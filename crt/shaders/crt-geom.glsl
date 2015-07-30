@@ -195,8 +195,8 @@ void main()
 
 // Precalculate a bunch of useful values we'll need in the fragment
 // shader.
-	sinangle = sin(vec2(x_tilt, y_tilt));
-	cosangle = cos(vec2(x_tilt, y_tilt));
+	sinangle = sin(vec2(max(abs(x_tilt), 1e-3), max(abs(y_tilt), 1e-3)));
+	cosangle = cos(vec2(max(abs(x_tilt), 1e-3), max(abs(y_tilt), 1e-3)));
 	stretch = maxscale();
 
 	ilfac = vec2(1.0,floor(InputSize.y/200.0));
