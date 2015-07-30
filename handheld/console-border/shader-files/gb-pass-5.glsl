@@ -1,4 +1,4 @@
-#pragma parameter SCALE "Box Scale" 0.6667 0.6667 1.5 0.33333
+#pragma parameter SCALE "Box Scale" 0.6667 0.6667 4.0 0.33333
 #pragma parameter OUT_X "Out X" 1600.0 1600.0 4800.0 8000.0
 #pragma parameter OUT_Y "Out Y" 800.0 800.0 2400.0 400.0
 #ifdef PARAMETER_UNIFORM
