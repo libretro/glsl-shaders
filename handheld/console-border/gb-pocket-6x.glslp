@@ -54,6 +54,6 @@ BORDER_linear = true
 
 parameters = "video_scale;SCALE;OUT_X;OUT_Y"
 video_scale = "4.0"
-SCALE = "1.5"
+SCALE = "2.0"
 OUT_X = "4800.0"
 OUT_Y = "2400.0"
