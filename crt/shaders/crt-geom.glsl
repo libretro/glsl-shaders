@@ -13,12 +13,18 @@
 #pragma parameter SHARPER "CRTGeom Sharpness" 1.0 1.0 3.0 1.0
 #pragma parameter scanline_weight "CRTGeom Scanline Weight" 0.3 0.1 0.5 0.05
 
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
 #ifdef PARAMETER_UNIFORM
 uniform float CRTgamma;
 uniform float monitorgamma;
-uniform float d;
+uniform COMPAT_PRECISION float d;
 uniform float CURVATURE;
-uniform float R;
+uniform COMPAT_PRECISION float R;
 uniform float cornersize;
 uniform float cornersmooth;
 uniform float x_tilt;
@@ -386,7 +392,7 @@ void main()
 	vec2 ilvec = vec2(0.0,ilfac.y > 1.5 ? mod(float(FrameCount),2.0) : 0.0);
 	vec2 ratio_scale = (xy * TextureSize - vec2(0.5) + ilvec)/ilfac;
 #ifdef OVERSAMPLE
-	float filter = fwidth(ratio_scale.y);
+	float filter = InputSize.y/OutputSize.y;//fwidth(ratio_scale.y);
 #endif
 	vec2 uv_ratio = fract(ratio_scale);
 
