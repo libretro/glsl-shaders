@@ -91,11 +91,11 @@ void main()
     _r0009 = _r0009 + VertexCoord.y*MVPMatrix[1];
     _r0009 = _r0009 + VertexCoord.z*MVPMatrix[2];
     _r0009 = _r0009 + VertexCoord.w*MVPMatrix[3];
-    _TMP5 = OutputSize/(InputSize*3.00000000E+00);
+    _TMP5 = OutputSize/(InputSize*video_scale);
     _oPosition1 = _r0009/vec4(_TMP5.x, _TMP5.y, 1.00000000E+00, 1.00000000E+00);
     _oTexCoord = TexCoord.xy + 2.50000000E-01/OutputSize;
     _TMP4._dot_size = vec2(float((1.00000000E+00/TextureSize).x), float((1.00000000E+00/TextureSize).y));
-    _TMP4._one_texel = vec2(float((1.00000000E+00/(TextureSize*3.00000000E+00)).x), float((1.00000000E+00/(TextureSize*3.00000000E+00)).y));
+    _TMP4._one_texel = vec2(float((1.00000000E+00/(TextureSize*video_scale)).x), float((1.00000000E+00/(TextureSize*video_scale)).y));
     _oMatrixData1._dot_size = _TMP4._dot_size;
     _oMatrixData1._one_texel = _TMP4._one_texel;
     gl_Position = _oPosition1;
