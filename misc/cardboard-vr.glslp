@@ -1,0 +1,8 @@
+shaders = 1
+
+shader0 = side-by-side-simple.glsl
+
+parameters = "eye_sep;y_loc;ana_zoom"
+eye_sep = "0.30"
+y_loc = "0.25"
+ana_zoom = "0.50"
