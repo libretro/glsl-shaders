@@ -42,8 +42,10 @@ uniform float OUTPUT_GAMMA;
 */
 
 /*
-    crt-pi - A Raspberry Pi friendly CRT shader.
+    crt-pi-vertical - A Raspberry Pi friendly CRT shader.
 
+    For use with portrait mode games on landscape mode screens (or landscape mode games on portrait mode sreens).
+ 
     Copyright (C) 2015-2016 davej
 
     This program is free software; you can redistribute it and/or modify it
@@ -209,14 +211,14 @@ void main()
 		gl_FragColor = vec4(colour, 1.0);
 #else
 #if MASK_TYPE == 1
-		float whichMask = fract(gl_FragCoord.x * 0.5);
+		float whichMask = fract(gl_FragCoord.y * 0.5);
 		vec3 mask;
 		if (whichMask < 0.5)
 			mask = vec3(MASK_BRIGHTNESS, 1.0, MASK_BRIGHTNESS);
 		else
 			mask = vec3(1.0, MASK_BRIGHTNESS, 1.0);
 #elif MASK_TYPE == 2
-		float whichMask = fract(gl_FragCoord.x * 0.3333333);
+		float whichMask = fract(gl_FragCoord.y * 0.3333333);
 		vec3 mask = vec3(MASK_BRIGHTNESS, MASK_BRIGHTNESS, MASK_BRIGHTNESS);
 		if (whichMask < 0.3333333)
 			mask.x = 1.0;
