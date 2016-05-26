@@ -141,8 +141,18 @@ uniform COMPAT_PRECISION vec2 InputSize;
 void main()
 {
     vec4 _color;
-    _TMP0 = COMPAT_TEXTURE(Texture, TEX0.xy / ZOOM);
-    _TMP1 = COMPAT_TEXTURE(Texture, TEX1.xy / ZOOM);
+
+//fix for clamping issues on GLES
+vec2 fragCoord1 = TEX0.xy * InputSize / TextureSize;
+vec2 fragCoord2 = TEX1.xy* InputSize / TextureSize;
+
+_TMP0 = vec4(0.0);
+if ( fragCoord1.x < 1.0 && fragCoord1.x > 0.0 && fragCoord1.y < 1.0 && fragCoord1.y > 0.0 )
+_TMP0 = COMPAT_TEXTURE(Texture, TEX0.xy / ZOOM);
+_TMP1 = vec4(0.0);
+if ( fragCoord2.x < 1.0 && fragCoord2.x > 0.0 && fragCoord2.y < 1.0 && fragCoord2.y > 0.0 )
+_TMP1 = COMPAT_TEXTURE(Texture, TEX1.xy / ZOOM);
+
     _color = _TMP0 + _TMP1;
     FragColor = _color;
     return;
