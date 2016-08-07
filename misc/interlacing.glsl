@@ -1,3 +1,16 @@
+#pragma parameter percent "Interlacing Scanline Bright %" 0.0 0.0 1.0 0.05
+#pragma parameter enable_480i "Enable 480i Mode" 1.0 0.0 1.0 1.0
+#pragma parameter top_field_first "Top Field First Enable" 0.0 0.0 1.0 1.0
+#ifdef PARAMETER_UNIFORM
+uniform float percent;
+uniform float enable_480i;
+uniform float top_field_first;
+#else
+#define percent 0.0
+#define enable_480i 1.0
+#define top_field_first 0.0
+#endif
+
 /*
    Interlacing
    Author: hunterk
@@ -115,11 +128,12 @@ void main()
 {
     vec4 _res;
     float _y;
+    vec2 timer = vec2(FrameCount, FrameCount); //<-this is dumb, but whatever
     _res = COMPAT_TEXTURE(Texture, TEX0.xy);
     if (InputSize.y > 400.0000001) { 
-        _y = TextureSize.y*TEX0.y + float(FrameCount);
+        _y = TextureSize.y*TEX0.y + (timer.y * enable_480i) + top_field_first;
     } else {
-        _y = 2.0000001*TextureSize.y*TEX0.y;
+        _y = 2.0000001*TextureSize.y*TEX0.y + top_field_first;
     } 
     mod_y = abs(2.00001) * fract(abs(_y/2.0000001));
 
