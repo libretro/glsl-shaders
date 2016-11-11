@@ -3,10 +3,10 @@
 #pragma parameter overscan_percent_x "Horizontal Overscan %" 0.0 -25.0 25.0 1.0
 #pragma parameter overscan_percent_y "Vertical Overscan %" 0.0 -25.0 25.0 1.0
 #pragma parameter saturation "Saturation" 1.0 0.0 2.0 0.01
-#pragma parameter contrast "Contrast" 0.0 -1.0 1.0 0.01
+#pragma parameter contrast "Contrast" 1.0 0.0 10.0 0.05
 #pragma parameter luminance "Luminance" 1.0 0.0 2.0 0.01
 #pragma parameter black_level "Black Level" 0.00 -0.30 0.30 0.01
-#pragma parameter bright_boost "Brightness Boost" 0.0 -1.0 1.0 0.1
+#pragma parameter bright_boost "Brightness Boost" 0.0 -1.0 1.0 0.05
 #pragma parameter R "Red Channel" 1.0 0.0 2.0 0.05
 #pragma parameter G "Green Channel" 1.0 0.0 2.0 0.05
 #pragma parameter B "Blue Channel" 1.0 0.0 2.0 0.05
@@ -39,7 +39,7 @@ uniform float H_OSMASK;
 #define saturation 1.0                 // color saturation; default 1.0
 #define monitor_gamma 2.2              // gamma setting of your current display; LCD monitors typically have a gamma of 2.2
 #define target_gamma 2.2               // the gamma you want the image to have; CRT TVs typically have a gamma of 2.4
-#define contrast 0.0                   // image contrast; default 1.0
+#define contrast 1.0                   // image contrast; default 1.0
 #define luminance 1.0                  // image luminance; default 1.0
 #define black_level 0.0
 #define bright_boost 0.0               // adds to the total brightness. Negative values decrease it; Use values between 1.0 (totally white) and -1.0 (totally black); default is 0.0
@@ -199,31 +199,22 @@ void main()
     vec2 fragcoord;
     vec3 res;
 	vec3 gamma;
-	vec3 AvgLumin;
-	vec3 intensity;
 	vec3 satColor;
 	vec3 conColor;
 
     fragcoord = TEX0.xy*(TextureSize.xy/InputSize.xy);
     res = COMPAT_TEXTURE(Texture, TEX0.xy).rgb;
 	gamma = vec3(monitor_gamma / target_gamma); // setup ratio of display's gamma vs desired gamma
-	AvgLumin = vec3(0.5);//saturation and luminance
 	
 //saturation and luminance
    satColor = clamp(hsv2rgb(rgb2hsv(res) * vec3(1.0, saturation, luminance)), 0.0, 1.0);
 
-//contrast; TODO: reduce branching
-   conColor = vec3(0.0);
-   if (contrast > 0.0){
-      conColor = (greaterThan(grayscale(res) , AvgLumin) == bvec3(true)) ? satColor + vec3(contrast) : satColor - vec3(contrast);
-      conColor = clamp(conColor, 0.0, 1.0);
-   }
-   else conColor = mix(AvgLumin, satColor, 1.0 + contrast);
+//contrast and brightness
+   conColor = clamp((satColor - 0.5) * contrast + 0.5 + bright_boost, 0.0, 1.0);
    
    conColor -= vec3(black_level); // apply black level
    conColor *= (vec3(1.0) / vec3(1.0-black_level));
    conColor = pow(conColor, vec3(1.0) / vec3(gamma)); // Apply gamma correction
-	conColor += vec3(bright_boost); // apply brightboost
 	conColor *= vec3(R, G, B); // apply color channel adjustment
 
     if (fragcoord.y > V_OSMASK && fragcoord.y < (1.00000000E+00 - V_OSMASK)) { 
