@@ -1,10 +1,17 @@
 #pragma parameter percent "Interlacing Scanline Bright %" 0.0 0.0 1.0 0.05
 #pragma parameter enable_480i "Enable 480i Mode" 1.0 0.0 1.0 1.0
 #pragma parameter top_field_first "Top Field First Enable" 0.0 0.0 1.0 1.0
+
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
 #ifdef PARAMETER_UNIFORM
-uniform float percent;
-uniform float enable_480i;
-uniform float top_field_first;
+uniform COMPAT_PRECISION float percent;
+uniform COMPAT_PRECISION float enable_480i;
+uniform COMPAT_PRECISION float top_field_first;
 #else
 #define percent 0.0
 #define enable_480i 1.0

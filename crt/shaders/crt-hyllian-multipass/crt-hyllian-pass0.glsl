@@ -1,10 +1,17 @@
 #pragma parameter SHARPNESS "CRT - Sharpness Hack" 1.0 1.0 5.0 1.0
 #pragma parameter CRT_ANTI_RINGING "CRT - Anti-Ringing" 0.8 0.0 1.0 0.1
 #pragma parameter InputGamma "CRT - Input gamma" 2.5 0.0 5.0 0.1
+
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
 #ifdef PARAMETER_UNIFORM
-uniform float SHARPNESS;
-uniform float CRT_ANTI_RINGING;
-uniform float InputGamma;
+uniform COMPAT_PRECISION float SHARPNESS;
+uniform COMPAT_PRECISION float CRT_ANTI_RINGING;
+uniform COMPAT_PRECISION float InputGamma;
 #else
 #define SHARPNESS 1.0
 #define CRT_ANTI_RINGING 0.8 

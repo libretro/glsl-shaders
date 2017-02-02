@@ -15,24 +15,31 @@
 #pragma parameter YPOS "Y Modifier" 0.0 -2.0 2.0 0.005
 #pragma parameter V_OSMASK "Overscan Mask Y" 0.0 0.0 1.0 0.005
 #pragma parameter H_OSMASK "Overscan Mask X" 0.0 0.0 1.0 0.005
+
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
 #ifdef PARAMETER_UNIFORM
-uniform float target_gamma;
-uniform float monitor_gamma;
-uniform float overscan_percent_x;
-uniform float overscan_percent_y;
-uniform float saturation;
-uniform float contrast;
-uniform float luminance;
-uniform float black_level;
-uniform float bright_boost;
-uniform float R;
-uniform float G;
-uniform float B;
-uniform float ZOOM;
-uniform float XPOS;
-uniform float YPOS;
-uniform float V_OSMASK;
-uniform float H_OSMASK;
+uniform COMPAT_PRECISION float target_gamma;
+uniform COMPAT_PRECISION float monitor_gamma;
+uniform COMPAT_PRECISION float overscan_percent_x;
+uniform COMPAT_PRECISION float overscan_percent_y;
+uniform COMPAT_PRECISION float saturation;
+uniform COMPAT_PRECISION float contrast;
+uniform COMPAT_PRECISION float luminance;
+uniform COMPAT_PRECISION float black_level;
+uniform COMPAT_PRECISION float bright_boost;
+uniform COMPAT_PRECISION float R;
+uniform COMPAT_PRECISION float G;
+uniform COMPAT_PRECISION float B;
+uniform COMPAT_PRECISION float ZOOM;
+uniform COMPAT_PRECISION float XPOS;
+uniform COMPAT_PRECISION float YPOS;
+uniform COMPAT_PRECISION float V_OSMASK;
+uniform COMPAT_PRECISION float H_OSMASK;
 #else
 #define overscan_percent_x 0.0         // crop width of image by X%; default is 0.0
 #define overscan_percent_y 0.0         // crop height of image by X%; default is 0.0

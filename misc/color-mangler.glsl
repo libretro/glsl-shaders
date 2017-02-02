@@ -15,24 +15,31 @@
 #pragma parameter blr "Black-Red Tint" 0.0 0.0 1.0 0.005
 #pragma parameter blg "Black-Green Tint" 0.0 0.0 1.0 0.005
 #pragma parameter blb "Black-Blue Tint" 0.0 0.0 1.0 0.005
+
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
 #ifdef PARAMETER_UNIFORM
-uniform float display_gamma;
-uniform float target_gamma;
-uniform float sat;
-uniform float lum;
-uniform float cntrst;
-uniform float blr;
-uniform float blg;
-uniform float blb;
-uniform float r;
-uniform float g;
-uniform float b;
-uniform float rg;
-uniform float rb;
-uniform float gr;
-uniform float gb;
-uniform float br;
-uniform float bg;
+uniform COMPAT_PRECISION float display_gamma;
+uniform COMPAT_PRECISION float target_gamma;
+uniform COMPAT_PRECISION float sat;
+uniform COMPAT_PRECISION float lum;
+uniform COMPAT_PRECISION float cntrst;
+uniform COMPAT_PRECISION float blr;
+uniform COMPAT_PRECISION float blg;
+uniform COMPAT_PRECISION float blb;
+uniform COMPAT_PRECISION float r;
+uniform COMPAT_PRECISION float g;
+uniform COMPAT_PRECISION float b;
+uniform COMPAT_PRECISION float rg;
+uniform COMPAT_PRECISION float rb;
+uniform COMPAT_PRECISION float gr;
+uniform COMPAT_PRECISION float gb;
+uniform COMPAT_PRECISION float br;
+uniform COMPAT_PRECISION float bg;
 #else
 #define display_gamma 2.2
 #define target_gamma 2.2

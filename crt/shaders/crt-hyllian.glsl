@@ -10,19 +10,26 @@
 #pragma parameter BEAM_MIN_WIDTH "CRT - Min Beam Width" 0.86 0.0 1.0 0.02
 #pragma parameter BEAM_MAX_WIDTH "CRT - Max Beam Width" 1.0 0.0 1.0 0.02
 #pragma parameter CRT_ANTI_RINGING "CRT - Anti-Ringing" 0.8 0.0 1.0 0.1
+
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
 #ifdef PARAMETER_UNIFORM
-uniform float PHOSPHOR;
-uniform float InputGamma;
-uniform float OutputGamma;
-uniform float SHARPNESS;
-uniform float COLOR_BOOST;
-uniform float RED_BOOST;
-uniform float GREEN_BOOST;
-uniform float BLUE_BOOST;
-uniform float SCANLINES_STRENGTH;
-uniform float BEAM_MIN_WIDTH;
-uniform float BEAM_MAX_WIDTH;
-uniform float CRT_ANTI_RINGING;
+uniform COMPAT_PRECISION float PHOSPHOR;
+uniform COMPAT_PRECISION float InputGamma;
+uniform COMPAT_PRECISION float OutputGamma;
+uniform COMPAT_PRECISION float SHARPNESS;
+uniform COMPAT_PRECISION float COLOR_BOOST;
+uniform COMPAT_PRECISION float RED_BOOST;
+uniform COMPAT_PRECISION float GREEN_BOOST;
+uniform COMPAT_PRECISION float BLUE_BOOST;
+uniform COMPAT_PRECISION float SCANLINES_STRENGTH;
+uniform COMPAT_PRECISION float BEAM_MIN_WIDTH;
+uniform COMPAT_PRECISION float BEAM_MAX_WIDTH;
+uniform COMPAT_PRECISION float CRT_ANTI_RINGING;
 #else
 #define PHOSPHOR 1.0
 #define InputGamma 2.4

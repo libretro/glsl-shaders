@@ -17,15 +17,21 @@
 // MASK_TYPE: 0 = none, 1 = green/magenta, 2 = trinitron(ish)
 #define MASK_TYPE 1
 
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
 #ifdef PARAMETER_UNIFORM
-uniform float CURVATURE_X;
-uniform float CURVATURE_Y;
-uniform float MASK_BRIGHTNESS;
-uniform float SCANLINE_WEIGHT;
-uniform float SCANLINE_GAP_BRIGHTNESS;
-uniform float BLOOM_FACTOR;
-uniform float INPUT_GAMMA;
-uniform float OUTPUT_GAMMA;
+uniform COMPAT_PRECISION float CURVATURE_X;
+uniform COMPAT_PRECISION float CURVATURE_Y;
+uniform COMPAT_PRECISION float MASK_BRIGHTNESS;
+uniform COMPAT_PRECISION float SCANLINE_WEIGHT;
+uniform COMPAT_PRECISION float SCANLINE_GAP_BRIGHTNESS;
+uniform COMPAT_PRECISION float BLOOM_FACTOR;
+uniform COMPAT_PRECISION float INPUT_GAMMA;
+uniform COMPAT_PRECISION float OUTPUT_GAMMA;
 #else
 #define CURVATURE_X 0.10
 #define CURVATURE_Y 0.25

@@ -6,15 +6,22 @@
 #pragma parameter BOTH "Horizontal Placement" 0.64 -2.0 2.0 0.005
 #pragma parameter warpX "warpX" 0.3 0.0 0.5 0.05
 #pragma parameter warpY "warpY" 0.3 0.0 0.5 0.05
+
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
 #ifdef PARAMETER_UNIFORM
-uniform float eye_sep;
-uniform float y_loc;
-uniform float ana_zoom;
-uniform float WIDTH;
-uniform float BOTH;
-uniform float HEIGHT;
-uniform float warpX;
-uniform float warpY;
+uniform COMPAT_PRECISION float eye_sep;
+uniform COMPAT_PRECISION float y_loc;
+uniform COMPAT_PRECISION float ana_zoom;
+uniform COMPAT_PRECISION float WIDTH;
+uniform COMPAT_PRECISION float BOTH;
+uniform COMPAT_PRECISION float HEIGHT;
+uniform COMPAT_PRECISION float warpX;
+uniform COMPAT_PRECISION float warpY;
 #else
 #define eye_sep 0.35
 #define y_loc 0.30

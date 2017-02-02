@@ -4,13 +4,20 @@
 #pragma parameter zoom "CocktailTable Zoom" 0.51 -2.0 5.0 0.01
 #pragma parameter location_x "CocktailTable Location X" 0.0 -1.0 1.0 0.01
 #pragma parameter location_y "CocktailTable Location Y" 0.0 -1.0 1.0 0.01
+
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
 #ifdef PARAMETER_UNIFORM
-uniform float height;
-uniform float width;
-uniform float separation;
-uniform float zoom;
-uniform float location_x;
-uniform float location_y;
+uniform COMPAT_PRECISION float height;
+uniform COMPAT_PRECISION float width;
+uniform COMPAT_PRECISION float separation;
+uniform COMPAT_PRECISION float zoom;
+uniform COMPAT_PRECISION float location_x;
+uniform COMPAT_PRECISION float location_y;
 #else
 #define height 1.99
 #define width 0.8

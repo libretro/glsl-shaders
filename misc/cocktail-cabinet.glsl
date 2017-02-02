@@ -4,12 +4,18 @@
 #pragma parameter location_x "Image Location X" -0.5 -4.0 4.0 0.005
 #pragma parameter ZOOM "Image Zoom" 1.0 0.0 2.0 0.005
 
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
 #ifdef PARAMETER_UNIFORM
-uniform float height;
-uniform float width;
-uniform float location_y;
-uniform float location_x;
-uniform float ZOOM;
+uniform COMPAT_PRECISION float height;
+uniform COMPAT_PRECISION float width;
+uniform COMPAT_PRECISION float location_y;
+uniform COMPAT_PRECISION float location_x;
+uniform COMPAT_PRECISION float ZOOM;
 #else
 #define height -1.145
 #define width 2.0

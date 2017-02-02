@@ -7,16 +7,23 @@
 #pragma parameter SCANLINES_STRENGTH "CRT - Scanline Strength" 0.72 0.0 1.0 0.02
 #pragma parameter BEAM_MIN_WIDTH "CRT - Min Beam Width" 0.86 0.0 1.0 0.02
 #pragma parameter BEAM_MAX_WIDTH "CRT - Max Beam Width" 1.0 0.0 1.0 0.02
+
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
 #ifdef PARAMETER_UNIFORM
-uniform float OutputGamma;
-uniform float PHOSPHOR;
-uniform float COLOR_BOOST;
-uniform float RED_BOOST;
-uniform float GREEN_BOOST;
-uniform float BLUE_BOOST;
-uniform float SCANLINES_STRENGTH;
-uniform float BEAM_MIN_WIDTH;
-uniform float BEAM_MAX_WIDTH;
+uniform COMPAT_PRECISION float OutputGamma;
+uniform COMPAT_PRECISION float PHOSPHOR;
+uniform COMPAT_PRECISION float COLOR_BOOST;
+uniform COMPAT_PRECISION float RED_BOOST;
+uniform COMPAT_PRECISION float GREEN_BOOST;
+uniform COMPAT_PRECISION float BLUE_BOOST;
+uniform COMPAT_PRECISION float SCANLINES_STRENGTH;
+uniform COMPAT_PRECISION float BEAM_MIN_WIDTH;
+uniform COMPAT_PRECISION float BEAM_MAX_WIDTH;
 #else
 #define OutputGamma 2.2
 #define PHOSPHOR 1.0

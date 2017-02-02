@@ -22,14 +22,20 @@
 #pragma parameter maskLight "maskLight" 1.5 0.0 2.0 0.1
 #pragma parameter brightboost "brightness" 1.0 0.0 2.0 0.05
 
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
 #ifdef PARAMETER_UNIFORM // If the shader implementation understands #pragma parameters, this is defined.
-uniform float hardScan;
-uniform float hardPix;
-uniform float warpX;
-uniform float warpY;
-uniform float maskDark;
-uniform float maskLight;
-uniform float brightboost;
+uniform COMPAT_PRECISION float hardScan;
+uniform COMPAT_PRECISION float hardPix;
+uniform COMPAT_PRECISION float warpX;
+uniform COMPAT_PRECISION float warpY;
+uniform COMPAT_PRECISION float maskDark;
+uniform COMPAT_PRECISION float maskLight;
+uniform COMPAT_PRECISION float brightboost;
 #else
 #define hardScan -8.0
 #define hardPix -3.0
