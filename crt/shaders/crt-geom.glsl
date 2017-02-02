@@ -20,20 +20,20 @@
 #endif
 
 #ifdef PARAMETER_UNIFORM
-uniform float CRTgamma;
-uniform float monitorgamma;
+uniform COMPAT_PRECISION float CRTgamma;
+uniform COMPAT_PRECISION float monitorgamma;
 uniform COMPAT_PRECISION float d;
-uniform float CURVATURE;
+uniform COMPAT_PRECISION float CURVATURE;
 uniform COMPAT_PRECISION float R;
-uniform float cornersize;
-uniform float cornersmooth;
-uniform float x_tilt;
-uniform float y_tilt;
-uniform float overscan_x;
-uniform float overscan_y;
-uniform float DOTMASK;
-uniform float SHARPER;
-uniform float scanline_weight;
+uniform COMPAT_PRECISION float cornersize;
+uniform COMPAT_PRECISION float cornersmooth;
+uniform COMPAT_PRECISION float x_tilt;
+uniform COMPAT_PRECISION float y_tilt;
+uniform COMPAT_PRECISION float overscan_x;
+uniform COMPAT_PRECISION float overscan_y;
+uniform COMPAT_PRECISION float DOTMASK;
+uniform COMPAT_PRECISION float SHARPER;
+uniform COMPAT_PRECISION float scanline_weight;
 
 #else
 #define CRTgamma 2.4

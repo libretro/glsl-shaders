@@ -18,21 +18,27 @@
 #pragma parameter GAMMA_OUTPUT "Gamma Output" 2.4 1.0 5.0 0.1
 #pragma parameter BRIGHTNESS "Brightness" 1.5 0.0 2.0 0.05
 
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
 #ifdef PARAMETER_UNIFORM
-uniform float SHARPNESS_IMAGE;
-uniform float SHARPNESS_EDGES;
-uniform float GLOW_WIDTH;
-uniform float GLOW_HEIGHT;
-uniform float GLOW_HALATION;
-uniform float GLOW_DIFFUSION;
-uniform float MASK_COLORS;
-uniform float MASK_STRENGTH;
-uniform float MASK_SIZE;
-uniform float SCANLINE_SIZE_MIN;
-uniform float SCANLINE_SIZE_MAX;
-uniform float GAMMA_INPUT;
-uniform float GAMMA_OUTPUT;
-uniform float BRIGHTNESS;
+uniform COMPAT_PRECISION float SHARPNESS_IMAGE;
+uniform COMPAT_PRECISION float SHARPNESS_EDGES;
+uniform COMPAT_PRECISION float GLOW_WIDTH;
+uniform COMPAT_PRECISION float GLOW_HEIGHT;
+uniform COMPAT_PRECISION float GLOW_HALATION;
+uniform COMPAT_PRECISION float GLOW_DIFFUSION;
+uniform COMPAT_PRECISION float MASK_COLORS;
+uniform COMPAT_PRECISION float MASK_STRENGTH;
+uniform COMPAT_PRECISION float MASK_SIZE;
+uniform COMPAT_PRECISION float SCANLINE_SIZE_MIN;
+uniform COMPAT_PRECISION float SCANLINE_SIZE_MAX;
+uniform COMPAT_PRECISION float GAMMA_INPUT;
+uniform COMPAT_PRECISION float GAMMA_OUTPUT;
+uniform COMPAT_PRECISION float BRIGHTNESS;
 #else
 #define SHARPNESS_IMAGE 1.0
 #define SHARPNESS_EDGES 3.0
