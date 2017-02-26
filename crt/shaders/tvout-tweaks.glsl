@@ -1,8 +1,8 @@
 
 ///////////////
-//	TV-out tweaks	
+//	TV-out tweaks
 //	Author: aliaspider - aliaspider@gmail.com
-//	License: GPLv3      
+//	License: GPLv3
 ////////////////////////////////////////////////////////
 
 
@@ -12,13 +12,13 @@
 // Basic settings:
 
 // signal resolution
-// higher = sharper 
+// higher = sharper
 #pragma parameter TVOUT_RESOLUTION "TVOut Signal Resolution" 256.0 0.0 1024.0 32.0 // default, minimum, maximum, optional step
 
 // simulate a composite connection instead of RGB
 #pragma parameter TVOUT_COMPOSITE_CONNECTION "TVOut Composite Enable" 0.0 0.0 1.0 1.0
 
-// use TV video color range (16-235) 
+// use TV video color range (16-235)
 // instead of PC full range (0-255)
 #pragma parameter TVOUT_TV_COLOR_LEVELS "TVOut TV Color Levels Enable" 0.0 0.0 1.0 1.0
 ////////////////////////////////////////////////////////
@@ -26,7 +26,7 @@
 ////////////////////////////////////////////////////////
 // Advanced settings:
 //
-// these values will be used instead 
+// these values will be used instead
 // if COMPOSITE_CONNECTION is defined
 // to simulate different signal resolutions(bandwidth)
 // for luma (Y) and chroma ( I and Q )
@@ -73,8 +73,8 @@ uniform COMPAT_PRECISION float TVOUT_RESOLUTION_Q;
 #define COMPAT_ATTRIBUTE in
 #define COMPAT_TEXTURE texture
 #else
-#define COMPAT_VARYING varying 
-#define COMPAT_ATTRIBUTE attribute 
+#define COMPAT_VARYING varying
+#define COMPAT_ATTRIBUTE attribute
 #define COMPAT_TEXTURE texture2D
 #endif
 
@@ -90,7 +90,7 @@ COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 
-vec4 _oPosition1; 
+vec4 _oPosition1;
 uniform mat4 MVPMatrix;
 uniform int FrameDirection;
 uniform int FrameCount;
@@ -100,8 +100,8 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 void main()
 {
-highp    vec4 _oColor;
-    vec2 _otexCoord;
+COMPAT_PRECISION   vec4 _oColor;
+COMPAT_PRECISION    vec2 _otexCoord;
     gl_Position = VertexCoord.x * MVPMatrix[0] + VertexCoord.y * MVPMatrix[1] + VertexCoord.z * MVPMatrix[2] + VertexCoord.w * MVPMatrix[3];
     _oPosition1 = gl_Position;
     _oColor = COLOR;
@@ -146,7 +146,7 @@ struct output_dummy {
 #define L(C) clamp((C -16.5/ 256.0)*256.0/(236.0-16.0),0.0,1.0)
 #define LCHR(C) clamp((C -16.5/ 256.0)*256.0/(240.0-16.0),0.0,1.0)
 
-highp vec3 LEVELS(vec3 c0)
+COMPAT_PRECISION vec3 LEVELS(vec3 c0)
 {
    if (TVOUT_TV_COLOR_LEVELS > 0.5)
    {
@@ -182,16 +182,16 @@ COMPAT_VARYING vec4 TEX0;
 
 void main()
 {
-highp mat3 RGB_to_YIQ = mat3(0.299,0.587,0.114, 
+COMPAT_PRECISION mat3 RGB_to_YIQ = mat3(0.299,0.587,0.114,
 		 0.595716,-0.274453,-0.321263,
 		 0.211456,-0.522591, 0.311135);
 
-mat3 YIQ_to_RGB = mat3(1.0,0.9563,0.6210, 
+COMPAT_PRECISION mat3 YIQ_to_RGB = mat3(1.0,0.9563,0.6210,
 		 1.0,-0.2721,-0.6474,
 		 1.0,-1.1070, 1.7046);
 
-highp   vec3 tempColor=vec3(0.0,0.0,0.0);
-highp   float	offset	= fract((TEX0.x * TextureSize.x) - 0.5);
+COMPAT_PRECISION   vec3 tempColor=vec3(0.0,0.0,0.0);
+COMPAT_PRECISION   float	offset	= fract((TEX0.x * TextureSize.x) - 0.5);
    float oneT=1.0/TextureSize.x;
    float oneI=1.0/TextureSize.x;
 
@@ -221,5 +221,5 @@ highp   float	offset	= fract((TEX0.x * TextureSize.x) - 0.5);
     _OUT._color = vec4(tempColor, 1.0);
     FragColor = _OUT._color;
     return;
-} 
+}
 #endif
