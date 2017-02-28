@@ -1,22 +1,31 @@
-shaders = "2"
+shaders = "4"
 
-shader0 = "../lcd_cgwg/lcd-grid.glsl"
-filter_linear0 = "false"
-wrap_mode0 = "clamp_to_border"
-scale_type_x0 = "source"
-scale_x0 = "4.000000"
-scale_type_y0 = "source"
-scale_y0 = "4.000000"
+shader0 = "../../motionblur/shaders/motionblur-simple.glsl"
+scale_type0 = source
+scale0 = 1.0
+filter_linear0 = false
 
-shader1 = "shader-files/gb-pass-5.glsl"
-filter_linear1 = "true"
-wrap_mode1 = "clamp_to_border"
+shader1 = "../shaders/color/gba-color.glsl
+filter_linear1 = false
 
-parameters = "SCALE;OUT_X;OUT_Y;GRID_STRENGTH"
+shader2 = "../shaders/lcd-cgwg/lcd-grid.glsl"
+filter_linear2 = "false"
+wrap_mode2 = "clamp_to_border"
+scale_type_x2 = "source"
+scale_x2 = "2.000000"
+scale_type_y2 = "source"
+scale_y2 = "2.000000"
+
+shader3 = "shader-files/gb-pass-5.glsl"
+filter_linear3 = "true"
+wrap_mode3 = "clamp_to_border"
+
+parameters = "SCALE;OUT_X;OUT_Y;GRID_STRENGTH;mixfactor"
 GRID_STRENGTH = "0.150000"
-SCALE = "0.5"
+SCALE = "1.0"
 OUT_X = "1600.0"
 OUT_Y = "800.0"
+mixfactor = "0.50"
 
 textures = "BORDER"
 BORDER = "resources/gba-border-square-4x.png"

@@ -1,6 +1,6 @@
 shaders = "2"
 
-shader0 = "../lcd_cgwg/lcd-grid.glsl"
+shader0 = "../shaders/lcd-cgwg/lcd-grid.glsl"
 filter_linear0 = "false"
 wrap_mode0 = "clamp_to_border"
 scale_type_x0 = "source"
@@ -12,11 +12,10 @@ shader1 = "shader-files/gb-pass-5.glsl"
 filter_linear1 = "true"
 wrap_mode1 = "clamp_to_border"
 
-parameters = "SCALE;OUT_X;OUT_Y;GRID_STRENGTH"
-GRID_STRENGTH = "0.050000"
-SCALE = "1.5"
-OUT_X = "7200.0"
-OUT_Y = "3600.0"
+parameters = "SCALE;OUT_X;OUT_Y"
+SCALE = "1.0"
+OUT_X = "4800.0"
+OUT_Y = "2400.0"
 
 textures = "BORDER"
 BORDER = "resources/color-border-square-4x.png"
