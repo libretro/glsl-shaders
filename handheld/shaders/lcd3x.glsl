@@ -99,17 +99,17 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
 
-vec2 omega = vec2(3.141592654) * vec2(2.0) * SourceSize.xy;
-const vec3 offsets = vec3(3.141592654) * vec3(1.0/2,1.0/2 - 2.0/3,1.0/2-4.0/3);
+const vec3 offsets = vec3(3.141592654) * vec3(1.0/2.0,1.0/2.0 - 2.0/3.0,1.0/2.0-4.0/3.0);
 
 void main()
 {
+    vec2 omega = vec2(3.141592654) * vec2(2.0) * SourceSize.xy;
     vec3 res = texture(Source, vTexCoord).xyz;
 
     vec2 angle = vTexCoord * omega;
 	
-    float yfactor = (brighten_scanlines + sin(angle.y)) / (brighten_scanlines + 1);
-    vec3 xfactors = (brighten_lcd + sin(angle.x + offsets)) / (brighten_lcd + 1);
+    float yfactor = (brighten_scanlines + sin(angle.y)) / (brighten_scanlines + 1.0);
+    vec3 xfactors = (brighten_lcd + sin(angle.x + offsets)) / (brighten_lcd + 1.0);
    
     vec3 color = yfactor * xfactors * res;
    

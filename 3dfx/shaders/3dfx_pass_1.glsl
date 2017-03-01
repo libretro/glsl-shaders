@@ -8,8 +8,8 @@
 // any later version.
 
 #define		FILTCAP		0.04	// filtered pixel should not exceed this 
-#define		FILTCAPG	(FILTCAP / 2)
-#define		LEIFX_PIXELWIDTH	0.50f
+#define		FILTCAPG	(FILTCAP / 2.0)
+#define		LEIFX_PIXELWIDTH	0.50
 
 #if defined(VERTEX)
 
@@ -25,6 +25,7 @@
 
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision COMPAT_PRECISION float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -121,8 +122,8 @@ void main()
 	pixel.x = SourceSize.z;
 	pixel.y = SourceSize.w;
 
-	float3 pixel1 = tex2D(Source, vTexCoord + float2((pixel.x), 0)).rgb;
-	float3 pixel2 = tex2D(Source, vTexCoord + float2(-pixel.x, 0)).rgb;
+	float3 pixel1 = tex2D(Source, vTexCoord + float2((pixel.x), 0.0)).rgb;
+	float3 pixel2 = tex2D(Source, vTexCoord + float2(-pixel.x, 0.0)).rgb;
 	float3 pixelblend;
 	
 // New filter
@@ -152,7 +153,7 @@ void main()
 		if (pixeldiffleft.g < -FILTCAPG) 	pixeldiffleft.g = -FILTCAPG;
 		if (pixeldiffleft.b < -FILTCAP) 	pixeldiffleft.b = -FILTCAP;
 
-		pixelmake.rgb = (pixeldiff.rgb / 4) + (pixeldiffleft.rgb / 16);
+		pixelmake.rgb = (pixeldiff.rgb / 4.0) + (pixeldiffleft.rgb / 16.0);
 		outcolor.rgb = (outcolor.rgb + pixelmake.rgb);
 	}	
 	

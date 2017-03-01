@@ -10,6 +10,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision COMPAT_PRECISION float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -24,15 +25,31 @@ uniform COMPAT_PRECISION float LEIFX_LINES;
 #endif
 
 // This table came from the wikipedia article about Ordered Dithering. NOT MAME.  Just to clarify.
-COMPAT_PRECISION float erroredtable[16] = {
-	16,4,13,1,   
-	8,12,5,9,
-	14,2,15,3,
-	6,10,7,11		
-};
+//int erroredtable[16] = {
+//	16,4,13,1,   
+//	8,12,5,9,
+//	14,2,15,3,
+//	6,10,7,11		
+//};
+float erroredtable0 = 16.0;
+float erroredtable1 = 4.0;
+float erroredtable2 = 13.0;
+float erroredtable3 = 1.0;
+float erroredtable4 = 8.0;
+float erroredtable5 = 12.0;
+float erroredtable6 = 5.0;
+float erroredtable7 = 9.0;
+float erroredtable8 = 14.0;
+float erroredtable9 = 2.0;
+float erroredtable10 = 15.0;
+float erroredtable11 = 3.0;
+float erroredtable12 = 6.0;
+float erroredtable13 = 10.0;
+float erroredtable14 = 7.0;
+float erroredtable15 = 11.0;
 
-#define DITHERAMOUNT		0.5f // was 0.33f
-#define DITHERBIAS		-1  // 0 to 16, biases the value of the dither up.  - was 8
+#define DITHERAMOUNT		0.5 // was 0.33f
+#define DITHERBIAS		-1.0  // 0 to 16, biases the value of the dither up.  - was 8
 
 #if defined(VERTEX)
 
@@ -152,40 +169,40 @@ void main()
 	// Dither. Total rewrite.
 	// NOW, WHAT PIXEL AM I!??
 
-	int ditdex = 	int(mod(ditheu.x, 4.0)) * 4 + int(mod(ditheu.y, 4.0)); // 4x4!
+	float ditdex = 	(mod(ditheu.x, 4.0)) * 4.0 + (mod(ditheu.y, 4.0)); // 4x4!
 	vec3 color;
 	vec3 colord;
-	color.r = outcolor.r * 255;
-	color.g = outcolor.g * 255;
-	color.b = outcolor.b * 255;
+	color.r = outcolor.r * 255.0;
+	color.g = outcolor.g * 255.0;
+	color.b = outcolor.b * 255.0;
 	float yeh = 0.0;
 	float ohyes = 0.0;
 	
 //	for (yeh=ditdex; yeh<(ditdex+16); yeh++) ohyes = pow(erroredtable[yeh-15], 0.72f);
-	if (yeh++==ditdex) ohyes = erroredtable[0];
-	else if (yeh++==ditdex) ohyes = erroredtable[1];
-	else if (yeh++==ditdex) ohyes = erroredtable[2];
-	else if (yeh++==ditdex) ohyes = erroredtable[3];
-	else if (yeh++==ditdex) ohyes = erroredtable[4];
-	else if (yeh++==ditdex) ohyes = erroredtable[5];
-	else if (yeh++==ditdex) ohyes = erroredtable[6];
-	else if (yeh++==ditdex) ohyes = erroredtable[7];
-	else if (yeh++==ditdex) ohyes = erroredtable[8];
-	else if (yeh++==ditdex) ohyes = erroredtable[9];
-	else if (yeh++==ditdex) ohyes = erroredtable[10];
-	else if (yeh++==ditdex) ohyes = erroredtable[11];
-	else if (yeh++==ditdex) ohyes = erroredtable[12];
-	else if (yeh++==ditdex) ohyes = erroredtable[13];
-	else if (yeh++==ditdex) ohyes = erroredtable[14];
-	else if (yeh++==ditdex) ohyes = erroredtable[15];
+	if (yeh++==ditdex) ohyes = float(erroredtable0);
+	else if (yeh++==ditdex) ohyes = float(erroredtable1);
+	else if (yeh++==ditdex) ohyes = float(erroredtable2);
+	else if (yeh++==ditdex) ohyes = float(erroredtable3);
+	else if (yeh++==ditdex) ohyes = float(erroredtable4);
+	else if (yeh++==ditdex) ohyes = float(erroredtable5);
+	else if (yeh++==ditdex) ohyes = float(erroredtable6);
+	else if (yeh++==ditdex) ohyes = float(erroredtable7);
+	else if (yeh++==ditdex) ohyes = float(erroredtable8);
+	else if (yeh++==ditdex) ohyes = float(erroredtable9);
+	else if (yeh++==ditdex) ohyes = float(erroredtable10);
+	else if (yeh++==ditdex) ohyes = float(erroredtable11);
+	else if (yeh++==ditdex) ohyes = float(erroredtable12);
+	else if (yeh++==ditdex) ohyes = float(erroredtable13);
+	else if (yeh++==ditdex) ohyes = float(erroredtable14);
+	else if (yeh++==ditdex) ohyes = float(erroredtable15);
 	
 	// Adjust the dither thing
-	ohyes = 17 - (ohyes - 1); // invert
+	ohyes = 17.0 - (ohyes - 1.0); // invert
 	ohyes *= DITHERAMOUNT;
 	ohyes += DITHERBIAS;
 
 	colord.r = color.r + ohyes;
-	colord.g = color.g + (ohyes / 2);
+	colord.g = color.g + (ohyes / 2.0);
 	colord.b = color.b + ohyes;
 	outcolor.rgb = colord.rgb * 0.003921568627451; // divide by 255, i don't trust em
 	
@@ -195,23 +212,23 @@ void main()
 
 	float3 why = float3(1.0);
 	float3 reduceme = float3(1.0);
-	float radooct = 32;	// 32 is usually the proper value
+	float radooct = 32.0;	// 32 is usually the proper value
 
 	reduceme.r = pow(outcolor.r, why.r);  
 	reduceme.r *= radooct;	
-	reduceme.r = int(floor(reduceme.r));	
+	reduceme.r = (floor(reduceme.r));	
 	reduceme.r /= radooct; 
 	reduceme.r = pow(reduceme.r, why.r);
 
 	reduceme.g = pow(outcolor.g, why.g);  
-	reduceme.g *= radooct * 2;	
-	reduceme.g = int(floor(reduceme.g));	
-	reduceme.g /= radooct * 2; 
+	reduceme.g *= radooct * 2.0;	
+	reduceme.g = (floor(reduceme.g));	
+	reduceme.g /= radooct * 2.0; 
 	reduceme.g = pow(reduceme.g, why.g);
 
 	reduceme.b = pow(outcolor.b, why.b);  
 	reduceme.b *= radooct;	
-	reduceme.b = int(floor(reduceme.b));	
+	reduceme.b = (floor(reduceme.b));	
 	reduceme.b /= radooct; 
 	reduceme.b = pow(reduceme.b, why.b);
 
@@ -219,9 +236,9 @@ void main()
 
 	// Add the purple line of lineness here, so the filter process catches it and gets gammaed.
 	{
-		float leifx_linegamma = (LEIFX_LINES / 10);
+		float leifx_linegamma = (LEIFX_LINES / 10.0);
 		float horzline1 = 	(mod(ditheu.y, 	2.0));
-		if (horzline1 < 1)	leifx_linegamma = 0;
+		if (horzline1 < 1.0)	leifx_linegamma = 0.0;
 	
 		outcolor.r += leifx_linegamma;
 		outcolor.b += leifx_linegamma;	

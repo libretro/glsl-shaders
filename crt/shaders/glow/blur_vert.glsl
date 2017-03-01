@@ -1,7 +1,7 @@
 // Higher value, more centered glow.
 // Lower values might need more taps.
 #define GLOW_FALLOFF 0.35
-#define TAPS 4
+#define TAPS 4.0
 
 #define kernel(x) exp(-GLOW_FALLOFF * (x) * (x))
 
@@ -87,7 +87,7 @@ void main()
     float dy = SourceSize.w;
 
     float k_total = 0.0;
-    for (int i = -TAPS; i <= TAPS; i++)
+    for (float i = -TAPS; i <= TAPS; i++)
     {
         float k = kernel(i);
         k_total += k;

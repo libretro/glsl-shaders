@@ -1,6 +1,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision mediump float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -110,7 +111,7 @@ void main()
     vec2 tex         = vec2((texel + 0.5) * SourceSize.z, vTexCoord.y);
 
     vec3 col = vec3(0.0);
-    for (int i = -2; i <= 2; i++)
+    for (float i = -2.0; i <= 2.0; i++)
     {
         float phase = base_phase - float(i);
         float g = INV_SQRT_2_PI * exp(-0.5 * phase * phase / (HORIZ_GAUSS_WIDTH * HORIZ_GAUSS_WIDTH)) / HORIZ_GAUSS_WIDTH;

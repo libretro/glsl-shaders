@@ -124,7 +124,7 @@ COMPAT_PRECISION float normalGaussIntegral(float x)
 }
 
 vec3 scanlines( float x , vec3 c){
-   float temp=sqrt(2*pi)*(tvVerticalResolution / InputSize.y);
+   float temp=sqrt(2.0*pi)*(tvVerticalResolution / InputSize.y);
 
    float rrr=0.5*(InputSize.y * OutputSize.w);
    float x1=(x+rrr)*temp;

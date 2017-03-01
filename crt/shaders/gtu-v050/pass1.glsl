@@ -7,6 +7,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision mediump float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -20,7 +21,7 @@ uniform COMPAT_PRECISION float compositeConnection1;
 #define compositeConnection1 0.0
 #endif
 
-#define RGB_to_YIQ 	mat3x3( 0.299 , 0.595716 , 0.211456 ,	0.587    , -0.274453 , -0.522591 ,		0.114    , -0.321263 , 0.311135 )
+#define RGB_to_YIQ 	mat3( 0.299 , 0.595716 , 0.211456 ,	0.587    , -0.274453 , -0.522591 ,		0.114    , -0.321263 , 0.311135 )
 
 #if defined(VERTEX)
 

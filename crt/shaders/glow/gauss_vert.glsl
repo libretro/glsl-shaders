@@ -1,6 +1,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision mediump float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -108,13 +109,13 @@ COMPAT_VARYING COMPAT_PRECISION float data_one;
 vec3 beam(vec3 color, float dist)
 {
 if (CRT_GEOM_BEAM > 0.5){
-    vec3 wid     = 2.0 + 2.0 * pow(color, vec3(4.0));
+    vec3 wid     = vec3(2.0) + 2.0 * pow(color, vec3(4.0));
     vec3 weights = vec3(abs(dist) * 3.333333333);
 
     return 2.0 * color * exp(-pow(weights * inversesqrt(0.5 * wid), wid)) / (0.6 + 0.2 * wid);
    }else{
     float reciprocal_width = 4.0;
-    vec3 x = dist * reciprocal_width;
+    vec3 x = vec3(dist * reciprocal_width);
 
     return 2.0 * color * exp(-0.5 * x * x) * reciprocal_width;
    }
@@ -126,8 +127,8 @@ void main()
     float phase = data_pix_no.y - texel.y;
     vec2  tex   = vec2(texel + 0.5) * SourceSize.zw;
 
-    vec3 top    = texture(Source, tex + vec2(0.0, 0 * data_one)).rgb;
-    vec3 bottom = texture(Source, tex + vec2(0.0, 1 * data_one)).rgb;
+    vec3 top    = texture(Source, tex + vec2(0.0, 0.0 * data_one)).rgb;
+    vec3 bottom = texture(Source, tex + vec2(0.0, 1.0 * data_one)).rgb;
 
     float dist0 = phase;
     float dist1 = 1.0 - phase;

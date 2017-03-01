@@ -105,7 +105,7 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
 
-#define YIQ_to_RGB 	mat3x3( 1.0   , 1.0      , 1.0      ,	0.9563   , -0.2721   , -1.1070   ,		0.6210   , -0.6474   , 1.7046   )
+#define YIQ_to_RGB 	mat3( 1.0   , 1.0      , 1.0      ,	0.9563   , -0.2721   , -1.1070   ,		0.6210   , -0.6474   , 1.7046   )
 #define pi        3.14159265358
 #define a(x) abs(x)
 #define d(x,b) (pi*b*min(a(x)+0.5,1.0/b))
