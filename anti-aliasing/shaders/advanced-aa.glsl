@@ -26,6 +26,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision COMPAT_PRECISION float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -94,7 +95,7 @@ void main()
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
 // Paste vertex contents here:
-   	vec2 ps = vec2(1.0/((AA_RESOLUTION_X == 0) ? AA_RESOLUTION_X_DEF : AA_RESOLUTION_X), 1.0/((AA_RESOLUTION_Y == 0) ? AA_RESOLUTION_Y_DEF : AA_RESOLUTION_Y));
+   	vec2 ps = vec2(1.0/((AA_RESOLUTION_X == 0.0) ? AA_RESOLUTION_X_DEF : AA_RESOLUTION_X), 1.0/((AA_RESOLUTION_Y == 0.0) ? AA_RESOLUTION_Y_DEF : AA_RESOLUTION_Y));
 	float dx = ps.x*0.5;
 	float dy = ps.y*0.5;
 	

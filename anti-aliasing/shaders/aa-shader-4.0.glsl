@@ -1,6 +1,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision COMPAT_PRECISION float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -20,16 +21,12 @@ uniform COMPAT_PRECISION float INTERNAL_RES;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 
 #if __VERSION__ >= 130
-#define COMPAT_VARYING in
 #define COMPAT_TEXTURE texture
-out vec4 FragColor;
 #else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
 #define COMPAT_TEXTURE texture2D
 #endif
 
-const vec3 dt = vec3(1.0,1.0,1.0);
+vec3 dt = vec3(1.0,1.0,1.0);
 
 vec3 texture2d (sampler2D tex, vec2 coord, vec4 yx) {
 
@@ -98,6 +95,14 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+out vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#endif
+
 uniform int FrameDirection;
 uniform int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
@@ -162,7 +167,7 @@ void main()
 	m2 = dot(abs(C5-C7),dt)+0.001;
 	dr = (m2*(C4+C8)+m1*(C5+C7))/(m1+m2);
 	
-	vec3 c11 = 0.5*((dr*fp.x+dl*(1-fp.x))*fp.y+(ur*fp.x+ul*(1-fp.x))*(1-fp.y) );
+	vec3 c11 = 0.5*((dr*fp.x+dl*(1.0-fp.x))*fp.y+(ur*fp.x+ul*(1.0-fp.x))*(1.0-fp.y) );
 	
    FragColor = vec4(c11, 1.0);
 } 
