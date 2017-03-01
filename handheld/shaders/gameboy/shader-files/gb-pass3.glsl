@@ -137,6 +137,45 @@ Normalized Gaussian weights:                     Normalized Gaussian weights:
 
 void main()
 {
+// unroll the loop for GLES, which can't handle C-style array initialization
+// I kept the old path when available for readability and speed(?)
+#ifdef GL_ES
+	float offsets1 = 0.0;
+	float offsets2 = 1.0;
+	float offsets3 = 2.0;
+	float offsets4 = 3.0;
+	float offsets5 = 4.0;
+
+    /*
+    Precalculated using the Gaussian function:
+    G(x) = (1 / sqrt(2 * pi * sigma^2)) * e^(-x^2 / (2 * sigma^2))
+    
+    Where sigma = 4.0 and x = offset in range [0, 5]
+    Normalized to 1 to prevent image darkening by multiplying each weight by:
+    1 / sum(all weights)
+    */	
+	float weights1 = 0.13465834124289953661305802732548;   
+    float weights2 = 0.13051534237555914090930704141833;
+    float weights3 = 0.11883557904592230273554609080014;
+    float weights4 = 0.10164546793794160274995705611009;
+    float weights5 = 0.08167444001912718529866079800870;
+	
+	// Sample the current fragment and apply its weight
+    vec4 out_color = texture(Source, clamp(vTexCoord, lower_bound, upper_bound)) * weights1;
+
+    // Iterate across the offsets in both directions sampling texels
+    // and adding their weighted alpha values to the total	
+	out_color.a += texture(Source, clamp(vTexCoord + vec2(0.0, offsets1 * texel.y), lower_bound, upper_bound)).a * weights1;
+    out_color.a += texture(Source, clamp(vTexCoord - vec2(0.0, offsets1 * texel.y), lower_bound, upper_bound)).a * weights1;
+	out_color.a += texture(Source, clamp(vTexCoord + vec2(0.0, offsets2 * texel.y), lower_bound, upper_bound)).a * weights2;
+    out_color.a += texture(Source, clamp(vTexCoord - vec2(0.0, offsets2 * texel.y), lower_bound, upper_bound)).a * weights2;
+	out_color.a += texture(Source, clamp(vTexCoord + vec2(0.0, offsets3 * texel.y), lower_bound, upper_bound)).a * weights3;
+    out_color.a += texture(Source, clamp(vTexCoord - vec2(0.0, offsets3 * texel.y), lower_bound, upper_bound)).a * weights3;
+	out_color.a += texture(Source, clamp(vTexCoord + vec2(0.0, offsets4 * texel.y), lower_bound, upper_bound)).a * weights4;
+    out_color.a += texture(Source, clamp(vTexCoord - vec2(0.0, offsets4 * texel.y), lower_bound, upper_bound)).a * weights4;
+	out_color.a += texture(Source, clamp(vTexCoord + vec2(0.0, offsets5 * texel.y), lower_bound, upper_bound)).a * weights5;
+    out_color.a += texture(Source, clamp(vTexCoord - vec2(0.0, offsets5 * texel.y), lower_bound, upper_bound)).a * weights5;
+#else
     // Define offsets and weights - change this for both the X and Y passes if you change the sigma value or number of texels sampled
     float offsets[5] = float[](0.0, 1.0, 2.0, 3.0, 4.0);
     
@@ -164,7 +203,7 @@ void main()
         out_color.a += texture(Source, clamp(vTexCoord + vec2(0.0, offsets[i] * texel.y), lower_bound, upper_bound)).a * weights[i];
         out_color.a += texture(Source, clamp(vTexCoord - vec2(0.0, offsets[i] * texel.y), lower_bound, upper_bound)).a * weights[i];
     }
-
+#endif
     FragColor = out_color;
 } 
 #endif

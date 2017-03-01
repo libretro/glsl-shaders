@@ -223,7 +223,7 @@ void main()
     );
 
     // Shadows are alpha blended with the background
-    vec4 out_color = (shadows * shadows.a * shadow_alpha) + (background * (1 - shadows.a * shadow_alpha));  
+    vec4 out_color = (shadows * shadows.a * shadow_alpha) + (background * (1.0 - shadows.a * shadow_alpha));  
 
     // Foreground is alpha blended with the shadowed background
     out_color = (foreground * foreground.a * contrast) + (out_color * (screen_light - foreground.a * contrast * pixel_opacity));
