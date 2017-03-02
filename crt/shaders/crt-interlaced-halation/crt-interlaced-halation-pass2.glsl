@@ -38,7 +38,7 @@ precision mediump float;
             #define CURVATURE
 
             // Enable 3x oversampling of the beam profile
-            #define OVERSAMPLE
+            //#define OVERSAMPLE
 
             // Use the older, purely gaussian beam profile
             #define USEGAUSSIAN
@@ -48,7 +48,7 @@ precision mediump float;
          
          // Enable Dot-mask emulation:
             // Output pixels are alternately tinted green and magenta.
-         #define DOTMASK
+         //#define DOTMASK
          
          //Enable if using several shaders. 
          //Disabling it reduces moire for single pass.
