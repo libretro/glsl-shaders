@@ -157,8 +157,8 @@ void main()
     vec2 uv_ratio = fract(ratio_scale);
     vec3 col, col2;
 
-    mat4x3 texes0 = mat4x3(TEX2D(c01).xyz, TEX2D(c11).xyz, TEX2D(c21).xyz, TEX2D(c31).xyz);
-    mat4x3 texes1 = mat4x3(TEX2D(c02).xyz, TEX2D(c12).xyz, TEX2D(c22).xyz, TEX2D(c32).xyz);
+    mat4 texes0 = mat4(TEX2D(c01).xyzw, TEX2D(c11).xyzw, TEX2D(c21).xyzw, TEX2D(c31).xyzw);
+    mat4 texes1 = mat4(TEX2D(c02).xyzw, TEX2D(c12).xyzw, TEX2D(c22).xyzw, TEX2D(c32).xyzw);
 
     vec4 coeffs = vec4(1.0 + uv_ratio.x, uv_ratio.x, 1.0 - uv_ratio.x, 2.0 - uv_ratio.x) + 0.005;
     coeffs      = sin(PI * coeffs) * sin(0.5 * PI * coeffs) / (coeffs * coeffs);
@@ -167,8 +167,8 @@ void main()
     vec3 weights  = vec3( 3.33 * uv_ratio.y,        uv_ratio.y *  3.33,        uv_ratio.y *  3.33);
     vec3 weights2 = vec3(-3.33 * uv_ratio.y + 3.33, uv_ratio.y * -3.33 + 3.33, uv_ratio.y * -3.33 + 3.33);
 
-    col  = clamp(texes0 * coeffs, 0.0, 1.0);
-    col2 = clamp(texes1 * coeffs, 0.0, 1.0);
+    col  = clamp(texes0 * coeffs, 0.0, 1.0).xyz;
+    col2 = clamp(texes1 * coeffs, 0.0, 1.0).xyz;
 
     vec3 wid  = 2.0 * pow(col,  vec3(4.0, 4.0, 4.0)) + 2.0;
     vec3 wid2 = 2.0 * pow(col2, vec3(4.0, 4.0, 4.0)) + 2.0;

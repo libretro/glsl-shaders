@@ -4,6 +4,7 @@
 
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision mediump float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -18,11 +19,6 @@ uniform COMPAT_PRECISION float InputGamma;
 #define InputGamma 2.5
 #endif
 // END PARAMETERS //
-
-/* COMPATIBILITY
-   - HLSL compilers
-   - Cg   compilers
-*/
 
 /*
    Hyllian's CRT Shader - pass0
@@ -49,7 +45,7 @@ uniform COMPAT_PRECISION float InputGamma;
 
 */
 
-#define GAMMA_IN(color)     pow(color, vec3(InputGamma, InputGamma, InputGamma))
+#define GAMMA_IN(color)     pow(color, vec4(InputGamma, InputGamma, InputGamma, InputGamma))
 
 // Horizontal cubic filter.
 
@@ -155,7 +151,7 @@ void main()
 {
     vec2 texture_size = vec2(SHARPNESS*TextureSize.x, TextureSize.y);
 
-    vec3 color;
+    vec4 color;
     vec2 dx = vec2(1.0/texture_size.x, 0.0);
     vec2 dy = vec2(0.0, 1.0/texture_size.y);
     vec2 pix_coord = texCoord*texture_size+vec2(-0.5,0.0);
@@ -164,16 +160,16 @@ void main()
 
     vec2 fp = fract(pix_coord);
 
-    vec3 c10 = GAMMA_IN(tex2D(s_p, tc     - dx).xyz);
-    vec3 c11 = GAMMA_IN(tex2D(s_p, tc         ).xyz);
-    vec3 c12 = GAMMA_IN(tex2D(s_p, tc     + dx).xyz);
-    vec3 c13 = GAMMA_IN(tex2D(s_p, tc + 2.0*dx).xyz);
+    vec4 c10 = GAMMA_IN(tex2D(s_p, tc     - dx).xyzw);
+    vec4 c11 = GAMMA_IN(tex2D(s_p, tc         ).xyzw);
+    vec4 c12 = GAMMA_IN(tex2D(s_p, tc     + dx).xyzw);
+    vec4 c13 = GAMMA_IN(tex2D(s_p, tc + 2.0*dx).xyzw);
 
     //  Get min/max samples
-    vec3 min_sample = min(c11,c12);
-    vec3 max_sample = max(c11,c12);
+    vec4 min_sample = min(c11,c12);
+    vec4 max_sample = max(c11,c12);
 
-    mat4x3 color_matrix = mat4x3(c10, c11, c12, c13);
+    mat4 color_matrix = mat4(c10, c11, c12, c13);
 
     vec4 lobes = vec4(fp.x*fp.x*fp.x, fp.x*fp.x, fp.x, 1.0);
 
@@ -181,10 +177,10 @@ void main()
     color         = color_matrix * invX_Px;
 
     // Anti-ringing
-    vec3 aux = color;
+    vec4 aux = color;
     color = clamp(color, min_sample, max_sample);
     color = mix(aux, color, CRT_ANTI_RINGING);
 
-    FragColor =  vec4(color, 1.0);
+    FragColor =  vec4(color);
 }
 #endif

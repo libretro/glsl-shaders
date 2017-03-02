@@ -166,7 +166,7 @@ void main()
     vec3 color1 = tex2D(s_p, tc     ).xyz;
 
     float pos0 = fp.y;
-    float pos1 = 1 - fp.y;
+    float pos1 = 1. - fp.y;
 
     vec3 lum0 = mix(vec3(BEAM_MIN_WIDTH), vec3(BEAM_MAX_WIDTH), color0);
     vec3 lum1 = mix(vec3(BEAM_MIN_WIDTH), vec3(BEAM_MAX_WIDTH), color1);

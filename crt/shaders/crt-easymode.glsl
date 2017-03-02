@@ -202,12 +202,12 @@ float curve_distance(float x, float sharp)
     return mix(x, curve, sharp);
 }
 
-mat4x4 get_color_matrix(vec2 co, vec2 dx)
+mat4 get_color_matrix(vec2 co, vec2 dx)
 {
-    return mat4x4(TEX2D(co - dx), TEX2D(co), TEX2D(co + dx), TEX2D(co + 2.0 * dx));
+    return mat4(TEX2D(co - dx), TEX2D(co), TEX2D(co + dx), TEX2D(co + 2.0 * dx));
 }
 
-vec3 filter_lanczos(vec4 coeffs, mat4x4 color_matrix)
+vec3 filter_lanczos(vec4 coeffs, mat4 color_matrix)
 {
     vec4 col        = color_matrix * coeffs;
     vec4 sample_min = min(color_matrix[1], color_matrix[2]);

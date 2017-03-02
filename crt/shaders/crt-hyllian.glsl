@@ -47,11 +47,6 @@ uniform COMPAT_PRECISION float CRT_ANTI_RINGING;
 #endif
 // END PARAMETERS //
 
-/* COMPATIBILITY
-   - HLSL compilers
-   - Cg   compilers
-*/
-
 /*
    Hyllian's CRT Shader
   
@@ -78,8 +73,8 @@ uniform COMPAT_PRECISION float CRT_ANTI_RINGING;
 */
 
 
-#define GAMMA_IN(color)     pow(color, vec3(InputGamma, InputGamma, InputGamma))
-#define GAMMA_OUT(color)    pow(color, vec3(1.0 / OutputGamma, 1.0 / OutputGamma, 1.0 / OutputGamma))
+#define GAMMA_IN(color)     pow(color, vec4(InputGamma, InputGamma, InputGamma, InputGamma))
+#define GAMMA_OUT(color)    pow(color, vec4(1.0 / OutputGamma, 1.0 / OutputGamma, 1.0 / OutputGamma, 1.0 / OutputGamma))
 
 // Horizontal cubic filter.
 
@@ -184,7 +179,7 @@ void main()
 {
     vec2 texture_size = vec2(SHARPNESS*TextureSize.x, TextureSize.y);
 
-    vec3 color;
+    vec4 color;
     vec2 dx = vec2(1.0/texture_size.x, 0.0);
     vec2 dy = vec2(0.0, 1.0/texture_size.y);
     vec2 pix_coord = texCoord*texture_size+vec2(-0.5,0.5);
@@ -193,30 +188,30 @@ void main()
 
     vec2 fp = fract(pix_coord);
 
-    vec3 c00 = GAMMA_IN(tex2D(s_p, tc     - dx - dy).xyz);
-    vec3 c01 = GAMMA_IN(tex2D(s_p, tc          - dy).xyz);
-    vec3 c02 = GAMMA_IN(tex2D(s_p, tc     + dx - dy).xyz);
-    vec3 c03 = GAMMA_IN(tex2D(s_p, tc + 2.0*dx - dy).xyz);
-    vec3 c10 = GAMMA_IN(tex2D(s_p, tc     - dx).xyz);
-    vec3 c11 = GAMMA_IN(tex2D(s_p, tc         ).xyz);
-    vec3 c12 = GAMMA_IN(tex2D(s_p, tc     + dx).xyz);
-    vec3 c13 = GAMMA_IN(tex2D(s_p, tc + 2.0*dx).xyz);
+    vec4 c00 = GAMMA_IN(tex2D(s_p, tc     - dx - dy).xyzw);
+    vec4 c01 = GAMMA_IN(tex2D(s_p, tc          - dy).xyzw);
+    vec4 c02 = GAMMA_IN(tex2D(s_p, tc     + dx - dy).xyzw);
+    vec4 c03 = GAMMA_IN(tex2D(s_p, tc + 2.0*dx - dy).xyzw);
+    vec4 c10 = GAMMA_IN(tex2D(s_p, tc     - dx).xyzw);
+    vec4 c11 = GAMMA_IN(tex2D(s_p, tc         ).xyzw);
+    vec4 c12 = GAMMA_IN(tex2D(s_p, tc     + dx).xyzw);
+    vec4 c13 = GAMMA_IN(tex2D(s_p, tc + 2.0*dx).xyzw);
 
     //  Get min/max samples
-    vec3 min_sample = min(min(c01,c11), min(c02,c12));
-    vec3 max_sample = max(max(c01,c11), max(c02,c12));
+    vec4 min_sample = min(min(c01,c11), min(c02,c12));
+    vec4 max_sample = max(max(c01,c11), max(c02,c12));
 
-    mat4x3 color_matrix0 = mat4x3(c00, c01, c02, c03);
-    mat4x3 color_matrix1 = mat4x3(c10, c11, c12, c13);
+    mat4 color_matrix0 = mat4(c00, c01, c02, c03);
+    mat4 color_matrix1 = mat4(c10, c11, c12, c13);
 
     vec4 lobes = vec4(fp.x*fp.x*fp.x, fp.x*fp.x, fp.x, 1.0);
 
     vec4 invX_Px  = invX * lobes;
-    vec3 color0   = color_matrix0 * invX_Px;
-    vec3 color1   = color_matrix1 * invX_Px;
+    vec4 color0   = color_matrix0 * invX_Px;
+    vec4 color1   = color_matrix1 * invX_Px;
 
     // Anti-ringing
-    vec3 aux = color0;
+    vec4 aux = color0;
     color0 = clamp(color0, min_sample, max_sample);
     color0 = mix(aux, color0, CRT_ANTI_RINGING);
     aux = color1;
@@ -226,31 +221,31 @@ void main()
     float pos0 = fp.y;
     float pos1 = 1.0 - fp.y;
 
-    vec3 lum0 = mix(vec3(BEAM_MIN_WIDTH), vec3(BEAM_MAX_WIDTH), color0);
-    vec3 lum1 = mix(vec3(BEAM_MIN_WIDTH), vec3(BEAM_MAX_WIDTH), color1);
+    vec4 lum0 = mix(vec4(BEAM_MIN_WIDTH), vec4(BEAM_MAX_WIDTH), color0);
+    vec4 lum1 = mix(vec4(BEAM_MIN_WIDTH), vec4(BEAM_MAX_WIDTH), color1);
 
-    vec3 d0 = clamp(pos0/(lum0+0.0000001), 0.0, 1.0);
-    vec3 d1 = clamp(pos1/(lum1+0.0000001), 0.0, 1.0);
+    vec4 d0 = clamp(pos0/(lum0+0.0000001), 0.0, 1.0);
+    vec4 d1 = clamp(pos1/(lum1+0.0000001), 0.0, 1.0);
 
     d0 = exp(-10.0*SCANLINES_STRENGTH*d0*d0);
     d1 = exp(-10.0*SCANLINES_STRENGTH*d1*d1);
 
     color = clamp(color0*d0+color1*d1, 0.0, 1.0);            
 
-    color *= COLOR_BOOST*vec3(RED_BOOST, GREEN_BOOST, BLUE_BOOST);
+    color *= COLOR_BOOST*vec4(RED_BOOST, GREEN_BOOST, BLUE_BOOST, 1.0);
 
     float mod_factor = texCoord.x * OutputSize.x * TextureSize.x / InputSize.x;
 
-    vec3 dotMaskWeights = mix(
-                                 vec3(1.0, 0.7, 1.0),
-                                 vec3(0.7, 1.0, 0.7),
+    vec4 dotMaskWeights = mix(
+                                 vec4(1.0, 0.7, 1.0, 1.),
+                                 vec4(0.7, 1.0, 0.7, 1.),
                                  floor(mod(mod_factor, 2.0))
                                   );
 
-    color.rgb *= mix(vec3(1.0,1.0,1.0), dotMaskWeights, PHOSPHOR);
+    color.rgba *= mix(vec4(1.0,1.0,1.0,1.0), dotMaskWeights, PHOSPHOR);
 
     color  = GAMMA_OUT(color);
 
-    FragColor =  vec4(color, 1.0);
+    FragColor =  vec4(color);
 }
 #endif

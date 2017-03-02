@@ -6,6 +6,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision mediump float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -91,12 +92,12 @@ COMPAT_PRECISION float curve_distance(float x, float sharp)
     return mix(x, curve, sharp);
 }
 
-mat4x4 get_color_matrix(sampler2D tex, vec2 co, vec2 dx)
+mat4 get_color_matrix(sampler2D tex, vec2 co, vec2 dx)
 {
-    return mat4x4(TEX2D(co - dx), TEX2D(co), TEX2D(co + dx), TEX2D(co + 2.0 * dx));
+    return mat4(TEX2D(co - dx), TEX2D(co), TEX2D(co + dx), TEX2D(co + 2.0 * dx));
 }
 
-vec4 filter_lanczos(vec4 coeffs, mat4x4 color_matrix)
+vec4 filter_lanczos(vec4 coeffs, mat4 color_matrix)
 {
     vec4 col = color_matrix * coeffs;
     vec4 sample_min = min(color_matrix[1], color_matrix[2]);
@@ -224,7 +225,7 @@ void main()
     float scan_offset = 0.0;
     float timer = vec2(FrameCount, FrameCount).x;
 
-    if (INTERLACING_TOGGLE > 0.5 && InputSize.y >= 400)
+    if (INTERLACING_TOGGLE > 0.5 && InputSize.y >= 400.)
     {
         tex_size.y *= 0.5;
 
@@ -264,7 +265,7 @@ void main()
     coeffs_y = 2.0 * sin(coeffs_y) * sin(coeffs_y / 2.0) / (coeffs_y * coeffs_y);
     coeffs_y /= dot(coeffs_y, vec4(1.0));
 
-    mat4x4 color_matrix;
+    mat4 color_matrix;
 
 
     color_matrix[0] = filter_lanczos(coeffs_x, get_color_matrix(PassPrev4Texture, tex_co - dy, dx));
@@ -289,13 +290,13 @@ void main()
     float mask_dither;
     vec4 mask_config;
 
-    if      (MASK_TYPE == 1) mask_config = vec4(2.0, 1.0, 1.0, 0.0);
-    else if (MASK_TYPE == 2) mask_config = vec4(3.0, 1.0, 1.0, 0.0);
-    else if (MASK_TYPE == 3) mask_config = vec4(2.1, 1.0, 1.0, 0.0);
-    else if (MASK_TYPE == 4) mask_config = vec4(3.1, 1.0, 1.0, 0.0);
-    else if (MASK_TYPE == 5) mask_config = vec4(2.0, 1.0, 1.0, 1.0);
-    else if (MASK_TYPE == 6) mask_config = vec4(3.0, 2.0, 1.0, 3.0);
-    else if (MASK_TYPE == 7) mask_config = vec4(3.0, 2.0, 2.0, 3.0);
+    if      (MASK_TYPE == 1.) mask_config = vec4(2.0, 1.0, 1.0, 0.0);
+    else if (MASK_TYPE == 2.) mask_config = vec4(3.0, 1.0, 1.0, 0.0);
+    else if (MASK_TYPE == 3.) mask_config = vec4(2.1, 1.0, 1.0, 0.0);
+    else if (MASK_TYPE == 4.) mask_config = vec4(3.1, 1.0, 1.0, 0.0);
+    else if (MASK_TYPE == 5.) mask_config = vec4(2.0, 1.0, 1.0, 1.0);
+    else if (MASK_TYPE == 6.) mask_config = vec4(3.0, 2.0, 1.0, 3.0);
+    else if (MASK_TYPE == 7.) mask_config = vec4(3.0, 2.0, 2.0, 3.0);
 
     mask_colors = floor(mask_config.x);
     mask_dot_width = mask_config.y;

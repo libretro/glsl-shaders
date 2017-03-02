@@ -1,7 +1,7 @@
 // Higher value, more centered glow.
 // Lower values might need more taps.
 #define GLOW_FALLOFF 0.35
-#define TAPS 4
+#define TAPS 4.
 
 #define kernel(x) exp(-GLOW_FALLOFF * (x) * (x))
 
@@ -28,9 +28,7 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
-vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
 uniform int FrameDirection;
 uniform int FrameCount;
@@ -43,8 +41,6 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
-// Paste vertex contents here:
-
 }
 
 #elif defined(FRAGMENT)
@@ -93,8 +89,8 @@ void main()
 	vec3 col = vec3(0.0);
 	float dx = SourceSize.z;
 
-	float k_total = 0.0;
-	for (int i = -TAPS; i <= TAPS; i++)
+	float k_total = 0.;
+	for (float i = -TAPS; i <= TAPS; i++)
 		{
 		float k = kernel(i);
 		k_total += k;
