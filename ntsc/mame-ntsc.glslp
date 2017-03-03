@@ -1,0 +1,9 @@
+shaders = 2
+
+shader0 = shaders/mame-ntsc/ntsc-mame-pass0.glsl
+scale_type0 = source
+scale0 = 1.0
+
+shader1 = shaders/mame-ntsc/ntsc-mame-pass1.glsl
+scale_type1 = source
+scale1 = 1.0
