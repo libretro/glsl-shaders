@@ -99,24 +99,24 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 #define vTexCoord TEX0.xy
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+#define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 // Largest integer scale of input video that will fit in the current output (y axis would typically be limiting on widescreens)
-//#define video_scale         floor(OutputSize.y * SourceSize.w) <- moved to parameter
+//#define video_scale         floor(outsize.y * SourceSize.w) <- moved to parameter
 
 // Size of the scaled video
 //#define scaled_video_out    (SourceSize.xy * vec2(video_scale)) <- moved to parameter 
 
 //it's... half a pixel
-#define half_pixel          (vec2(0.5) * OutputSize.zw)   
+#define half_pixel          (vec2(0.5) * OutSize.zw)   
 
 void main()
 {
-	float video_scale_factor = floor(OutputSize.y / InputSize.y);
+	float video_scale_factor = floor(outsize.y / InputSize.y);
 	if (console_border_enable > 0.5) video_scale_factor = video_scale;
 	vec2 scaled_video_out = (InputSize.xy * vec2(video_scale_factor));
     // Remaps position to integer scaled output
-    gl_Position = MVPMatrix * VertexCoord / vec4( vec2(OutputSize.xy / scaled_video_out), 1.0, 1.0 );
+    gl_Position = MVPMatrix * VertexCoord / vec4( vec2(outsize.xy / scaled_video_out), 1.0, 1.0 );
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy + half_pixel;
     dot_size = SourceSize.zw;
@@ -172,7 +172,7 @@ COMPAT_VARYING vec2 one_texel;
 #define vTexCoord TEX0.xy
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+#define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 ////////////////////////////////////////////////////////////////////////////////
 //fragment definitions                                                        //

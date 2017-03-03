@@ -121,7 +121,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 #define vTexCoord TEX0.xy
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+#define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 void main()
 {
@@ -177,7 +177,7 @@ COMPAT_VARYING vec2 texel;
 #define vTexCoord TEX0.xy
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+#define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 #define bg_color texture(COLOR_PALETTE, vec2(0.25, 0.5)) 
 
@@ -192,8 +192,8 @@ COMPAT_VARYING vec2 texel;
 
 void main()
 {
-//    vec2 tex = floor(OutputSize.xy * vTexCoord);
-//    tex = (tex + 0.5) * OutputSize.zw;
+//    vec2 tex = floor(outsize.xy * vTexCoord);
+//    tex = (tex + 0.5) * outsize.zw;
     vec2 tex = vTexCoord.xy;
     
     // Sample all the relevant textures

@@ -90,7 +90,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 #define vTexCoord TEX0.xy
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+#define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 void main()
 {
@@ -104,7 +104,7 @@ void main()
     blur_coords_right = vTexCoord + vec2(texel.x,  0.0);
     blur_coords_left  = vTexCoord + vec2(-texel.x, 0.0);
     blur_coords_lower_bound = vec2(0.0);
-    blur_coords_upper_bound = texel * (OutputSize.xy - vec2(2.0));
+    blur_coords_upper_bound = texel * (outsize.xy - vec2(2.0));
 }
 
 #elif defined(FRAGMENT)
@@ -150,7 +150,7 @@ COMPAT_VARYING vec2 blur_coords_upper_bound;
 #define vTexCoord TEX0.xy
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+#define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Fragment definitions                                                       //

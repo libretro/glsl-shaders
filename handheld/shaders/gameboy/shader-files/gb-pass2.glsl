@@ -56,7 +56,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 #define vTexCoord TEX0.xy
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+#define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 void main()
 {
@@ -66,7 +66,7 @@ void main()
 
     texel = SourceSize.zw;
     lower_bound = vec2(0.0);
-    upper_bound = vec2(texel * (OutputSize.xy - 1.0));
+    upper_bound = vec2(texel * (outsize.xy - 1.0));
 }
 
 #elif defined(FRAGMENT)
@@ -108,7 +108,7 @@ COMPAT_VARYING vec2 upper_bound;
 #define vTexCoord TEX0.xy
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+#define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 /*
 sigma = 4.0, normalized for 5 pixel offset       sigma = 4.0, normalized for 4 pixel offset
