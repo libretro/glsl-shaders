@@ -175,7 +175,7 @@ COMPAT_VARYING vec4 TEX0;
 #define vTexCoord TEX0.xy
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+#define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 // Set to 0 to use linear filter and gain speed
 #define ENABLE_LANCZOS 1
@@ -256,7 +256,7 @@ void main()
     float scan_weight = 1.0 - pow(cos(vTexCoord.y * 2.0 * PI * SourceSize.y) * 0.5 + 0.5, scan_beam) * SCANLINE_STRENGTH;
 
     float mask   = 1.0 - MASK_STRENGTH;    
-    vec2 mod_fac = floor(vTexCoord * OutputSize.xy * SourceSize.xy / (InputSize.xy * vec2(MASK_SIZE, MASK_DOT_HEIGHT * MASK_SIZE)));
+    vec2 mod_fac = floor(vTexCoord * outsize.xy * SourceSize.xy / (InputSize.xy * vec2(MASK_SIZE, MASK_DOT_HEIGHT * MASK_SIZE)));
     int dot_no   = int(mod((mod_fac.x + mod(mod_fac.y, 2.0) * MASK_STAGGER) / MASK_DOT_WIDTH, 3.0));
     vec3 mask_weight;
 

@@ -45,6 +45,7 @@
 
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision mediump float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -100,8 +101,8 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 void main()
 {
-COMPAT_PRECISION   vec4 _oColor;
-COMPAT_PRECISION    vec2 _otexCoord;
+vec4 _oColor;
+vec2 _otexCoord;
     gl_Position = VertexCoord.x * MVPMatrix[0] + VertexCoord.y * MVPMatrix[1] + VertexCoord.z * MVPMatrix[2] + VertexCoord.w * MVPMatrix[3];
     _oPosition1 = gl_Position;
     _oColor = COLOR;
@@ -182,16 +183,16 @@ COMPAT_VARYING vec4 TEX0;
 
 void main()
 {
-COMPAT_PRECISION mat3 RGB_to_YIQ = mat3(0.299,0.587,0.114,
+mat3 RGB_to_YIQ = mat3(0.299,0.587,0.114,
 		 0.595716,-0.274453,-0.321263,
 		 0.211456,-0.522591, 0.311135);
 
-COMPAT_PRECISION mat3 YIQ_to_RGB = mat3(1.0,0.9563,0.6210,
+mat3 YIQ_to_RGB = mat3(1.0,0.9563,0.6210,
 		 1.0,-0.2721,-0.6474,
 		 1.0,-1.1070, 1.7046);
 
-COMPAT_PRECISION   vec3 tempColor=vec3(0.0,0.0,0.0);
-COMPAT_PRECISION   float	offset	= fract((TEX0.x * TextureSize.x) - 0.5);
+vec3 tempColor=vec3(0.0,0.0,0.0);
+float	offset	= fract((TEX0.x * TextureSize.x) - 0.5);
    float oneT=1.0/TextureSize.x;
    float oneI=1.0/TextureSize.x;
 

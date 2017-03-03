@@ -81,7 +81,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 #define vTexCoord TEX0.xy
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+#define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 void main()
 {
@@ -100,7 +100,7 @@ void main()
     c12 = vTexCoord + vec2(0.0, dy);
     c22 = vTexCoord + vec2(dx, dy);
     c32 = vTexCoord + vec2(2.0 * dx, dy);
-    mod_factor  = vTexCoord.x * OutputSize.x;
+    mod_factor  = vTexCoord.x * outsize.x;
     ratio_scale = vTexCoord * SourceSize.xy;
 }
 

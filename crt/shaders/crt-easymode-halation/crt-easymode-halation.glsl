@@ -216,7 +216,7 @@ COMPAT_VARYING vec4 TEX0;
 #define vTexCoord TEX0.xy
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+#define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 void main()
 {
@@ -277,7 +277,7 @@ void main()
     diff = texture(Source, xy).rgb;
 
     float rgb_max = max(col.r, max(col.g, col.b));
-    float sample_offset = (InputSize.y * OutputSize.w) * 0.5;
+    float sample_offset = (InputSize.y * outsize.w) * 0.5;
     float scan_pos = xy.y * tex_size.y + scan_offset;
     float scan_strength = mix(SCANLINE_STRENGTH_MAX, SCANLINE_STRENGTH_MIN, rgb_max);
     float scan_beam = clamp(rgb_max * SCANLINE_BEAM_MAX, SCANLINE_BEAM_MIN, SCANLINE_BEAM_MAX);
@@ -304,7 +304,7 @@ void main()
     mask_stagger = mask_config.w;
     mask_dither = fract(mask_config.x) * 10.0;
 
-    vec2 mod_fac = floor(vTexCoord * OutputSize.xy * SourceSize.xy / (InputSize.xy * vec2(MASK_SIZE, mask_dot_height * MASK_SIZE))) * 1.0001;
+    vec2 mod_fac = floor(vTexCoord * outsize.xy * SourceSize.xy / (InputSize.xy * vec2(MASK_SIZE, mask_dot_height * MASK_SIZE))) * 1.0001;
     int dot_no = int(mod((mod_fac.x + mod(mod_fac.y, 2.0) * mask_stagger) / mask_dot_width, mask_colors));
     float dither = mod(mod_fac.y + mod(floor(mod_fac.x / mask_colors), 2.0), 2.0);
 

@@ -86,7 +86,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 // compatibility #defines
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+#define outsize vec4(OutputSize, 1.0 / OutputSize)
 #define vTexCoord TEX0.xy
 
 void main()

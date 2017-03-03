@@ -111,7 +111,7 @@ COMPAT_VARYING vec4 TEX0;
 #define vTexCoord TEX0.xy
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+#define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 COMPAT_PRECISION float normalGaussIntegral(float x)
 {
@@ -126,13 +126,13 @@ COMPAT_PRECISION float normalGaussIntegral(float x)
 vec3 scanlines( float x , vec3 c){
    float temp=sqrt(2.0*pi)*(tvVerticalResolution / InputSize.y);
 
-   float rrr=0.5*(InputSize.y * OutputSize.w);
+   float rrr=0.5*(InputSize.y * outsize.w);
    float x1=(x+rrr)*temp;
    float x2=(x-rrr)*temp;
    c.r=(c.r*(normalGaussIntegral(x1)-normalGaussIntegral(x2)));
    c.g=(c.g*(normalGaussIntegral(x1)-normalGaussIntegral(x2)));
    c.b=(c.b*(normalGaussIntegral(x1)-normalGaussIntegral(x2)));
-   c*=(OutputSize.y / InputSize.y);
+   c*=(outsize.y / InputSize.y);
    return c;
 }
 

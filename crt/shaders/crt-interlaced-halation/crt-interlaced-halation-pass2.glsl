@@ -59,9 +59,9 @@ precision mediump float;
             #define PI 3.141592653589
 
             #ifdef LINEAR_PROCESSING
-            #       define TEX2D(c) pow(COMPAT_TEXTURE(Pass1Texture, (c)), vec4(CRTgamma))
+            #       define TEX2D(c) pow(COMPAT_TEXTURE(OrigTexture, (c)), vec4(CRTgamma))
             #else
-            #       define TEX2D(c) COMPAT_TEXTURE(Pass1Texture, (c))
+            #       define TEX2D(c) COMPAT_TEXTURE(OrigTexture, (c))
             #endif
 
 
@@ -204,12 +204,12 @@ uniform int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
-uniform COMPAT_PRECISION vec2 Pass1InputSize;
-uniform COMPAT_PRECISION vec2 Pass1TextureSize;
+uniform COMPAT_PRECISION vec2 OrigInputSize;
+uniform COMPAT_PRECISION vec2 OrigTextureSize;
 
 #define vTexCoord TEX0.xy
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+#define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 void main()
 {
@@ -229,10 +229,10 @@ void main()
         #endif
 
                     // The size of one texel, in texture-coordinates.
-                    one = ilfac / Pass1TextureSize.xy;
+                    one = ilfac / OrigTextureSize.xy;
 
                     // Resulting X pixel-coordinate of the pixel we're drawing.
-                    mod_factor = vTexCoord.x * Pass1TextureSize.x * OutputSize.x / Pass1InputSize.x;
+                    mod_factor = vTexCoord.x * OrigTextureSize.x * outsize.x / OrigInputSize.x;
 
 }
 
@@ -264,10 +264,10 @@ uniform int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
-uniform COMPAT_PRECISION vec2 Pass1InputSize;
-uniform COMPAT_PRECISION vec2 Pass1TextureSize;
+uniform COMPAT_PRECISION vec2 OrigInputSize;
+uniform COMPAT_PRECISION vec2 OrigTextureSize;
 uniform sampler2D Texture;
-uniform sampler2D Pass1Texture;
+uniform sampler2D OrigTexture;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 one;
 COMPAT_VARYING float mod_factor;
@@ -281,7 +281,7 @@ COMPAT_VARYING vec2 cosangle;
 #define vTexCoord TEX0.xy
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+#define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 void main()
 {
@@ -309,15 +309,15 @@ void main()
                     // Texture coordinates of the texel containing the active pixel.
             #ifdef CURVATURE
                     vec2 cd = vTexCoord;
-                    cd *= Pass1TextureSize / Pass1InputSize;
+                    cd *= OrigTextureSize / OrigInputSize;
                     cd = (cd-vec2(0.5))*aspect*stretch.z+stretch.xy;
-                    vec2 xy =  (bkwtrans(cd, sinangle, cosangle)/overscan/aspect+vec2(0.5)) * Pass1InputSize / Pass1TextureSize;
+                    vec2 xy =  (bkwtrans(cd, sinangle, cosangle)/overscan/aspect+vec2(0.5)) * OrigInputSize / OrigTextureSize;
 
             #else
                     vec2 xy = vTexCoord;
             #endif
                     vec2 cd2 = xy;
-                    cd2 *= Pass1TextureSize / Pass1InputSize;
+                    cd2 *= OrigTextureSize / OrigInputSize;
                     cd2 = (cd2 - vec2(0.5)) * overscan + vec2(0.5);
                     cd2 = min(cd2, vec2(1.0)-cd2) * aspect;
                     vec2 cdist = vec2(cornersize);
@@ -325,7 +325,7 @@ void main()
                     float dist = sqrt(dot(cd2,cd2));
                     float cval = clamp((cdist.x-dist)*cornersmooth,0.0, 1.0);
 
-                    vec2 xy2 = ((xy*Pass1TextureSize / Pass1InputSize-vec2(0.5))*vec2(1.0,1.0)+vec2(0.5)) * InputSize / TextureSize;
+                    vec2 xy2 = ((xy*OrigTextureSize / OrigInputSize-vec2(0.5))*vec2(1.0,1.0)+vec2(0.5)) * InputSize / TextureSize;
                     // Of all the pixels that are mapped onto the texel we are
                     // currently rendering, which pixel are we currently rendering?
                     vec2 ilfloat = vec2(0.0,ilfac.y > 1.5 ? mod(FrameCount,2.0) : 0.0);
@@ -334,7 +334,7 @@ void main()
           
             #ifdef OVERSAMPLE
                     //float filter = fwidth(ratio_scale.y);
-                    float filter = InputSize.y / OutputSize.y;
+                    float filter = InputSize.y / outsize.y;
             #endif
                     vec2 uv_ratio = fract(ratio_scale);
 

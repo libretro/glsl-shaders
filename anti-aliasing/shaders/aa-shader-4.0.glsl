@@ -114,7 +114,7 @@ COMPAT_VARYING vec4 TEX0;
 
 // compatibility #defines
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+#define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 // delete all 'params.' or 'registers.' or whatever in the fragment
 
@@ -122,7 +122,7 @@ void main()
 {
 	// Calculating texel coordinates
 	vec2 size     = 4.0 * SourceSize.xy / INTERNAL_RES;
-//	vec2 size     = X * (OutputSize.xy * SourceSize.zw) * SourceSize.xy;
+//	vec2 size     = X * (outsize.xy * SourceSize.zw) * SourceSize.xy;
 	vec2 inv_size = 1.0 / size;
 
 	vec4 yx = vec4(inv_size, -inv_size);
