@@ -1,6 +1,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision mediump float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -155,9 +156,9 @@ void main()
 	vec3 yiq = rgb2yiq(col);
 
 	#if defined(TWO_PHASE)
-		float chroma_phase = PI * (mod(pix_no.y, 2.0) + FrameCount);
+		float chroma_phase = PI * (mod(pix_no.y, 2.0) + float(FrameCount));
 	#elif defined(THREE_PHASE)
-		float chroma_phase = 0.6667 * PI * (mod(pix_no.y, 3.0) + FrameCount);
+		float chroma_phase = 0.6667 * PI * (mod(pix_no.y, 3.0) + float(FrameCount));
 	#endif
 
 	float mod_phase = chroma_phase + pix_no.x * CHROMA_MOD_FREQ;

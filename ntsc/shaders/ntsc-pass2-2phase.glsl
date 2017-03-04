@@ -1,6 +1,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision highp float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -198,7 +199,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 uniform mat4 MVPMatrix;
 uniform int FrameDirection;
@@ -216,7 +216,7 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
-    TEX0.xy = TexCoord - vec2(0.5 / SourceSize.x, 0.0); // Compensate for decimate-by-2.
+    TEX0.xy = TexCoord.xy - vec2(0.5 / SourceSize.x, 0.0); // Compensate for decimate-by-2.
 }
 
 #elif defined(FRAGMENT)
@@ -249,7 +249,6 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-// in variables go here as COMPAT_VARYING whatever
 
 // fragment compatibility #defines
 #define Source Texture

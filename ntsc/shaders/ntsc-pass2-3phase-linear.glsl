@@ -1,6 +1,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision highp float;
 #else
 #define COMPAT_PRECISION
 #endif

@@ -23,6 +23,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision mediump float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -42,7 +43,11 @@ uniform COMPAT_PRECISION float trV;
 #define trV 6.0
 #endif
 
+#ifdef GL_ES
+vec3 yuv_threshold = vec3(0.188235294, 0.02745098, 0.023529412);
+#else
 vec3 yuv_threshold = vec3(trY/255.0, trU/255.0, trV/255.0);
+#endif
 const mat3 yuv = mat3(0.299, -0.169, 0.5, 0.587, -0.331, -0.419, 0.114, 0.5, -0.081);
 const vec3 yuv_offset = vec3(0.0, 0.5, 0.5);
 

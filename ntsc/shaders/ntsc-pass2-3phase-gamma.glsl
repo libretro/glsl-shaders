@@ -1,6 +1,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision highp float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -187,7 +188,7 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
-    TEX0.xy = TexCoord - vec2(0.5 / SourceSize.x, 0.0); // Compensate for decimate-by-2.
+    TEX0.xy = TexCoord.xy - vec2(0.5 / SourceSize.x, 0.0); // Compensate for decimate-by-2.
 }
 
 #elif defined(FRAGMENT)

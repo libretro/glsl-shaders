@@ -25,7 +25,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
-precision mediump float;
+precision highp float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -328,7 +328,7 @@ void main()
                     vec2 xy2 = ((xy*OrigTextureSize / OrigInputSize-vec2(0.5))*vec2(1.0,1.0)+vec2(0.5)) * InputSize / TextureSize;
                     // Of all the pixels that are mapped onto the texel we are
                     // currently rendering, which pixel are we currently rendering?
-                    vec2 ilfloat = vec2(0.0,ilfac.y > 1.5 ? mod(FrameCount,2.0) : 0.0);
+                    vec2 ilfloat = vec2(0.0,ilfac.y > 1.5 ? mod(float(FrameCount),2.0) : 0.0);
 
                     vec2 ratio_scale = (xy * SourceSize.xy - vec2(0.5) + ilfloat)/ilfac;
           

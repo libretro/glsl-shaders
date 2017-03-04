@@ -52,7 +52,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 uniform mat4 MVPMatrix;
 uniform int FrameDirection;
@@ -71,8 +70,6 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
-// Paste vertex contents here:
-
 }
 
 #elif defined(FRAGMENT)
@@ -107,7 +104,6 @@ uniform sampler2D Texture;
 uniform sampler2D LUT;
 uniform sampler2D OrigTexture;
 COMPAT_VARYING vec4 TEX0;
-// in variables go here as COMPAT_VARYING whatever
 
 // fragment compatibility #defines
 #define Source Texture
