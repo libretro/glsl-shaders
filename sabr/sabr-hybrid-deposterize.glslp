@@ -1,0 +1,15 @@
+shaders = 3
+
+shader0 = "../blurs/blur3x3resize.glsl"
+filter_linear0 = false
+scale_type0 = source
+scale0 = 1.0
+alias0 = Smooth
+
+shader1 = shaders/sabr-hybrid.glsl
+filter_linear1 = true
+scale_type1 = source
+scale1 = 2.0
+alias1 = Sharp
+
+shader2 = shaders/edge-detect.glsl
