@@ -1,0 +1,4 @@
+shaders = 1
+
+shader0 = shaders/retro-v2.glsl
+filter_linear0 = false
