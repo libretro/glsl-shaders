@@ -20,6 +20,7 @@
 
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision mediump float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -78,12 +79,12 @@ MASK_TYPE defines what, if any, shadow mask to use. MASK_BRIGHTNESS defines how 
 */
 
 
-uniform COMPAT_PRECISION vec2 TextureSize;
+uniform vec2 TextureSize;
 #if defined(CURVATURE)
-varying COMPAT_PRECISION vec2 screenScale;
+varying vec2 screenScale;
 #endif
-varying COMPAT_PRECISION vec2 TEX0;
-varying COMPAT_PRECISION float filterWidth;
+varying vec2 TEX0;
+varying float filterWidth;
 
 #if defined(VERTEX)
 uniform mat4 MVPMatrix;
@@ -106,11 +107,11 @@ void main()
 uniform sampler2D Texture;
 
 #if defined(CURVATURE)
-COMPAT_PRECISION vec2 CURVATURE_DISTORTION = vec2(CURVATURE_X, CURVATURE_Y);
+vec2 CURVATURE_DISTORTION = vec2(CURVATURE_X, CURVATURE_Y);
 // Barrel distortion shrinks the display area a bit, this will allow us to counteract that.
 vec2 barrelScale = 1.0 - (0.23 * CURVATURE_DISTORTION);
 
-COMPAT_PRECISION vec2 Distort(vec2 coord)
+vec2 Distort(vec2 coord)
 {
 	coord *= screenScale;
 	coord -= vec2(0.5);
@@ -129,14 +130,14 @@ COMPAT_PRECISION vec2 Distort(vec2 coord)
 }
 #endif
 
-COMPAT_PRECISION float CalcScanLineWeight(float dist)
+float CalcScanLineWeight(float dist)
 {
 	return max(1.0-dist*dist*SCANLINE_WEIGHT, SCANLINE_GAP_BRIGHTNESS);
 }
 
-COMPAT_PRECISION float CalcScanLine(float dy)
+float CalcScanLine(float dy)
 {
-	COMPAT_PRECISION float scanLineWeight = CalcScanLineWeight(dy);
+	float scanLineWeight = CalcScanLineWeight(dy);
 #if defined(MULTISAMPLE)
 	scanLineWeight += CalcScanLineWeight(dy-filterWidth);
 	scanLineWeight += CalcScanLineWeight(dy+filterWidth);
@@ -148,21 +149,21 @@ COMPAT_PRECISION float CalcScanLine(float dy)
 void main()
 {
 #if defined(CURVATURE)
-	COMPAT_PRECISION vec2 texcoord = Distort(TEX0);
+	vec2 texcoord = Distort(TEX0);
 	if (texcoord.x < 0.0)
 		gl_FragColor = vec4(0.0);
 	else
 #else
-	COMPAT_PRECISION vec2 texcoord = TEX0;
+	vec2 texcoord = TEX0;
 #endif
 	{
-		COMPAT_PRECISION vec2 texcoordInPixels = texcoord * TextureSize;
+		vec2 texcoordInPixels = texcoord * TextureSize;
 #if defined(SHARPER)
-		COMPAT_PRECISION vec2 tempCoord = floor(texcoordInPixels) + 0.5;
-		COMPAT_PRECISION vec2 coord = tempCoord / TextureSize;
-		COMPAT_PRECISION vec2 deltas = texcoordInPixels - tempCoord;
-		COMPAT_PRECISION float scanLineWeight = CalcScanLine(deltas.y);
-		COMPAT_PRECISION vec2 signs = sign(deltas);
+		vec2 tempCoord = floor(texcoordInPixels) + 0.5;
+		vec2 coord = tempCoord / TextureSize;
+		vec2 deltas = texcoordInPixels - tempCoord;
+		float scanLineWeight = CalcScanLine(deltas.y);
+		vec2 signs = sign(deltas);
 		deltas.x *= 2.0;
 		deltas = deltas * deltas;
 		deltas.y = deltas.y * deltas.y;
@@ -170,22 +171,22 @@ void main()
 		deltas.y *= 8.0;
 		deltas /= TextureSize;
 		deltas *= signs;
-		COMPAT_PRECISION vec2 tc = coord + deltas;
+		vec2 tc = coord + deltas;
 #else
-		COMPAT_PRECISION float tempY = floor(texcoordInPixels.y) + 0.5;
-		COMPAT_PRECISION float yCoord = tempY / TextureSize.y;
-		COMPAT_PRECISION float dy = texcoordInPixels.y - tempY;
-		COMPAT_PRECISION float scanLineWeight = CalcScanLine(dy);
-		COMPAT_PRECISION float signY = sign(dy);
+		float tempY = floor(texcoordInPixels.y) + 0.5;
+		float yCoord = tempY / TextureSize.y;
+		float dy = texcoordInPixels.y - tempY;
+		float scanLineWeight = CalcScanLine(dy);
+		float signY = sign(dy);
 		dy = dy * dy;
 		dy = dy * dy;
 		dy *= 8.0;
 		dy /= TextureSize.y;
 		dy *= signY;
-		COMPAT_PRECISION vec2 tc = vec2(texcoord.x, yCoord + dy);
+		vec2 tc = vec2(texcoord.x, yCoord + dy);
 #endif
 
-		COMPAT_PRECISION vec3 colour = texture2D(Texture, tc).rgb;
+		vec3 colour = texture2D(Texture, tc).rgb;
 
 #if defined(SCANLINES)
 #if defined(GAMMA)
@@ -210,15 +211,15 @@ void main()
 		gl_FragColor = vec4(colour, 1.0);
 #else
 #if MASK_TYPE == 1
-		COMPAT_PRECISION float whichMask = fract(gl_FragCoord.x * 0.5);
-		COMPAT_PRECISION vec3 mask;
+		float whichMask = fract(gl_FragCoord.x * 0.5);
+		vec3 mask;
 		if (whichMask < 0.5)
 			mask = vec3(MASK_BRIGHTNESS, 1.0, MASK_BRIGHTNESS);
 		else
 			mask = vec3(1.0, MASK_BRIGHTNESS, 1.0);
 #elif MASK_TYPE == 2
-		COMPAT_PRECISION float whichMask = fract(gl_FragCoord.x * 0.3333333);
-		COMPAT_PRECISION vec3 mask = vec3(MASK_BRIGHTNESS, MASK_BRIGHTNESS, MASK_BRIGHTNESS);
+		float whichMask = fract(gl_FragCoord.x * 0.3333333);
+		vec3 mask = vec3(MASK_BRIGHTNESS, MASK_BRIGHTNESS, MASK_BRIGHTNESS);
 		if (whichMask < 0.3333333)
 			mask.x = 1.0;
 		else if (whichMask < 0.6666666)
