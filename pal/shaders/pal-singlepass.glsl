@@ -152,9 +152,9 @@ COMPAT_VARYING vec4 TEX0;
 #define FSC          4433618.75
 
 /* Line frequency */
-#define FLINE        15625
+#define FLINE        15625.
 
-#define VISIBLELINES 312
+#define VISIBLELINES 312.
 
 #define PI           3.14159265358
 
@@ -176,7 +176,7 @@ COMPAT_VARYING vec4 TEX0;
                             
 #define fetch(ofs,center,invx) texture(Source, vec2((ofs) * (invx) + center.x, center.y))
 
-#define FIRTAPS 20
+#define FIRTAPS 20.
 #ifdef GL_ES
 float FIR1 = -0.008030271;
 float FIR2 = 0.003107906;
@@ -246,7 +246,7 @@ float rand(vec2 co)
 
 float modulated(vec2 xy, float sinwt, float coswt) 
 {
-    vec3 rgb = fetch(0, xy, invx).xyz;
+    vec3 rgb = fetch(0., xy, invx).xyz;
     vec3 yuv = RGB_to_YUV * rgb;
 
     return clamp(yuv.x + yuv.y * sinwt + yuv.z * coswt, 0.0, 1.0);    
@@ -254,7 +254,7 @@ float modulated(vec2 xy, float sinwt, float coswt)
 
 vec2 modem_uv(vec2 xy, float ofs) {
     float t  = (xy.x + ofs * invx) * SourceSize.x;
-    float wt = t * 2 * PI / width_ratio;
+    float wt = t * 2. * PI / width_ratio;
 
     float sinwt = sin(wt);
     float coswt = cos(wt + altv);
@@ -263,10 +263,10 @@ vec2 modem_uv(vec2 xy, float ofs) {
     vec3 yuv = RGB_to_YUV * rgb;
     float signal = clamp(yuv.x + yuv.y * sinwt + yuv.z * coswt, 0.0, 1.0);
     
-    if (PHASE_NOISE != 0)
+    if (PHASE_NOISE != 0.)
     {
         /* .yy is horizontal noise, .xx looks bad, .xy is classic noise */
-        vec2 seed = xy.yy * FrameCount;
+        vec2 seed = xy.yy * float(FrameCount);
         wt        = wt + PHASE_NOISE * (rand(seed) - 0.5);
         sinwt     = sin(wt);
         coswt     = cos(wt + altv);
@@ -334,7 +334,7 @@ void main()
     }
 #endif
     float t  = xy.x * SourceSize.x;
-    float wt = t * 2 * PI / width_ratio;
+    float wt = t * 2. * PI / width_ratio;
 
     float sinwt = sin(wt);
     float coswt = cos(wt + altv);

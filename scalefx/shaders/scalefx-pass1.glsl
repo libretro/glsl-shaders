@@ -80,6 +80,9 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING vec4 t1;
+COMPAT_VARYING vec4 t2;
+COMPAT_VARYING vec4 t3;
 
 uniform mat4 MVPMatrix;
 uniform int FrameDirection;
@@ -98,6 +101,12 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
+    vec2 ps = 1.0/TextureSize.xy;
+	float dx = ps.x, dy = ps.y;
+    
+    t1 = TEX0.xxxy + vec4(  -dx,   0, dx,  -dy);	// A, B, C
+	t2 = TEX0.xxxy + vec4(  -dx,   0, dx,    0);	// D, E, F
+	t3 = TEX0.xxxy + vec4(  -dx,   0, dx,   dy);	// G, H, I
 }
 
 #elif defined(FRAGMENT)
@@ -130,6 +139,9 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING vec4 t1;
+COMPAT_VARYING vec4 t2;
+COMPAT_VARYING vec4 t3;
 
 // fragment compatibility #defines
 #define Source Texture
@@ -141,9 +153,9 @@ COMPAT_VARYING vec4 TEX0;
 // corner strength
 float str(float d, vec2 a, vec2 b){
 	float diff = a.x - a.y;
-	float wght1 = max(SFX_CLR - d, 0) / SFX_CLR;
-	float wght2 = clamp((1-d) + (min(a.x, b.x) + a.x > min(a.y, b.y) + a.y ? diff : -diff), 0, 1);
-	return (SFX_SAA == 1 || 2*d < a.x + a.y) ? (wght1 * wght2) * (a.x * a.y) : 0;
+	float wght1 = max(SFX_CLR - d, 0.) / SFX_CLR;
+	float wght2 = clamp((1.-d) + (min(a.x, b.x) + a.x > min(a.y, b.y) + a.y ? diff : -diff), 0., 1.);
+	return (SFX_SAA == 1. || 2.*d < a.x + a.y) ? (wght1 * wght2) * (a.x * a.y) : 0.;
 }
 
 void main()
@@ -155,13 +167,21 @@ void main()
 		G H I
 	*/
 
+#ifdef GL_ES
+#define TEX(x) texture(Source, x)
 
+	// metric data
+	vec4 A = TEX(t1.xw), B = TEX(t1.yw);
+	vec4 D = TEX(t2.xw), E = TEX(t2.yw), F = TEX(t2.zw);
+	vec4 G = TEX(t3.xw), H = TEX(t3.yw), I = TEX(t3.zw);
+#else
 #define TEX(x, y) textureOffset(Source, vTexCoord, ivec2(x, y))
 
 	// metric data
 	vec4 A = TEX(-1,-1), B = TEX( 0,-1);
 	vec4 D = TEX(-1, 0), E = TEX( 0, 0), F = TEX( 1, 0);
 	vec4 G = TEX(-1, 1), H = TEX( 0, 1), I = TEX( 1, 1);
+#endif
 
 	// corner strength
 	vec4 res;

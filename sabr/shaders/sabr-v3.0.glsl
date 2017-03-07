@@ -24,6 +24,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision mediump float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -142,7 +143,7 @@ void main()
    	float x = SourceSize.z;//1.0 / IN.texture_size.x;
 	float y = SourceSize.w;//1.0 / IN.texture_size.y;
 	
-	tc = TexCoord * 1.00001;
+	tc = TEX0.xy * 1.00001;
 	xyp_1_2_3    = tc.xxxy + float4(      -x, 0.0,   x, -2.0 * y);
 	xyp_6_7_8    = tc.xxxy + float4(      -x, 0.0,   x,       -y);
 	xyp_11_12_13 = tc.xxxy + float4(      -x, 0.0,   x,      0.0);

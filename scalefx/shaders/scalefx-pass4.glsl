@@ -95,10 +95,10 @@ void main()
 	vec2 ps = 1.0/OrigTextureSize;
 	float dx = ps.x, dy = ps.y;
 
-	t1 = TEX0.xxxy + vec4( 0, -dx, -2*dx,     0);	// E, D, D0
-	t2 = TEX0.xyxy + vec4(dx,   0,  2*dx,     0);	// F, F0
-	t3 = TEX0.xyxy + vec4( 0, -dy,     0, -2*dy);	// B, B0
-	t4 = TEX0.xyxy + vec4( 0,  dy,     0,  2*dy);	// H, H0
+	t1 = TEX0.xxxy + vec4( 0., -dx, -2.*dx,     0.);	// E, D, D0
+	t2 = TEX0.xyxy + vec4(dx,   0,  2.*dx,     0.);	// F, F0
+	t3 = TEX0.xyxy + vec4( 0., -dy,     0., -2.*dy);	// B, B0
+	t4 = TEX0.xyxy + vec4( 0.,  dy,     0.,  2.*dy);	// H, H0
 }
 
 #elif defined(FRAGMENT)
@@ -146,12 +146,12 @@ COMPAT_VARYING vec4 t4;
 
 // extract corners
 vec4 loadCrn(vec4 x){
-	return floor(mod(x*80 + 0.5, 9));
+	return floor(mod(x*80. + 0.5, 9.));
 }
 
 // extract mids
 vec4 loadMid(vec4 x){
-	return floor(mod(x*8.888888 + 0.055555, 9));
+	return floor(mod(x*8.888888 + 0.055555, 9.));
 }
 
 void main()
@@ -173,10 +173,10 @@ void main()
 
 	// determine subpixel
 	vec2 fp = floor(3.0 * fract(vTexCoord * SourceSize.xy));
-	float sp = fp.y == 0 ? (fp.x == 0 ? crn.x : fp.x == 1 ? mid.x : crn.y) : (fp.y == 1 ? (fp.x == 0 ? mid.w : fp.x == 1 ? 0 : mid.y) : (fp.x == 0 ? crn.w : fp.x == 1 ? mid.z : crn.z));
+	float sp = fp.y == 0. ? (fp.x == 0. ? crn.x : fp.x == 1. ? mid.x : crn.y) : (fp.y == 1. ? (fp.x == 0. ? mid.w : fp.x == 1. ? 0. : mid.y) : (fp.x == 0. ? crn.w : fp.x == 1. ? mid.z : crn.z));
 
 	// output coordinate - 0 = E, 1 = D, 2 = D0, 3 = F, 4 = F0, 5 = B, 6 = B0, 7 = H, 8 = H0
-	vec2 res = sp == 0 ? vec2(0,0) : sp == 1 ? vec2(-1,0) : sp == 2 ? vec2(-2,0) : sp == 3 ? vec2(1,0) : sp == 4 ? vec2(2,0) : sp == 5 ? vec2(0,-1) : sp == 6 ? vec2(0,-2) : sp == 7 ? vec2(0,1) : vec2(0,2);
+	vec2 res = sp == 0. ? vec2(0.,0.) : sp == 1. ? vec2(-1.,0.) : sp == 2. ? vec2(-2.,0.) : sp == 3. ? vec2(1.,0.) : sp == 4. ? vec2(2.,0.) : sp == 5. ? vec2(0,-1) : sp == 6. ? vec2(0.,-2.) : sp == 7. ? vec2(0.,1.) : vec2(0.,2.);
 
 	// ouput
 	FragColor = texture(OrigTexture, vTexCoord + res / SourceSize.xy);

@@ -22,6 +22,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision mediump float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -52,7 +53,7 @@ vec3 bevel(vec2 pos, vec3 color)
 
     vec3 delta = mix(vec3(BEVEL_LEVEL), vec3(1.0-BEVEL_LEVEL), color);
 
-    weight = delta*(1-r);
+    weight = delta*(1.-r);
 
     return color+weight;
 }

@@ -68,6 +68,8 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING vec4 t1;
+COMPAT_VARYING vec4 t2;
 
 uniform mat4 MVPMatrix;
 uniform int FrameDirection;
@@ -86,6 +88,11 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
+    vec2 ps = 1.0/TextureSize.xy;
+	float dx = ps.x, dy = ps.y;
+
+	t1 = TEX0.xxxy + vec4(-dx, 0, dx, -dy);	// A, B, C
+	t2 = TEX0.xxxy + vec4(-dx, 0, dx,   0);	// D, E, F
 }
 
 #elif defined(FRAGMENT)
@@ -118,7 +125,8 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-// in variables go here as COMPAT_VARYING whatever
+COMPAT_VARYING vec4 t1;
+COMPAT_VARYING vec4 t2;
 
 // fragment compatibility #defines
 #define Source Texture
@@ -132,9 +140,9 @@ float dist(vec3 A, vec3 B)
 {
 	float r = 0.5 * (A.r + B.r);
 	vec3 d = A - B;
-	vec3 c = vec3(2 + r, 4, 3 - r);
+	vec3 c = vec3(2. + r, 4., 3. - r);
 
-	return sqrt(dot(c*d, d)) / 3;
+	return sqrt(dot(c*d, d)) / 3.;
 }
 
 void main()
@@ -145,16 +153,23 @@ void main()
 		  E F		  o w
 	*/
 
-
+#ifdef GL_ES
+#define TEX(x) texture(Source, x)
+// read texels
+	vec3 A = TEX(t1.xw).rgb;
+	vec3 B = TEX(t1.yw).rgb;
+	vec3 C = TEX(t1.zw).rgb;
+	vec3 E = TEX(t2.yw).rgb;
+	vec3 F = TEX(t2.zw).rgb;
+#else
 #define TEX(x, y) textureOffset(Source, vTexCoord, ivec2(x, y)).rgb
-
 	// read texels
 	vec3 A = TEX(-1,-1);
 	vec3 B = TEX( 0,-1);
 	vec3 C = TEX( 1,-1);
 	vec3 E = TEX( 0, 0);
 	vec3 F = TEX( 1, 0);
-
+#endif
 	// output
 	FragColor = vec4(dist(E,A), dist(E,B), dist(E,C), dist(E,F));
 } 

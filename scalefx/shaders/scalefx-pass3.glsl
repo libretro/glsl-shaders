@@ -78,6 +78,10 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING vec4 t1;
+COMPAT_VARYING vec4 t2;
+COMPAT_VARYING vec4 t3;
+COMPAT_VARYING vec4 t4;
 
 uniform mat4 MVPMatrix;
 uniform int FrameDirection;
@@ -96,6 +100,14 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
+	
+	vec2 ps = 1.0/TextureSize;
+	float dx = ps.x, dy = ps.y;
+    
+    t1 = TEX0.xxxy + vec4(-dx, -2.*dx, -3.*dx,     0.);	// D, D0, D1
+	t2 = TEX0.xxxy + vec4( dx,  2.*dx,  3.*dx,     0.);	// F, F0, F1
+	t3 = TEX0.xyyy + vec4(  0.,   -dy, -2.*dy, -3.*dy);	// B, B0, B1
+	t4 = TEX0.xyyy + vec4(  0.,    dy,  2.*dy,  3.*dy);	// H, H0, H1
 }
 
 #elif defined(FRAGMENT)
@@ -128,6 +140,10 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING vec4 t1;
+COMPAT_VARYING vec4 t2;
+COMPAT_VARYING vec4 t3;
+COMPAT_VARYING vec4 t4;
 
 // fragment compatibility #defines
 #define Source Texture
@@ -138,22 +154,22 @@ COMPAT_VARYING vec4 TEX0;
 
 // extract first bool4 from float4 - corners
 bvec4 loadCorn(vec4 x){
-	return bvec4(floor(mod(x*15 + 0.5, 2)));
+	return bvec4(floor(mod(x*15. + 0.5, 2.)));
 }
 
 // extract second bool4 from float4 - horizontal edges
 bvec4 loadHori(vec4 x){
-	return bvec4(floor(mod(x*7.5 + 0.25, 2)));
+	return bvec4(floor(mod(x*7.5 + 0.25, 2.)));
 }
 
 // extract third bool4 from float4 - vertical edges
 bvec4 loadVert(vec4 x){
-	return bvec4(floor(mod(x*3.75 + 0.125, 2)));
+	return bvec4(floor(mod(x*3.75 + 0.125, 2.)));
 }
 
 // extract fourth bool4 from float4 - orientation
 bvec4 loadOr(vec4 x){
-	return bvec4(floor(mod(x*1.875 + 0.0625, 2)));
+	return bvec4(floor(mod(x*1.875 + 0.0625, 2.)));
 }
 
 void main()
@@ -164,7 +180,16 @@ void main()
 		D E F				w   y
 		  H		w   z	  	  z
 	*/
+#ifdef GL_ES
+#define TEX(x) texture(Source, x)
 
+	// read data
+	vec4 E = TEX(vTexCoord);
+	vec4 D = TEX(t1.xw), D0 = TEX(t1.yw), D1 = TEX(t1.zw);
+	vec4 F = TEX(t2.xw), F0 = TEX(t2.yw), F1 = TEX(t2.zw);
+	vec4 B = TEX(t3.xy), B0 = TEX(t3.xz), B1 = TEX(t3.xw);
+	vec4 H = TEX(t4.xy), H0 = TEX(t4.xz), H1 = TEX(t4.xw);
+#else
 #define TEX(x, y) textureOffset(Source, vTexCoord, ivec2(x, y))
 
 	// read data
@@ -173,7 +198,7 @@ void main()
 	vec4 F = TEX( 1, 0), F0 = TEX( 2, 0), F1 = TEX( 3, 0);
 	vec4 B = TEX( 0,-1), B0 = TEX( 0,-2), B1 = TEX( 0,-3);
 	vec4 H = TEX( 0, 1), H0 = TEX( 0, 2), H1 = TEX( 0, 3);
-
+#endif
 	// extract data
 	bvec4 Ec = loadCorn(E), Eh = loadHori(E), Ev = loadVert(E), Eo = loadOr(E);
 	bvec4 Dc = loadCorn(D),	Dh = loadHori(D), Do = loadOr(D), D0c = loadCorn(D0), D0h = loadHori(D0), D1h = loadHori(D1);
@@ -183,10 +208,10 @@ void main()
 
 	
 	// lvl1 corners (hori, vert)
-	bool lvl1x = Ec.x && (Dc.z || Bc.z || SFX_SCN == 1);
-	bool lvl1y = Ec.y && (Fc.w || Bc.w || SFX_SCN == 1);
-	bool lvl1z = Ec.z && (Fc.x || Hc.x || SFX_SCN == 1);
-	bool lvl1w = Ec.w && (Dc.y || Hc.y || SFX_SCN == 1);
+	bool lvl1x = Ec.x && (Dc.z || Bc.z || SFX_SCN == 1.);
+	bool lvl1y = Ec.y && (Fc.w || Bc.w || SFX_SCN == 1.);
+	bool lvl1z = Ec.z && (Fc.x || Hc.x || SFX_SCN == 1.);
+	bool lvl1w = Ec.w && (Dc.y || Hc.y || SFX_SCN == 1.);
 
 	// lvl2 mid (left, right / up, down)
 	bvec2 lvl2x = bvec2((Ec.x && Eh.y) && Dc.z, (Ec.y && Eh.x) && Fc.w);
@@ -222,19 +247,19 @@ void main()
 	// subpixels - 0 = E, 1 = D, 2 = D0, 3 = F, 4 = F0, 5 = B, 6 = B0, 7 = H, 8 = H0
 
 	vec4 crn;
-	crn.x = (lvl1x && Eo.x || lvl3x.x && Eo.y || lvl4x.x && Do.x || lvl6x.x && Fo.y) ? 5 : (lvl1x || lvl3x.y && !Eo.w || lvl4x.y && !Bo.x || lvl6x.y && !Ho.w) ? 1 : lvl3x.x ? 3 : lvl3x.y ? 7 : lvl4x.x ? 2 : lvl4x.y ? 6 : lvl6x.x ? 4 : lvl6x.y ? 8 : 0;
-	crn.y = (lvl1y && Eo.y || lvl3y.x && Eo.x || lvl4y.x && Fo.y || lvl6y.x && Do.x) ? 5 : (lvl1y || lvl3y.y && !Eo.z || lvl4y.y && !Bo.y || lvl6y.y && !Ho.z) ? 3 : lvl3y.x ? 1 : lvl3y.y ? 7 : lvl4y.x ? 4 : lvl4y.y ? 6 : lvl6y.x ? 2 : lvl6y.y ? 8 : 0;
-	crn.z = (lvl1z && Eo.z || lvl3z.x && Eo.w || lvl4z.x && Fo.z || lvl6z.x && Do.w) ? 7 : (lvl1z || lvl3z.y && !Eo.y || lvl4z.y && !Ho.z || lvl6z.y && !Bo.y) ? 3 : lvl3z.x ? 1 : lvl3z.y ? 5 : lvl4z.x ? 4 : lvl4z.y ? 8 : lvl6z.x ? 2 : lvl6z.y ? 6 : 0;
-	crn.w = (lvl1w && Eo.w || lvl3w.x && Eo.z || lvl4w.x && Do.w || lvl6w.x && Fo.z) ? 7 : (lvl1w || lvl3w.y && !Eo.x || lvl4w.y && !Ho.w || lvl6w.y && !Bo.x) ? 1 : lvl3w.x ? 3 : lvl3w.y ? 5 : lvl4w.x ? 2 : lvl4w.y ? 8 : lvl6w.x ? 4 : lvl6w.y ? 6 : 0;
+	crn.x = (lvl1x && Eo.x || lvl3x.x && Eo.y || lvl4x.x && Do.x || lvl6x.x && Fo.y) ? 5. : (lvl1x || lvl3x.y && !Eo.w || lvl4x.y && !Bo.x || lvl6x.y && !Ho.w) ? 1. : lvl3x.x ? 3. : lvl3x.y ? 7. : lvl4x.x ? 2. : lvl4x.y ? 6. : lvl6x.x ? 4. : lvl6x.y ? 8. : 0.;
+	crn.y = (lvl1y && Eo.y || lvl3y.x && Eo.x || lvl4y.x && Fo.y || lvl6y.x && Do.x) ? 5. : (lvl1y || lvl3y.y && !Eo.z || lvl4y.y && !Bo.y || lvl6y.y && !Ho.z) ? 3. : lvl3y.x ? 1. : lvl3y.y ? 7. : lvl4y.x ? 4. : lvl4y.y ? 6. : lvl6y.x ? 2. : lvl6y.y ? 8. : 0.;
+	crn.z = (lvl1z && Eo.z || lvl3z.x && Eo.w || lvl4z.x && Fo.z || lvl6z.x && Do.w) ? 7. : (lvl1z || lvl3z.y && !Eo.y || lvl4z.y && !Ho.z || lvl6z.y && !Bo.y) ? 3. : lvl3z.x ? 1. : lvl3z.y ? 5. : lvl4z.x ? 4. : lvl4z.y ? 8. : lvl6z.x ? 2. : lvl6z.y ? 6. : 0.;
+	crn.w = (lvl1w && Eo.w || lvl3w.x && Eo.z || lvl4w.x && Do.w || lvl6w.x && Fo.z) ? 7. : (lvl1w || lvl3w.y && !Eo.x || lvl4w.y && !Ho.w || lvl6w.y && !Bo.x) ? 1. : lvl3w.x ? 3. : lvl3w.y ? 5. : lvl4w.x ? 2. : lvl4w.y ? 8. : lvl6w.x ? 4. : lvl6w.y ? 6. : 0.;
 
 	vec4 mid;
-	mid.x = (lvl2x.x &&  Eo.x || lvl2x.y &&  Eo.y || lvl5x.x &&  Do.x || lvl5x.y &&  Fo.y) ? 5 : lvl2x.x ? 1 : lvl2x.y ? 3 : lvl5x.x ? 2 : lvl5x.y ? 4 : (Ec.x && Dc.z && Ec.y && Fc.w) ? ( Eo.x ?  Eo.y ? 5 : 3 : 1) : 0;
-	mid.y = (lvl2y.x && !Eo.y || lvl2y.y && !Eo.z || lvl5y.x && !Bo.y || lvl5y.y && !Ho.z) ? 3 : lvl2y.x ? 5 : lvl2y.y ? 7 : lvl5y.x ? 6 : lvl5y.y ? 8 : (Ec.y && Bc.w && Ec.z && Hc.x) ? (!Eo.y ? !Eo.z ? 3 : 7 : 5) : 0;
-	mid.z = (lvl2z.x &&  Eo.w || lvl2z.y &&  Eo.z || lvl5z.x &&  Do.w || lvl5z.y &&  Fo.z) ? 7 : lvl2z.x ? 1 : lvl2z.y ? 3 : lvl5z.x ? 2 : lvl5z.y ? 4 : (Ec.z && Fc.x && Ec.w && Dc.y) ? ( Eo.z ?  Eo.w ? 7 : 1 : 3) : 0;
-	mid.w = (lvl2w.x && !Eo.x || lvl2w.y && !Eo.w || lvl5w.x && !Bo.x || lvl5w.y && !Ho.w) ? 1 : lvl2w.x ? 5 : lvl2w.y ? 7 : lvl5w.x ? 6 : lvl5w.y ? 8 : (Ec.w && Hc.y && Ec.x && Bc.z) ? (!Eo.w ? !Eo.x ? 1 : 5 : 7) : 0;
+	mid.x = (lvl2x.x &&  Eo.x || lvl2x.y &&  Eo.y || lvl5x.x &&  Do.x || lvl5x.y &&  Fo.y) ? 5. : lvl2x.x ? 1. : lvl2x.y ? 3. : lvl5x.x ? 2. : lvl5x.y ? 4. : (Ec.x && Dc.z && Ec.y && Fc.w) ? ( Eo.x ?  Eo.y ? 5. : 3. : 1.) : 0.;
+	mid.y = (lvl2y.x && !Eo.y || lvl2y.y && !Eo.z || lvl5y.x && !Bo.y || lvl5y.y && !Ho.z) ? 3. : lvl2y.x ? 5. : lvl2y.y ? 7. : lvl5y.x ? 6. : lvl5y.y ? 8. : (Ec.y && Bc.w && Ec.z && Hc.x) ? (!Eo.y ? !Eo.z ? 3. : 7. : 5.) : 0.;
+	mid.z = (lvl2z.x &&  Eo.w || lvl2z.y &&  Eo.z || lvl5z.x &&  Do.w || lvl5z.y &&  Fo.z) ? 7. : lvl2z.x ? 1. : lvl2z.y ? 3. : lvl5z.x ? 2. : lvl5z.y ? 4. : (Ec.z && Fc.x && Ec.w && Dc.y) ? ( Eo.z ?  Eo.w ? 7. : 1. : 3.) : 0.;
+	mid.w = (lvl2w.x && !Eo.x || lvl2w.y && !Eo.w || lvl5w.x && !Bo.x || lvl5w.y && !Ho.w) ? 1. : lvl2w.x ? 5. : lvl2w.y ? 7. : lvl5w.x ? 6. : lvl5w.y ? 8. : (Ec.w && Hc.y && Ec.x && Bc.z) ? (!Eo.w ? !Eo.x ? 1. : 5. : 7.) : 0.;
 
 
 	// ouput
-	FragColor = (crn + 9 * mid) / 80;
+	FragColor = (crn + 9. * mid) / 80.;
 } 
 #endif

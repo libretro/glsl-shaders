@@ -139,7 +139,11 @@ void main()
    bottomLeftColor  = texture(Source, (floor(vec2(left, bottom)  / texelSize) + 0.5) * texelSize).rgb;
    topRightColor    = texture(Source, (floor(vec2(right, top)    / texelSize) + 0.5) * texelSize).rgb;}
 
+#ifdef GL_ES // round() isn't supported in GLSL until #version 130
+   vec2 border = clamp(floor((vTexCoord / texelSize) + vec2(0.5)) * texelSize, vec2(left, bottom), vec2(right, top));
+#else
    vec2 border = clamp(round(vTexCoord / texelSize) * texelSize, vec2(left, bottom), vec2(right, top));
+#endif
 
    float totalArea = 4.0 * range.x * range.y;
 
