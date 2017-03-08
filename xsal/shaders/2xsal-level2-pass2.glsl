@@ -104,11 +104,6 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
-struct deltas
-{
-    vec2 UL, UR, DL, DR;
-};
-
 void main()
 {
     vec2 texsize = SourceSize.xy;
@@ -116,17 +111,15 @@ void main()
     float dy     = pow(texsize.y, -1.0) * 0.5;
     vec3  dt     = vec3(1.0, 1.0, 1.0);
 
-    deltas VAR = { 
-        vTexCoord + vec2(-dx, -dy),
-        vTexCoord + vec2( dx, -dy),
-        vTexCoord + vec2(-dx,  dy),
-        vTexCoord + vec2( dx,  dy)
-    };
+    vec2 UL =    vTexCoord + vec2(-dx, -dy);
+    vec2 UR =    vTexCoord + vec2( dx, -dy);
+    vec2 DL =    vTexCoord + vec2(-dx,  dy);
+    vec2 DR =    vTexCoord + vec2( dx,  dy);
 
-    vec3 c00 = texture(Source, VAR.UL).xyz;
-    vec3 c20 = texture(Source, VAR.UR).xyz;
-    vec3 c02 = texture(Source, VAR.DL).xyz;
-    vec3 c22 = texture(Source, VAR.DR).xyz;
+    vec3 c00 = texture(Source, UL).xyz;
+    vec3 c20 = texture(Source, UR).xyz;
+    vec3 c02 = texture(Source, DL).xyz;
+    vec3 c22 = texture(Source, DR).xyz;
 
     float m1 = dot(abs(c00 - c22), dt) + 0.001;
     float m2 = dot(abs(c02 - c20), dt) + 0.001;

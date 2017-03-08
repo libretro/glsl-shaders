@@ -175,7 +175,7 @@ float mask = 1.0 - DOTMASK_STRENGTH;
 vec3 dotMaskWeights = mix(vec3(1.0, mask, 1.0),
 						  vec3(mask, 1.0, mask),
 						  floor(mod(mod_factor, 2.0)));
-if (shadowMask == 0) {
+if (shadowMask == 0.) {
 	res *= dotMaskWeights;
 	}
 else {
