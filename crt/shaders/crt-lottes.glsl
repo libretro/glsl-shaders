@@ -169,7 +169,7 @@ vec3 ToSrgb(vec3 c)
 #else
 float ToLinear1(float c)
 {
-    if (scaleInLinearGamma == 0) 
+    if (scaleInLinearGamma == 0.) 
         return c;
     
     return(c<=0.04045) ? c/12.92 : pow((c + 0.055)/1.055, 2.4);
@@ -177,7 +177,7 @@ float ToLinear1(float c)
 
 vec3 ToLinear(vec3 c)
 {
-    if (scaleInLinearGamma==0) 
+    if (scaleInLinearGamma==0.) 
         return c;
     
     return vec3(ToLinear1(c.r), ToLinear1(c.g), ToLinear1(c.b));
@@ -187,7 +187,7 @@ vec3 ToLinear(vec3 c)
 // Assuming using sRGB typed textures this should not be needed.
 float ToSrgb1(float c)
 {
-    if (scaleInLinearGamma == 0) 
+    if (scaleInLinearGamma == 0.) 
         return c;
     
     return(c<0.0031308 ? c*12.92 : 1.055*pow(c, 0.41666) - 0.055);
@@ -195,7 +195,7 @@ float ToSrgb1(float c)
 
 vec3 ToSrgb(vec3 c)
 {
-    if (scaleInLinearGamma == 0) 
+    if (scaleInLinearGamma == 0.) 
         return c;
     
     return vec3(ToSrgb1(c.r), ToSrgb1(c.g), ToSrgb1(c.b));
