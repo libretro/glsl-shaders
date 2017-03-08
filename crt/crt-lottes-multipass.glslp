@@ -1,0 +1,7 @@
+shaders = 2
+
+shader0 = shaders/crt-lottes-multipass/bloompass.glsl
+alias0 = BloomPass
+ srgb_framebuffer0 = true // doesn't work in GL_ES anyway, AFAICT
+
+shader1 = shaders/crt-lottes-multipass/scanpass.glsl
