@@ -135,11 +135,11 @@ COMPAT_VARYING vec4 TEX0;
 #define fetch_offset(coord, offset) (pow(vec3(gain) * texelFetchOffset(Source, (coord), 0, (offset)).rgb + vec3(blacklevel), vec3(gamma)) + vec3(ambient))
 
 // integral of (1 - x^2 - x^4 + x^6)^2
-COMPAT_PRECISION float coeffs_x[7] = float[](1.0, -2.0/3.0, -1.0/5.0, 4.0/7.0, -1.0/9.0, -2.0/11.0, 1.0/13.0);
+float coeffs_x[7] = float[](1.0, -2.0/3.0, -1.0/5.0, 4.0/7.0, -1.0/9.0, -2.0/11.0, 1.0/13.0);
 // integral of (1 - 2x^4 + x^6)^2
-COMPAT_PRECISION float coeffs_y[7] = float[](1.0,      0.0, -4.0/5.0, 2.0/7.0,  4.0/9.0, -4.0/11.0, 1.0/13.0);
+float coeffs_y[7] = float[](1.0,      0.0, -4.0/5.0, 2.0/7.0,  4.0/9.0, -4.0/11.0, 1.0/13.0);
 
-COMPAT_PRECISION float intsmear_func(float z, float coeffs[7])
+float intsmear_func(float z, float coeffs[7])
 {
     float z2 = z*z;
     float zn = z;
@@ -151,7 +151,7 @@ COMPAT_PRECISION float intsmear_func(float z, float coeffs[7])
     return ret;
 }
 
-COMPAT_PRECISION float intsmear(float x, float dx, float d, float coeffs[7])
+float intsmear(float x, float dx, float d, float coeffs[7])
 {
     float zl = clamp((x-dx*0.5)/d,-1.0,1.0);
     float zh = clamp((x+dx*0.5)/d,-1.0,1.0);
@@ -162,7 +162,7 @@ void main()
 {
     vec2 texelSize = SourceSize.zw;
     /* float2 range = IN.video_size / (IN.output_size * IN.texture_size); */
-    vec2 range = outsize.zw;
+    vec2 range = InputSize.xy / (OutputSize.xy * TextureSize.xy);//outsize.zw;
 
     vec3 cred   = pow(vec3(RSUBPIX_R, RSUBPIX_G, RSUBPIX_B), vec3(outgamma));
     vec3 cgreen = pow(vec3(GSUBPIX_R, GSUBPIX_G, GSUBPIX_B), vec3(outgamma));

@@ -137,7 +137,7 @@ struct input_dummy {
     vec2 _video_size;
     vec2 VARtexture_size;
     vec2 _output_dummy_size;
-    float _frame_count;
+    int _frame_count;
     float _frame_direction;
     float _frame_rotation;
 float _placeholder74;
