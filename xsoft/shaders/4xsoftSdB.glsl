@@ -21,6 +21,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision mediump float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -94,7 +95,7 @@ void main()
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
 	/* messy I know but we need to make it possible to have it default to input resolution x/y in case RESOLUTION_X is 0.0 */
-	vec2 ps = vec2(1.0/((RESOLUTION_X == 0) ? RESOLUTION_X_DEF : RESOLUTION_X), 1.0/((RESOLUTION_Y == 0) ? RESOLUTION_Y_DEF : RESOLUTION_Y));
+	vec2 ps = vec2(1.0/((RESOLUTION_X == 0.) ? RESOLUTION_X_DEF : RESOLUTION_X), 1.0/((RESOLUTION_Y == 0.) ? RESOLUTION_Y_DEF : RESOLUTION_Y));
 
 	float dx = ps.x;
 	float dy = ps.y;

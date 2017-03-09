@@ -12,7 +12,7 @@
 #endif
 
 #ifdef GL_ES
-#define GET_LEVEL(X) ((X)*(255.0 / (128.0f*(1.962-.518)))-(.518 / (1.962-.518)))
+#define GET_LEVEL(X) ((X)*(255.0 / (128.0*(1.962-.518)))-(.518 / (1.962-.518)))
 #else
 #define TO_INT2(X) int(floor(((X) * 3.0) + 0.5))
 #define TO_INT3(X) int(floor(((X) * 7.0) + 0.5))
@@ -30,7 +30,7 @@ float NTSCsignal(int emphasis, int level, int color, int p)
 
     float attenuation = 0.746;
     const float levels[8] = float[] (   0.350 , 0.518, 0.962, 1.550,
-                                        1.094f, 1.506, 1.962, 1.962);
+                                        1.094, 1.506, 1.962, 1.962);
     if (color > 13)  
         level = 1;
     
@@ -102,7 +102,7 @@ void main()
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
     vec2 pos    = (TEX0.xy*outsize.xy*TextureSize.xy/InputSize.xy)-0.5;
-    colorPhase  = 8.0001 + pos.x + pos.y * 4.0001 + FrameCount * 4.0001;
+    colorPhase  = 8.0001 + pos.x + pos.y * 4.0001 + float(FrameCount) * 4.0001;
 }
 
 #elif defined(FRAGMENT)

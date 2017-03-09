@@ -7,6 +7,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision mediump float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -138,7 +139,7 @@ void main()
     range           =   min(range, 255.0);
             
     float i;
-    for (i = 1 - range; i < 1 + range; i++)
+    for (i = 1. - range; i < 1. + range; i++)
         signal += VAL(i);
 
     if (addNoise > 0.0)

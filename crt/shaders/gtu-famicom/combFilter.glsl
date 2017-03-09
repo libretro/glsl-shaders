@@ -68,7 +68,7 @@ void main()
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
     vec2 pos = (TEX0.xy*outsize.xy*TextureSize.xy/InputSize.xy)-0.5;
-    colorPhase = 8.0 + pos.x + pos.y * 4.0 + FrameCount * 4.0 + 4.0 + phaseOffset * 12.0;
+    colorPhase = 8.0 + pos.x + pos.y * 4.0 + float(FrameCount) * 4.0 + 4.0 + phaseOffset * 12.0;
 }
 
 #elif defined(FRAGMENT)
