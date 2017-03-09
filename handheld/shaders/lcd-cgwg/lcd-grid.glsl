@@ -1,6 +1,6 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
-#define COMPAT_PRECISION mediump
+#define COMPAT_PRECISION highp
 precision mediump float;
 #else
 #define COMPAT_PRECISION
@@ -48,7 +48,7 @@ float intsmear(float x, float dx)
 #endif
 
 #ifdef GL_ES
-#define COMPAT_PRECISION mediump
+#define COMPAT_PRECISION highp
 #else
 #define COMPAT_PRECISION
 #endif
@@ -91,7 +91,7 @@ precision highp float;
 #else
 precision mediump float;
 #endif
-#define COMPAT_PRECISION mediump
+#define COMPAT_PRECISION highp
 #else
 #define COMPAT_PRECISION
 #endif
@@ -116,28 +116,28 @@ COMPAT_VARYING vec4 TEX0;
 
 void main()
 {
-  vec2 texelSize = SourceSize.zw;
+  vec2 texelSize = 1.0 / TextureSize.xy;
   vec2 subtexelSize = texelSize / vec2(3.0,1.0);
   vec2 range;
-  range = InputSize.xy / (outsize.xy * SourceSize.xy);
+  range = InputSize.xy / (OutputSize.xy * TextureSize.xy);
   
-  float left   = vTexCoord.x - texelSize.x*0.5;
+  float left   = vTexCoord.x - texelSize.x*0.4999;
   float top    = vTexCoord.y + range.y;
-  float right  = vTexCoord.x + texelSize.x*0.5;
+  float right  = vTexCoord.x + texelSize.x*0.4999;
   float bottom = vTexCoord.y - range.y;
   
   vec4 lcol, rcol;
   float subpix = mod(vTexCoord.x/subtexelSize.x+1.5,3.0);
   float rsubpix = range.x/subtexelSize.x;
   lcol = vec4(intsmear(subpix+1.0,rsubpix),intsmear(subpix    ,rsubpix),
-	      intsmear(subpix-1.0,rsubpix),0.0);
+	          intsmear(subpix-1.0,rsubpix),0.0);
   rcol = vec4(intsmear(subpix-2.0,rsubpix),intsmear(subpix-3.0,rsubpix),
-	      intsmear(subpix-4.0,rsubpix),0.0);
+	          intsmear(subpix-4.0,rsubpix),0.0);
 			  
-  vec4 topLeftColor     = TEX2D((floor(vec2(left, top)     / texelSize) + 0.5) * texelSize) * lcol;
-  vec4 bottomRightColor = TEX2D((floor(vec2(right, bottom) / texelSize) + 0.5) * texelSize) * rcol;
-  vec4 bottomLeftColor  = TEX2D((floor(vec2(left, bottom)  / texelSize) + 0.5) * texelSize) * lcol;
-  vec4 topRightColor    = TEX2D((floor(vec2(right, top)    / texelSize) + 0.5) * texelSize) * rcol;
+  vec4 topLeftColor     = TEX2D((floor(vec2(left, top)     / texelSize) + 0.4999) * texelSize) * lcol;
+  vec4 bottomRightColor = TEX2D((floor(vec2(right, bottom) / texelSize) + 0.4999) * texelSize) * rcol;
+  vec4 bottomLeftColor  = TEX2D((floor(vec2(left, bottom)  / texelSize) + 0.4999) * texelSize) * lcol;
+  vec4 topRightColor    = TEX2D((floor(vec2(right, top)    / texelSize) + 0.4999) * texelSize) * rcol;
   
   vec2 border = round(vTexCoord.st/subtexelSize);
   vec2 bordert = clamp((border+vec2(0.0,+GRID_STRENGTH)) * subtexelSize,
