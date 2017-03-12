@@ -120,7 +120,7 @@ void main()
     vec2 tex         = vec2((texel + 0.5) * SourceSize.z, vTexCoord.y);
 
     vec3 col = vec3(0.0);
-    for (int i = -2.0; i <= 2.0; i++)
+    for (int i = -2; i <= 2; i++)
     {
         float phase = base_phase - float(i);
         if (abs(phase) < 2.0)
