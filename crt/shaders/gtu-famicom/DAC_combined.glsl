@@ -13,6 +13,8 @@
 
 #ifdef GL_ES
 #define GET_LEVEL(X) ((X)*(255.0 / (128.0*(1.962-.518)))-(.518 / (1.962-.518)))
+#elif __VERSION__ <= 130
+#define GET_LEVEL(X) ((X)*(255.0 / (128.0*(1.962-.518)))-(.518 / (1.962-.518)))
 #else
 #define TO_INT2(X) int(floor(((X) * 3.0) + 0.5))
 #define TO_INT3(X) int(floor(((X) * 7.0) + 0.5))
@@ -149,6 +151,12 @@ void main()
 {
     vec4 c = texture(Source, vTexCoord.xy);
 #ifdef GL_ES
+    vec2 pixmapCoord;
+    pixmapCoord.x = c.x * (15.0 / (16.0 * 4.0)) + c.y * (3.0 / 4.0) +(0.5 / (16.0 * 4.0));
+    pixmapCoord.y = 1.0 - (floor(mod(colorPhase + 0.5, 12.0)) / (12.0 * 8.0) + c.z * (7.0 / 8.0) + (0.5 / (12.0 * 8.0)));
+
+    FragColor = vec4(GET_LEVEL(texture(nestable, pixmapCoord.xy).r));//vec4(signal);
+#elif __VERSION__ <= 130
     vec2 pixmapCoord;
     pixmapCoord.x = c.x * (15.0 / (16.0 * 4.0)) + c.y * (3.0 / 4.0) +(0.5 / (16.0 * 4.0));
     pixmapCoord.y = 1.0 - (floor(mod(colorPhase + 0.5, 12.0)) / (12.0 * 8.0) + c.z * (7.0 / 8.0) + (0.5 / (12.0 * 8.0)));
