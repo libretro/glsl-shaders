@@ -177,7 +177,7 @@ COMPAT_VARYING vec4 TEX0;
 #define fetch(ofs,center,invx) texture(Source, vec2((ofs) * (invx) + center.x, center.y))
 
 #define FIRTAPS 20.
-#ifdef GL_ES
+#if __VERSION__ < 130
 float FIR1 = -0.008030271;
 float FIR2 = 0.003107906;
 float FIR3 = 0.016841352;
@@ -285,7 +285,7 @@ void main()
    
     // lowpass U/V at baseband
     vec2 filtered = vec2(0.0, 0.0);
-#ifdef GL_ES //unroll the loop
+#if __VERSION__ < 130 //unroll the loop
 	vec2 uv;
 	uv   = modem_uv(xy, 1. - FIRTAPS*0.5);
         filtered += FIR_GAIN * uv * FIR1;
