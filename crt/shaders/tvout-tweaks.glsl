@@ -143,11 +143,11 @@ struct output_dummy {
 #define d(x,b) (pi*b*min(a(x)+0.5,1.0/b))
 #define e(x,b) (pi*b*min(max(a(x)-0.5,-1.0/b),1.0/b))
 #define STU(x,b) ((d(x,b)+sin(d(x,b))-e(x,b)-sin(e(x,b)))/(2.0*pi))
-#define X(i) (offset-(i))
+//#define X(i) (offset-(i))
 #define L(C) clamp((C -16.5/ 256.0)*256.0/(236.0-16.0),0.0,1.0)
 #define LCHR(C) clamp((C -16.5/ 256.0)*256.0/(240.0-16.0),0.0,1.0)
 
-COMPAT_PRECISION vec3 LEVELS(vec3 c0)
+vec3 LEVELS(vec3 c0)
 {
    if (TVOUT_TV_COLOR_LEVELS > 0.5)
    {
@@ -199,19 +199,19 @@ float	offset	= fract((TEX0.x * TextureSize.x) - 0.5);
    float X;
    vec3 c;
 
-   X = X(-1.0);
+   X = (offset-(-1.0));//X(-1.0);
    GETC(c);
    VAL(tempColor);
 
-   X = X(0.0);
+   X = (offset-(0.0));//X(0.0);
    GETC(c);
    VAL(tempColor);
 
-   X = X(1.0);
+   X = (offset-(1.0));//X(1.0);
    GETC(c);
    VAL(tempColor);
 
-   X = X(2.0);
+   X = (offset-(2.0));//X(2.0);
    GETC(c);
    VAL(tempColor);
 
