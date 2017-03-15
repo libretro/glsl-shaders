@@ -1,0 +1,38 @@
+shaders = 5
+
+shader0 = shaders/phosphorlut/scanlines-interlace-linearize.glsl
+alias0 = firstPass
+scale0 = 2.0
+scale_type0 = source
+srgb_framebuffer0 = true
+filter_linear0 = false
+
+shader1 = ../blurs/blur-gauss-v.glsl
+scale_type1 = source
+scale1 = 1.0
+srgb_framebuffer1 = true
+filter_linear1 = true
+alias1 = blurPassV
+
+shader2 = ../blurs/blur-gauss-h.glsl
+alias2 = blurPass
+filter_linear2 = true
+scale2 = 1.0
+scale_type2 = source
+srgb_framebuffer2 = true
+
+shader3 = shaders/phosphorlut/phosphorlut-pass0.glsl
+alias3 = phosphorPass
+filter_linear3 = true
+scale_type3 = source
+scale_x3 = 4.0
+scale_y3 = 2.0
+srgb_framebuffer3 = true
+
+shader4 = shaders/phosphorlut/phosphorlut-pass1.glsl
+filter_linear4 = true
+
+textures = "shadow;aperture;slot"
+shadow = shaders/phosphorlut/luts/shadowmask.png
+aperture = shaders/phosphorlut/luts/aperture-grille.png
+slot = shaders/phosphorlut/luts/slotmask.png
