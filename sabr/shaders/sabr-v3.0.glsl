@@ -29,64 +29,67 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
-#define saturate(c) clamp(c, 0.0, 1.0)
-#define lerp(a,b,c) mix(a,b,c)
-#define mul(a,b) (b*a)
-#define fmod(a,b) mod(a,b)
-#define frac(c) fract(c)
-#define tex2D(c,d) texture(c,d)
-#define float2 vec2
-#define float3 vec3
-#define float4 vec4
-#define int2 ivec2
-#define int3 ivec3
-#define int4 ivec4
-#define bool2 bvec2
-#define bool3 bvec3
-#define bool4 bvec4
-#define float2x2 mat2x2
-#define float3x3 mat3x3
-#define float4x4 mat4x4
+/*
+	Constants
+*/
+/*
+	Inequation coefficients for interpolation
+Equations are in the form: Ay + Bx = C
+45, 30, and 60 denote the angle from x each line the cooeficient variable set builds
+*/
+const vec4 Ai  = vec4( 1.0, -1.0, -1.0,  1.0);
+const vec4 B45 = vec4( 1.0,  1.0, -1.0, -1.0);
+const vec4 C45 = vec4( 1.5,  0.5, -0.5,  0.5);
+const vec4 B30 = vec4( 0.5,  2.0, -0.5, -2.0);
+const vec4 C30 = vec4( 1.0,  1.0, -0.5,  0.0);
+const vec4 B60 = vec4( 2.0,  0.5, -2.0, -0.5);
+const vec4 C60 = vec4( 2.0,  0.0, -1.0,  0.5);
 
-#define decal Source
+const vec4 M45 = vec4(0.4, 0.4, 0.4, 0.4);
+const vec4 M30 = vec4(0.2, 0.4, 0.2, 0.4);
+const vec4 M60 = M30.yxwz;
+const vec4 Mshift = vec4(0.2);
 
-const  float4 Ai  = float4( 1.0, -1.0, -1.0,  1.0);
-const  float4 B45 = float4( 1.0,  1.0, -1.0, -1.0);
-const  float4 C45 = float4( 1.5,  0.5, -0.5,  0.5);
-const  float4 B30 = float4( 0.5,  2.0, -0.5, -2.0);
-const  float4 C30 = float4( 1.0,  1.0, -0.5,  0.0);
-const  float4 B60 = float4( 2.0,  0.5, -2.0, -0.5);
-const  float4 C60 = float4( 2.0,  0.0, -1.0,  0.5);
+// Coefficient for weighted edge detection
+const float coef = 2.0;
+// Threshold for if luminance values are "equal"
+const vec4 threshold = vec4(0.32);
 
-const  float4 M45 = float4(0.4, 0.4, 0.4, 0.4);
-const  float4 M30 = float4(0.2, 0.4, 0.2, 0.4);
-const  float4 M60 = M30.yxwz;
-const  float4 Mshift = float4(0.2, 0.2, 0.2, 0.2);
+// Conversion from RGB to Luminance (from GIMP)
+const vec3 lum = vec3(0.21, 0.72, 0.07);
 
-const  float coef = 2.0;
-
-const  float4 threshold = float4(0.32, 0.32, 0.32, 0.32);
-
-const  float3 lum = float3(0.21, 0.72, 0.07);
-
-float4 lum_to(float3 v0, float3 v1, float3 v2, float3 v3) {
-	return float4(dot(lum, v0), dot(lum, v1), dot(lum, v2), dot(lum, v3));
+// Performs same logic operation as && for vectors
+bvec4 _and_(bvec4 A, bvec4 B) {
+	return bvec4(A.x && B.x, A.y && B.y, A.z && B.z, A.w && B.w);
 }
 
-float4 lum_df(float4 A, float4 B) {
+// Performs same logic operation as || for vectors
+bvec4 _or_(bvec4 A, bvec4 B) {
+	return bvec4(A.x || B.x, A.y || B.y, A.z || B.z, A.w || B.w);
+}
+
+// Converts 4 3-color vectors into 1 4-value luminance vector
+vec4 lum_to(vec3 v0, vec3 v1, vec3 v2, vec3 v3) {
+	return vec4(dot(lum, v0), dot(lum, v1), dot(lum, v2), dot(lum, v3));
+}
+
+// Gets the difference between 2 4-value luminance vectors
+vec4 lum_df(vec4 A, vec4 B) {
 	return abs(A - B);
 }
 
-bool4 lum_eq(float4 A, float4 B) {
-	return lessThan(lum_df(A, B) , float4(threshold));
+// Determines if 2 4-value luminance vectors are "equal" based on threshold
+bvec4 lum_eq(vec4 A, vec4 B) {
+	return lessThan(lum_df(A, B), threshold);
 }
 
-float4 lum_wd(float4 a, float4 b, float4 c, float4 d, float4 e, float4 f, float4 g, float4 h) {
+vec4 lum_wd(vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, vec4 f, vec4 g, vec4 h) {
 	return lum_df(a, b) + lum_df(a, c) + lum_df(d, e) + lum_df(d, f) + 4.0 * lum_df(g, h);
 }
 
-float c_df(float3 c1, float3 c2) {
-	float3 df = abs(c1 - c2);
+// Gets the difference between 2 3-value rgb colors
+float c_df(vec3 c1, vec3 c2) {
+	vec3 df = abs(c1 - c2);
 	return df.r + df.g + df.b;
 }
 
@@ -143,14 +146,14 @@ void main()
    	float x = SourceSize.z;//1.0 / IN.texture_size.x;
 	float y = SourceSize.w;//1.0 / IN.texture_size.y;
 	
-	tc = TEX0.xy * 1.00001;
-	xyp_1_2_3    = tc.xxxy + float4(      -x, 0.0,   x, -2.0 * y);
-	xyp_6_7_8    = tc.xxxy + float4(      -x, 0.0,   x,       -y);
-	xyp_11_12_13 = tc.xxxy + float4(      -x, 0.0,   x,      0.0);
-	xyp_16_17_18 = tc.xxxy + float4(      -x, 0.0,   x,        y);
-	xyp_21_22_23 = tc.xxxy + float4(      -x, 0.0,   x,  2.0 * y);
-	xyp_5_10_15  = tc.xyyy + float4(-2.0 * x,  -y, 0.0,        y);
-	xyp_9_14_9   = tc.xyyy + float4( 2.0 * x,  -y, 0.0,        y);
+	tc = TEX0.xy * vec2(1.0004, 1.0);
+	xyp_1_2_3    = tc.xxxy + vec4(      -x, 0.0,   x, -2.0 * y);
+	xyp_6_7_8    = tc.xxxy + vec4(      -x, 0.0,   x,       -y);
+	xyp_11_12_13 = tc.xxxy + vec4(      -x, 0.0,   x,      0.0);
+	xyp_16_17_18 = tc.xxxy + vec4(      -x, 0.0,   x,        y);
+	xyp_21_22_23 = tc.xxxy + vec4(      -x, 0.0,   x,  2.0 * y);
+	xyp_5_10_15  = tc.xyyy + vec4(-2.0 * x,  -y, 0.0,        y);
+	xyp_9_14_9   = tc.xyyy + vec4( 2.0 * x,  -y, 0.0,        y);
 }
 
 #elif defined(FRAGMENT)
@@ -203,117 +206,130 @@ COMPAT_VARYING vec4 xyp_21_22_23;
 
 void main()
 {
-	/*
-		Mask for algorithm
-		+-----+-----+-----+-----+-----+
-		|     |  1  |  2  |  3  |     |
-		+-----+-----+-----+-----+-----+
-		|  5  |  6  |  7  |  8  |  9  |
-		+-----+-----+-----+-----+-----+
-		| 10  | 11  | 12  | 13  | 14  |
-		+-----+-----+-----+-----+-----+
-		| 15  | 16  | 17  | 18  | 19  |
-		+-----+-----+-----+-----+-----+
-		|     | 21  | 22  | 23  |     |
-		+-----+-----+-----+-----+-----+
+/*
+Mask for algorhithm
++-----+-----+-----+-----+-----+
+|     |  1  |  2  |  3  |     |
++-----+-----+-----+-----+-----+
+|  5  |  6  |  7  |  8  |  9  |
++-----+-----+-----+-----+-----+
+| 10  | 11  | 12  | 13  | 14  |
++-----+-----+-----+-----+-----+
+| 15  | 16  | 17  | 18  | 19  |
++-----+-----+-----+-----+-----+
+|     | 21  | 22  | 23  |     |
++-----+-----+-----+-----+-----+
 	*/
-	// Store mask values
-	float3 P1  = tex2D(decal, xyp_1_2_3.xw   ).rgb;
-	float3 P2  = tex2D(decal, xyp_1_2_3.yw   ).rgb;
-	float3 P3  = tex2D(decal, xyp_1_2_3.zw   ).rgb;
+	// Get mask values by performing texture lookup with the uniform sampler
+	vec3 P1  = texture(Source, xyp_1_2_3.xw   ).rgb;
+	vec3 P2  = texture(Source, xyp_1_2_3.yw   ).rgb;
+	vec3 P3  = texture(Source, xyp_1_2_3.zw   ).rgb;
 	
-	float3 P6  = tex2D(decal, xyp_6_7_8.xw   ).rgb;
-	float3 P7  = tex2D(decal, xyp_6_7_8.yw   ).rgb;
-	float3 P8  = tex2D(decal, xyp_6_7_8.zw   ).rgb;
+	vec3 P6  = texture(Source, xyp_6_7_8.xw   ).rgb;
+	vec3 P7  = texture(Source, xyp_6_7_8.yw   ).rgb;
+	vec3 P8  = texture(Source, xyp_6_7_8.zw   ).rgb;
 	
-	float3 P11 = tex2D(decal, xyp_11_12_13.xw).rgb;
-	float3 P12 = tex2D(decal, xyp_11_12_13.yw).rgb;
-	float3 P13 = tex2D(decal, xyp_11_12_13.zw).rgb;
+	vec3 P11 = texture(Source, xyp_11_12_13.xw).rgb;
+	vec3 P12 = texture(Source, xyp_11_12_13.yw).rgb;
+	vec3 P13 = texture(Source, xyp_11_12_13.zw).rgb;
 	
-	float3 P16 = tex2D(decal, xyp_16_17_18.xw).rgb;
-	float3 P17 = tex2D(decal, xyp_16_17_18.yw).rgb;
-	float3 P18 = tex2D(decal, xyp_16_17_18.zw).rgb;
+	vec3 P16 = texture(Source, xyp_16_17_18.xw).rgb;
+	vec3 P17 = texture(Source, xyp_16_17_18.yw).rgb;
+	vec3 P18 = texture(Source, xyp_16_17_18.zw).rgb;
 	
-	float3 P21 = tex2D(decal, xyp_21_22_23.xw).rgb;
-	float3 P22 = tex2D(decal, xyp_21_22_23.yw).rgb;
-	float3 P23 = tex2D(decal, xyp_21_22_23.zw).rgb;
+	vec3 P21 = texture(Source, xyp_21_22_23.xw).rgb;
+	vec3 P22 = texture(Source, xyp_21_22_23.yw).rgb;
+	vec3 P23 = texture(Source, xyp_21_22_23.zw).rgb;
 	
-	float3 P5  = tex2D(decal, xyp_5_10_15.xy ).rgb;
-	float3 P10 = tex2D(decal, xyp_5_10_15.xz ).rgb;
-	float3 P15 = tex2D(decal, xyp_5_10_15.xw ).rgb;
+	vec3 P5  = texture(Source, xyp_5_10_15.xy ).rgb;
+	vec3 P10 = texture(Source, xyp_5_10_15.xz ).rgb;
+	vec3 P15 = texture(Source, xyp_5_10_15.xw ).rgb;
 	
-	float3 P9  = tex2D(decal, xyp_9_14_9.xy  ).rgb;
-	float3 P14 = tex2D(decal, xyp_9_14_9.xz  ).rgb;
-	float3 P19 = tex2D(decal, xyp_9_14_9.xw  ).rgb;
+	vec3 P9  = texture(Source, xyp_9_14_9.xy  ).rgb;
+	vec3 P14 = texture(Source, xyp_9_14_9.xz  ).rgb;
+	vec3 P19 = texture(Source, xyp_9_14_9.xw  ).rgb;
 	
-	// Store luminance values of each point 
-	float4 p7  = lum_to(P7,  P11, P17, P13);
-	float4 p8  = lum_to(P8,  P6,  P16, P18);
-	float4 p11 = p7.yzwx;                      // P11, P17, P13, P7
-	float4 p12 = lum_to(P12, P12, P12, P12);
-	float4 p13 = p7.wxyz;                      // P13, P7,  P11, P17
-	float4 p14 = lum_to(P14, P2,  P10, P22);
-	float4 p16 = p8.zwxy;                      // P16, P18, P8,  P6
-	float4 p17 = p7.zwxy;                      // P11, P17, P13, P7
-	float4 p18 = p8.wxyz;                      // P18, P8,  P6,  P16
-	float4 p19 = lum_to(P19, P3,  P5,  P21);
-	float4 p22 = p14.wxyz;                     // P22, P14, P2,  P10
-	float4 p23 = lum_to(P23, P9,  P1,  P15);
+	// Store luminance values of each point in groups of 4
+	// so that we may operate on all four corners at once
+	vec4 p7  = lum_to(P7,  P11, P17, P13);
+	vec4 p8  = lum_to(P8,  P6,  P16, P18);
+	vec4 p11 = p7.yzwx;                      // P11, P17, P13, P7
+	vec4 p12 = lum_to(P12, P12, P12, P12);
+	vec4 p13 = p7.wxyz;                      // P13, P7,  P11, P17
+	vec4 p14 = lum_to(P14, P2,  P10, P22);
+	vec4 p16 = p8.zwxy;                      // P16, P18, P8,  P6
+	vec4 p17 = p7.zwxy;                      // P17, P13, P7,  P11
+	vec4 p18 = p8.wxyz;                      // P18, P8,  P6,  P16
+	vec4 p19 = lum_to(P19, P3,  P5,  P21);
+	vec4 p22 = p14.wxyz;                     // P22, P14, P2,  P10
+	vec4 p23 = lum_to(P23, P9,  P1,  P15);
 	
-	float2 fp = frac(tc * SourceSize.xy);
+	// Scale current texel coordinate to [0..1]
+	vec2 fp = fract(tc * SourceSize.xy);
 	
-	float4 ma45 = smoothstep(C45 - M45, C45 + M45, Ai * fp.y + B45 * fp.x);
-	float4 ma30 = smoothstep(C30 - M30, C30 + M30, Ai * fp.y + B30 * fp.x);
-	float4 ma60 = smoothstep(C60 - M60, C60 + M60, Ai * fp.y + B60 * fp.x);
-	float4 marn = smoothstep(C45 - M45 + Mshift, C45 + M45 + Mshift, Ai * fp.y + B45 * fp.x);
+	// Determine amount of "smoothing" or mixing that could be done on texel corners
+	vec4 ma45 = smoothstep(C45 - M45, C45 + M45, Ai * fp.y + B45 * fp.x);
+	vec4 ma30 = smoothstep(C30 - M30, C30 + M30, Ai * fp.y + B30 * fp.x);
+	vec4 ma60 = smoothstep(C60 - M60, C60 + M60, Ai * fp.y + B60 * fp.x);
+	vec4 marn = smoothstep(C45 - M45 + Mshift, C45 + M45 + Mshift, Ai * fp.y + B45 * fp.x);
 	
-	float4 e45   = lum_wd(p12, p8, p16, p18, p22, p14, p17, p13);
-	float4 econt = lum_wd(p17, p11, p23, p13, p7, p19, p12, p18);
-	float4 e30   = lum_df(p13, p16);
-	float4 e60   = lum_df(p8, p17);
+	// Perform edge weight calculations
+	vec4 e45   = lum_wd(p12, p8, p16, p18, p22, p14, p17, p13);
+	vec4 econt = lum_wd(p17, p11, p23, p13, p7, p19, p12, p18);
+	vec4 e30   = lum_df(p13, p16);
+	vec4 e60   = lum_df(p8, p17);
+	
+	// Calculate rule results for interpolation
+	bvec4 r45_1   = _and_(notEqual(p12, p13), notEqual(p12, p17));
+	bvec4 r45_2   = _and_(not(lum_eq(p13, p7)), not(lum_eq(p13, p8)));
+	bvec4 r45_3   = _and_(not(lum_eq(p17, p11)), not(lum_eq(p17, p16)));
+	bvec4 r45_4_1 = _and_(not(lum_eq(p13, p14)), not(lum_eq(p13, p19)));
+	bvec4 r45_4_2 = _and_(not(lum_eq(p17, p22)), not(lum_eq(p17, p23)));
+	bvec4 r45_4   = _and_(lum_eq(p12, p18), _or_(r45_4_1, r45_4_2));
+	bvec4 r45_5   = _or_(lum_eq(p12, p16), lum_eq(p12, p8));
+	bvec4 r45     = _and_(r45_1, _or_(_or_(_or_(r45_2, r45_3), r45_4), r45_5));
+	bvec4 r30 = _and_(notEqual(p12, p16), notEqual(p11, p16));
+	bvec4 r60 = _and_(notEqual(p12, p8), notEqual(p7, p8));
+	
+	// Combine rules with edge weights
+	bvec4 edr45 = _and_(lessThan(e45, econt), r45);
+	bvec4 edrrn = lessThanEqual(e45, econt);
+	bvec4 edr30 = _and_(lessThanEqual(coef * e30, e60), r30);
+	bvec4 edr60 = _and_(lessThanEqual(coef * e60, e30), r60);
+	
+	// Finalize interpolation rules and cast to float (0.0 for false, 1.0 for true)
+	vec4 final45 = vec4(_and_(_and_(not(edr30), not(edr60)), edr45));
+	vec4 final30 = vec4(_and_(_and_(edr45, not(edr60)), edr30));
+	vec4 final60 = vec4(_and_(_and_(edr45, not(edr30)), edr60));
+	vec4 final36 = vec4(_and_(_and_(edr60, edr30), edr45));
+	vec4 finalrn = vec4(_and_(not(edr45), edrrn));
+	
+	// Determine the color to mix with for each corner
+	vec4 px = step(lum_df(p12, p17), lum_df(p12, p13));
+	
+	// Determine the mix amounts by combining the final rule result and corresponding
+	// mix amount for the rule in each corner
+	vec4 mac = final36 * max(ma30, ma60) + final30 * ma30 + final60 * ma60 + final45 * ma45 + finalrn * marn;
+	
+/*
+Calculate the resulting color by traversing clockwise and counter-clockwise around
+the corners of the texel
 
-/*  The whole edge detection thing seems broken here, so may as well comment it out to save cycles	
-	bool4 r45 = (notEqual(p12 , p13) == bool4(true) && notEqual(p12 , p17) == bool4(true) && (
-			lum_eq(p13, p7) == bool4(false) && lum_eq(p13, p8) == bool4(false) ||
-			lum_eq(p17, p11) == bool4(false) && lum_eq(p17, p16) == bool4(false) ||
-			lum_eq(p12, p18) == bool4(true) && (
-					lum_eq(p13, p14) == bool4(false) && lum_eq(p13, p19) == bool4(false) ||
-					lum_eq(p17, p22) == bool4(false) && lum_eq(p17, p23) == bool4(false)) ||
-			lum_eq(p12, p16) == bool4(true) ||
-			lum_eq(p12, p8) == bool4(true))) ? bool4(true) : bool4(false);
-	bool4 r30 = (notEqual(p12 , p16) == bool4(true) && notEqual(p11 , p16) == bool4(true)) ? bool4(true) : bool4(false);
-	bool4 r60 = (notEqual(p12 , p8) == bool4(true) && notEqual(p7 , p8) == bool4(true)) ? bool4(true) : bool4(false);
-	
-	bool4 edr45 = (lessThan(e45 , econt) == bool4(true) && r45 == bool4(true)) ? bool4(true) : bool4(false);
-	bool4 edrrn = (lessThanEqual(e45 , econt) == bool4(true)) ? bool4(true) : bool4(false);
-	bool4 edr30 = (lessThanEqual(e30 * coef , e60) == bool4(true) && (r30 == bool4(true))) ? bool4(true) : bool4(false);
-	bool4 edr60 = (lessThanEqual(e60 * coef , e30) == bool4(true) && (r60 == bool4(true))) ? bool4(true) : bool4(false);
+Finally choose the result that has the largest difference from the texel's original
+color
 */
+	vec3 res1 = P12;
+	res1 = mix(res1, mix(P13, P17, px.x), mac.x);
+	res1 = mix(res1, mix(P7, P13, px.y), mac.y);
+	res1 = mix(res1, mix(P11, P7, px.z), mac.z);
+	res1 = mix(res1, mix(P17, P11, px.w), mac.w);
 	
-	//FIXME: dunno what's up here. final45 is the only one that seems to matter and it's either all on or all off
-	//       again, may as well comment it out to save cycles :/
-	float4 final45 = float4(1.0);//(edr30 == bool4(false) && edr60 == bool4(false) && edr45 == bool4(true)) ? float4(1.0) : float4(1.0);
-	float4 final30 = float4(0.0);//(edr45 == bool4(true) && edr30 == bool4(true) && edr60 == bool4(false)) ? float4(1.0) : float4(0.0);
-	float4 final60 = float4(0.0);//(edr45 == bool4(true) && edr60 == bool4(true) && edr30 == bool4(false)) ? float4(1.0) : float4(0.0);
-	float4 final36 = float4(0.0);//(edr45 == bool4(true) && edr30 == bool4(true) && edr60 == bool4(true)) ? float4(1.0) : float4(0.0);
-	float4 finalrn = float4(0.0);//(edr45 == bool4(false) && edrrn == bool4(true)) ? float4(1.0) : float4(0.0);
+	vec3 res2 = P12;
+	res2 = mix(res2, mix(P17, P11, px.w), mac.w);
+	res2 = mix(res2, mix(P11, P7, px.z), mac.z);
+	res2 = mix(res2, mix(P7, P13, px.y), mac.y);
+	res2 = mix(res2, mix(P13, P17, px.x), mac.x);
 	
-	float4 px = step(lum_df(p12, p17), lum_df(p12, p13));
-	
-	float4 mac = final36 * max(ma30, ma60) + final30 * ma30 + final60 * ma60 + final45 * ma45 + finalrn * marn;
-	
-	float3 res1 = P12;
-	res1 = lerp(res1, lerp(P13, P17, px.x), mac.x);
-	res1 = lerp(res1, lerp(P7 , P13, px.y), mac.y);
-	res1 = lerp(res1, lerp(P11, P7 , px.z), mac.z);
-	res1 = lerp(res1, lerp(P17, P11, px.w), mac.w);
-	
-	float3 res2 = P12;
-	res2 = lerp(res2, lerp(P17, P11, px.w), mac.w);
-	res2 = lerp(res2, lerp(P11, P7 , px.z), mac.z);
-	res2 = lerp(res2, lerp(P7 , P13, px.y), mac.y);
-	res2 = lerp(res2, lerp(P13, P17, px.x), mac.x);
-	
-   FragColor = float4(lerp(res1, res2, step(c_df(P12, res1), c_df(P12, res2))), 1.0);
+	FragColor = vec4(mix(res1, res2, step(c_df(P12, res1), c_df(P12, res2))), 1.0);
 } 
 #endif
