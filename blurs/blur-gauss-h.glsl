@@ -80,7 +80,6 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-// in variables go here as COMPAT_VARYING whatever
 
 // compatibility #defines
 #define Source Texture
@@ -89,12 +88,38 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
-// delete all 'params.' or 'registers.' or whatever in the fragment
-
 void main()
 {
 	vec2 texcoord  = vTexCoord;
 	vec2 PIXEL_SIZE = SourceSize.zw;
+#if __VERSION__ < 130
+	float sampleOffsets1 = 0.0;
+	float sampleOffsets2 = 1.4347826;
+	float sampleOffsets3 = 3.3478260;
+	float sampleOffsets4 = 5.2608695;
+	float sampleOffsets5 = 7.1739130;
+
+	float sampleWeights1 = 0.16818994;
+	float sampleWeights2 = 0.27276957;
+	float sampleWeights3 = 0.11690125;
+	float sampleWeights4 = 0.024067905;
+	float sampleWeights5 = 0.0021112196;
+
+	vec4 color = texture(Source, texcoord) * sampleWeights1;
+
+// unroll the loop
+		color += texture(Source, texcoord + vec2(sampleOffsets2* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights2;
+		color += texture(Source, texcoord - vec2(sampleOffsets2* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights2;
+
+		color += texture(Source, texcoord + vec2(sampleOffsets3* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights3;
+		color += texture(Source, texcoord - vec2(sampleOffsets3* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights3;
+
+		color += texture(Source, texcoord + vec2(sampleOffsets4* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights4;
+		color += texture(Source, texcoord - vec2(sampleOffsets4* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights4;
+
+		color += texture(Source, texcoord + vec2(sampleOffsets5* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights5;
+		color += texture(Source, texcoord - vec2(sampleOffsets5* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights5;
+#else
 
 	float sampleOffsets[5] = { 0.0, 1.4347826, 3.3478260, 5.2608695, 7.1739130 };
 	float sampleWeights[5] = { 0.16818994, 0.27276957, 0.11690125, 0.024067905, 0.0021112196 };
@@ -104,6 +129,8 @@ void main()
 		color += texture(Source, texcoord + vec2(sampleOffsets[i]*HW * PIXEL_SIZE.x, 0.0)) * sampleWeights[i];
 		color += texture(Source, texcoord - vec2(sampleOffsets[i]*HW * PIXEL_SIZE.x, 0.0)) * sampleWeights[i];
 	}
+#endif
+
    FragColor = vec4(color);
 } 
 #endif

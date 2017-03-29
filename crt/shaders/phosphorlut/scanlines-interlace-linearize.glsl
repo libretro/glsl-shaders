@@ -121,7 +121,7 @@ void main()
 {
    vec4 res = texture(Source, vTexCoord).rgba;
    float y = 0.0;
-   float tick = FrameCount;
+   float tick = vec2(FrameCount, 1.0).x;
 
    // assume anything with a vertical resolution greater than 400 lines is interlaced
    if (InputSize.y > 400.0)
