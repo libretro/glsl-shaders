@@ -143,7 +143,7 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
-    TEX0.xy = TexCoord.xy;
+    TEX0.xy = TexCoord.xy * 1.0001;
    float dx = SourceSize.z;
    float dy = SourceSize.w;
    t1 = vTexCoord.xyxy + vec4(-dx, -dy, 2.0*dx, 2.0*dy);

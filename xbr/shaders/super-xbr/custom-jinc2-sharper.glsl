@@ -124,7 +124,7 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
-    TEX0.xy = TexCoord.xy;
+    TEX0.xy = TexCoord.xy * 1.0001;
 }
 
 #elif defined(FRAGMENT)
