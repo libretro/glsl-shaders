@@ -122,7 +122,7 @@ void main()
     vec3 E = pow(texture(Source, vTexCoord).xyz, vec3(2.4));
 
     vec2 fp = fract(vTexCoord*SourceSize.xy);
-    vec2 ps = SourceSize.xy * outsize.zw;
+    vec2 ps = InputSize.xy * outsize.zw;
 
     vec2 f = clamp(clamp(fp + 0.5*ps, 0.0, 1.0) - RETRO_PIXEL_SIZE, vec2(0.0), ps)/ps;
 
