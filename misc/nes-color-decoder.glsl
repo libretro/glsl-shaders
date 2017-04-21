@@ -19,7 +19,11 @@ uniform COMPAT_PRECISION float contrast;
 uniform COMPAT_PRECISION float brightness;
 uniform COMPAT_PRECISION float gamma;
 #else
-#define intensity 1.0
+#define saturation 1.0
+#define hue_tweak 0.0
+#define contrast 1.0
+#define brightness 1.0
+#define gamma 1.8
 #endif
 
 bool wave (int p, int color)
