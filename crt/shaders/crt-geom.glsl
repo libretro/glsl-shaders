@@ -379,11 +379,7 @@ void main()
 // edges of the texels of the underlying texture.
 
 // Texture coordinates of the texel containing the active pixel.
-#ifdef CURVATURE
-	vec2 xy = transform(TEX0.xy);
-#else
-	vec2 xy = TEX0.xy;
-#endif
+	vec2 xy = (CURVATURE > 0.5) ? transform(TEX0.xy) : TEX0.xy;
 
 	float cval = corner(xy);
 
