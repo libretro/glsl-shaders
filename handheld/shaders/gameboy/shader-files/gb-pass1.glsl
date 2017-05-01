@@ -156,7 +156,7 @@ COMPAT_VARYING vec2 blur_coords_upper_bound;
 // Fragment definitions                                                       //
 ////////////////////////////////////////////////////////////////////////////////
 
-//#define blending_modifier(color) clamp((color.a == 0) + blending_mode, 0.0, 1.0)
+#define blending_modifier(color) clamp(float(color.a == 0.) + blending_mode, 0.0, 1.0)
 
 void main()
 {
@@ -186,9 +186,9 @@ void main()
         (out_color.a - adjacent_texel_2.a) + 
         (out_color.a - adjacent_texel_3.a) + 
         (out_color.a - adjacent_texel_4.a) 
-    ) * adjacent_texel_alpha_blending;
+    ) * adjacent_texel_alpha_blending * blending_modifier(out_color);
     
-    out_color.a *= clamp((0.0) + blending_mode, 0.0, 1.0);
+    //out_color.a *= clamp((0.0) + blending_mode, 0.0, 1.0);
 
     FragColor = out_color;
 } 
