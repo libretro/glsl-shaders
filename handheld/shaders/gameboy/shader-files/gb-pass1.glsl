@@ -187,8 +187,6 @@ void main()
         (out_color.a - adjacent_texel_3.a) + 
         (out_color.a - adjacent_texel_4.a) 
     ) * adjacent_texel_alpha_blending * blending_modifier(out_color);
-    
-    //out_color.a *= clamp((0.0) + blending_mode, 0.0, 1.0);
 
     FragColor = out_color;
 } 
