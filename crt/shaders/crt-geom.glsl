@@ -256,7 +256,7 @@ COMPAT_VARYING vec4 TEX0;
 	#define LINEAR_PROCESSING
 
 // Enable screen curvature.
-        #define CURVATURE
+//        #define CURVATURE
 
 // Enable 3x oversampling of the beam profile
         #define OVERSAMPLE
