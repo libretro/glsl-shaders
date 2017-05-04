@@ -115,7 +115,7 @@ void main()
 {
    vec2 texelSize = SourceSize.zw;
 
-   vec2 range = vec2(abs(SourceSize.x / (outsize.x * SourceSize.x)), abs(SourceSize.y / (outsize.y * SourceSize.y)));
+   vec2 range = vec2(abs(InputSize.x / (outsize.x * SourceSize.x)), abs(InputSize.y / (outsize.y * SourceSize.y)));
    range = range / 2.0 * 0.999;
 
    float left   = vTexCoord.x - range.x;
