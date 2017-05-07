@@ -1,0 +1,12 @@
+shaders = "3"
+shader0 = ../misc/nes-color-decoder.glsl
+shader1 = ../misc/colorimetry.glsl
+shader2 = ../retro/shaders/pixellate.glsl
+
+filter_linear0 = "false"
+scale_type0 = "source"
+scale0 = "1.000000"
+
+filter_linear1 = "false"
+scale_type1 = "source"
+scale1 = "1.000000"
