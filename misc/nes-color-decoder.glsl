@@ -5,26 +5,53 @@
 #define COMPAT_PRECISION
 #endif
 
+/*
+   NES NTSC Color Decoder shader
+   Ported from Bisqwit's C++ NES Palette Generator
+   https://forums.nesdev.com/viewtopic.php?p=85060#p85060
+
+   Hue Preserve Clip functions ported from Drag's Palette Generator
+   http://drag.wootest.net/misc/palgen.html
+
+   Use with Nestopia or FCEUmm libretro cores with the palette set to 'raw'.
+*/
+
+
 // Parameter lines go here:
-#pragma parameter saturation "Saturation" 1.0 0.0 5.0 0.05
-#pragma parameter hue_tweak "Hue" 0.0 -10.0 10.0 0.05
-#pragma parameter contrast "Contrast" 1.0 0.0 2.0 0.05
-#pragma parameter brightness "Brightness" 1.0 0.0 2.0 0.05
-#pragma parameter gamma "Gamma" 1.8 1.0 2.5 0.05
+#pragma parameter nes_saturation "Saturation" 1.0 0.0 5.0 0.05
+#pragma parameter nes_hue "Hue" 0.0 -360.0 360.0 1.0
+#pragma parameter nes_contrast "Contrast" 1.0 0.0 2.0 0.05
+#pragma parameter nes_brightness "Brightness" 1.0 0.0 2.0 0.05
+#pragma parameter nes_gamma "Gamma" 1.8 1.0 2.5 0.05
+#pragma parameter nes_sony_matrix "Sony CXA2025AS US colors" 0.0 0.0 1.0 1.0
+#pragma parameter nes_clip_method "Palette clipping method" 0.0 0.0 2.0 1.0
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float saturation;
-uniform COMPAT_PRECISION float hue_tweak;
-uniform COMPAT_PRECISION float contrast;
-uniform COMPAT_PRECISION float brightness;
-uniform COMPAT_PRECISION float gamma;
+uniform COMPAT_PRECISION float nes_saturation;
+uniform COMPAT_PRECISION float nes_hue;
+uniform COMPAT_PRECISION float nes_contrast;
+uniform COMPAT_PRECISION float nes_brightness;
+uniform COMPAT_PRECISION float nes_gamma;
+uniform COMPAT_PRECISION float nes_sony_matrix;
+uniform COMPAT_PRECISION float nes_clip_method;
 #else
-#define saturation 1.0
-#define hue_tweak 0.0
-#define contrast 1.0
-#define brightness 1.0
-#define gamma 1.8
+#define nes_saturation 1.0
+#define nes_hue 0.0
+#define nes_contrast 1.0
+#define nes_brightness 1.0
+#define nes_gamma 1.8
+#define nes_sony_matrix 0.0
+#define nes_clip_method 0.0
 #endif
+
+#define saturation nes_saturation
+#define hue nes_hue
+#define contrast nes_contrast
+#define brightness nes_brightness
+#define gamma nes_gamma
+
+//comment the define out to use the "common" conversion matrix instead of the FCC sanctioned one
+#define USE_FCC_MATRIX
 
 bool wave (int p, int color)
 {
@@ -36,6 +63,65 @@ float gammafix (float f)
    return f < 0.0 ? 0.0 : pow(f, 2.2 / gamma);
 }
 
+vec3 huePreserveClipDarken(float r, float g, float b)
+{
+   float ratio = 1.0;
+   if ((r > 1.0) || (g > 1.0) || (b > 1.0))
+   {
+      float max = r;
+      if (g > max)
+         max = g;
+      if (b > max)
+         max = b;
+      ratio = 1.0 / max;
+   }
+
+   r *= ratio;
+   g *= ratio;
+   b *= ratio;
+
+   r = clamp(r, 0.0, 1.0);
+   g = clamp(g, 0.0, 1.0);
+   b = clamp(b, 0.0, 1.0);
+
+   return vec3(r, g, b);
+}
+
+vec3 huePreserveClipDesaturate(float r, float g, float b)
+{
+   float l = (.299 * r) + (0.587 * g) + (0.114 * b);
+   bool ovr = false;
+   float ratio = 1.0;
+
+   if ((r > 1.0) || (g > 1.0) || (b > 1.0))
+   {
+      ovr = true;
+      float max = r;
+      if (g > max) max = g;
+      if (b > max) max = b;
+      ratio = 1.0 / max;
+   }
+
+   if (ovr)
+   {
+      r -= 1.0;
+      g -= 1.0;
+      b -= 1.0;
+      r *= ratio;
+      g *= ratio;
+      b *= ratio;
+      r += 1.0;
+      g += 1.0;
+      b += 1.0;
+   }
+
+   r = clamp(r, 0.0, 1.0);
+   g = clamp(g, 0.0, 1.0);
+   b = clamp(b, 0.0, 1.0);
+
+   return vec3(r, g, b);
+}
+
 vec3 MakeRGBColor(int emphasis, int level, int color)
 {
    float y = 0.0;
@@ -45,6 +131,11 @@ vec3 MakeRGBColor(int emphasis, int level, int color)
    float r = 0.0;
    float g = 0.0;
    float b = 0.0;
+
+   float yiq2rgb[6];
+
+   // Color 0xE and 0xF are black
+   level = (color < 14) ? level : 1;
 
    // Voltage levels, relative to synch voltage
    float black = 0.518;
@@ -78,6 +169,8 @@ vec3 MakeRGBColor(int emphasis, int level, int color)
       v = (v - 0.5) * contrast + 0.5;
       v *= (brightness / 12.0);
 
+      float hue_tweak = hue * 12.0 / 360.0;
+
       y += v;
       i += v * cos((3.141592653 / 6.0) * (p + hue_tweak) );
       q += v * sin((3.141592653 / 6.0) * (p + hue_tweak) );
@@ -87,12 +180,65 @@ vec3 MakeRGBColor(int emphasis, int level, int color)
    i *= saturation;
    q *= saturation;
 
-   // Convert YIQ into RGB according to FCC-sanctioned conversion matrix.
-   r = clamp((1.0 * gammafix(y +  0.946882 * i +  0.623557 * q)), 0, 1.0);
-   g = clamp((1.0 * gammafix(y + -0.274788 * i + -0.635691 * q)), 0, 1.0);
-   b = clamp((1.0 * gammafix(y + -1.108545 * i +  1.709007 * q)), 0, 1.0);
+   if (nes_sony_matrix > 0.5)
+   {
+      // Sony CXA2025AS US conversion matrix
+      yiq2rgb[0] = 1.630;
+      yiq2rgb[1] = 0.317;
+      yiq2rgb[2] = -0.378;
+      yiq2rgb[3] = -0.466;
+      yiq2rgb[4] = -1.089;
+      yiq2rgb[5] = 1.677;
+   }
+   else
+   {
+#ifdef USE_FCC_MATRIX
+      // FCC sanctioned conversion matrix
+      yiq2rgb[0] = 0.946882;
+      yiq2rgb[1] = 0.623557;
+      yiq2rgb[2] = -0.274788;
+      yiq2rgb[3] = -0.635691;
+      yiq2rgb[4] = -1.108545;
+      yiq2rgb[5] = 1.709007;
+#else
+      // commonly used conversion matrix
+      yiq2rgb[0] = 0.956;
+      yiq2rgb[1] = 0.621;
+      yiq2rgb[2] = -0.272;
+      yiq2rgb[3] = -0.647;
+      yiq2rgb[4] = -1.105;
+      yiq2rgb[5] = 1.702;
+#endif
+   }
 
-   return vec3(r,g,b);
+   // Convert YIQ into RGB according to selected conversion matrix
+   r = gammafix(y + yiq2rgb[0] * i + yiq2rgb[1] * q);
+   g = gammafix(y + yiq2rgb[2] * i + yiq2rgb[3] * q);
+   b = gammafix(y + yiq2rgb[4] * i + yiq2rgb[5] * q);
+
+   vec3 corrected_rgb;
+
+   // Apply desired clipping method to out-of-gamut colors.
+   if (nes_clip_method < 0.5)
+   {
+      //If a channel is out of range (> 1.0), it's simply clamped to 1.0. This may change hue, saturation, and/or lightness.
+      r = clamp(r, 0.0, 1.0);
+      g = clamp(g, 0.0, 1.0);
+      b = clamp(b, 0.0, 1.0);
+      corrected_rgb = vec3(r, g, b);
+   }
+   else if (nes_clip_method == 1.0)
+   {
+      //If any channels are out of range, the color is darkened until it is completely in range.
+      corrected_rgb = huePreserveClipDarken(r, g, b);
+   }
+   else if (nes_clip_method == 2.0)
+   {
+      //If any channels are out of range, the color is desaturated towards the luminance it would've had.
+      corrected_rgb = huePreserveClipDesaturate(r, g, b);
+   }
+
+   return corrected_rgb;
 }
 
 #if defined(VERTEX)
