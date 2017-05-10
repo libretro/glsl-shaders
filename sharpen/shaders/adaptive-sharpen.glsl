@@ -1,3 +1,5 @@
+#version 130
+
 // Copyright (c) 2015, bacondither
 // All rights reserved.
 //
@@ -206,9 +208,9 @@ void main()
 // RGB to greyscale
 	float	c0_Y	=	CtG(c0);
 	
-	float	kernel[25]	=	{ c0_Y,  CtG(c1), CtG(c2), CtG(c3), CtG(c4), CtG(c5), CtG(c6), CtG(c7), CtG(c8),
+	float	kernel[25]	=	float[]( c0_Y,  CtG(c1), CtG(c2), CtG(c3), CtG(c4), CtG(c5), CtG(c6), CtG(c7), CtG(c8),
 							CtG(c9), CtG(c10), CtG(c11), CtG(c12), CtG(c13), CtG(c14), CtG(c15), CtG(c16),
-							CtG(c17), CtG(c18), CtG(c19), CtG(c20), CtG(c21), CtG(c22), CtG(c23), CtG(c24) };
+							CtG(c17), CtG(c18), CtG(c19), CtG(c20), CtG(c21), CtG(c22), CtG(c23), CtG(c24) );
 			
 // Partial laplacian outer pixel weighting scheme
 	float	mdiff_c0	=	0.03 + 4*( abs(kernel[0]-kernel[2]) + abs(kernel[0]-kernel[4])
