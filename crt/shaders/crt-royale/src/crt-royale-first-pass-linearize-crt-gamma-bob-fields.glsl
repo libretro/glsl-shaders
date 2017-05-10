@@ -1,3 +1,5 @@
+#version 130
+
 /////////////////////////////  GPL LICENSE NOTICE  /////////////////////////////
 
 //  crt-royale: A full-featured CRT shader, with cheese.
@@ -2279,7 +2281,7 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
-    TEX0.xy = TexCoord;
+    TEX0.xy = TexCoord.xy;
    
 	//  Save the uv distance between texels:
 	uv_step = vec2(1.0) * SourceSize.zw;

@@ -1,3 +1,5 @@
+#version 120
+
 //////////////////////////////////////////////////////////////////////////
 //
 // CC0 1.0 Universal (CC0 1.0)
@@ -66,10 +68,10 @@ uniform COMPAT_PRECISION float animate_artifacts;
 
 // Weight for applying an unsharp mask at a distance of 1, 2, or 3 pixels from changes in luma.
 // The sign of each weight changes in order to alternately simulate overshooting and undershooting.
-const float SharpWeight[3] =
-{
+float SharpWeight[3] =
+float[](
 	1.0, -0.3162277, 0.1
-};
+);
 
 // Calculate luma for an RGB value.
 float Brightness(vec4 InVal)

@@ -1,3 +1,5 @@
+#version 430
+
 // 8x8 Bayer matrix dithering
 // by Martins Upitis
 // license: "All the content here is and will be free to use for everyone, but a donation is always nice."

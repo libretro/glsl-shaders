@@ -1,3 +1,5 @@
+#version 130
+
 /////////////////////////////  GPL LICENSE NOTICE  /////////////////////////////
 
 //  crt-royale: A full-featured CRT shader, with cheese.
@@ -1748,16 +1750,16 @@ vec2 get_frame_sign(float frame)
 
 /////////////////////////  ANTIALIASED TEXTURE LOOKUPS  ////////////////////////
 
-vec3 tex2Daa_subpixel_weights_only(sampler2D tex,
-    vec2 tex_uv, mat2x2 pixel_to_tex_uv)
+vec3 tex2Daa_subpixel_weights_only(sampler2D tex, 
+    vec2 coord, mat2x2 pixel_to_tex_uv)
 {
     //  This function is unlike the others: Just perform a single independent
     //  lookup for each subpixel.  It may be very aliased.
     vec2 aa_r_offset = get_aa_subpixel_r_offset();
     vec2 aa_r_offset_uv_offset = (aa_r_offset * pixel_to_tex_uv);
-    float color_g = tex2D_linearize(tex, tex_uv).g;
-    float color_r = tex2D_linearize(tex, tex_uv + aa_r_offset_uv_offset).r;
-    float color_b = tex2D_linearize(tex, tex_uv - aa_r_offset_uv_offset).b;
+    float color_g = tex2D_linearize(tex, coord).g;
+    float color_r = tex2D_linearize(tex, coord + aa_r_offset_uv_offset).r;
+    float color_b = tex2D_linearize(tex, coord - aa_r_offset_uv_offset).b;
     return vec3(color_r, color_g, color_b);
 }
 
@@ -3246,7 +3248,7 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 
 // compatibility #defines
-#define tex_uv TEX0.xy
+//#define tex_uv TEX0.xy
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -3254,6 +3256,7 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy;
+    vec2 tex_uv = TEX0.xy;
    video_and_texture_size_inv = vec4(1.0) / vec4(InputSize.xy, TextureSize.xy);
     output_size_inv = vec2(1.0) / OutputSize.xy;
 

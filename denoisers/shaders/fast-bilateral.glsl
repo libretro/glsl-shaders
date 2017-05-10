@@ -1,3 +1,5 @@
+#version 120
+
 /*
    Hyllian's Fast Bilateral Shader
    

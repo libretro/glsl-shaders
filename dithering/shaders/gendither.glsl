@@ -1,3 +1,5 @@
+#version 120
+
 // Gendither
 // 
 // 	Copyright (C) 2013-2014 leilei
@@ -9,12 +11,12 @@
 // any later version.
 
 // This table is a lazy jailbar pattern
-int erroredtable[16] = {
+int erroredtable[16] = int[](
 	0,1,0,1,   
 	16,15,16,15,
 	0,1,0,1,   
 	16,15,16,15
-};
+);
 
 #if defined(VERTEX)
 

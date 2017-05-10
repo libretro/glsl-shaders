@@ -1,3 +1,5 @@
+#version 130
+
 // HQ2x
 // by Lior Halphon
 // ported to slang by hunterk

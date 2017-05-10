@@ -1,3 +1,5 @@
+#version 130
+
 /////////////////////////////  GPL LICENSE NOTICE  /////////////////////////////
 
 //  crt-royale: A full-featured CRT shader, with cheese.
@@ -4516,7 +4518,7 @@ void main()
         Pass5TextureSize.xy;
     brightpass_tex_uv = video_uv * Pass9InputSize.xy /
         Pass9TextureSize.xy;
-    bloom_tex_uv = TexCoord;
+    bloom_tex_uv = TexCoord.xy;
 
     //  We're horizontally blurring the bloom input (vertically blurred
     //  brightpass).  Get the uv distance between output pixels / input texels
