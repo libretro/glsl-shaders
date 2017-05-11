@@ -1,3 +1,5 @@
+#version 120
+
 /*
    
   *******  Super XBR Shader - pass2  *******  This pass is optional.

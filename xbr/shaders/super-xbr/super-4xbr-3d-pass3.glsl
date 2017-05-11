@@ -1,3 +1,5 @@
+#version 120
+
 /*
    
   *******  Super 4XBR Shader - pass3  ******* 

@@ -1,3 +1,5 @@
+#version 120
+
 /*
    Hyllian's xBR-lv3 Shader
    

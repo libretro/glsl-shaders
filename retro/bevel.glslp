@@ -1,4 +1,4 @@
 shaders = 1
 
-shader0 = shaders/aann.glsl
+shader0 = shaders/bevel.glsl
 filter_linear0 = false

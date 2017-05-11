@@ -1,3 +1,5 @@
+#version 110
+
 //    Pixellate Shader
 //    Copyright (c) 2011, 2012 Fes
 //    Permission to use, copy, modify, and/or distribute this software for any

@@ -1,3 +1,5 @@
+#version 130
+
 // OmniScale
 // by Lior Halphon
 // ported to RetroArch glsl by hunterk

@@ -1,3 +1,5 @@
+#version 120
+
 /*
    
   *******  Super XBR 3D Shader - pass0  *******
