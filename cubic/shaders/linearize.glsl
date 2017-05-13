@@ -12,6 +12,7 @@
 
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision COMPAT_PRECISION float;
 #else
 #define COMPAT_PRECISION
 #endif

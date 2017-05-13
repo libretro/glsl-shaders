@@ -60,8 +60,8 @@ COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 
 uniform mat4 MVPMatrix;
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -83,7 +83,7 @@ void main()
 #if __VERSION__ >= 130
 #define COMPAT_VARYING in
 #define COMPAT_TEXTURE texture
-out vec4 FragColor;
+out mediump vec4 FragColor;
 #else
 #define COMPAT_VARYING varying
 #define FragColor gl_FragColor
@@ -101,14 +101,13 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-// in variables go here as COMPAT_VARYING whatever
 
 // fragment compatibility #defines
 #define Source Texture
@@ -197,7 +196,7 @@ vec4 scale(sampler2D image, vec2 coord)
     if (P(0x2f,0x2f)) {
         float dist = length(p - vec2(0.5));
         float pixel_size = length(1.0 / (uResolution / textureDimensions));
-        if (dist < 0.5 - pixel_size / 2) {
+        if (dist < 0.5 - pixel_size / 2.) {
             return w4;
         }
         vec4 r;
@@ -208,40 +207,40 @@ vec4 scale(sampler2D image, vec2 coord)
             r = mix(mix(w1 * 0.375 + w0 * 0.25 + w3 * 0.375, w3, p.y * 2.0), w1, p.x * 2.0);
         }
 
-        if (dist > 0.5 + pixel_size / 2) {
+        if (dist > 0.5 + pixel_size / 2.) {
             return r;
         }
-        return mix(w4, r, (dist - 0.5 + pixel_size / 2) / pixel_size);
+        return mix(w4, r, (dist - 0.5 + pixel_size / 2.) / pixel_size);
     }
     if (P(0xbf,0x37) || P(0xdb,0x13)) {
         float dist = p.x - 2.0 * p.y;
-        float pixel_size = length(1.0 / (uResolution / textureDimensions)) * sqrt(5);
-        if (dist > pixel_size / 2) {
+        float pixel_size = length(1.0 / (uResolution / textureDimensions)) * sqrt(5.);
+        if (dist > pixel_size / 2.) {
             return w1;
         }
         vec4 r = mix(w3, w4, p.x + 0.5);
-        if (dist < -pixel_size / 2) {
+        if (dist < -pixel_size / 2.) {
             return r;
         }
-        return mix(r, w1, (dist + pixel_size / 2) / pixel_size);
+        return mix(r, w1, (dist + pixel_size / 2.) / pixel_size);
     }
     if (P(0xdb,0x49) || P(0xef,0x6d)) {
         float dist = p.y - 2.0 * p.x;
-        float pixel_size = length(1.0 / (uResolution / textureDimensions)) * sqrt(5);
-        if (p.y - 2.0 * p.x > pixel_size / 2) {
+        float pixel_size = length(1.0 / (uResolution / textureDimensions)) * sqrt(5.);
+        if (p.y - 2.0 * p.x > pixel_size / 2.) {
             return w3;
         }
         vec4 r = mix(w1, w4, p.x + 0.5);
-        if (dist < -pixel_size / 2) {
+        if (dist < -pixel_size / 2.) {
             return r;
         }
-        return mix(r, w3, (dist + pixel_size / 2) / pixel_size);
+        return mix(r, w3, (dist + pixel_size / 2.) / pixel_size);
     }
     if (P(0xbf,0x8f) || P(0x7e,0x0e)) {
         float dist = p.x + 2.0 * p.y;
-        float pixel_size = length(1.0 / (uResolution / textureDimensions)) * sqrt(5);
+        float pixel_size = length(1.0 / (uResolution / textureDimensions)) * sqrt(5.);
 
-        if (dist > 1.0 + pixel_size / 2) {
+        if (dist > 1.0 + pixel_size / 2.) {
             return w4;
         }
 
@@ -253,19 +252,19 @@ vec4 scale(sampler2D image, vec2 coord)
             r = mix(mix(w1 * 0.375 + w0 * 0.25 + w3 * 0.375, w3, p.y * 2.0), w1, p.x * 2.0);
         }
 
-        if (dist < 1.0 - pixel_size / 2) {
+        if (dist < 1.0 - pixel_size / 2.) {
             return r;
         }
 
-        return mix(r, w4, (dist + pixel_size / 2 - 1.0) / pixel_size);
+        return mix(r, w4, (dist + pixel_size / 2. - 1.0) / pixel_size);
 
     }
 
     if (P(0x7e,0x2a) || P(0xef,0xab)) {
         float dist = p.y + 2.0 * p.x;
-        float pixel_size = length(1.0 / (uResolution / textureDimensions)) * sqrt(5);
+        float pixel_size = length(1.0 / (uResolution / textureDimensions)) * sqrt(5.);
 
-        if (p.y + 2.0 * p.x > 1.0 + pixel_size / 2) {
+        if (p.y + 2.0 * p.x > 1.0 + pixel_size / 2.) {
             return w4;
         }
 
@@ -278,11 +277,11 @@ vec4 scale(sampler2D image, vec2 coord)
             r = mix(mix(w1 * 0.375 + w0 * 0.25 + w3 * 0.375, w3, p.y * 2.0), w1, p.x * 2.0);
         }
 
-        if (dist < 1.0 - pixel_size / 2) {
+        if (dist < 1.0 - pixel_size / 2.) {
             return r;
         }
 
-        return mix(r, w4, (dist + pixel_size / 2 - 1.0) / pixel_size);
+        return mix(r, w4, (dist + pixel_size / 2. - 1.0) / pixel_size);
     }
 
     if (P(0x1b,0x03) || P(0x4f,0x43) || P(0x8b,0x83) || P(0x6b,0x43))
@@ -301,7 +300,7 @@ vec4 scale(sampler2D image, vec2 coord)
         float dist = p.x + p.y;
         float pixel_size = length(1.0 / (uResolution / textureDimensions));
 
-        if (dist > 0.5 + pixel_size / 2) {
+        if (dist > 0.5 + pixel_size / 2.) {
             return w4;
         }
 
@@ -313,11 +312,11 @@ vec4 scale(sampler2D image, vec2 coord)
             r = mix(mix(w1 * 0.375 + w0 * 0.25 + w3 * 0.375, w3, p.y * 2.0), w1, p.x * 2.0);
         }
 
-        if (dist < 0.5 - pixel_size / 2) {
+        if (dist < 0.5 - pixel_size / 2.) {
             return r;
         }
 
-        return mix(r, w4, (dist + pixel_size / 2 - 0.5) / pixel_size);
+        return mix(r, w4, (dist + pixel_size / 2. - 0.5) / pixel_size);
     }
 
     if (P(0x0b,0x01))
@@ -329,7 +328,7 @@ vec4 scale(sampler2D image, vec2 coord)
     float dist = p.x + p.y;
     float pixel_size = length(1.0 / (uResolution / textureDimensions));
 
-    if (dist > 0.5 + pixel_size / 2)
+    if (dist > 0.5 + pixel_size / 2.)
         return w4;
 
     /* We need more samples to "solve" this diagonal */
@@ -357,10 +356,10 @@ vec4 scale(sampler2D image, vec2 coord)
 
     if (diagonal_bias <=  0) {
         vec4 r = mix(w1, w3, p.y - p.x + 0.5);
-        if (dist < 0.5 - pixel_size / 2) {
+        if (dist < 0.5 - pixel_size / 2.) {
             return r;
         }
-        return mix(r, w4, (dist + pixel_size / 2 - 0.5) / pixel_size);
+        return mix(r, w4, (dist + pixel_size / 2. - 0.5) / pixel_size);
     }
     
     return w4;

@@ -1,4 +1,4 @@
-#version 120
+#version 130
 
 /*
    
@@ -29,6 +29,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision mediump float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -143,8 +144,8 @@ COMPAT_VARYING vec4 TEX0;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -179,8 +180,8 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -289,7 +290,7 @@ void main()
 
 
 			/* Smoothly blends the two strongest directions (one in diagonal and the other in vert/horiz direction). */
-			vec3 color =  mix(mix(c1, c2, step(0.0, d_edge)), mix(c3, c4, step(0.0, hv_edge)), 1 - edge_strength);
+			vec3 color =  mix(mix(c1, c2, step(0.0, d_edge)), mix(c3, c4, step(0.0, hv_edge)), 1. - edge_strength);
 
 /*
                               P1
@@ -302,8 +303,8 @@ void main()
 */
 
 			/* Anti-ringing code. */
-			vec3 min_sample = min4( E, F, H, I ) + (1-XBR_ANTI_RINGING)*mix((P2-H)*(F-P1), (P0-E)*(I-P3), step(0.0, d_edge));
-			vec3 max_sample = max4( E, F, H, I ) - (1-XBR_ANTI_RINGING)*mix((P2-H)*(F-P1), (P0-E)*(I-P3), step(0.0, d_edge));
+			vec3 min_sample = min4( E, F, H, I ) + (1.-XBR_ANTI_RINGING)*mix((P2-H)*(F-P1), (P0-E)*(I-P3), step(0.0, d_edge));
+			vec3 max_sample = max4( E, F, H, I ) - (1.-XBR_ANTI_RINGING)*mix((P2-H)*(F-P1), (P0-E)*(I-P3), step(0.0, d_edge));
 
 			color = clamp(color, min_sample, max_sample);
 

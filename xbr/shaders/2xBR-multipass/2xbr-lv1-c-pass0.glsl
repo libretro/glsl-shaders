@@ -1,8 +1,9 @@
-#version 120
+#version 130
 
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision mediump float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -39,8 +40,8 @@ COMPAT_VARYING vec4 t6;
 COMPAT_VARYING vec4 t7;
 
 uniform mat4 MVPMatrix;
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -96,8 +97,8 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -125,9 +126,9 @@ float u_weight = 7.0;
 float v_weight = 6.0;
 
 mat3 yuv          = mat3(0.299, 0.587, 0.114, -0.169, -0.331, 0.499, 0.499, -0.418, -0.0813);
-mat3 yuv_weighted = mat3(y_weight * yuv[0], u_weight * yuv[1], v_weight * yuv[2]);
-vec4 bin          = vec4(1.0f, 2.0f, 4.0f, 8.0f);
-vec4 maximo       = vec4(255.0f, 255.0f, 255.0f, 255.0f);
+mat3 yuv_weighted = mat3(14.352, 28.176, 5.472, -1.183, -2.317, 3.493, 2.994, 2.508, -0.4878);
+vec4 bin          = vec4(1.0, 2.0, 4.0, 8.0);
+vec4 maximo       = vec4(255.0, 255.0, 255.0, 255.0);
 
 bvec4 _and_(bvec4 A, bvec4 B) {
    return bvec4(A.x && B.x, A.y && B.y, A.z && B.z, A.w && B.w);

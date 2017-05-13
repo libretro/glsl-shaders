@@ -1,3 +1,11 @@
+// Compatibility #ifdefs needed for parameters
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+precision mediump float;
+#else
+#define COMPAT_PRECISION
+#endif
+
 //#pragma parameter XBR_SCALE "xBR Scale" 3.0 1.0 5.0 1.0
 #pragma parameter XBR_Y_WEIGHT "Y Weight" 48.0 0.0 100.0 1.0
 #pragma parameter XBR_EQ_THRESHOLD "Eq Threshold" 15.0 0.0 50.0 1.0

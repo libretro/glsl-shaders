@@ -91,8 +91,8 @@ void main()
 	float dx = ps.x;
 	float dy = ps.y;
 
-	t1.xy = float2( dx,  0); // F
-	t1.zw = float2(  0, dy); // H
+	t1.xy = float2( dx,  0.); // F
+	t1.zw = float2(  0., dy); // H
 	loc = vTexCoord*SourceSize.xy;
 }
 
@@ -148,7 +148,7 @@ float luma(float3 color)
 
 COMPAT_PRECISION float3 bilinear(float p, float q, float3 A, float3 B, float3 C, float3 D)
 {
-	return ((1-p)*(1-q)*A + p*(1-q)*B + (1-p)*q*C + p*q*D);
+	return ((1.-p)*(1.-q)*A + p*(1.-q)*B + (1.-p)*q*C + p*q*D);
 }
 
 void main()

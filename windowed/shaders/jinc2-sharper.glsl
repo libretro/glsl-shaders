@@ -1,5 +1,12 @@
 //#version 130
 
+#ifdef GLES
+#define COMPAT_PRECISION mediump
+precision mediump float;
+#else
+#define COMPAT_PRECISION 
+#endif
+
 /*
 //#pragma parameter JINC2_WINDOW_SINC "Window Sinc Param" 0.42 0.0 1.0 0.01
 //#pragma parameter JINC2_SINC "Sinc Param" 0.92 0.0 1.0 0.01
@@ -93,12 +100,6 @@ vec4 resampler(vec4 x)
 #define tex2D texture2D
 #endif
 
-#ifdef GL_ES
-#define PRECISION mediump
-#else
-#define PRECISION
-#endif
-
 
 IN  vec4 VertexCoord;
 IN  vec4 Color;
@@ -107,11 +108,11 @@ OUT vec4 color;
 OUT vec2 texCoord;
 
 uniform mat4 MVPMatrix;
-uniform int  FrameDirection;
-uniform int  FrameCount;
-uniform PRECISION vec2 OutputSize;
-uniform PRECISION vec2 TextureSize;
-uniform PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION int  FrameDirection;
+uniform COMPAT_PRECISION int  FrameCount;
+uniform COMPAT_PRECISION vec2 OutputSize;
+uniform COMPAT_PRECISION vec2 TextureSize;
+uniform COMPAT_PRECISION vec2 InputSize;
 
 void main()
 {
@@ -144,8 +145,8 @@ precision mediump float;
 #define PRECISION
 #endif
 
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform PRECISION vec2 OutputSize;
 uniform PRECISION vec2 TextureSize;
 uniform PRECISION vec2 InputSize;

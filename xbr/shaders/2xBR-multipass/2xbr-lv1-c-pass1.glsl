@@ -1,8 +1,9 @@
-#version 120
+#version 130
 
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision mediump float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -33,8 +34,8 @@ COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec4 t1;
 
 uniform mat4 MVPMatrix;
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -84,8 +85,8 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -105,7 +106,7 @@ COMPAT_VARYING vec4 t1;
 #define OriginalSize vec4(OrigTextureSize, 1.0 / OrigTextureSize)
 #define Original OrigTexture
 
-mat4x2 sym_vectors  = mat4x2(1,  1,   1, -1,   -1, -1,   -1,  1);
+mat4x2 sym_vectors  = mat4x2(1.,  1.,   1., -1.,   -1., -1.,   -1.,  1.);
 
 float remapFrom01(float v, float high)
 {
@@ -115,7 +116,7 @@ float remapFrom01(float v, float high)
 vec2 unpack_info(float i)
 {
    vec2 info;
-   info.x = round(modf(i/2.0f, i));
+   info.x = round(modf(i/2.0, i));
    info.y = i;
 
    return info;

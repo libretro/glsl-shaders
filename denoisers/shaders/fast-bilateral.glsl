@@ -28,6 +28,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision COMPAT_PRECISION float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -161,33 +162,33 @@ void main()
       float2 tc = vTexCoord;
 
       float3 col;
-      float3 center = GET(0,0);
+      float3 center = GET(0.,0.);
 
-      BIL(-2,-2)
-      BIL(-1,-2)
-      BIL( 0,-2)
-      BIL( 1,-2)
-      BIL( 2,-2)
-      BIL(-2,-1)
-      BIL(-1,-1)
-      BIL( 0,-1)
-      BIL( 1,-1)
-      BIL( 2,-1)
-      BIL(-2, 0)
-      BIL(-1, 0)
-      BIL( 0, 0)
-      BIL( 1, 0)
-      BIL( 2, 0)
-      BIL(-2, 1)
-      BIL(-1, 1)
-      BIL( 0, 1)
-      BIL( 1, 1)
-      BIL( 2, 1)
-      BIL(-2, 2)
-      BIL(-1, 2)
-      BIL( 0, 2)
-      BIL( 1, 2)
-      BIL( 2, 2)
+      BIL(-2.,-2.)
+      BIL(-1.,-2.)
+      BIL( 0.,-2.)
+      BIL( 1.,-2.)
+      BIL( 2.,-2.)
+      BIL(-2.,-1.)
+      BIL(-1.,-1.)
+      BIL( 0.,-1.)
+      BIL( 1.,-1.)
+      BIL( 2.,-1.)
+      BIL(-2., 0.)
+      BIL(-1., 0.)
+      BIL( 0., 0.)
+      BIL( 1., 0.)
+      BIL( 2., 0.)
+      BIL(-2., 1.)
+      BIL(-1., 1.)
+      BIL( 0., 1.)
+      BIL( 1., 1.)
+      BIL( 2., 1.)
+      BIL(-2., 2.)
+      BIL(-1., 2.)
+      BIL( 0., 2.)
+      BIL( 1., 2.)
+      BIL( 2., 2.)
 
       // Weight normalization
       color /= wsum;

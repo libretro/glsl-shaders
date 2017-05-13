@@ -2,7 +2,8 @@
 
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
-#define COMPAT_PRECISION mediump
+#define COMPAT_PRECISION highp
+precision highp float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -71,7 +72,7 @@ uniform COMPAT_PRECISION float BGR;
 #endif
 
 #ifdef GL_ES
-#define COMPAT_PRECISION mediump
+#define COMPAT_PRECISION highp
 #else
 #define COMPAT_PRECISION
 #endif
@@ -83,8 +84,8 @@ COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 
 uniform mat4 MVPMatrix;
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -101,6 +102,7 @@ void main()
 #if __VERSION__ >= 130
 #define COMPAT_VARYING in
 #define COMPAT_TEXTURE texture
+
 out vec4 FragColor;
 #else
 #define COMPAT_VARYING varying
@@ -114,13 +116,13 @@ precision highp float;
 #else
 precision mediump float;
 #endif
-#define COMPAT_PRECISION mediump
+#define COMPAT_PRECISION highp
 #else
 #define COMPAT_PRECISION
 #endif
 
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;

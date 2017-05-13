@@ -30,6 +30,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision COMPAT_PRECISION float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -90,8 +91,8 @@ COMPAT_VARYING vec4 TEX0;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -128,8 +129,8 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -143,8 +144,6 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
-
-// delete all 'params.' or 'registers.' or whatever in the fragment
 
 void main()
 {
@@ -161,34 +160,34 @@ void main()
 // [      c20, c6,  c7,  c8, c17      ]
 // [           c15, c12, c14          ]
 // [                c13               ]
-	vec3	 c19	=	clamp( texture(Source, vTexCoord + vec2(-3*px,   0)).rgb, 0.0, 1.0);
-	vec3	 c21	=	clamp( texture(Source, vTexCoord + vec2(-2*px,  -py)).rgb, 0.0, 1.0);
-	vec3	 c10	=	clamp( texture(Source, vTexCoord + vec2(-2*px,   0)).rgb, 0.0, 1.0);
-	vec3	 c20	=	clamp( texture(Source, vTexCoord + vec2(-2*px,   py)).rgb, 0.0, 1.0);
-	vec3	 c24	=	clamp( texture(Source, vTexCoord + vec2(  -px,-2*py)).rgb, 0.0, 1.0);
+	vec3	 c19	=	clamp( texture(Source, vTexCoord + vec2(-3.*px,   0.)).rgb, 0.0, 1.0);
+	vec3	 c21	=	clamp( texture(Source, vTexCoord + vec2(-2.*px,  -py)).rgb, 0.0, 1.0);
+	vec3	 c10	=	clamp( texture(Source, vTexCoord + vec2(-2.*px,   0.)).rgb, 0.0, 1.0);
+	vec3	 c20	=	clamp( texture(Source, vTexCoord + vec2(-2.*px,   py)).rgb, 0.0, 1.0);
+	vec3	 c24	=	clamp( texture(Source, vTexCoord + vec2(  -px,-2.*py)).rgb, 0.0, 1.0);
 	vec3	 c1 	=	clamp( texture(Source, vTexCoord + vec2(  -px,  -py)).rgb, 0.0, 1.0);
-	vec3	 c4 	=	clamp( texture(Source, vTexCoord + vec2(  -px,   0)).rgb, 0.0, 1.0);
+	vec3	 c4 	=	clamp( texture(Source, vTexCoord + vec2(  -px,   0.)).rgb, 0.0, 1.0);
 	vec3	 c6 	=	clamp( texture(Source, vTexCoord + vec2(  -px,   py)).rgb, 0.0, 1.0);
-	vec3	 c15	=	clamp( texture(Source, vTexCoord + vec2(  -px, 2*py)).rgb, 0.0, 1.0);
-	vec3	 c22	=	clamp( texture(Source, vTexCoord + vec2(   0, -3*py)).rgb, 0.0, 1.0);
-	vec3	 c9 	=	clamp( texture(Source, vTexCoord + vec2(   0, -2*py)).rgb, 0.0, 1.0);
-	vec3	 c2 	=	clamp( texture(Source, vTexCoord + vec2(   0,   -py)).rgb, 0.0, 1.0);
+	vec3	 c15	=	clamp( texture(Source, vTexCoord + vec2(  -px, 2.*py)).rgb, 0.0, 1.0);
+	vec3	 c22	=	clamp( texture(Source, vTexCoord + vec2(   0., -3.*py)).rgb, 0.0, 1.0);
+	vec3	 c9 	=	clamp( texture(Source, vTexCoord + vec2(   0., -2.*py)).rgb, 0.0, 1.0);
+	vec3	 c2 	=	clamp( texture(Source, vTexCoord + vec2(   0.,   -py)).rgb, 0.0, 1.0);
 	vec3	 c0 	=	clamp( texture(Source, vTexCoord).rgb, 0.0, 1.0);
-	vec3	 c7 	=	clamp( texture(Source, vTexCoord + vec2(   0,    py)).rgb, 0.0, 1.0);
-	vec3	 c12	=	clamp( texture(Source, vTexCoord + vec2(   0,  2*py)).rgb, 0.0, 1.0);
-	vec3	 c13	=	clamp( texture(Source, vTexCoord + vec2(   0,  3*py)).rgb, 0.0, 1.0);
-	vec3	 c23	=	clamp( texture(Source, vTexCoord + vec2(   px,-2*py)).rgb, 0.0, 1.0);
+	vec3	 c7 	=	clamp( texture(Source, vTexCoord + vec2(   0.,    py)).rgb, 0.0, 1.0);
+	vec3	 c12	=	clamp( texture(Source, vTexCoord + vec2(   0.,  2.*py)).rgb, 0.0, 1.0);
+	vec3	 c13	=	clamp( texture(Source, vTexCoord + vec2(   0.,  3.*py)).rgb, 0.0, 1.0);
+	vec3	 c23	=	clamp( texture(Source, vTexCoord + vec2(   px,-2.*py)).rgb, 0.0, 1.0);
 	vec3	 c3 	=	clamp( texture(Source, vTexCoord + vec2(   px,  -py)).rgb, 0.0, 1.0);
-	vec3	 c5 	=	clamp( texture(Source, vTexCoord + vec2(   px,   0)).rgb, 0.0, 1.0);
+	vec3	 c5 	=	clamp( texture(Source, vTexCoord + vec2(   px,   0.)).rgb, 0.0, 1.0);
 	vec3	 c8 	=	clamp( texture(Source, vTexCoord + vec2(   px,   py)).rgb, 0.0, 1.0);
-	vec3	 c14	=	clamp( texture(Source, vTexCoord + vec2(   px, 2*py)).rgb, 0.0, 1.0);
-	vec3	 c18	=	clamp( texture(Source, vTexCoord + vec2( 2*px,  -py)).rgb, 0.0, 1.0);
-	vec3	 c11	=	clamp( texture(Source, vTexCoord + vec2( 2*px,   0)).rgb, 0.0, 1.0);
-	vec3	 c17	=	clamp( texture(Source, vTexCoord + vec2( 2*px,   py)).rgb, 0.0, 1.0);
-	vec3	 c16	=	clamp( texture(Source, vTexCoord + vec2( 3*px,   0)).rgb, 0.0, 1.0 );
+	vec3	 c14	=	clamp( texture(Source, vTexCoord + vec2(   px, 2.*py)).rgb, 0.0, 1.0);
+	vec3	 c18	=	clamp( texture(Source, vTexCoord + vec2( 2.*px,  -py)).rgb, 0.0, 1.0);
+	vec3	 c11	=	clamp( texture(Source, vTexCoord + vec2( 2.*px,   0.)).rgb, 0.0, 1.0);
+	vec3	 c17	=	clamp( texture(Source, vTexCoord + vec2( 2.*px,   py)).rgb, 0.0, 1.0);
+	vec3	 c16	=	clamp( texture(Source, vTexCoord + vec2( 3.*px,   0.)).rgb, 0.0, 1.0 );
 	
 // Blur, gauss 3x3
-	vec3	blur	=	(2*(c2 + c4 + c5 + c7) + (c1 + c3 + c6 +c8) + 4*c0)/16;
+	vec3	blur	=	(2.*(c2 + c4 + c5 + c7) + (c1 + c3 + c6 +c8) + 4.*c0)/16.;
 	float	blur_Y	=	(blur.r*(1.0/3.0) + blur.g*(1.0/3.0) + blur.b*(1.0/3.0));
 	
 // Edge detection
@@ -203,7 +202,7 @@ void main()
 					+	0.25*(abs(blur-c9) + abs(blur-c10) + abs(blur-c11) + abs(blur-c12)) )*(1.0/3.0);
 
 // Edge detect contrast compression, center = 0.5
-	edge	*=	min((0.8+2.7*pow(2, (-7.4*blur_Y))), 3.2);
+	edge	*=	min((0.8+2.7*pow(2., (-7.4*blur_Y))), 3.2);
 	
 // RGB to greyscale
 	float	c0_Y	=	CtG(c0);
@@ -213,7 +212,7 @@ void main()
 							CtG(c17), CtG(c18), CtG(c19), CtG(c20), CtG(c21), CtG(c22), CtG(c23), CtG(c24) );
 			
 // Partial laplacian outer pixel weighting scheme
-	float	mdiff_c0	=	0.03 + 4*( abs(kernel[0]-kernel[2]) + abs(kernel[0]-kernel[4])
+	float	mdiff_c0	=	0.03 + 4.*( abs(kernel[0]-kernel[2]) + abs(kernel[0]-kernel[4])
 						+	abs(kernel[0]-kernel[5]) + abs(kernel[0]-kernel[7])
 						+	0.25*(abs(kernel[0]-kernel[1]) + abs(kernel[0]-kernel[3])
 						+	abs(kernel[0]-kernel[6]) + abs(kernel[0]-kernel[8])) );
@@ -248,11 +247,11 @@ void main()
 						+	(kernel[1] + kernel[3] + kernel[6] + kernel[8])
 						+	((kernel[9]*weights.x) + (kernel[10]*weights.y)
 						+	(kernel[11]*weights.z) + (kernel[12]*weights.w)) )
-						/	(5 + weights.x + weights.y + weights.z + weights.w);
+						/	(5. + weights.x + weights.y + weights.z + weights.w);
 						
  // Compute sharpening magnitude function, x = edge mag, y = laplace operator mag
 	float	sharpen_val	=	0.01 + (curve_height/(curveslope*pow(edge, 3.5) + 0.5))
-						-	(curve_height/(8192*pow((edge*2.2), 4.5) + 0.5));
+						-	(curve_height/(8192.*pow((edge*2.2), 4.5) + 0.5));
 
  // Calculate sharpening diff and scale
 	float	sharpdiff	=	(c0_Y - neg_laplace)*(sharpen_val*0.8);
@@ -275,12 +274,12 @@ void main()
 		}
 	}
 	
-	float	nmax		=	max(((kernel[23] + kernel[24])/2), c0_Y);
-	float	nmin		=	min(((kernel[0]  + kernel[1])/2),  c0_Y);
+	float	nmax		=	max(((kernel[23] + kernel[24])/2.), c0_Y);
+	float	nmin		=	min(((kernel[0]  + kernel[1])/2.),  c0_Y);
 
 // Calculate tanh scale factor, pos/neg
-	float	nmax_scale	=	max((1/((nmax - c0_Y) + L_overshoot)), max_scale_lim);
-	float	nmin_scale	=	max((1/((c0_Y - nmin) + D_overshoot)), max_scale_lim);
+	float	nmax_scale	=	max((1./((nmax - c0_Y) + L_overshoot)), max_scale_lim);
+	float	nmin_scale	=	max((1./((c0_Y - nmin) + D_overshoot)), max_scale_lim);
 
 // Soft limit sharpening with tanh, mix to control maximum compression
 	sharpdiff			=	mix( (tanh((max(sharpdiff, 0.0))*nmax_scale)/nmax_scale), (max(sharpdiff, 0.0)), L_comp_ratio )
