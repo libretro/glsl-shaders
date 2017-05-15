@@ -1,0 +1,22 @@
+shaders = 4
+
+shader0 = shaders/nnedi3-nns16-win8x4-pass1-rgb.glsl
+filter_linear0 = false
+scale_type0 = source
+scale_x0 = 1.0
+scale_y0 = 2.0
+
+shader1 = shaders/nnedi3-nns16-win8x4-pass2-rgb.glsl
+filter_linear1 = false
+scale_type1 = source
+scale_x1 = 2.0
+scale_y1 = 1.0
+
+shader2 = shaders/jinc2-cshift-rgb.glsl
+filter_linear2 = false
+scale_type2 = source
+scale_x2 = 1.0
+scale_y2 = 1.0
+
+shader3 = ../windowed/shaders/jinc2.glsl
+filter_linear3 = false
