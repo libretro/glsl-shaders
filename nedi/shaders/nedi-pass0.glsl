@@ -30,6 +30,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision mediump float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -61,7 +62,7 @@
 #define NEDI_OFFSET 0.0
 
 #define ITERATIONS  3
-#define WGT   2
+#define WGT   2.
 
 #define width  (SourceSize.x)
 #define height (SourceSize.y)
@@ -203,14 +204,23 @@ float2 tex = vTexCoord + float2(0.0, 0.25*SourceSize.w);
 */
 
 	//Define window and directions - original
-	float2 dir[4] = {{-1.,-1.},{1.,1.},{-1.,1.},{1.,-1.}};
-	float4x2 wind[4] = {{{-1.,-1.},{1.,1.},{-1.,1.},{1.,-1.}},{{-3.,-1.},{3.,1.},{-1.,3.},{1.,-3.}},{{-3.,1.},{3.,-1.},{1.,3.},{-1.,-3.}},{{-3.,-3.},{ 3.,3.},{-3., 3.},{3.,-3.}}};
+	vec2 dir1 = vec2(-1.,-1.);
+	vec2 dir2 = vec2( 1., 1.);
+	vec2 dir3 = vec2(-1., 1.);
+	vec2 dir4 = vec2( 1.,-1.);
+	float2 dir[4] = vec2[](dir1, dir2, dir3, dir4);
+
+	mat4x2 wind1 = mat4x2(-1.,-1.,1., 1.,-1., 1., 1.,-1.);
+	mat4x2 wind2 = mat4x2(-3.,-1.,3., 1.,-1., 3., 1.,-3.);
+	mat4x2 wind3 = mat4x2(-3., 1.,3.,-1., 1., 3.,-1.,-3.);
+	mat4x2 wind4 = mat4x2(-3.,-3., 3.,3.,-3., 3., 3.,-3.);
+	float4x2 wind[4] = mat4x2[](wind1, wind2, wind3, wind4);
 
 	//Initialization
-	float2x2 R = float2x2(0.0);
+	float2x2 R = float2x2(0.0, 0.0, 0.0, 0.0);
 	float2 r = float2(0.0);
 
-        float m[4] = {NEDI_WEIGHT, 1.0, 1.0, 1.0};
+        float m[4] = float[](NEDI_WEIGHT, 1.0, 1.0, 1.0);
 
 	//Calculate (local) autocorrelation coefficients
 	for (int k = 0; k<ITERATIONS; k+= 1){

@@ -1,5 +1,13 @@
 #version 150
 
+// Compatibility #ifdefs needed for parameters
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+precision mediump float;
+#else
+#define COMPAT_PRECISION
+#endif
+
 /*
    NEDI Shader  -  pass2
 
@@ -193,8 +201,17 @@ void main()
 */
 
 	//Define window and directions
-	float2 dir[4] = {{-1.,-1.},{1.,1.},{-1.,1.},{1.,-1.}};
-	float4x2 wind[4] = {{{-1.,-1.},{1.,1.},{-1.,1.},{1.,-1.}},{{-3.,-1.},{3.,1.},{-1.,3.},{1.,-3.}},{{-3.,1.},{3.,-1.},{1.,3.},{-1.,-3.}},{{-3.,-3.},{ 3.,3.},{-3., 3.},{3.,-3.}}};
+	vec2 dir1 = vec2(-1.,-1.);
+	vec2 dir2 = vec2( 1., 1.);
+	vec2 dir3 = vec2(-1., 1.);
+	vec2 dir4 = vec2( 1.,-1.);
+	float2 dir[4] = vec2[](dir1, dir2, dir3, dir4);
+
+	mat4x2 wind1 = mat4x2(-1.,-1.,1., 1.,-1., 1., 1.,-1.);
+	mat4x2 wind2 = mat4x2(-3.,-1.,3., 1.,-1., 3., 1.,-3.);
+	mat4x2 wind3 = mat4x2(-3., 1.,3.,-1., 1., 3.,-1.,-3.);
+	mat4x2 wind4 = mat4x2(-3.,-3., 3.,3.,-3., 3., 3.,-3.);
+	float4x2 wind[4] = mat4x2[](wind1, wind2, wind3, wind4);
 
 	//Initialization
 	float2x2 R = float2x2(0.0);

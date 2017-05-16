@@ -1,4 +1,4 @@
-#version 120
+#version 130
 
 /*
    Hyllian's jinc windowed-jinc 2-lobe with anti-ringing Shader
@@ -38,6 +38,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision highp float;
 #else
 #define COMPAT_PRECISION
 #endif
