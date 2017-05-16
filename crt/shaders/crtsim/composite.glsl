@@ -1,4 +1,4 @@
-#version 120
+#version 130
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -22,6 +22,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision mediump float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -105,8 +106,8 @@ COMPAT_VARYING vec4 TEX0;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -141,8 +142,8 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -174,7 +175,7 @@ void main()
 	half4 NTSCArtifact2 = tex2D(NTSCArtifactSampler, scanuv + vec2(0.0, 1.0 / InputSize.y));
 	half4 NTSCArtifact = lerp(NTSCArtifact1, NTSCArtifact2, 1.0 - NTSCLerp);
 	
-	float artifacting = (animate_artifacts > 0.5) ? mod(FrameCount, 2.0) : 1.0;
+	float artifacting = (animate_artifacts > 0.5) ? mod(float(FrameCount), 2.0) : 1.0;
 	half2 LeftUV = fragcoord - vec2(artifacting / SourceSize.x, 0.0);//RcpScrWidth;
 	half2 RightUV = fragcoord + vec2(artifacting / SourceSize.x, 0.0);//RcpScrWidth;
 	
@@ -227,7 +228,7 @@ void main()
 	}
 	
 	// Apply the NTSC artifacts to the unsharp offset as well.
-	Cur_Local = saturate(Cur_Local + (offset * Tuning_Sharp * lerp(ivec4(1,1,1,1), NTSCArtifact, Tuning_Artifacts)));
+	Cur_Local = saturate(Cur_Local + (offset * Tuning_Sharp * lerp(vec4(1.,1.,1.,1.), NTSCArtifact, Tuning_Artifacts)));
 	
 	vec4 Tuning_Persistence = vec4(Tuning_Persistence_R, Tuning_Persistence_G, Tuning_Persistence_B, 1.0);
 	// Take the max here because adding is overkill; bleeding should only brighten up dark areas, not blow out the whole screen.

@@ -1,3 +1,5 @@
+#version 130
+
 //////////////////////////////////////////////////////////////////////////
 //
 // CC0 1.0 Universal (CC0 1.0)
@@ -17,6 +19,7 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision mediump float;
 #else
 #define COMPAT_PRECISION
 #endif
@@ -90,8 +93,8 @@ COMPAT_VARYING vec4 TEX0;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -126,8 +129,8 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -155,7 +158,7 @@ half4 SampleCRT(sampler2D shadowMaskSampler, sampler2D compFrameSampler, half2 u
 	half3 scantex = tex2D(shadowMaskSampler, scanuv).rgb;
 	
 	scantex += Tuning_Mask_Brightness;			// adding looks better
-	scantex = lerp(ivec3(1,1,1), scantex, Tuning_Mask_Opacity);
+	scantex = lerp(vec3(1,1,1), scantex, Tuning_Mask_Opacity);
 /*  // commenting this to move to present shader
 	// Apply overscan after scanline sampling is done.
 	half2 overscanuv = (ScaledUV * Tuning_Overscan) - ((Tuning_Overscan - 1.0) * 0.5);
