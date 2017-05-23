@@ -29,13 +29,18 @@ precision mediump float;
 
 // Parameter lines go here:
 #pragma parameter Tuning_Sharp "Composite Sharp" 0.2 0.0 1.0 0.05
+// typically [0,1], defines the weighting of the sharpness taps
 #pragma parameter Tuning_Persistence_R "Red Persistence" 0.075 0.0 1.0 0.01
+// typically [0,1] per channel, defines the total blending of previous frame values
 #pragma parameter Tuning_Persistence_G "Green Persistence" 0.05 0.0 1.0 0.01
 #pragma parameter Tuning_Persistence_B "Blue Persistence" 0.05 0.0 1.0 0.01
 #pragma parameter Tuning_Bleed "Composite Bleed" 0.5 0.0 1.0 0.05
+// typically [0,1], defines the blending of L/R values with center value from prevous frame
 #pragma parameter Tuning_Artifacts "Composite Artifacts" 0.5 0.0 1.0 0.05
+// typically [0,1], defines the weighting of NTSC scanline artifacts (not physically accurate by any means)
 #pragma parameter NTSCLerp "NTSC Artifacts" 1.0 0.0 1.0 1.0
-#pragma parameter NTSCArtifactScale "NTSC Artifact Scale" 0.5 0.0 2.0 0.05
+// Defines an interpolation between the two NTSC filter states. Typically would be 0 or 1 for vsynced 60 fps gameplay or 0.5 for unsynced, but can be whatever.
+#pragma parameter NTSCArtifactScale "NTSC Artifact Scale" 255.0 0.0 1000.0 5.0
 #pragma parameter animate_artifacts "Animate NTSC Artifacts" 1.0 0.0 1.0 1.0
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
@@ -56,7 +61,7 @@ uniform COMPAT_PRECISION float animate_artifacts;
 #define Tuning_Bleed 0.5
 #define Tuning_Artifacts 0.5
 #define NTSCLerp 1.0
-#define NTSCArtifactScale 200.0
+#define NTSCArtifactScale 255.0
 #define animate_artifacts 1.0
 #endif
 
@@ -170,14 +175,14 @@ COMPAT_VARYING vec4 TEX0;
 void main()
 {
 	vec2 fragcoord = (vTexCoord * (SourceSize.xy / InputSize.xy)) * (InputSize.xy / SourceSize.xy);
-	half2 scanuv = vec2(fract(fragcoord / NTSCArtifactScale));
+	half2 scanuv = vec2(fract(fragcoord * 1.0001 * SourceSize.xy / NTSCArtifactScale));
 	half4 NTSCArtifact1 = tex2D(NTSCArtifactSampler, scanuv);
-	half4 NTSCArtifact2 = tex2D(NTSCArtifactSampler, scanuv + vec2(0.0, 1.0 / InputSize.y));
-	half4 NTSCArtifact = lerp(NTSCArtifact1, NTSCArtifact2, 1.0 - NTSCLerp);
+	half4 NTSCArtifact2 = tex2D(NTSCArtifactSampler, scanuv + vec2(0.0, 1.0 / SourceSize.y));
+	float lerpfactor = (animate_artifacts > 0.5) ? mod(FrameCount, 2.0) : NTSCLerp;
+	half4 NTSCArtifact = lerp(NTSCArtifact1, NTSCArtifact2, 1.0 - lerpfactor);
 	
-	float artifacting = (animate_artifacts > 0.5) ? mod(float(FrameCount), 2.0) : 1.0;
-	half2 LeftUV = fragcoord - vec2(artifacting / SourceSize.x, 0.0);//RcpScrWidth;
-	half2 RightUV = fragcoord + vec2(artifacting / SourceSize.x, 0.0);//RcpScrWidth;
+	half2 LeftUV = vTexCoord - vec2(1.0 / SourceSize.x, 0.0);
+	half2 RightUV = vTexCoord + vec2(1.0 / SourceSize.x, 0.0);
 	
 	half4 Cur_Left = tex2D(curFrameSampler, LeftUV);
 	half4 Cur_Local = tex2D(curFrameSampler, vTexCoord);
@@ -218,7 +223,7 @@ void main()
 	// as opposed to 0 and N as done here, but this works pretty well and is a little cheaper.)
 	for (int i = 0; i < 3; ++i)
 	{
-		half2 StepSize = (half2(1.0/256.0,0.0) * (float(i + 1)));
+		half2 StepSize = (half2(1.0/TextureSize.x,0.0) * (float(i + 1)));
 		half4 neighborleft = tex2D(curFrameSampler, vTexCoord - StepSize);
 		half4 neighborright = tex2D(curFrameSampler, vTexCoord + StepSize);
 		
