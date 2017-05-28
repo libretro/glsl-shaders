@@ -10,7 +10,7 @@
 //  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 //  sell copies of the Software, and to permit persons to whom the Software is
 //  furnished to do so, subject to the following conditions:
-//  
+//
 //  The above copyright notice and this permission notice shall be included in
 //  all copies or substantial portions of the Software.
 //
@@ -1988,8 +1988,8 @@ vec3 tex2Dblur11fast(sampler2D texture, vec2 tex_uv,
 #define COMPAT_ATTRIBUTE in
 #define COMPAT_TEXTURE texture
 #else
-#define COMPAT_VARYING varying 
-#define COMPAT_ATTRIBUTE attribute 
+#define COMPAT_VARYING varying
+#define COMPAT_ATTRIBUTE attribute
 #define COMPAT_TEXTURE texture2D
 #endif
 
@@ -2006,7 +2006,7 @@ COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 blur_dxdy;
 
-vec4 _oPosition1; 
+vec4 _oPosition1;
 uniform mat4 MVPMatrix;
 uniform int FrameDirection;
 uniform int FrameCount;
@@ -2079,8 +2079,8 @@ COMPAT_VARYING vec2 blur_dxdy;
 
 void main()
 {
-	vec3 color = tex2Dblur9resize(Source, tex_uv, blur_dxdy);
-    //  Encode and output the blurred image: 
+	vec3 color = tex2Dblur9fast(Source, tex_uv, blur_dxdy);
+    //  Encode and output the blurred image:
     FragColor = encode_output(vec4(color, 1.0));
-} 
+}
 #endif

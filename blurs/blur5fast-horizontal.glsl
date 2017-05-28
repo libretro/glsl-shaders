@@ -10,7 +10,7 @@
 //  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 //  sell copies of the Software, and to permit persons to whom the Software is
 //  furnished to do so, subject to the following conditions:
-//  
+//
 //  The above copyright notice and this permission notice shall be included in
 //  all copies or substantial portions of the Software.
 //
@@ -1980,6 +1980,7 @@ vec3 tex2Dblur11fast(sampler2D texture, vec2 tex_uv,
 
 #endif  //  BLUR_FUNCTIONS_H
 
+
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -1987,8 +1988,8 @@ vec3 tex2Dblur11fast(sampler2D texture, vec2 tex_uv,
 #define COMPAT_ATTRIBUTE in
 #define COMPAT_TEXTURE texture
 #else
-#define COMPAT_VARYING varying 
-#define COMPAT_ATTRIBUTE attribute 
+#define COMPAT_VARYING varying
+#define COMPAT_ATTRIBUTE attribute
 #define COMPAT_TEXTURE texture2D
 #endif
 
@@ -2005,7 +2006,7 @@ COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 blur_dxdy;
 
-vec4 _oPosition1; 
+vec4 _oPosition1;
 uniform mat4 MVPMatrix;
 uniform int FrameDirection;
 uniform int FrameCount;
@@ -2025,16 +2026,16 @@ void main()
 	//  Get the uv sample distance between output pixels.  Blurs are not generic
     //  Gaussian resizers, and correct blurs require:
     //  1.) OutputSize == InputSize * 2^m, where m is an integer <= 0.
-    //  2.) mipmap_inputN = "true" for this pass in the preset if m != 0
+    //  2.) mipmap_inputN = "true" for this pass in .cgp preset if m != 0
     //  3.) filter_linearN = "true" except for 1x scale nearest neighbor blurs
     //  Gaussian resizers would upsize using the distance between input texels
     //  (not output pixels), but we avoid this and consistently blur at the
     //  destination size.  Otherwise, combining statically calculated weights
     //  with bilinear sample exploitation would result in terrible artifacts.
-    vec2 dxdy_scale = InputSize/OutputSize;
-	vec2 dxdy = dxdy_scale/TextureSize;
-    //  This blur is vertical-only, so zero out the horizontal offset:
-	blur_dxdy = vec2(0.0, dxdy.y);
+    vec2 dxdy_scale = InputSize.xy/OutputSize.xy;
+	vec2 dxdy = dxdy_scale/TextureSize.xy;
+    //  This blur is horizontal-only, so zero out the vertical offset:
+	blur_dxdy = vec2(dxdy.x, 0.0);
 }
 
 #elif defined(FRAGMENT)
@@ -2078,8 +2079,8 @@ COMPAT_VARYING vec2 blur_dxdy;
 
 void main()
 {
-	vec3 color = tex2Dblur9fast(Source, tex_uv, blur_dxdy);
+	vec3 color = tex2Dblur5fast(Source, tex_uv, blur_dxdy);
     //  Encode and output the blurred image:
     FragColor = encode_output(vec4(color, 1.0));
-} 
+}
 #endif
