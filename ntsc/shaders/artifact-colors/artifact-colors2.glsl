@@ -108,6 +108,8 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
+uniform sampler2D OrigTexture;
+#define Original OrigTexture
 COMPAT_VARYING vec4 TEX0;
 
 // compatibility #defines
@@ -216,7 +218,7 @@ void main()
     	FragColor = vec4(color, 0.);
     
     #elif(VIEW_MODE == RGB)
-   		FragColor = texture(Original, uv / SourceSize.xy);
+   		FragColor = texture(Original, vTexCoord.xy);
     
     #elif(VIEW_MODE == LUMA) 
     	FragColor = vec4(luma);
@@ -228,9 +230,9 @@ void main()
     	FragColor = 0.5 * texture(Pass2, uv / SourceSize.xy).rrrr+0.25;
     
     #elif(VIEW_MODE == SPLIT)
-    	if(uv.x < SourceSize.x/2.0)
+    	if(vTexCoord.x < 0.30)
         {
-            FragColor = texture(Original, uv / SourceSize.xy);
+            FragColor = texture(Original, vTexCoord.xy);
         }
         else
         {

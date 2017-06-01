@@ -153,7 +153,7 @@ half4 SampleCRT(sampler2D shadowMaskSampler, sampler2D compFrameSampler, half2 u
 //	ScaledUV *= UVScalar;
 //	ScaledUV += UVOffset;
 
-	half2 scanuv = fract(uv / CRTMask_Scale * 10.0);
+	half2 scanuv = fract(uv / CRTMask_Scale * 100.0);
 	vec4 phosphor_grid;
 	half3 scantex = tex2D(shadowMaskSampler, scanuv).rgb;
 	
