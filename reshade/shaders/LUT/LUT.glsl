@@ -1,18 +1,5 @@
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter LUT_Size "LUT Size" 16.0 16.0 64.0 1.0
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float LUT_Size;
-#else
-#define LUT_Size 16.0
-#endif
 
 #if defined(VERTEX)
 
@@ -96,13 +83,22 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float LUT_Size;
+#else
+#define LUT_Size 16.0
+#endif
+
 void main()
 {
-	vec4 imgColor = pow(texture(Source, vTexCoord.xy), vec4(2.2));
+	vec4 imgColor = texture(Source, vTexCoord.xy);
     float red = ( imgColor.r * (LUT_Size - 1.0) + 0.5 ) / (LUT_Size * LUT_Size);
     float green = ( imgColor.g * (LUT_Size - 1.0) + 0.5 ) / LUT_Size;
-    float blue = floor( imgColor.b  * (LUT_Size - 1.0) ) / LUT_Size;
-    vec4 color = texture( SamplerLUT, vec2( blue + red, green ));
-   FragColor = pow(color, vec4(1.0 / 2.2));
+    float blue1 = floor( imgColor.b  * (LUT_Size - 1.0) ) / LUT_Size;
+	float blue2 = ceil( imgColor.b  * (LUT_Size - 1.0) ) / LUT_Size;
+	float mixer = (imgColor.b - (blue1 + red)) / ((blue2 + red) - (blue1 + red));
+    vec4 color1 = texture( SamplerLUT, vec2( blue1 + red, green ));
+	vec4 color2 = texture( SamplerLUT, vec2( blue2 + red, green ));
+   FragColor = mix(color1, color2, mixer);
 } 
 #endif
