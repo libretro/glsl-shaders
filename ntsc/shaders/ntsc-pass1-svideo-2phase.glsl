@@ -1,11 +1,7 @@
 #version 130
 
-// Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
-#define COMPAT_PRECISION mediump
 precision mediump float;
-#else
-#define COMPAT_PRECISION
 #endif
 
 #define TWO_PHASE
@@ -72,8 +68,8 @@ vec3 rgb2yiq(vec3 col)
 #define COMPAT_ATTRIBUTE in
 #define COMPAT_TEXTURE texture
 #else
-#define COMPAT_VARYING varying 
-#define COMPAT_ATTRIBUTE attribute 
+#define COMPAT_VARYING varying
+#define COMPAT_ATTRIBUTE attribute
 #define COMPAT_TEXTURE texture2D
 #endif
 
@@ -173,5 +169,5 @@ void main()
 	yiq.yz *= vec2(i_mod, q_mod); // Demodulate.
 	FragColor = vec4(yiq, 1.0);
 //#endif
-} 
+}
 #endif

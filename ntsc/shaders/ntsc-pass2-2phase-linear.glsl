@@ -1,11 +1,7 @@
 #version 130
 
-// Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision highp float;
-#else
-#define COMPAT_PRECISION
+precision mediump float;
 #endif
 
 #define NTSC_CRT_GAMMA 2.4
@@ -187,8 +183,8 @@ const float chroma_filter[TAPS + 1] = float[TAPS + 1](
 #define COMPAT_ATTRIBUTE in
 #define COMPAT_TEXTURE texture
 #else
-#define COMPAT_VARYING varying 
-#define COMPAT_ATTRIBUTE attribute 
+#define COMPAT_VARYING varying
+#define COMPAT_ATTRIBUTE attribute
 #define COMPAT_TEXTURE texture2D
 #endif
 
@@ -271,198 +267,198 @@ void main()
 #ifdef test//GL_ES
 	float offset;
 	vec3 sums;
-	
+
 	// unrolling the loopz
 	// TAP = 1
 	offset = 0.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter1, chroma_filter1, chroma_filter1);
-		
+
 	// TAP = 2
 	offset = 1.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter2, chroma_filter2, chroma_filter2);
-		
+
 	// TAP = 3
 	offset = 2.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter3, chroma_filter3, chroma_filter3);
-		
+
 	// TAP = 4
 	offset = 3.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter4, chroma_filter4, chroma_filter4);
-		
+
 	// TAP = 5
 	offset = 4.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter5, chroma_filter5, chroma_filter5);
-		
+
 	// TAP = 6
 	offset = 5.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter6, chroma_filter6, chroma_filter6);
-		
+
 	// TAP = 7
 	offset = 6.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter7, chroma_filter7, chroma_filter7);
-		
+
 	// TAP = 8
 	offset = 7.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter8, chroma_filter8, chroma_filter8);
-		
+
 	// TAP = 9
 	offset = 8.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter9, chroma_filter9, chroma_filter9);
-		
+
 	// TAP = 10
 	offset = 9.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter10, chroma_filter10, chroma_filter10);
-		
+
 	// TAP = 11
 	offset = 10.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter11, chroma_filter11, chroma_filter11);
-		
+
 	// TAP = 12
 	offset = 11.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter12, chroma_filter12, chroma_filter12);
-		
+
 	// TAP = 13
 	offset = 12.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter13, chroma_filter13, chroma_filter13);
-		
+
 	// TAP = 14
 	offset = 13.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter14, chroma_filter14, chroma_filter14);
-		
+
 	// TAP = 15
 	offset = 14.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter15, chroma_filter15, chroma_filter15);
-		
+
 	// TAP = 16
 	offset = 15.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter16, chroma_filter16, chroma_filter16);
-		
+
 	// TAP = 17
 	offset = 16.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter17, chroma_filter17, chroma_filter17);
-		
+
 	// TAP = 18
 	offset = 17.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter18, chroma_filter18, chroma_filter18);
-		
+
 	// TAP = 19
 	offset = 18.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter19, chroma_filter19, chroma_filter19);
-		
+
 	// TAP = 20
 	offset = 19.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter20, chroma_filter20, chroma_filter20);
-	
+
 	// TAP = 21
 	offset = 20.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter21, chroma_filter21, chroma_filter21);
-		
+
 	// TAP = 22
 	offset = 21.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter22, chroma_filter22, chroma_filter22);
-		
+
 	// TAP = 23
 	offset = 22.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter23, chroma_filter23, chroma_filter23);
-		
+
 	// TAP = 24
 	offset = 23.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter24, chroma_filter24, chroma_filter24);
-	
+
 	// TAP = 25
 	offset = 32.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter25, chroma_filter25, chroma_filter25);
-		
+
 	// TAP = 26
 	offset = 25.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter26, chroma_filter26, chroma_filter26);
-		
+
 	// TAP = 27
 	offset = 26.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter27, chroma_filter27, chroma_filter27);
-		
+
 	// TAP = 28
 	offset = 27.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter28, chroma_filter28, chroma_filter28);
-	
+
 	// TAP = 29
 	offset = 28.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter29, chroma_filter29, chroma_filter29);
-		
+
 	// TAP = 30
 	offset = 29.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter30, chroma_filter30, chroma_filter30);
-		
+
 	// TAP = 31
 	offset = 30.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter31, chroma_filter31, chroma_filter31);
-		
+
 	// TAP = 32
 	offset = 31.;
 	sums = fetch_offset(offset - 32., one_x) +
-		fetch_offset(32. - offset, one_x);	
+		fetch_offset(32. - offset, one_x);
 	signal += sums * vec3(luma_filter32, chroma_filter32, chroma_filter32);
 
 	signal += COMPAT_TEXTURE(Texture, TEX0.xy).xyz *
@@ -483,5 +479,5 @@ void main()
 // end ntsc-pass2-decode
 	vec3 rgb = yiq2rgb(signal);
 	FragColor = vec4(pow(rgb, vec3(NTSC_CRT_GAMMA)), 1.0);
-} 
+}
 #endif

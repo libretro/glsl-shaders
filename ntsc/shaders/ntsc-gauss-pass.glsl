@@ -1,23 +1,5 @@
-
-
-// Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
-#define COMPAT_PRECISION mediump
 precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
-// Parameter lines go here:
-#pragma parameter NTSC_CRT_GAMMA "NTSC CRT Gamma" 2.5 0.0 10.0 0.1
-#pragma parameter NTSC_DISPLAY_GAMMA "NTSC Display Gamma" 2.1 0.0 10.0 0.1
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float NTSC_CRT_GAMMA;
-uniform COMPAT_PRECISION float NTSC_DISPLAY_GAMMA;
-#else
-#define NTSC_CRT_GAMMA 2.5
-#define NTSC_DISPLAY_GAMMA 2.1
 #endif
 
 #if defined(VERTEX)
@@ -27,8 +9,8 @@ uniform COMPAT_PRECISION float NTSC_DISPLAY_GAMMA;
 #define COMPAT_ATTRIBUTE in
 #define COMPAT_TEXTURE texture
 #else
-#define COMPAT_VARYING varying 
-#define COMPAT_ATTRIBUTE attribute 
+#define COMPAT_VARYING varying
+#define COMPAT_ATTRIBUTE attribute
 #define COMPAT_TEXTURE texture2D
 #endif
 
@@ -90,6 +72,18 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
+// Parameter lines go here:
+#pragma parameter NTSC_CRT_GAMMA "NTSC CRT Gamma" 2.5 0.0 10.0 0.1
+#pragma parameter NTSC_DISPLAY_GAMMA "NTSC Display Gamma" 2.1 0.0 10.0 0.1
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float NTSC_CRT_GAMMA;
+uniform COMPAT_PRECISION float NTSC_DISPLAY_GAMMA;
+#else
+#define NTSC_CRT_GAMMA 2.5
+#define NTSC_DISPLAY_GAMMA 2.1
+#endif
+
 uniform COMPAT_PRECISION int FrameDirection;
 uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
@@ -131,5 +125,5 @@ void main()
    scanline += frame4 * exp(-5.0 * dist4 * dist4);
 
 FragColor = vec4(pow(1.15 * scanline, vec3(1.0 / NTSC_DISPLAY_GAMMA)), 1.0);
-} 
+}
 #endif

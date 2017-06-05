@@ -1,9 +1,6 @@
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
-#define COMPAT_PRECISION mediump
 precision mediump float;
-#else
-#define COMPAT_PRECISION
 #endif
 
 #if defined(VERTEX)
@@ -13,8 +10,8 @@ precision mediump float;
 #define COMPAT_ATTRIBUTE in
 #define COMPAT_TEXTURE texture
 #else
-#define COMPAT_VARYING varying 
-#define COMPAT_ATTRIBUTE attribute 
+#define COMPAT_VARYING varying
+#define COMPAT_ATTRIBUTE attribute
 #define COMPAT_TEXTURE texture2D
 #endif
 
@@ -98,5 +95,5 @@ void main()
 // Paste fragment contents here:
 
     FragColor = texture(Source, vTexCoord);
-} 
+}
 #endif
