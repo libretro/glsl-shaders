@@ -98,11 +98,11 @@ COMPAT_VARYING vec4 TEX0;
 
 void main()
 {
-	vec4 imgColor = texture(Source, vTexCoord.xy);
+	vec4 imgColor = pow(texture(Source, vTexCoord.xy), vec4(2.2));
     float red = ( imgColor.r * (LUT_Size - 1.0) + 0.5 ) / (LUT_Size * LUT_Size);
     float green = ( imgColor.g * (LUT_Size - 1.0) + 0.5 ) / LUT_Size;
     float blue = floor( imgColor.b  * (LUT_Size - 1.0) ) / LUT_Size;
     vec4 color = texture( SamplerLUT, vec2( blue + red, green ));
-   FragColor = color;
+   FragColor = pow(color, vec4(1.0 / 2.2));
 } 
 #endif
