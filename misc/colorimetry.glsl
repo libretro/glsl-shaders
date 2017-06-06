@@ -1,3 +1,5 @@
+#version 120
+
 /*
    Colorimetry shader
    Ported from Drag's NES Palette Generator
