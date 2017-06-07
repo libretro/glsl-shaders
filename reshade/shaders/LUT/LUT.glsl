@@ -89,16 +89,24 @@ uniform COMPAT_PRECISION float LUT_Size;
 #define LUT_Size 16.0
 #endif
 
+// This shouldn't be necessary but it seems some undefined values can
+// creep in and each GPU vendor handles that differently. This keeps
+// all values within a safe range
+vec4 mixfix(vec4 a, vec4 b, float c)
+{
+	return (a.z < 1.0) ? mix(a, b, c) : a;
+}
+
 void main()
 {
 	vec4 imgColor = texture(Source, vTexCoord.xy);
-    float red = ( imgColor.r * (LUT_Size - 1.0) + 0.5 ) / (LUT_Size * LUT_Size);
-    float green = ( imgColor.g * (LUT_Size - 1.0) + 0.5 ) / LUT_Size;
-    float blue1 = floor( imgColor.b  * (LUT_Size - 1.0) ) / LUT_Size;
-	float blue2 = ceil( imgColor.b  * (LUT_Size - 1.0) ) / LUT_Size;
-	float mixer = (imgColor.b - (blue1 + red)) / ((blue2 + red) - (blue1 + red));
-    vec4 color1 = texture( SamplerLUT, vec2( blue1 + red, green ));
-	vec4 color2 = texture( SamplerLUT, vec2( blue2 + red, green ));
-   FragColor = mix(color1, color2, mixer);
+	float red = ( imgColor.r * (LUT_Size - 1.0) + 0.4999 ) / (LUT_Size * LUT_Size);
+	float green = ( imgColor.g * (LUT_Size - 1.0) + 0.4999 ) / LUT_Size;
+	float blue1 = (floor( imgColor.b  * (LUT_Size - 1.0) ) / LUT_Size) + red;
+	float blue2 = (ceil( imgColor.b  * (LUT_Size - 1.0) ) / LUT_Size) + red;
+	float mixer = max((imgColor.b - blue1) / (blue2 - blue1), 0.0);
+	vec4 color1 = texture( SamplerLUT, vec2( blue1, green ));
+	vec4 color2 = texture( SamplerLUT, vec2( blue2, green ));
+	FragColor = mixfix(color1, color2, mixer);//mix(color1, color2, mixer);
 } 
 #endif
