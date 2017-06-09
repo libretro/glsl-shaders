@@ -1,3 +1,5 @@
+#version 130
+
 // Meta CRT - @P_Malin
 // https://www.shadertoy.com/view/4dlyWX#
 
@@ -11,7 +13,7 @@
 #pragma parameter sphereY "Sphere Y Pos" 0.075 -10.0 10.0 0.05
 #pragma parameter sphereZ "Sphere Z Pos" -0.1 -10.0 10.0 0.01
 #pragma parameter sphereMaterial "Sphere Material" 4.0 -1.0 4.0 1.0
-#pragma parameter index "Cam Pos Preset" 2.0 0.0 9.0 1.0
+#pragma parameter cam_index "Cam Pos Preset" 2.0 0.0 9.0 1.0
 #pragma parameter snow "Snow Toggle" 0.0 0.0 1.0 1.0
 
 #if defined(VERTEX)
@@ -109,7 +111,7 @@ uniform COMPAT_PRECISION float sphereX;
 uniform COMPAT_PRECISION float sphereY;
 uniform COMPAT_PRECISION float sphereZ;
 uniform COMPAT_PRECISION float sphereMaterial;
-uniform COMPAT_PRECISION float index;
+uniform COMPAT_PRECISION float cam_index;
 uniform COMPAT_PRECISION float snow;
 #else
 #define posx -0.4
@@ -122,7 +124,7 @@ uniform COMPAT_PRECISION float snow;
 #define sphereY 0.075
 #define sphereZ -0.1
 #define sphereMaterial 4.0
-#define index 2.0
+#define cam_index 2.0
 #define snow 0.0
 #endif
 
@@ -626,7 +628,7 @@ vec3 PulseIntegral( vec3 x, float s1, float s2 )
     //return clamp( (x - s1), 0.0f, s2 - s1);
     //return t;
     
-    return clamp( (x - s1), vec3(0.0f), vec3(s2 - s1));
+    return clamp( (x - s1), vec3(0.0), vec3(s2 - s1));
 }
 
 float PulseIntegral( float x, float s1, float s2 )
@@ -639,10 +641,10 @@ float PulseIntegral( float x, float s1, float s2 )
 	//return 0.0f; 
     
     // V2
-    //return clamp( (x - s1), 0.0f, s2 - s1);
+    //return clamp( (x - s1), 0.0, s2 - s1);
     //return t;
     
-    return clamp( (x - s1), (0.0f), (s2 - s1));
+    return clamp( (x - s1), (0.0), (s2 - s1));
 }
 
 vec3 Bayer( vec2 vUV, vec2 vBlur )
@@ -661,7 +663,7 @@ vec3 Bayer( vec2 vUV, vec2 vBlur )
     
     // cell centered at 0.5
     
-    vec2 vSize = vec2(0.16f, 0.75f);
+    vec2 vSize = vec2(0.16, 0.75);
     
     vec2 vMin = 0.5 - vSize * 0.5;
     vec2 vMax = 0.5 + vSize * 0.5;
@@ -695,7 +697,7 @@ vec3 GetPixelMatrix( vec2 vUV )
 float Scanline( float y, float fBlur )
 {   
     float fResult = sin( y * 10.0 ) * 0.45 + 0.55;
-    return mix( fResult, 1.0f, min( 1.0, fBlur ) );
+    return mix( fResult, 1.0, min( 1.0, fBlur ) );
 }
 
 
@@ -714,7 +716,7 @@ float GetScanline( vec2 vUV )
 }
 
 
-vec2 kScreenRsolution = vec2(480.0f, 576.0f);
+vec2 kScreenRsolution = vec2(480.0, 576.0);
 
 struct Interference
 {
@@ -749,7 +751,7 @@ float InterferenceNoise( vec2 uv )
 	float displayVerticalLines = 483.0;
     float scanLine = floor(uv.y * displayVerticalLines); 
     float scanPos = scanLine + uv.x;
-	float timeSeed = fract( FrameCount * 123.78 );
+	float timeSeed = fract( float(FrameCount) * 123.78 );
     
     return InterferenceSmoothNoise1D( scanPos * 234.5 + timeSeed * 12345.6 );
 }
@@ -759,7 +761,7 @@ Interference GetInterference( vec2 vUV )
     Interference interference;
         
     interference.noise = InterferenceNoise( vUV );
-    interference.scanLineRandom = InterferenceHash(vUV.y * 100.0 + fract(FrameCount * 1234.0) * 12345.0);
+    interference.scanLineRandom = InterferenceHash(vUV.y * 100.0 + fract(float(FrameCount) * 1234.0) * 12345.0);
     
     return interference;
 }
@@ -1033,7 +1035,7 @@ vec4 Env_GetSkyColor( const vec3 vViewPos, const vec3 vViewDir )
 	vec4 vResult = vec4( 0.0, 0.0, 0.0, kFarDist );
    
 #if 1
-    vec3 vEnvMap = textureLod( cubeMap, vViewDir.zyx, 1.0 ).rgb;
+    vec3 vEnvMap = textureLod( cubeMap, vViewDir.zy, 1.0 ).rgb;
     vEnvMap = vEnvMap * vEnvMap;
     float kEnvmapExposure = 0.999;
     vResult.rgb = -log2(1.0 - vEnvMap * kEnvmapExposure);
@@ -1098,6 +1100,8 @@ vec4 MainCommon( vec3 vRayOrigin, vec3 vRayDir )
 CameraState GetCameraPosition( int whatever )
 {
     CameraState cam;
+	
+	int index = int(cam_index);
 
     vec3 vFocus = vec3(0,0.25,-0.012);   
     
@@ -1186,7 +1190,7 @@ void main()
     	CameraState camA;
     	CameraState camB;
     
-        float fSeqTime = mod(FrameCount / 50.0, 300.0);
+        float fSeqTime = mod(int(FrameCount) / 50.0, 300.0);
         float fSequenceSegLength = 5.0;
         float fSeqIndex = 1.0;//floor(fSeqTime / fSequenceSegLength);
         float fSeqPos = 1.0;//fract(fSeqTime / fSequenceSegLength);
@@ -1219,7 +1223,7 @@ void main()
     }
 */    
 #ifdef ENABLE_TAA_JITTER
-    cam.vJitter = hash21( fract( FrameCount ) ) - 0.5;
+    cam.vJitter = hash21( fract( int(FrameCount) ) ) - 0.5;
 #endif
     
             
