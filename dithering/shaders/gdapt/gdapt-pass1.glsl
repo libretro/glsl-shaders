@@ -16,13 +16,16 @@
 // Parameter lines go here:
 #pragma parameter STEPS "GDAPT Error Prevention LVL"	1.0 0.0 5.0 1.0
 #pragma parameter DEBUG "GDAPT Adjust View"		0.0 0.0 1.0 1.0
+#pragma parameter linear_gamma "Use Linear Gamma"		0.0 0.0 1.0 1.0
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
 uniform COMPAT_PRECISION float STEPS;
 uniform COMPAT_PRECISION float DEBUG;
+uniform COMPAT_PRECISION float linear_gamma;
 #else
 #define STEPS 1.0
 #define DEBUG 0.0
+#define linear_gamma 0.0
 #endif
 
 #if defined(VERTEX)
@@ -116,7 +119,13 @@ void main()
 	vec4 L = TEX(-1, 0);
 	vec4 R = TEX( 1, 0);
 	
-
+	if(linear_gamma > 0.5)
+	{
+		C.xyz = pow(TEX( 0, 0), vec3(2.2)).xyz;
+		L.xyz = pow(TEX(-1, 0), vec3(2.2)).xyz;
+		R.xyz = pow(TEX( 1, 0), vec3(2.2)).xyz;
+	}
+	
 	float str = 0.0;
 
 	if(STEPS == 0.0){
@@ -152,6 +161,8 @@ void main()
 	float wght = max(L.w, R.w);
 	      wght = (wght == 0.0) ? 1.0 : sum/wght;
 
-   FragColor = vec4(mix(C.xyz, (wght*C.xyz + L.w*L.xyz + R.w*R.xyz)/(wght + sum), str), 1.0);
+   vec4 final = vec4(mix(C.xyz, (wght*C.xyz + L.w*L.xyz + R.w*R.xyz)/(wght + sum), str), 1.0);
+   FragColor = final;
+   if(linear_gamma > 0.5) FragColor = pow(final, vec4(1.0 / 2.2));
 } 
 #endif
