@@ -16,22 +16,8 @@
 
 // Multi-purpose code used for both downsampling and upsampling the full-resolution output image.
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter bloom_scale_up "Upsample Bloom Scale" 0.004 0.0 0.03 0.001
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float bloom_scale_up;
-#else
-#define bloom_scale_up 0.004
-#endif
 
 #define half4 vec4
 #define half3 vec3
@@ -76,7 +62,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -91,8 +76,6 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
-// Paste vertex contents here:
-
 }
 
 #elif defined(FRAGMENT)
@@ -133,6 +116,13 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float bloom_scale_up;
+#else
+#define bloom_scale_up 0.004
+#endif
 
 void main()
 {

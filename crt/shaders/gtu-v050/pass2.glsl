@@ -4,30 +4,11 @@
 // License: GPLv3
 ////////////////////////////////////////////////////////
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
-#pragma parameter compositeConnection2 "Composite Connection Enable 2" 0.0 0.0 1.0 1.0
+#pragma parameter compositeConnection "Composite Connection Enable" 0.0 0.0 1.0 1.0
 #pragma parameter signalResolution "Signal Resolution Y" 256.0 16.0 1024.0 16.0
 #pragma parameter signalResolutionI "Signal Resolution I" 83.0 1.0 350.0 2.0
 #pragma parameter signalResolutionQ "Signal Resolution Q" 25.0 1.0 350.0 2.0
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float compositeConnection2;
-uniform COMPAT_PRECISION float signalResolution;
-uniform COMPAT_PRECISION float signalResolutionI;
-uniform COMPAT_PRECISION float signalResolutionQ;
-#else
-#define compositeConnection2 0.0
-#define RETRO_PIXEL_SIZE 256.0
-#define RETRO_PIXEL_SIZE 83.0
-#define RETRO_PIXEL_SIZE 25.0
-#endif
 
 #if defined(VERTEX)
 
@@ -105,6 +86,19 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float compositeConnection;
+uniform COMPAT_PRECISION float signalResolution;
+uniform COMPAT_PRECISION float signalResolutionI;
+uniform COMPAT_PRECISION float signalResolutionQ;
+#else
+#define compositeConnection 0.0
+#define RETRO_PIXEL_SIZE 256.0
+#define RETRO_PIXEL_SIZE 83.0
+#define RETRO_PIXEL_SIZE 25.0
+#endif
+
 #define YIQ_to_RGB 	mat3( 1.0   , 1.0      , 1.0      ,	0.9563   , -0.2721   , -1.1070   ,		0.6210   , -0.6474   , 1.7046   )
 #define pi        3.14159265358
 #define a(x) abs(x)
@@ -127,13 +121,13 @@ void main()
 	float	X;
 	vec3	c;
 	float range;
-	if (compositeConnection2 > 0.0)
+	if (compositeConnection > 0.0)
       range=ceil(0.5+InputSize.x/min(min(signalResolution,signalResolutionI),signalResolutionQ));
    else
       range=ceil(0.5+InputSize.x/signalResolution);
 	  
 	float i;
-   if(compositeConnection2 > 0.0){
+   if(compositeConnection > 0.0){
       for (i=-range;i<range+2.0;i++){
          PROCESS_composite((offset-(i)))
       }
@@ -143,7 +137,7 @@ void main()
          PROCESS((offset-(i)))
       }
    }
-   if(compositeConnection2 > 0.0)
+   if(compositeConnection > 0.0)
       tempColor=clamp(tempColor * YIQ_to_RGB,0.0,1.0);
    else
       tempColor=clamp(tempColor,0.0,1.0);

@@ -1,21 +1,6 @@
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter BLOOM_STRENGTH "Glow Strength" 0.45 0.0 0.8 0.05
 #pragma parameter OUTPUT_GAMMA "Monitor Gamma" 2.2 1.8 2.6 0.02
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float BLOOM_STRENGTH;
-uniform COMPAT_PRECISION float OUTPUT_GAMMA;
-#else
-#define BLOOM_STRENGTH 0.45
-#define OUTPUT_GAMMA 2.2
-#endif
 
 #if defined(VERTEX)
 
@@ -40,7 +25,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -88,7 +72,6 @@ uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 uniform sampler2D PassPrev4Texture;
 COMPAT_VARYING vec4 TEX0;
-// in variables go here as COMPAT_VARYING whatever
 
 // compatibility #defines
 #define Source Texture
@@ -96,6 +79,15 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float BLOOM_STRENGTH;
+uniform COMPAT_PRECISION float OUTPUT_GAMMA;
+#else
+#define BLOOM_STRENGTH 0.45
+#define OUTPUT_GAMMA 2.2
+#endif
 
 // For debugging
 #define BLOOM_ONLY 0
@@ -106,7 +98,7 @@ void main()
     vec3 source = BLOOM_STRENGTH * texture(Source, vTexCoord).rgb;
 #else
 
-    vec3 source = 1.15 * texture(PassPrev4Texture, vTexCoord).rgb;
+    vec3 source = 1.15 * texture(PassPrev4Texture, vTexCoord * vec2(1.0, 1.004)).rgb;
     vec3 bloom  = texture(Source, vTexCoord).rgb;
     source     += BLOOM_STRENGTH * bloom;
 #endif

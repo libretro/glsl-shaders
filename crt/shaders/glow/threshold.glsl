@@ -1,21 +1,6 @@
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter GLOW_WHITEPOINT "Glow Whitepoint" 1.0 0.5 1.1 0.02
 #pragma parameter GLOW_ROLLOFF "Glow Rolloff" 3.0 1.2 6.0 0.1
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float GLOW_WHITEPOINT;
-uniform COMPAT_PRECISION float GLOW_ROLLOFF;
-#else
-#define GLOW_WHITEPOINT 1.0
-#define GLOW_ROLLOFF 3.0
-#endif
 
 #if defined(VERTEX)
 
@@ -92,6 +77,15 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float GLOW_WHITEPOINT;
+uniform COMPAT_PRECISION float GLOW_ROLLOFF;
+#else
+#define GLOW_WHITEPOINT 1.0
+#define GLOW_ROLLOFF 3.0
+#endif
 
 void main()
 {

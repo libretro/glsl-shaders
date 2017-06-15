@@ -4,13 +4,6 @@
 //  License: GPLv3      
 ////////////////////////////////////////////////////////
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 #define TO_INT2(X) int(floor(((X) * 3.0) + 0.5))
 #define TO_INT3(X) int(floor(((X) * 7.0) + 0.5))
 #define TO_INT4(X) int(floor(((X) * 15.0) + 0.5))

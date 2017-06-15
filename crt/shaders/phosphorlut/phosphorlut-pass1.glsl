@@ -1,21 +1,6 @@
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter diffusion "Halation Strength" 0.5 0.0 1.0 0.01
 #pragma parameter out_gamma "Display Gamma" 2.2 1.5 3.0 0.1
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float diffusion;
-uniform COMPAT_PRECISION float out_gamma;
-#else
-#define diffusion 0.5
-#define out_gamma 2.2
-#endif
 
 #if defined(VERTEX)
 
@@ -40,7 +25,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 uniform mat4 MVPMatrix;
 uniform int FrameDirection;
@@ -59,8 +43,6 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
-// Paste vertex contents here:
-
 }
 
 #elif defined(FRAGMENT)
@@ -96,7 +78,6 @@ uniform sampler2D Pass1Texture;
 uniform sampler2D Pass2Texture;
 uniform sampler2D Pass3Texture;
 COMPAT_VARYING vec4 TEX0;
-// in variables go here as COMPAT_VARYING whatever
 
 // fragment compatibility #defines
 #define Source Texture
@@ -104,6 +85,14 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float diffusion;
+uniform COMPAT_PRECISION float out_gamma;
+#else
+#define diffusion 0.5
+#define out_gamma 2.2
+#endif
 
 #define firstPass Pass1Texture
 #define blurPassV Pass2Texture

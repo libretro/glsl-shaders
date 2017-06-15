@@ -4,31 +4,12 @@
 //  License: GPLv3
 ////////////////////////////////////////////////////////
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter cropOverscan_x "Crop Overscan X" 0.0 0.0 1.0 1.0
 #pragma parameter signalResolutionY "Signal Res Y" 200.0 20.0 500.0 10.0
 #pragma parameter signalResolutionI "Signal Res I" 125.0 20.0 350.0 10.0
 #pragma parameter signalResolutionQ "Signal Res Q" 125.0 20.0 350.0 10.0
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float cropOverscan_x;
-uniform COMPAT_PRECISION float signalResolutionY;
-uniform COMPAT_PRECISION float signalResolutionI;
-uniform COMPAT_PRECISION float signalResolutionQ;
-#else
-#define cropOverscan_x 0.0
-#define signalResolutionY 200.0
-#define signalResolutionI 125.0
-#define signalResolutionQ 125.0
-#endif
+
 
 #define pi          3.14159265358
 
@@ -65,7 +46,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 uniform mat4 MVPMatrix;
 uniform int FrameDirection;
@@ -78,6 +58,12 @@ uniform COMPAT_PRECISION vec2 InputSize;
 #define vTexCoord TEX0.xy
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float cropOverscan_x;
+#else
+#define cropOverscan_x 0.0
+#endif
 
 void main()
 {
@@ -125,6 +111,16 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float signalResolutionY;
+uniform COMPAT_PRECISION float signalResolutionI;
+uniform COMPAT_PRECISION float signalResolutionQ;
+#else
+#define signalResolutionY 200.0
+#define signalResolutionI 125.0
+#define signalResolutionQ 125.0
+#endif
 
 void main()
 {

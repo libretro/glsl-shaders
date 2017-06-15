@@ -1,18 +1,5 @@
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter INPUT_GAMMA "Input Gamma" 2.4 2.0 2.6 0.02
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float INPUT_GAMMA;
-#else
-#define INPUT_GAMMA 2.4
-#endif
 
 #if defined(VERTEX)
 
@@ -89,6 +76,13 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float INPUT_GAMMA;
+#else
+#define INPUT_GAMMA 2.4
+#endif
 
 void main()
 {

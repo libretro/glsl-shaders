@@ -43,30 +43,6 @@
 // (=262.5*60Hz)
 ////////////////////////////////////////////////////////
 
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
-#ifdef PARAMETER_UNIFORM // If the shader implementation understands #pragma parameters, this is defined.
-uniform COMPAT_PRECISION float TVOUT_RESOLUTION;
-uniform COMPAT_PRECISION float TVOUT_COMPOSITE_CONNECTION;
-uniform COMPAT_PRECISION float TVOUT_TV_COLOR_LEVELS;
-uniform COMPAT_PRECISION float TVOUT_RESOLUTION_Y;
-uniform COMPAT_PRECISION float TVOUT_RESOLUTION_I;
-uniform COMPAT_PRECISION float TVOUT_RESOLUTION_Q;
-#else
-// Fallbacks if parameters are not supported.
-#define TVOUT_RESOLUTION 256.0 // Default
-#define TVOUT_COMPOSITE_CONNECTION 0
-#define TVOUT_TV_COLOR_LEVELS 0
-#define TVOUT_RESOLUTION_Y 256.0
-#define TVOUT_RESOLUTION_I 83.2
-#define TVOUT_RESOLUTION_Q 25.6
-#endif
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -132,6 +108,23 @@ precision mediump float;
 #define COMPAT_PRECISION mediump
 #else
 #define COMPAT_PRECISION
+#endif
+
+#ifdef PARAMETER_UNIFORM // If the shader implementation understands #pragma parameters, this is defined.
+uniform COMPAT_PRECISION float TVOUT_RESOLUTION;
+uniform COMPAT_PRECISION float TVOUT_COMPOSITE_CONNECTION;
+uniform COMPAT_PRECISION float TVOUT_TV_COLOR_LEVELS;
+uniform COMPAT_PRECISION float TVOUT_RESOLUTION_Y;
+uniform COMPAT_PRECISION float TVOUT_RESOLUTION_I;
+uniform COMPAT_PRECISION float TVOUT_RESOLUTION_Q;
+#else
+// Fallbacks if parameters are not supported.
+#define TVOUT_RESOLUTION 256.0 // Default
+#define TVOUT_COMPOSITE_CONNECTION 0
+#define TVOUT_TV_COLOR_LEVELS 0
+#define TVOUT_RESOLUTION_Y 256.0
+#define TVOUT_RESOLUTION_I 83.2
+#define TVOUT_RESOLUTION_Q 25.6
 #endif
 
 struct output_dummy {

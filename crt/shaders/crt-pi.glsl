@@ -1,3 +1,32 @@
+/*
+    crt-pi - A Raspberry Pi friendly CRT shader.
+
+    Copyright (C) 2015-2016 davej
+
+    This program is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the Free
+    Software Foundation; either version 2 of the License, or (at your option)
+    any later version.
+
+
+Notes:
+
+This shader is designed to work well on Raspberry Pi GPUs (i.e. 1080P @ 60Hz on a game with a 4:3 aspect ratio). It pushes the Pi's GPU hard and enabling some features will slow it down so that it is no longer able to match 1080P @ 60Hz. You will need to overclock your Pi to the fastest setting in raspi-config to get the best results from this shader: 'Pi2' for Pi2 and 'Turbo' for original Pi and Pi Zero. Note: Pi2s are slower at running the shader than other Pis, this seems to be down to Pi2s lower maximum memory speed. Pi2s don't quite manage 1080P @ 60Hz - they drop about 1 in 1000 frames. You probably won't notice this, but if you do, try enabling FAKE_GAMMA.
+
+SCANLINES enables scanlines. You'll almost certainly want to use it with MULTISAMPLE to reduce moire effects. SCANLINE_WEIGHT defines how wide scanlines are (it is an inverse value so a higher number = thinner lines). SCANLINE_GAP_BRIGHTNESS defines how dark the gaps between the scan lines are. Darker gaps between scan lines make moire effects more likely.
+
+GAMMA enables gamma correction using the values in INPUT_GAMMA and OUTPUT_GAMMA. FAKE_GAMMA causes it to ignore the values in INPUT_GAMMA and OUTPUT_GAMMA and approximate gamma correction in a way which is faster than true gamma whilst still looking better than having none. You must have GAMMA defined to enable FAKE_GAMMA.
+
+CURVATURE distorts the screen by CURVATURE_X and CURVATURE_Y. Curvature slows things down a lot.
+
+By default the shader uses linear blending horizontally. If you find this too blury, enable SHARPER.
+
+BLOOM_FACTOR controls the increase in width for bright scanlines.
+
+MASK_TYPE defines what, if any, shadow mask to use. MASK_BRIGHTNESS defines how much the mask type darkens the screen.
+
+*/
+
 #pragma parameter CURVATURE_X "Screen curvature - horizontal" 0.10 0.0 1.0 0.01
 #pragma parameter CURVATURE_Y "Screen curvature - vertical" 0.15 0.0 1.0 0.01
 #pragma parameter MASK_BRIGHTNESS "Mask brightness" 0.70 0.0 1.0 0.01
@@ -48,36 +77,6 @@ uniform COMPAT_PRECISION float OUTPUT_GAMMA;
 /* COMPATIBILITY
    - GLSL compilers
 */
-
-/*
-    crt-pi - A Raspberry Pi friendly CRT shader.
-
-    Copyright (C) 2015-2016 davej
-
-    This program is free software; you can redistribute it and/or modify it
-    under the terms of the GNU General Public License as published by the Free
-    Software Foundation; either version 2 of the License, or (at your option)
-    any later version.
-
-
-Notes:
-
-This shader is designed to work well on Raspberry Pi GPUs (i.e. 1080P @ 60Hz on a game with a 4:3 aspect ratio). It pushes the Pi's GPU hard and enabling some features will slow it down so that it is no longer able to match 1080P @ 60Hz. You will need to overclock your Pi to the fastest setting in raspi-config to get the best results from this shader: 'Pi2' for Pi2 and 'Turbo' for original Pi and Pi Zero. Note: Pi2s are slower at running the shader than other Pis, this seems to be down to Pi2s lower maximum memory speed. Pi2s don't quite manage 1080P @ 60Hz - they drop about 1 in 1000 frames. You probably won't notice this, but if you do, try enabling FAKE_GAMMA.
-
-SCANLINES enables scanlines. You'll almost certainly want to use it with MULTISAMPLE to reduce moire effects. SCANLINE_WEIGHT defines how wide scanlines are (it is an inverse value so a higher number = thinner lines). SCANLINE_GAP_BRIGHTNESS defines how dark the gaps between the scan lines are. Darker gaps between scan lines make moire effects more likely.
-
-GAMMA enables gamma correction using the values in INPUT_GAMMA and OUTPUT_GAMMA. FAKE_GAMMA causes it to ignore the values in INPUT_GAMMA and OUTPUT_GAMMA and approximate gamma correction in a way which is faster than true gamma whilst still looking better than having none. You must have GAMMA defined to enable FAKE_GAMMA.
-
-CURVATURE distorts the screen by CURVATURE_X and CURVATURE_Y. Curvature slows things down a lot.
-
-By default the shader uses linear blending horizontally. If you find this too blury, enable SHARPER.
-
-BLOOM_FACTOR controls the increase in width for bright scanlines.
-
-MASK_TYPE defines what, if any, shadow mask to use. MASK_BRIGHTNESS defines how much the mask type darkens the screen.
-
-*/
-
 
 uniform vec2 TextureSize;
 #if defined(CURVATURE)

@@ -18,44 +18,6 @@
 #pragma parameter GAMMA_OUTPUT "Gamma Output" 2.4 1.0 5.0 0.1
 #pragma parameter BRIGHTNESS "Brightness" 1.5 0.0 2.0 0.05
 
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
-#ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float SHARPNESS_IMAGE;
-uniform COMPAT_PRECISION float SHARPNESS_EDGES;
-uniform COMPAT_PRECISION float GLOW_WIDTH;
-uniform COMPAT_PRECISION float GLOW_HEIGHT;
-uniform COMPAT_PRECISION float GLOW_HALATION;
-uniform COMPAT_PRECISION float GLOW_DIFFUSION;
-uniform COMPAT_PRECISION float MASK_COLORS;
-uniform COMPAT_PRECISION float MASK_STRENGTH;
-uniform COMPAT_PRECISION float MASK_SIZE;
-uniform COMPAT_PRECISION float SCANLINE_SIZE_MIN;
-uniform COMPAT_PRECISION float SCANLINE_SIZE_MAX;
-uniform COMPAT_PRECISION float GAMMA_INPUT;
-uniform COMPAT_PRECISION float GAMMA_OUTPUT;
-uniform COMPAT_PRECISION float BRIGHTNESS;
-#else
-#define SHARPNESS_IMAGE 1.0
-#define SHARPNESS_EDGES 3.0
-#define GLOW_WIDTH 0.5
-#define GLOW_HEIGHT 0.5
-#define GLOW_HALATION 0.1
-#define GLOW_DIFFUSION 0.05
-#define MASK_COLORS 2.0
-#define MASK_STRENGTH 0.3
-#define MASK_SIZE 1.0
-#define SCANLINE_SIZE_MIN 0.5
-#define SCANLINE_SIZE_MAX 1.5
-#define GAMMA_INPUT 2.4
-#define GAMMA_OUTPUT 2.4
-#define BRIGHTNESS 1.5
-#endif
-
 #define Coord TEX0
 
 #if defined(VERTEX)
@@ -126,6 +88,38 @@ uniform PRECISION vec2 TextureSize;
 uniform PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 IN vec2 Coord;
+
+#ifdef PARAMETER_UNIFORM
+uniform PRECISION float SHARPNESS_IMAGE;
+uniform PRECISION float SHARPNESS_EDGES;
+uniform PRECISION float GLOW_WIDTH;
+uniform PRECISION float GLOW_HEIGHT;
+uniform PRECISION float GLOW_HALATION;
+uniform PRECISION float GLOW_DIFFUSION;
+uniform PRECISION float MASK_COLORS;
+uniform PRECISION float MASK_STRENGTH;
+uniform PRECISION float MASK_SIZE;
+uniform PRECISION float SCANLINE_SIZE_MIN;
+uniform PRECISION float SCANLINE_SIZE_MAX;
+uniform PRECISION float GAMMA_INPUT;
+uniform PRECISION float GAMMA_OUTPUT;
+uniform PRECISION float BRIGHTNESS;
+#else
+#define SHARPNESS_IMAGE 1.0
+#define SHARPNESS_EDGES 3.0
+#define GLOW_WIDTH 0.5
+#define GLOW_HEIGHT 0.5
+#define GLOW_HALATION 0.1
+#define GLOW_DIFFUSION 0.05
+#define MASK_COLORS 2.0
+#define MASK_STRENGTH 0.3
+#define MASK_SIZE 1.0
+#define SCANLINE_SIZE_MIN 0.5
+#define SCANLINE_SIZE_MAX 1.5
+#define GAMMA_INPUT 2.4
+#define GAMMA_OUTPUT 2.4
+#define BRIGHTNESS 1.5
+#endif
 
 #define FIX(c) max(abs(c), 1e-5)
 #define PI 3.141592653589

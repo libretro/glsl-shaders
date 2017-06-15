@@ -4,13 +4,6 @@
 //  License: GPLv3      
 ////////////////////////////////////////////////////////
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 #ifdef GL_ES
 #define GET_LEVEL(X) ((X)*(255.0 / (128.0*(1.962-.518)))-(.518 / (1.962-.518)))
 #elif __VERSION__ <= 130

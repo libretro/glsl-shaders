@@ -1,3 +1,11 @@
+// Meta CRT - @P_Malin
+// https://www.shadertoy.com/view/4dlyWX#
+// In which I add and remove aliasing
+
+// Uncomment different defines in Buf B to run different shaders on TV
+
+// Postprocessing Pass
+// Motion blur, Depth of Field, Vignetting & Tonemap
 
 #if defined(VERTEX)
 
@@ -22,7 +30,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -41,7 +48,6 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy;
-// Paste vertex contents here:
 }
 
 #elif defined(FRAGMENT)
@@ -84,25 +90,6 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
-
-// Parameter lines go here:
-#pragma parameter RETRO_PIXEL_SIZE "Retro Pixel Size" 0.84 0.0 1.0 0.01
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float RETRO_PIXEL_SIZE;
-#else
-#define RETRO_PIXEL_SIZE 0.84
-#endif
-
-// Meta CRT - @P_Malin
-// https://www.shadertoy.com/view/4dlyWX#
-// In which I add and remove aliasing
-
-// Uncomment different defines in Buf B to run different shaders on TV
-
-// Postprocessing Pass
-// Motion blur, Depth of Field, Vignetting & Tonemap
-
 
 #define ENABLE_DOF
 #define ENABLE_MOTION_BLUR

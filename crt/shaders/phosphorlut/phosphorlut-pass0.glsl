@@ -1,24 +1,7 @@
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter PHOSPHOR_SCALE_X "Phosphor Scale X" 2.0 1.0 12.0 1.0
 #pragma parameter PHOSPHOR_SCALE_Y "Phosphor Scale Y" 4.0 1.0 12.0 1.0
 #pragma parameter phosphor_layout "Phosphor Layout" 1.0 1.0 3.0 1.0
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float PHOSPHOR_SCALE_X;
-uniform COMPAT_PRECISION float PHOSPHOR_SCALE_Y;
-uniform COMPAT_PRECISION float phosphor_layout;
-#else
-#define PHOSPHOR_SCALE_X 2.0
-#define PHOSPHOR_SCALE_Y 4.0
-#define phosphor_layout 1.0
-#endif
 
 #if defined(VERTEX)
 
@@ -43,7 +26,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 uniform mat4 MVPMatrix;
 uniform int FrameDirection;
@@ -62,8 +44,6 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
-// Paste vertex contents here:
-
 }
 
 #elif defined(FRAGMENT)
@@ -107,6 +87,16 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float PHOSPHOR_SCALE_X;
+uniform COMPAT_PRECISION float PHOSPHOR_SCALE_Y;
+uniform COMPAT_PRECISION float phosphor_layout;
+#else
+#define PHOSPHOR_SCALE_X 2.0
+#define PHOSPHOR_SCALE_Y 4.0
+#define phosphor_layout 1.0
+#endif
 
 #define firstPass Pass1Texture
 

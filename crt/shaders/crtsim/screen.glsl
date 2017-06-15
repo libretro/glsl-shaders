@@ -21,30 +21,10 @@
 #define mul(a, b) (b * a)
 #define saturate(c) clamp(c, 0.0, 1.0)
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
-// Parameter lines go here:
-//#pragma parameter CRTMask_Scale "CRT Mask Scale" 0.02 0.0 0.5 0.01
-//#pragma parameter Tuning_Satur "Saturation" 1.0 0.0 1.0 0.05
-//#pragma parameter Tuning_Mask_Brightness "Mask Brightness" 0.5 0.0 1.0 0.05
-//#pragma parameter Tuning_Mask_Opacity "Mask Opacity" 0.3 0.0 1.0 0.05
-//#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-//uniform COMPAT_PRECISION float CRTMask_Scale;
-//uniform COMPAT_PRECISION float Tuning_Satur;
-//uniform COMPAT_PRECISION float Tuning_Mask_Brightness;
-//uniform COMPAT_PRECISION float Tuning_Mask_Opacity;
-//#else
-#define CRTMask_Scale 0.02
+#define CRTMask_Scale 0.25
 #define Tuning_Satur 1.0
 #define Tuning_Mask_Brightness 0.5
 #define Tuning_Mask_Opacity 0.34
-//#endif
 
 #if defined(VERTEX)
 
@@ -84,8 +64,6 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
-// Paste vertex contents here:
-
 }
 
 #elif defined(FRAGMENT)
@@ -119,7 +97,6 @@ uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 uniform sampler2D shadowMaskSampler;
 COMPAT_VARYING vec4 TEX0;
-// in variables go here as COMPAT_VARYING whatever
 
 // compatibility #defines
 #define Source Texture

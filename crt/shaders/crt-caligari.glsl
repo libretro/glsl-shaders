@@ -19,13 +19,6 @@
 
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 // 0.5 = the spot stays inside the original pixel
 // 1.0 = the spot bleeds up to the center of next pixel
@@ -36,20 +29,6 @@
 // Constants used with gamma correction.
 #pragma parameter InputGamma "CRTCaligari Input Gamma" 2.4 0.0 5.0 0.1
 #pragma parameter OutputGamma "CRTCaligari Output Gamma" 2.2 0.0 5.0 0.1
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float SPOT_WIDTH;
-uniform COMPAT_PRECISION float SPOT_HEIGHT;
-uniform COMPAT_PRECISION float COLOR_BOOST;
-uniform COMPAT_PRECISION float InputGamma;
-uniform COMPAT_PRECISION float OutputGamma;
-#else
-#define SPOT_WIDTH 0.9
-#define SPOT_HEIGHT 0.65
-#define COLOR_BOOST 1.45
-#define InputGamma 2.4
-#define OutputGamma 2.2
-#endif
 
 #if defined(VERTEX)
 
@@ -135,6 +114,21 @@ COMPAT_VARYING vec2 oney;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float SPOT_WIDTH;
+uniform COMPAT_PRECISION float SPOT_HEIGHT;
+uniform COMPAT_PRECISION float COLOR_BOOST;
+uniform COMPAT_PRECISION float InputGamma;
+uniform COMPAT_PRECISION float OutputGamma;
+#else
+#define SPOT_WIDTH 0.9
+#define SPOT_HEIGHT 0.65
+#define COLOR_BOOST 1.45
+#define InputGamma 2.4
+#define OutputGamma 2.2
+#endif
 
 #define GAMMA_IN(color)     pow(color,vec4(InputGamma))
 #define GAMMA_OUT(color)    pow(color, vec4(1.0 / OutputGamma))

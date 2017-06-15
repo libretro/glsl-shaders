@@ -16,46 +16,16 @@
 
 // Blends the original full-resolution scene with the blurred output of post shaders to create bloom.
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter BloomPower "Bloom Power" 1.0 0.0 10.0 0.1
 #pragma parameter BloomScalar "Bloom Scalar" 0.1 0.0 1.0 0.05
-#pragma parameter CRTMask_Scale "CRT Mask Scale" 0.02 0.0 0.5 0.01
+#pragma parameter CRTMask_Scale "CRT Mask Scale" 0.25 0.0 0.5 0.01
 #pragma parameter Tuning_Satur "Saturation" 1.0 0.0 1.0 0.05
 #pragma parameter Tuning_Mask_Brightness "Mask Brightness" 0.5 0.0 1.0 0.05
 #pragma parameter Tuning_Mask_Opacity "Mask Opacity" 0.3 0.0 1.0 0.05
 //#pragma parameter Tuning_Overscan "Overscan" 0.95 0.0 1.0 0.05
 //#pragma parameter Tuning_Barrel "Barrel Distortion" 0.25 0.0 1.0 0.05
 #pragma parameter mask_toggle "Mask Toggle" 1.0 0.0 1.0 1.0
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float BloomPower;
-uniform COMPAT_PRECISION float BloomScalar;
-//uniform COMPAT_PRECISION float Tuning_Overscan;
-//uniform COMPAT_PRECISION float Tuning_Barrel;
-uniform COMPAT_PRECISION float mask_toggle;
-uniform COMPAT_PRECISION float CRTMask_Scale;
-uniform COMPAT_PRECISION float Tuning_Satur;
-uniform COMPAT_PRECISION float Tuning_Mask_Brightness;
-uniform COMPAT_PRECISION float Tuning_Mask_Opacity;
-#else
-#define BloomPower 1.0
-#define BloomScalar 0.1
-//#define Tuning_Overscan 0.95
-//#define Tuning_Barrel 0.25
-#define mask_toggle 1.0
-#define CRTMask_Scale 0.02
-#define Tuning_Satur 1.0
-#define Tuning_Mask_Brightness 0.5
-#define Tuning_Mask_Opacity 0.34
-#endif
 
 #define half4 vec4
 #define half3 vec3
@@ -89,7 +59,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -146,6 +115,29 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float BloomPower;
+uniform COMPAT_PRECISION float BloomScalar;
+//uniform COMPAT_PRECISION float Tuning_Overscan;
+//uniform COMPAT_PRECISION float Tuning_Barrel;
+uniform COMPAT_PRECISION float mask_toggle;
+uniform COMPAT_PRECISION float CRTMask_Scale;
+uniform COMPAT_PRECISION float Tuning_Satur;
+uniform COMPAT_PRECISION float Tuning_Mask_Brightness;
+uniform COMPAT_PRECISION float Tuning_Mask_Opacity;
+#else
+#define BloomPower 1.0
+#define BloomScalar 0.1
+//#define Tuning_Overscan 0.95
+//#define Tuning_Barrel 0.25
+#define mask_toggle 1.0
+#define CRTMask_Scale 0.25
+#define Tuning_Satur 1.0
+#define Tuning_Mask_Brightness 0.5
+#define Tuning_Mask_Opacity 0.34
+#endif
 
 half4 SampleCRT(sampler2D shadowMaskSampler, sampler2D compFrameSampler, half2 uv)
 {

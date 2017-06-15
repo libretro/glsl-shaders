@@ -19,22 +19,8 @@
     )
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter CRTCGWG_GAMMA "CRTcgwg Gamma" 2.7 0.0 10.0 0.01
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float CRTCGWG_GAMMA;
-#else
-#define CRTCGWG_GAMMA 2.7
-#endif
 
 #if defined(VERTEX)
 
@@ -148,6 +134,13 @@ COMPAT_VARYING vec2 ratio_scale;
 // compatibility #defines
 #define Source Texture
 #define texture(c, d) COMPAT_TEXTURE(c, d)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float CRTCGWG_GAMMA;
+#else
+#define CRTCGWG_GAMMA 2.7
+#endif
 
 #define TEX2D(c) COMPAT_TEXTURE(Source ,(c))
 #define PI 3.141592653589

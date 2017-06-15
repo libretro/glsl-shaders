@@ -4,22 +4,8 @@
 // License: GPLv3
 ////////////////////////////////////////////////////////
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
-#pragma parameter compositeConnection1 "Composite Connection Enable 1" 0.0 0.0 1.0 1.0
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float compositeConnection1;
-#else
-#define compositeConnection1 0.0
-#endif
+//#pragma parameter compositeConnection "Composite Connection Enable" 0.0 0.0 1.0 1.0
 
 #define RGB_to_YIQ 	mat3( 0.299 , 0.595716 , 0.211456 ,	0.587    , -0.274453 , -0.522591 ,		0.114    , -0.321263 , 0.311135 )
 
@@ -99,10 +85,16 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float compositeConnection;
+#else
+#define compositeConnection 0.0
+#endif
+
 void main()
 {
 	vec4	c	=	texture(Source, vTexCoord);
-	if(compositeConnection1 > 0.0)
+	if(compositeConnection > 0.0)
 		c.rgb	=	c.rgb * RGB_to_YIQ;
    FragColor = c;
 } 

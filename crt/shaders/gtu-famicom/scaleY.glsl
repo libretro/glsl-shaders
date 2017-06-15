@@ -4,13 +4,6 @@
 //  License: GPLv3
 ////////////////////////////////////////////////////////
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter noScanlines "No Scanlines" 0.0 0.0 1.0 1.0
 #pragma parameter tvVerticalResolution "TV Vert. Res" 250.0 20.0 1000.0 10.0
@@ -18,22 +11,6 @@
 #pragma parameter contrast "Contrast" 1.0 0.0 2.0 0.1
 #pragma parameter gamma "Gamma" 1.0 0.5 1.5 0.01
 #pragma parameter cropOverscan_y "Crop Overscan Y" 0.0 0.0 1.0 1.0
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float noScanlines;
-uniform COMPAT_PRECISION float tvVerticalResolution;
-uniform COMPAT_PRECISION float blackLevel;
-uniform COMPAT_PRECISION float contrast;
-uniform COMPAT_PRECISION float gamma;
-uniform COMPAT_PRECISION float cropOverscan_y;
-#else
-#define noScanlines 0.0
-#define tvVerticalResolution 250.0
-#define blackLevel 0.07
-#define contrast 1.0
-#define gamma 1.0
-#define cropOverscan_y 0.0
-#endif
 
 #if defined(VERTEX)
 
@@ -58,7 +35,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 uniform mat4 MVPMatrix;
 uniform int FrameDirection;
@@ -71,6 +47,12 @@ uniform COMPAT_PRECISION vec2 InputSize;
 #define vTexCoord TEX0.xy
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float cropOverscan_y;
+#else
+#define cropOverscan_y 0.0
+#endif
 
 void main()
 {
@@ -111,7 +93,6 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-// in variables go here as COMPAT_VARYING whatever
 
 // fragment compatibility #defines
 #define Source Texture
@@ -119,6 +100,21 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float noScanlines;
+uniform COMPAT_PRECISION float tvVerticalResolution;
+uniform COMPAT_PRECISION float blackLevel;
+uniform COMPAT_PRECISION float contrast;
+uniform COMPAT_PRECISION float gamma;
+#else
+#define noScanlines 0.0
+#define tvVerticalResolution 250.0
+#define blackLevel 0.07
+#define contrast 1.0
+#define gamma 1.0
+#endif
 
 #define pi          3.14159265358
 #define normalGauss(x) ((exp(-(x)*(x)*0.5))/sqrt(2.0*pi))

@@ -1,25 +1,3 @@
-#pragma parameter SHARPNESS "CRT - Sharpness Hack" 1.0 1.0 5.0 1.0
-#pragma parameter CRT_ANTI_RINGING "CRT - Anti-Ringing" 0.8 0.0 1.0 0.1
-#pragma parameter InputGamma "CRT - Input gamma" 2.5 0.0 5.0 0.1
-
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
-#ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float SHARPNESS;
-uniform COMPAT_PRECISION float CRT_ANTI_RINGING;
-uniform COMPAT_PRECISION float InputGamma;
-#else
-#define SHARPNESS 1.0
-#define CRT_ANTI_RINGING 0.8 
-#define InputGamma 2.5
-#endif
-// END PARAMETERS //
-
 /*
    Hyllian's CRT Shader - pass0
   
@@ -44,6 +22,10 @@ uniform COMPAT_PRECISION float InputGamma;
    THE SOFTWARE.
 
 */
+
+#pragma parameter SHARPNESS "CRT - Sharpness Hack" 1.0 1.0 5.0 1.0
+#pragma parameter CRT_ANTI_RINGING "CRT - Anti-Ringing" 0.8 0.0 1.0 0.1
+#pragma parameter InputGamma "CRT - Input gamma" 2.5 0.0 5.0 0.1
 
 #define GAMMA_IN(color)     pow(color, vec4(InputGamma, InputGamma, InputGamma, InputGamma))
 
@@ -146,6 +128,16 @@ uniform PRECISION vec2 InputSize;
 uniform sampler2D s_p;
 IN vec2 texCoord;
 
+#ifdef PARAMETER_UNIFORM
+uniform PRECISION float SHARPNESS;
+uniform PRECISION float CRT_ANTI_RINGING;
+uniform PRECISION float InputGamma;
+#else
+#define SHARPNESS 1.0
+#define CRT_ANTI_RINGING 0.8 
+#define InputGamma 2.5
+#endif
+// END PARAMETERS //
 
 void main()
 {

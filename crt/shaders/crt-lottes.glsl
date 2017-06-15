@@ -11,14 +11,6 @@
 // It is an example what I personally would want as a display option for pixel art games.
 // Please take and use, change, or whatever.
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision highp float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter hardScan "hardScan" -8.0 -20.0 0.0 1.0
 #pragma parameter hardPix "hardPix" -3.0 -20.0 0.0 1.0
@@ -33,36 +25,6 @@ precision highp float;
 #pragma parameter hardBloomScan "bloom-y soft" -2.0 -4.0 -1.0 0.1
 #pragma parameter bloomAmount "bloom ammount" 0.15 0.0 1.0 0.05
 #pragma parameter shape "filter kernel shape" 2.0 0.0 10.0 0.05
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float hardScan;
-uniform COMPAT_PRECISION float hardPix;
-uniform COMPAT_PRECISION float warpX;
-uniform COMPAT_PRECISION float warpY;
-uniform COMPAT_PRECISION float maskDark;
-uniform COMPAT_PRECISION float maskLight;
-uniform COMPAT_PRECISION float scaleInLinearGamma;
-uniform COMPAT_PRECISION float shadowMask;
-uniform COMPAT_PRECISION float brightBoost;
-uniform COMPAT_PRECISION float hardBloomPix;
-uniform COMPAT_PRECISION float hardBloomScan;
-uniform COMPAT_PRECISION float bloomAmount;
-uniform COMPAT_PRECISION float shape;
-#else
-#define hardScan -8.0
-#define hardPix -3.0
-#define warpX 0.031
-#define warpY 0.041
-#define maskDark 0.5
-#define maskLight 1.5
-#define scaleInLinearGamma 1.0
-#define shadowMask 3.0
-#define brightBoost 1.0
-#define hardBloomPix -1.5
-#define hardBloomScan -2.0
-#define bloomAmount 0.15
-#define shape 2.0
-#endif
 
 #if defined(VERTEX)
 
@@ -143,6 +105,37 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float hardScan;
+uniform COMPAT_PRECISION float hardPix;
+uniform COMPAT_PRECISION float warpX;
+uniform COMPAT_PRECISION float warpY;
+uniform COMPAT_PRECISION float maskDark;
+uniform COMPAT_PRECISION float maskLight;
+uniform COMPAT_PRECISION float scaleInLinearGamma;
+uniform COMPAT_PRECISION float shadowMask;
+uniform COMPAT_PRECISION float brightBoost;
+uniform COMPAT_PRECISION float hardBloomPix;
+uniform COMPAT_PRECISION float hardBloomScan;
+uniform COMPAT_PRECISION float bloomAmount;
+uniform COMPAT_PRECISION float shape;
+#else
+#define hardScan -8.0
+#define hardPix -3.0
+#define warpX 0.031
+#define warpY 0.041
+#define maskDark 0.5
+#define maskLight 1.5
+#define scaleInLinearGamma 1.0
+#define shadowMask 3.0
+#define brightBoost 1.0
+#define hardBloomPix -1.5
+#define hardBloomScan -2.0
+#define bloomAmount 0.15
+#define shape 2.0
+#endif
 
 //Uncomment to reduce instructions with simpler linearization
 //(fixes HD3000 Sandy Bridge IGP)

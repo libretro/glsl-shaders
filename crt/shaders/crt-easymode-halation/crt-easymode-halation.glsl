@@ -3,14 +3,6 @@
     License: GPL
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter GAMMA_OUTPUT "Gamma Output" 2.2 0.1 5.0 0.01
 #pragma parameter SHARPNESS_H "Sharpness Horizontal" 0.6 0.0 1.0 0.05
@@ -31,114 +23,6 @@ precision mediump float;
 #pragma parameter HALATION "Halation" 0.03 0.0 1.0 0.01
 #pragma parameter DIFFUSION "Diffusion" 0.0 0.0 1.0 0.01
 #pragma parameter BRIGHTNESS "Brightness" 1.0 0.0 2.0 0.05
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float GAMMA_OUTPUT;
-uniform COMPAT_PRECISION float SHARPNESS_H;
-uniform COMPAT_PRECISION float SHARPNESS_V;
-uniform COMPAT_PRECISION float MASK_TYPE;
-uniform COMPAT_PRECISION float MASK_STRENGTH_MIN;
-uniform COMPAT_PRECISION float MASK_STRENGTH_MAX;
-uniform COMPAT_PRECISION float MASK_SIZE;
-uniform COMPAT_PRECISION float SCANLINE_STRENGTH_MIN;
-uniform COMPAT_PRECISION float SCANLINE_STRENGTH_MAX;
-uniform COMPAT_PRECISION float SCANLINE_BEAM_MIN;
-uniform COMPAT_PRECISION float SCANLINE_BEAM_MAX;
-uniform COMPAT_PRECISION float GEOM_CURVATURE;
-uniform COMPAT_PRECISION float GEOM_WARP;
-uniform COMPAT_PRECISION float GEOM_CORNER_SIZE;
-uniform COMPAT_PRECISION float GEOM_CORNER_SMOOTH;
-uniform COMPAT_PRECISION float INTERLACING_TOGGLE;
-uniform COMPAT_PRECISION float HALATION;
-uniform COMPAT_PRECISION float DIFFUSION;
-uniform COMPAT_PRECISION float BRIGHTNESS;
-#else
-#define GAMMA_OUTPUT 2.2
-#define SHARPNESS_H 0.6
-#define SHARPNESS_V 1.0
-#define MASK_TYPE 4.0
-#define MASK_STRENGTH_MIN 0.2
-#define MASK_STRENGTH_MAX 0.2
-#define MASK_SIZE 1.0
-#define SCANLINE_STRENGTH_MIN 0.2
-#define SCANLINE_STRENGTH_MAX 0.4
-#define SCANLINE_BEAM_MIN 1.0
-#define SCANLINE_BEAM_MAX 1.0
-#define GEOM_CURVATURE 0.0
-#define GEOM_WARP 0.0
-#define GEOM_CORNER_SIZE 0.0
-#define GEOM_CORNER_SMOOTH 150
-#define INTERLACING_TOGGLE 1.0
-#define HALATION 0.3
-#define DIFFUSION 0.0
-#define BRIGHTNESS 1.0
-#endif
-
-#if __VERSION__ >= 130
-#define COMPAT_TEXTURE texture
-#else
-#define COMPAT_TEXTURE texture2D
-#endif
-
-#define FIX(c) max(abs(c), 1e-5)
-#define PI 3.141592653589
-#define TEX2D(c) COMPAT_TEXTURE(tex, c)
-
-COMPAT_PRECISION float curve_distance(float x, float sharp)
-{
-    float x_step = step(0.5, x);
-    float curve = 0.5 - sqrt(0.25 - (x - x_step) * (x - x_step)) * sign(0.5 - x);
-
-    return mix(x, curve, sharp);
-}
-
-mat4 get_color_matrix(sampler2D tex, vec2 co, vec2 dx)
-{
-    return mat4(TEX2D(co - dx), TEX2D(co), TEX2D(co + dx), TEX2D(co + 2.0 * dx));
-}
-
-vec4 filter_lanczos(vec4 coeffs, mat4 color_matrix)
-{
-    vec4 col = color_matrix * coeffs;
-    vec4 sample_min = min(color_matrix[1], color_matrix[2]);
-    vec4 sample_max = max(color_matrix[1], color_matrix[2]);
-
-    col = clamp(col, sample_min, sample_max);
-
-    return col;
-}
-
-vec3 get_scanline_weight(float pos, float beam, float strength)
-{
-    float weight = 1.0 - pow(cos(pos * 2.0 * PI) * 0.5 + 0.5, beam);
-    
-    weight = weight * strength * 2.0 + (1.0 - strength);
-    
-    return vec3(weight);
-}
-
-vec2 curve_coordinate(vec2 co, float curvature)
-{
-    vec2 curve = vec2(curvature, curvature * 0.75);
-    vec2 co2 = co + co * curve - curve / 2.0;
-    vec2 co_weight = vec2(co.y, co.x) * 2.0 - 1.0;
-
-    co = mix(co, co2, co_weight * co_weight);
-
-    return co;
-}
-
-COMPAT_PRECISION float get_corner_weight(vec2 co, vec2 corner, float smoothfunc)
-{
-    float corner_weight;
-    
-    co = min(co, vec2(1.0) - co) * vec2(1.0, 0.75);
-    co = (corner - min(co, corner));
-    corner_weight = clamp((corner.x - sqrt(dot(co, co))) * smoothfunc, 0.0, 1.0);
-    corner_weight = mix(1.0, corner_weight, ceil(corner.x));
-    
-    return corner_weight;
-}
 
 #if defined(VERTEX)
 
@@ -209,7 +93,6 @@ uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 uniform sampler2D PassPrev4Texture;
 COMPAT_VARYING vec4 TEX0;
-// in variables go here as COMPAT_VARYING whatever
 
 // compatibility #defines
 #define Source Texture
@@ -217,6 +100,109 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float GAMMA_OUTPUT;
+uniform COMPAT_PRECISION float SHARPNESS_H;
+uniform COMPAT_PRECISION float SHARPNESS_V;
+uniform COMPAT_PRECISION float MASK_TYPE;
+uniform COMPAT_PRECISION float MASK_STRENGTH_MIN;
+uniform COMPAT_PRECISION float MASK_STRENGTH_MAX;
+uniform COMPAT_PRECISION float MASK_SIZE;
+uniform COMPAT_PRECISION float SCANLINE_STRENGTH_MIN;
+uniform COMPAT_PRECISION float SCANLINE_STRENGTH_MAX;
+uniform COMPAT_PRECISION float SCANLINE_BEAM_MIN;
+uniform COMPAT_PRECISION float SCANLINE_BEAM_MAX;
+uniform COMPAT_PRECISION float GEOM_CURVATURE;
+uniform COMPAT_PRECISION float GEOM_WARP;
+uniform COMPAT_PRECISION float GEOM_CORNER_SIZE;
+uniform COMPAT_PRECISION float GEOM_CORNER_SMOOTH;
+uniform COMPAT_PRECISION float INTERLACING_TOGGLE;
+uniform COMPAT_PRECISION float HALATION;
+uniform COMPAT_PRECISION float DIFFUSION;
+uniform COMPAT_PRECISION float BRIGHTNESS;
+#else
+#define GAMMA_OUTPUT 2.2
+#define SHARPNESS_H 0.6
+#define SHARPNESS_V 1.0
+#define MASK_TYPE 4.0
+#define MASK_STRENGTH_MIN 0.2
+#define MASK_STRENGTH_MAX 0.2
+#define MASK_SIZE 1.0
+#define SCANLINE_STRENGTH_MIN 0.2
+#define SCANLINE_STRENGTH_MAX 0.4
+#define SCANLINE_BEAM_MIN 1.0
+#define SCANLINE_BEAM_MAX 1.0
+#define GEOM_CURVATURE 0.0
+#define GEOM_WARP 0.0
+#define GEOM_CORNER_SIZE 0.0
+#define GEOM_CORNER_SMOOTH 150
+#define INTERLACING_TOGGLE 1.0
+#define HALATION 0.3
+#define DIFFUSION 0.0
+#define BRIGHTNESS 1.0
+#endif
+
+#define FIX(c) max(abs(c), 1e-5)
+#define PI 3.141592653589
+#define TEX2D(c) COMPAT_TEXTURE(tex, c)
+
+COMPAT_PRECISION float curve_distance(float x, float sharp)
+{
+    float x_step = step(0.5, x);
+    float curve = 0.5 - sqrt(0.25 - (x - x_step) * (x - x_step)) * sign(0.5 - x);
+
+    return mix(x, curve, sharp);
+}
+
+mat4 get_color_matrix(sampler2D tex, vec2 co, vec2 dx)
+{
+    return mat4(TEX2D(co - dx), TEX2D(co), TEX2D(co + dx), TEX2D(co + 2.0 * dx));
+}
+
+vec4 filter_lanczos(vec4 coeffs, mat4 color_matrix)
+{
+    vec4 col = color_matrix * coeffs;
+    vec4 sample_min = min(color_matrix[1], color_matrix[2]);
+    vec4 sample_max = max(color_matrix[1], color_matrix[2]);
+
+    col = clamp(col, sample_min, sample_max);
+
+    return col;
+}
+
+vec3 get_scanline_weight(float pos, float beam, float strength)
+{
+    float weight = 1.0 - pow(cos(pos * 2.0 * PI) * 0.5 + 0.5, beam);
+    
+    weight = weight * strength * 2.0 + (1.0 - strength);
+    
+    return vec3(weight);
+}
+
+vec2 curve_coordinate(vec2 co, float curvature)
+{
+    vec2 curve = vec2(curvature, curvature * 0.75);
+    vec2 co2 = co + co * curve - curve / 2.0;
+    vec2 co_weight = vec2(co.y, co.x) * 2.0 - 1.0;
+
+    co = mix(co, co2, co_weight * co_weight);
+
+    return co;
+}
+
+COMPAT_PRECISION float get_corner_weight(vec2 co, vec2 corner, float smoothfunc)
+{
+    float corner_weight;
+    
+    co = min(co, vec2(1.0) - co) * vec2(1.0, 0.75);
+    co = (corner - min(co, corner));
+    corner_weight = clamp((corner.x - sqrt(dot(co, co))) * smoothfunc, 0.0, 1.0);
+    corner_weight = mix(1.0, corner_weight, ceil(corner.x));
+    
+    return corner_weight;
+}
 
 void main()
 {

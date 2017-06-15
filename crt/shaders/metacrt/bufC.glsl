@@ -39,7 +39,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -821,7 +820,7 @@ SurfaceInfo Scene_GetSurfaceInfo( const in vec3 vRayOrigin,  const in vec3 vRayD
     if ( traceResult.iObjectId == MAT_DEFAULT )
     {
     	surfaceInfo.vR0 = vec3( 0.02 );
-	    surfaceInfo.vAlbedo = textureLod( table, traceResult.vUVW.xz * vec2(-0.00, -0.0), 0.0 ).rgb;
+	    surfaceInfo.vAlbedo = textureLod( table, traceResult.vUVW.xz * 2.0, 0.0 ).rgb;
         surfaceInfo.vAlbedo = surfaceInfo.vAlbedo * surfaceInfo.vAlbedo;
                         
     	surfaceInfo.fSmoothness = clamp( 1.0 - surfaceInfo.vAlbedo.r * surfaceInfo.vAlbedo.r * 2.0, 0.0, 1.0);

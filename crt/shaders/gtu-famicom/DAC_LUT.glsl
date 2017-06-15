@@ -4,14 +4,7 @@
 //  License: GPLv3      
 ////////////////////////////////////////////////////////
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
-#define GET_LEVEL(X) ((X)*(255.0f / (128.0f*(1.962f-.518f)))-(.518f / (1.962f-.518f)))
+#define GET_LEVEL(X) ((X)*(255.0 / (128.0*(1.962-.518)))-(.518 / (1.962-.518)))
 
 #if defined(VERTEX)
 

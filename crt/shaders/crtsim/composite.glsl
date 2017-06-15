@@ -19,14 +19,6 @@
 // This is where we apply effects "inside the screen," including spatial and temporal bleeding,
 // an unsharp mask to simulate overshoot/undershoot, NTSC artifacts, and so on.
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter Tuning_Sharp "Composite Sharp" 0.2 0.0 1.0 0.05
 // typically [0,1], defines the weighting of the sharpness taps
@@ -42,28 +34,6 @@ precision mediump float;
 // Defines an interpolation between the two NTSC filter states. Typically would be 0 or 1 for vsynced 60 fps gameplay or 0.5 for unsynced, but can be whatever.
 #pragma parameter NTSCArtifactScale "NTSC Artifact Scale" 255.0 0.0 1000.0 5.0
 #pragma parameter animate_artifacts "Animate NTSC Artifacts" 1.0 0.0 1.0 1.0
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float Tuning_Sharp;
-uniform COMPAT_PRECISION float Tuning_Persistence_R;
-uniform COMPAT_PRECISION float Tuning_Persistence_G;
-uniform COMPAT_PRECISION float Tuning_Persistence_B;
-uniform COMPAT_PRECISION float Tuning_Bleed;
-uniform COMPAT_PRECISION float Tuning_Artifacts;
-uniform COMPAT_PRECISION float NTSCLerp;
-uniform COMPAT_PRECISION float NTSCArtifactScale;
-uniform COMPAT_PRECISION float animate_artifacts;
-#else
-#define Tuning_Sharp 0.2
-#define Tuning_Persistence_R 0.075
-#define Tuning_Persistence_G 0.05
-#define Tuning_Persistence_B 0.05
-#define Tuning_Bleed 0.5
-#define Tuning_Artifacts 0.5
-#define NTSCLerp 1.0
-#define NTSCArtifactScale 255.0
-#define animate_artifacts 1.0
-#endif
 
 #define lerp(a, b, c) mix(a, b, c)
 #define tex2D(a, b) COMPAT_TEXTURE(a, b)
@@ -71,19 +41,6 @@ uniform COMPAT_PRECISION float animate_artifacts;
 #define half2 vec2
 #define half float
 #define saturate(c) clamp(c, 0.0, 1.0)
-
-// Weight for applying an unsharp mask at a distance of 1, 2, or 3 pixels from changes in luma.
-// The sign of each weight changes in order to alternately simulate overshooting and undershooting.
-float SharpWeight[3] =
-float[](
-	1.0, -0.3162277, 0.1
-);
-
-// Calculate luma for an RGB value.
-float Brightness(vec4 InVal)
-{
-	return dot(InVal, vec4(0.299, 0.587, 0.114, 0.0));
-}
 
 #if defined(VERTEX)
 
@@ -169,6 +126,42 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float Tuning_Sharp;
+uniform COMPAT_PRECISION float Tuning_Persistence_R;
+uniform COMPAT_PRECISION float Tuning_Persistence_G;
+uniform COMPAT_PRECISION float Tuning_Persistence_B;
+uniform COMPAT_PRECISION float Tuning_Bleed;
+uniform COMPAT_PRECISION float Tuning_Artifacts;
+uniform COMPAT_PRECISION float NTSCLerp;
+uniform COMPAT_PRECISION float NTSCArtifactScale;
+uniform COMPAT_PRECISION float animate_artifacts;
+#else
+#define Tuning_Sharp 0.2
+#define Tuning_Persistence_R 0.075
+#define Tuning_Persistence_G 0.05
+#define Tuning_Persistence_B 0.05
+#define Tuning_Bleed 0.5
+#define Tuning_Artifacts 0.5
+#define NTSCLerp 1.0
+#define NTSCArtifactScale 255.0
+#define animate_artifacts 1.0
+#endif
+
+// Weight for applying an unsharp mask at a distance of 1, 2, or 3 pixels from changes in luma.
+// The sign of each weight changes in order to alternately simulate overshooting and undershooting.
+float SharpWeight[3] =
+float[](
+	1.0, -0.3162277, 0.1
+);
+
+// Calculate luma for an RGB value.
+float Brightness(vec4 InVal)
+{
+	return dot(InVal, vec4(0.299, 0.587, 0.114, 0.0));
+}
 
 #define curFrameSampler Source
 
