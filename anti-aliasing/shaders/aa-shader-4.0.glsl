@@ -1,56 +1,25 @@
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
+//##############################################################//
+//						                //
+//       AA Shader 4.o shader - coded by guest(r)               //
+//		     part of code by ShadX		        //
+//##############################################################// 
+// Ported by Hyllian and hunterk - 2015
 
-// Parameter lines go here:
 #pragma parameter INTERNAL_RES "Internal Resolution" 1.0 1.0 8.0 1.0
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float INTERNAL_RES;
-#else
-#define INTERNAL_RES 1.0
-#endif
 
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 
-#if __VERSION__ >= 130
-#define COMPAT_TEXTURE texture
-#else
-#define COMPAT_TEXTURE texture2D
-#endif
-
-vec3 dt = vec3(1.0,1.0,1.0);
-
-vec3 texture2d (sampler2D tex, vec2 coord, vec4 yx) {
-
-	vec3 s00 = texture(tex, coord + yx.zw).xyz; 
-	vec3 s20 = texture(tex, coord + yx.xw).xyz; 
-	vec3 s22 = texture(tex, coord + yx.xy).xyz; 
-	vec3 s02 = texture(tex, coord + yx.zy).xyz; 
-
-	float m1=dot(abs(s00-s22),dt)+0.001;
-	float m2=dot(abs(s02-s20),dt)+0.001;
-
-	return 0.5*(m2*(s00+s22)+m1*(s02+s20))/(m1+m2);
-}
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
 #define COMPAT_VARYING out
 #define COMPAT_ATTRIBUTE in
-#define COMPAT_TEXTURE texture
 #else
 #define COMPAT_VARYING varying 
 #define COMPAT_ATTRIBUTE attribute 
-#define COMPAT_TEXTURE texture2D
 #endif
 
 #ifdef GL_ES
@@ -64,7 +33,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 uniform mat4 MVPMatrix;
 uniform int FrameDirection;
@@ -78,8 +46,6 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
-// Paste vertex contents here:
-
 }
 
 #elif defined(FRAGMENT)
@@ -97,9 +63,11 @@ precision mediump float;
 
 #if __VERSION__ >= 130
 #define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
 out vec4 FragColor;
 #else
 #define COMPAT_VARYING varying
+#define COMPAT_TEXTURE texture2D
 #define FragColor gl_FragColor
 #endif
 
@@ -110,13 +78,31 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-// in variables go here as COMPAT_VARYING whatever
 
 // compatibility #defines
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
-// delete all 'params.' or 'registers.' or whatever in the fragment
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float INTERNAL_RES;
+#else
+#define INTERNAL_RES 1.0
+#endif
+
+vec3 dt = vec3(1.0,1.0,1.0);
+
+vec3 texture2d (sampler2D tex, vec2 coord, vec4 yx) {
+
+	vec3 s00 = texture(tex, coord + yx.zw).xyz; 
+	vec3 s20 = texture(tex, coord + yx.xw).xyz; 
+	vec3 s22 = texture(tex, coord + yx.xy).xyz; 
+	vec3 s02 = texture(tex, coord + yx.zy).xyz; 
+
+	float m1=dot(abs(s00-s22),dt)+0.001;
+	float m2=dot(abs(s02-s20),dt)+0.001;
+
+	return 0.5*(m2*(s00+s22)+m1*(s02+s20))/(m1+m2);
+}
 
 void main()
 {

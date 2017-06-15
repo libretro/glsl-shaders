@@ -1,19 +1,3 @@
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision COMPAT_PRECISION float;
-#else
-#define COMPAT_PRECISION
-#endif
-
-//compatibility #defines
-#if __VERSION__ >= 130
-#define COMPAT_TEXTURE texture
-#else
-#define COMPAT_TEXTURE texture2D
-#endif
-#define texture(c, d) COMPAT_TEXTURE(c, d)
-
 /**
  * @license
  * Copyright (c) 2011 NVIDIA Corporation. All rights reserved.
@@ -28,6 +12,84 @@ precision COMPAT_PRECISION float;
  * OTHER PECUNIARY LOSS) ARISING OUT OF THE  USE OF OR INABILITY  TO USE THIS SOFTWARE, 
  * EVEN IF NVIDIA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
  */
+
+#if defined(VERTEX)
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING out
+#define COMPAT_ATTRIBUTE in
+#define COMPAT_TEXTURE texture
+#else
+#define COMPAT_VARYING varying 
+#define COMPAT_ATTRIBUTE attribute 
+#define COMPAT_TEXTURE texture2D
+#endif
+
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
+COMPAT_ATTRIBUTE vec4 VertexCoord;
+COMPAT_ATTRIBUTE vec4 COLOR;
+COMPAT_ATTRIBUTE vec4 TexCoord;
+COMPAT_VARYING vec4 COL0;
+COMPAT_VARYING vec4 TEX0;
+
+vec4 _oPosition1; 
+uniform mat4 MVPMatrix;
+uniform int FrameDirection;
+uniform int FrameCount;
+uniform COMPAT_PRECISION vec2 OutputSize;
+uniform COMPAT_PRECISION vec2 TextureSize;
+uniform COMPAT_PRECISION vec2 InputSize;
+
+void main()
+{
+    gl_Position = MVPMatrix * VertexCoord;
+    COL0 = COLOR;
+    TEX0.xy = TexCoord.xy;
+}
+
+#elif defined(FRAGMENT)
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define COMPAT_TEXTURE texture2D
+#define FragColor gl_FragColor
+#endif
+
+#ifdef GL_ES
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
+uniform int FrameDirection;
+uniform int FrameCount;
+uniform COMPAT_PRECISION vec2 OutputSize;
+uniform COMPAT_PRECISION vec2 TextureSize;
+uniform COMPAT_PRECISION vec2 InputSize;
+uniform sampler2D Texture;
+COMPAT_VARYING vec4 TEX0;
+
+// compatibility #defines
+#define Source Texture
+#define vTexCoord TEX0.xy
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
+#define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#define texture(c, d) COMPAT_TEXTURE(c, d)
 
 /*
 FXAA_PRESET - Choose compile-in knob preset 0-5.
@@ -249,81 +311,6 @@ vec3 FxaaPixelShader(vec2 pos, sampler2D tex, vec2 rcpFrame)
         pos.y + (horzSpan ? subPixelOffset : 0.0))).xyz;
     return FxaaLerp3(rgbL, rgbF, blendL); 
 }
-
-#if defined(VERTEX)
-
-#if __VERSION__ >= 130
-#define COMPAT_VARYING out
-#define COMPAT_ATTRIBUTE in
-#define COMPAT_TEXTURE texture
-#else
-#define COMPAT_VARYING varying 
-#define COMPAT_ATTRIBUTE attribute 
-#define COMPAT_TEXTURE texture2D
-#endif
-
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
-COMPAT_ATTRIBUTE vec4 VertexCoord;
-COMPAT_ATTRIBUTE vec4 COLOR;
-COMPAT_ATTRIBUTE vec4 TexCoord;
-COMPAT_VARYING vec4 COL0;
-COMPAT_VARYING vec4 TEX0;
-
-vec4 _oPosition1; 
-uniform mat4 MVPMatrix;
-uniform int FrameDirection;
-uniform int FrameCount;
-uniform COMPAT_PRECISION vec2 OutputSize;
-uniform COMPAT_PRECISION vec2 TextureSize;
-uniform COMPAT_PRECISION vec2 InputSize;
-
-void main()
-{
-    gl_Position = MVPMatrix * VertexCoord;
-    COL0 = COLOR;
-    TEX0.xy = TexCoord.xy;
-}
-
-#elif defined(FRAGMENT)
-
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#endif
-
-#ifdef GL_ES
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
-#endif
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
-uniform int FrameDirection;
-uniform int FrameCount;
-uniform COMPAT_PRECISION vec2 OutputSize;
-uniform COMPAT_PRECISION vec2 TextureSize;
-uniform COMPAT_PRECISION vec2 InputSize;
-uniform sampler2D Texture;
-COMPAT_VARYING vec4 TEX0;
-
-// compatibility #defines
-#define Source Texture
-#define vTexCoord TEX0.xy
-#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 void main()
 {

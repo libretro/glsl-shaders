@@ -7,23 +7,6 @@
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version.
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision COMPAT_PRECISION float;
-#else
-#define COMPAT_PRECISION
-#endif
-
-// Parameter lines go here:
-#pragma parameter LEIFX_LINES "LeiFX Line Intensity" 0.05 0.00 1.00 0.01
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float LEIFX_LINES;
-#else
-#define LEIFX_LINES 0.05
-#endif
-
 // This table came from the wikipedia article about Ordered Dithering. NOT MAME.  Just to clarify.
 //int erroredtable[16] = {
 //	16,4,13,1,   
@@ -74,7 +57,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -89,8 +71,6 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
-// Paste vertex contents here:
-
 }
 
 #elif defined(FRAGMENT)
@@ -123,7 +103,6 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-// in variables go here as COMPAT_VARYING whatever
 
 // compatibility #defines
 #define saturate(c) clamp(c, 0.0, 1.0)
@@ -150,7 +129,13 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
-// delete all 'params.' or 'registers.' or whatever in the fragment
+// Parameter lines go here:
+#pragma parameter LEIFX_LINES "LeiFX Line Intensity" 0.05 0.00 1.00 0.01
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float LEIFX_LINES;
+#else
+#define LEIFX_LINES 0.05
+#endif
 
 void main()
 {

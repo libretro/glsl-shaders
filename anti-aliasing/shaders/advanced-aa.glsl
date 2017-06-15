@@ -23,29 +23,8 @@
    - AA gfx. back to it's original size (looks nice above 640x480, set scaling to 1.0) 
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision COMPAT_PRECISION float;
-#else
-#define COMPAT_PRECISION
-#endif
-
-// Parameter lines go here:
 #pragma parameter AA_RESOLUTION_X "AA Input Res X" 0.0 0.0 1920.0 1.0
 #pragma parameter AA_RESOLUTION_Y "AA Input Res Y" 0.0 0.0 1920.0 1.0
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float AA_RESOLUTION_X;
-uniform COMPAT_PRECISION float AA_RESOLUTION_Y;
-#else
-#define AA_RESOLUTION_X 0.0
-#define AA_RESOLUTION_Y 0.0
-#endif
-
-#define AA_RESOLUTION_X_DEF SourceSize.x
-#define AA_RESOLUTION_Y_DEF SourceSize.y
-vec3  dt = vec3(1,1,1);
 
 #if defined(VERTEX)
 
@@ -70,7 +49,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 COMPAT_VARYING vec4 t1;
 COMPAT_VARYING vec4 t2;
 COMPAT_VARYING vec4 t3;
@@ -89,12 +67,24 @@ uniform COMPAT_PRECISION vec2 InputSize;
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 #define vTexCoord TEX0.xy
 
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float AA_RESOLUTION_X;
+uniform COMPAT_PRECISION float AA_RESOLUTION_Y;
+#else
+#define AA_RESOLUTION_X 0.0
+#define AA_RESOLUTION_Y 0.0
+#endif
+
+#define AA_RESOLUTION_X_DEF SourceSize.x
+#define AA_RESOLUTION_Y_DEF SourceSize.y
+
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
-// Paste vertex contents here:
+	
    	vec2 ps = vec2(1.0/((AA_RESOLUTION_X == 0.0) ? AA_RESOLUTION_X_DEF : AA_RESOLUTION_X), 1.0/((AA_RESOLUTION_Y == 0.0) ? AA_RESOLUTION_Y_DEF : AA_RESOLUTION_Y));
 	float dx = ps.x*0.5;
 	float dy = ps.y*0.5;
@@ -139,7 +129,6 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-// in variables go here as COMPAT_VARYING whatever
 COMPAT_VARYING vec4 t1;
 COMPAT_VARYING vec4 t2;
 COMPAT_VARYING vec4 t3;
@@ -150,7 +139,7 @@ COMPAT_VARYING vec4 t4;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define vTexCoord TEX0.xy
 
-// delete all 'params.' or 'registers.' or whatever in the fragment
+vec3  dt = vec3(1.,1.,1.);
 
 void main()
 {
