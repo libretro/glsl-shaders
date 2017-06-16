@@ -10,18 +10,7 @@
 #pragma parameter signalResolutionI "Signal Res I" 125.0 20.0 350.0 10.0
 #pragma parameter signalResolutionQ "Signal Res Q" 125.0 20.0 350.0 10.0
 
-
 #define pi          3.14159265358
-
-float d(float x, float b)
-{
-    return (pi*b*min(abs(x)+0.5,1.0/b));
-}
-
-float e(float x, float b)
-{
-    return (pi*b*min(max(abs(x)-0.5,-1.0/b),1.0/b));
-}
 
 #if defined(VERTEX)
 
@@ -121,6 +110,16 @@ uniform COMPAT_PRECISION float signalResolutionQ;
 #define signalResolutionI 125.0
 #define signalResolutionQ 125.0
 #endif
+
+float d(float x, float b)
+{
+    return (pi*b*min(abs(x)+0.5,1.0/b));
+}
+
+float e(float x, float b)
+{
+    return (pi*b*min(max(abs(x)-0.5,-1.0/b),1.0/b));
+}
 
 void main()
 {

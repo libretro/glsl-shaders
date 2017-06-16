@@ -21,6 +21,9 @@
             under the GPL."
         )
     */
+#ifdef GL_ES
+precision highp float;
+#endif
 
             // Comment the next line to disable interpolation in linear gamma (and
             // gain speed).
@@ -241,11 +244,6 @@ out vec4 FragColor;
 #endif
 
 #ifdef GL_ES
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
-#endif
 #define COMPAT_PRECISION mediump
 #else
 #define COMPAT_PRECISION

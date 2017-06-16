@@ -51,18 +51,7 @@
 //    B = 0.2620, C = 0.3690  =>  Robidoux Sharp filter.
 //    B = 0.36, C = 0.28  =>  My best config for ringing elimination in pixel art (Hyllian).
 
-
 // For more info, see: http://www.imagemagick.org/Usage/img_diagrams/cubic_survey.gif
-
-// Change these params to configure the horizontal filter.
-const float  B =  0.0; 
-const float  C =  0.5;  
-
-const  mat4 invX = mat4(                          (-B - 6.0*C)/6.0,   (12.0 - 9.0*B - 6.0*C)/6.0,  -(12.0 - 9.0*B - 6.0*C)/6.0,   (B + 6.0*C)/6.0,
-                                              (3.0*B + 12.0*C)/6.0, (-18.0 + 12.0*B + 6.0*C)/6.0, (18.0 - 15.0*B - 12.0*C)/6.0,                -C,
-                                              (-3.0*B - 6.0*C)/6.0,                          0.0,          (3.0*B + 6.0*C)/6.0,               0.0,
-                                                             B/6.0,            (6.0 - 2.0*B)/6.0,                        B/6.0,               0.0);
-
 
 #define texCoord TEX0
 
@@ -138,18 +127,18 @@ uniform sampler2D s_p;
 IN vec2 texCoord;
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float PHOSPHOR;
-uniform COMPAT_PRECISION float InputGamma;
-uniform COMPAT_PRECISION float OutputGamma;
-uniform COMPAT_PRECISION float SHARPNESS;
-uniform COMPAT_PRECISION float COLOR_BOOST;
-uniform COMPAT_PRECISION float RED_BOOST;
-uniform COMPAT_PRECISION float GREEN_BOOST;
-uniform COMPAT_PRECISION float BLUE_BOOST;
-uniform COMPAT_PRECISION float SCANLINES_STRENGTH;
-uniform COMPAT_PRECISION float BEAM_MIN_WIDTH;
-uniform COMPAT_PRECISION float BEAM_MAX_WIDTH;
-uniform COMPAT_PRECISION float CRT_ANTI_RINGING;
+uniform PRECISION float PHOSPHOR;
+uniform PRECISION float InputGamma;
+uniform PRECISION float OutputGamma;
+uniform PRECISION float SHARPNESS;
+uniform PRECISION float COLOR_BOOST;
+uniform PRECISION float RED_BOOST;
+uniform PRECISION float GREEN_BOOST;
+uniform PRECISION float BLUE_BOOST;
+uniform PRECISION float SCANLINES_STRENGTH;
+uniform PRECISION float BEAM_MIN_WIDTH;
+uniform PRECISION float BEAM_MAX_WIDTH;
+uniform PRECISION float CRT_ANTI_RINGING;
 #else
 #define PHOSPHOR 1.0
 #define InputGamma 2.4
@@ -165,6 +154,15 @@ uniform COMPAT_PRECISION float CRT_ANTI_RINGING;
 #define CRT_ANTI_RINGING 0.8 
 #endif
 // END PARAMETERS //
+
+// Change these params to configure the horizontal filter.
+const float  B =  0.0; 
+const float  C =  0.5;  
+
+const  mat4 invX = mat4(                          (-B - 6.0*C)/6.0,   (12.0 - 9.0*B - 6.0*C)/6.0,  -(12.0 - 9.0*B - 6.0*C)/6.0,   (B + 6.0*C)/6.0,
+                                              (3.0*B + 12.0*C)/6.0, (-18.0 + 12.0*B + 6.0*C)/6.0, (18.0 - 15.0*B - 12.0*C)/6.0,                -C,
+                                              (-3.0*B - 6.0*C)/6.0,                          0.0,          (3.0*B + 6.0*C)/6.0,               0.0,
+                                                             B/6.0,            (6.0 - 2.0*B)/6.0,                        B/6.0,               0.0);
 
 void main()
 {

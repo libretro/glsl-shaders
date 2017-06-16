@@ -14,22 +14,6 @@
 //	14,2,15,3,
 //	6,10,7,11		
 //};
-float erroredtable0 = 16.0;
-float erroredtable1 = 4.0;
-float erroredtable2 = 13.0;
-float erroredtable3 = 1.0;
-float erroredtable4 = 8.0;
-float erroredtable5 = 12.0;
-float erroredtable6 = 5.0;
-float erroredtable7 = 9.0;
-float erroredtable8 = 14.0;
-float erroredtable9 = 2.0;
-float erroredtable10 = 15.0;
-float erroredtable11 = 3.0;
-float erroredtable12 = 6.0;
-float erroredtable13 = 10.0;
-float erroredtable14 = 7.0;
-float erroredtable15 = 11.0;
 
 #define DITHERAMOUNT		0.5 // was 0.33f
 #define DITHERBIAS		-1.0  // 0 to 16, biases the value of the dither up.  - was 8
@@ -136,6 +120,23 @@ uniform COMPAT_PRECISION float LEIFX_LINES;
 #else
 #define LEIFX_LINES 0.05
 #endif
+
+float erroredtable0 = 16.0;
+float erroredtable1 = 4.0;
+float erroredtable2 = 13.0;
+float erroredtable3 = 1.0;
+float erroredtable4 = 8.0;
+float erroredtable5 = 12.0;
+float erroredtable6 = 5.0;
+float erroredtable7 = 9.0;
+float erroredtable8 = 14.0;
+float erroredtable9 = 2.0;
+float erroredtable10 = 15.0;
+float erroredtable11 = 3.0;
+float erroredtable12 = 6.0;
+float erroredtable13 = 10.0;
+float erroredtable14 = 7.0;
+float erroredtable15 = 11.0;
 
 void main()
 {

@@ -4,56 +4,6 @@
 //  License: GPLv3      
 ////////////////////////////////////////////////////////
 
-#ifdef GL_ES
-#define GET_LEVEL(X) ((X)*(255.0 / (128.0*(1.962-.518)))-(.518 / (1.962-.518)))
-#elif __VERSION__ <= 130
-#define GET_LEVEL(X) ((X)*(255.0 / (128.0*(1.962-.518)))-(.518 / (1.962-.518)))
-#else
-#define TO_INT2(X) int(floor(((X) * 3.0) + 0.5))
-#define TO_INT3(X) int(floor(((X) * 7.0) + 0.5))
-#define TO_INT4(X) int(floor(((X) * 15.0) + 0.5))
-
-bool InColorp (int p, int color)
-{
-    return ((color + p) % 12 < 6);
-}
-
-float NTSCsignal(int emphasis, int level, int color, int p)
-{
-    float black = .518;
-    float white = 1.962;
-
-    float attenuation = 0.746;
-    const float levels[8] = float[] (   0.350 , 0.518, 0.962, 1.550,
-                                        1.094, 1.506, 1.962, 1.962);
-    if (color > 13)  
-        level = 1;
-    
-    float low  = levels[0 + level];
-    float high = levels[4 + level];
-    
-    if (color == 0) 
-        low = high;
-    
-    if (color > 12) 
-        high = low;
-
-    float signal = InColorp(p, color) ? high : low;
-
-    if ((bool(emphasis & 1) && InColorp(p, 0)) ||
-        (bool(emphasis & 2) && InColorp(p, 4)) ||
-        (bool(emphasis & 4) && InColorp(p, 8))) 
-    {
-        signal = signal * attenuation;
-    }
-
-
-    signal = (signal - black) / (white - black);
-
-    return signal;
-}
-#endif
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -139,6 +89,56 @@ COMPAT_VARYING float colorPhase;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef GL_ES
+#define GET_LEVEL(X) ((X)*(255.0 / (128.0*(1.962-.518)))-(.518 / (1.962-.518)))
+#elif __VERSION__ <= 130
+#define GET_LEVEL(X) ((X)*(255.0 / (128.0*(1.962-.518)))-(.518 / (1.962-.518)))
+#else
+#define TO_INT2(X) int(floor(((X) * 3.0) + 0.5))
+#define TO_INT3(X) int(floor(((X) * 7.0) + 0.5))
+#define TO_INT4(X) int(floor(((X) * 15.0) + 0.5))
+
+bool InColorp (int p, int color)
+{
+    return ((color + p) % 12 < 6);
+}
+
+float NTSCsignal(int emphasis, int level, int color, int p)
+{
+    float black = .518;
+    float white = 1.962;
+
+    float attenuation = 0.746;
+    const float levels[8] = float[] (   0.350 , 0.518, 0.962, 1.550,
+                                        1.094, 1.506, 1.962, 1.962);
+    if (color > 13)  
+        level = 1;
+    
+    float low  = levels[0 + level];
+    float high = levels[4 + level];
+    
+    if (color == 0) 
+        low = high;
+    
+    if (color > 12) 
+        high = low;
+
+    float signal = InColorp(p, color) ? high : low;
+
+    if ((bool(emphasis & 1) && InColorp(p, 0)) ||
+        (bool(emphasis & 2) && InColorp(p, 4)) ||
+        (bool(emphasis & 4) && InColorp(p, 8))) 
+    {
+        signal = signal * attenuation;
+    }
+
+
+    signal = (signal - black) / (white - black);
+
+    return signal;
+}
+#endif
 
 void main()
 {

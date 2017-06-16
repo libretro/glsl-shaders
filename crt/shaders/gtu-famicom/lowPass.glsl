@@ -18,20 +18,6 @@
 #define S(i) (texture(Source, vec2(vTexCoord.x - X(i)/SourceSize.x,vTexCoord.y)).x)
 #define VAL(i) (S(i)*STU(X(i),(signalResolution / InputSize.x)))
 
-float rand2(vec2 co)
-{
-    float c = 43758.5453;
-    float dt = dot(co.xy, vec2(12.9898, 78.233));
-    float sn = mod(dt, 3.14);
-    
-    return fract(sin(sn) * c);
-}
-
-float rand(vec2 co)
-{
-    return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
-}
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -123,6 +109,20 @@ uniform COMPAT_PRECISION float noiseStrength;
 #define addNoise 0.0
 #define noiseStrength 0.0
 #endif
+
+float rand2(vec2 co)
+{
+    float c = 43758.5453;
+    float dt = dot(co.xy, vec2(12.9898, 78.233));
+    float sn = mod(dt, 3.14);
+    
+    return fract(sin(sn) * c);
+}
+
+float rand(vec2 co)
+{
+    return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
+}
 
 void main()
 {

@@ -26,11 +26,6 @@
 #define float3x3 mat3x3
 #define float4x4 mat4x4
 
-float mod2(float x, float y)
-{
-	return x - y * floor (x/y);
-}
-
 //float	GAMMA_LEVEL = 1.0;
 
 #if defined(VERTEX)
@@ -117,6 +112,11 @@ uniform COMPAT_PRECISION float GAMMA_LEVEL;
 #else
 #define GAMMA_LEVEL 1.3
 #endif
+
+float mod2(float x, float y)
+{
+	return x - y * floor (x/y);
+}
 
 void main()
 {

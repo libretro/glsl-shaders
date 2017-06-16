@@ -83,16 +83,6 @@ void main()
 
 #elif defined(FRAGMENT)
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
-
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
@@ -102,6 +92,16 @@ precision mediump float;
 #define COMPAT_PRECISION mediump
 #else
 #define COMPAT_PRECISION
+#endif
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out COMPAT_PRECISION vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
 #endif
 
 uniform COMPAT_PRECISION int FrameDirection;
@@ -171,7 +171,7 @@ void main()
 	half2 scanuv = vec2(fract(fragcoord * 1.0001 * SourceSize.xy / NTSCArtifactScale));
 	half4 NTSCArtifact1 = tex2D(NTSCArtifactSampler, scanuv);
 	half4 NTSCArtifact2 = tex2D(NTSCArtifactSampler, scanuv + vec2(0.0, 1.0 / SourceSize.y));
-	float lerpfactor = (animate_artifacts > 0.5) ? mod(FrameCount, 2.0) : NTSCLerp;
+	float lerpfactor = (animate_artifacts > 0.5) ? mod(float(FrameCount), 2.0) : NTSCLerp;
 	half4 NTSCArtifact = lerp(NTSCArtifact1, NTSCArtifact2, 1.0 - lerpfactor);
 	
 	half2 LeftUV = vTexCoord - vec2(1.0 / SourceSize.x, 0.0);

@@ -61,16 +61,6 @@ void main()
 
 #elif defined(FRAGMENT)
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
-
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
@@ -80,6 +70,16 @@ precision mediump float;
 #define COMPAT_PRECISION mediump
 #else
 #define COMPAT_PRECISION
+#endif
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out COMPAT_PRECISION vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
 #endif
 
 uniform COMPAT_PRECISION int FrameDirection;
@@ -1189,7 +1189,7 @@ void main()
     	CameraState camA;
     	CameraState camB;
     
-        float fSeqTime = mod(int(FrameCount) / 50.0, 300.0);
+        float fSeqTime = mod(float(FrameCount) / 50.0, 300.0);
         float fSequenceSegLength = 5.0;
         float fSeqIndex = 1.0;//floor(fSeqTime / fSequenceSegLength);
         float fSeqPos = 1.0;//fract(fSeqTime / fSequenceSegLength);
@@ -1222,7 +1222,7 @@ void main()
     }
 */    
 #ifdef ENABLE_TAA_JITTER
-    cam.vJitter = hash21( fract( int(FrameCount) ) ) - 0.5;
+    cam.vJitter = hash21( fract( float(FrameCount) ) ) - 0.5;
 #endif
     
             

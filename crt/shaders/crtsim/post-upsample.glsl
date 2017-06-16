@@ -29,16 +29,6 @@
 #define mul(a, b) (b * a)
 #define saturate(c) clamp(c, 0.0, 1.0)
 
-const float2 Poisson0 = float2(0.000000, 0.000000);
-const float2 Poisson1 = float2(0.000000, 1.000000);
-const float2 Poisson2 = float2(0.000000, -1.000000);
-const float2 Poisson3 = float2(-0.866025, 0.500000);
-const float2 Poisson4 = float2(-0.866025, -0.500000);
-const float2 Poisson5 = float2(0.866025, 0.500000);
-const float2 Poisson6 = float2(0.866025, -0.500000);
-
-const float InvNumSamples = 0.1428571428571429; //<- 1.0 / number of Poisson samples
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -80,16 +70,6 @@ void main()
 
 #elif defined(FRAGMENT)
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
-
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
@@ -99,6 +79,16 @@ precision mediump float;
 #define COMPAT_PRECISION mediump
 #else
 #define COMPAT_PRECISION
+#endif
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out COMPAT_PRECISION vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
 #endif
 
 uniform COMPAT_PRECISION int FrameDirection;
@@ -123,6 +113,16 @@ uniform COMPAT_PRECISION float bloom_scale_up;
 #else
 #define bloom_scale_up 0.004
 #endif
+
+const COMPAT_PRECISION float2 Poisson0 = float2(0.000000, 0.000000);
+const COMPAT_PRECISION float2 Poisson1 = float2(0.000000, 1.000000);
+const COMPAT_PRECISION float2 Poisson2 = float2(0.000000, -1.000000);
+const COMPAT_PRECISION float2 Poisson3 = float2(-0.866025, 0.500000);
+const COMPAT_PRECISION float2 Poisson4 = float2(-0.866025, -0.500000);
+const COMPAT_PRECISION float2 Poisson5 = float2(0.866025, 0.500000);
+const COMPAT_PRECISION float2 Poisson6 = float2(0.866025, -0.500000);
+
+const float InvNumSamples = 0.1428571428571429; //<- 1.0 / number of Poisson samples
 
 void main()
 {
