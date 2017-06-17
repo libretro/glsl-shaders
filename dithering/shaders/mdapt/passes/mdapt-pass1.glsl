@@ -6,33 +6,6 @@
 
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
-#define TEX(dx,dy) texture(Source, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
-
-
-float and(float a, float b){
-	return min(a,b);
-}
-
-float and(float a, float b, float c){
-	return min(a, min(b,c));
-}
-
-float or(float a, float b){
-	return max(a,b);
-}
-
-float or(float a, float b, float c, float d, float e){
-	return max(a, max(b, max(c, max(d,e))));
-}
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -113,6 +86,27 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
+
+#define TEX(dx,dy) texture(Source, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
+
+
+float and(float a, float b){
+	return min(a,b);
+}
+
+float and(float a, float b, float c){
+	return min(a, min(b,c));
+}
+
+float or(float a, float b){
+	return max(a,b);
+}
+
+float or(float a, float b, float c, float d, float e){
+	return max(a, max(b, max(c, max(d,e))));
+}
+
+
 
 void main()
 {

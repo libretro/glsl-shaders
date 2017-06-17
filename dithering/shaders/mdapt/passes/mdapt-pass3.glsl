@@ -6,41 +6,6 @@
 
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
-#define TEX(dx,dy)   texture(Source, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
-#define TEXt0(dx,dy) texture(Original, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
-
-bool eq(vec3 A, vec3 B){
-	return (A == B);
-}
-
-float and(float a, float b){
-	return min(a,b);
-}
-
-float or(float a, float b, float c, float d, float e, float f, float g, float h, float i){
-	return max(a, max(b, max(c, max(d, max(e, max(f, max(g, max(h,i))))))));
-}
-
-vec2 and(vec2 a, vec2 b){
-	return min(a,b);
-}
-
-vec2 or(vec2 a, vec2 b){
-	return max(a,b);
-}
-
-vec2 or(vec2 a, vec2 b, vec2 c, vec2 d){
-	return max(a, max(b, max(c,d)));
-}
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -64,7 +29,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 vec4 _oPosition1;
 uniform mat4 MVPMatrix;
@@ -83,7 +47,6 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy;
-// Paste vertex contents here:
 }
 
 #elif defined(FRAGMENT)
@@ -125,6 +88,33 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
+
+#define TEX(dx,dy)   texture(Source, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
+#define TEXt0(dx,dy) texture(Original, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
+
+bool eq(vec3 A, vec3 B){
+	return (A == B);
+}
+
+float and(float a, float b){
+	return min(a,b);
+}
+
+float or(float a, float b, float c, float d, float e, float f, float g, float h, float i){
+	return max(a, max(b, max(c, max(d, max(e, max(f, max(g, max(h,i))))))));
+}
+
+vec2 and(vec2 a, vec2 b){
+	return min(a,b);
+}
+
+vec2 or(vec2 a, vec2 b){
+	return max(a,b);
+}
+
+vec2 or(vec2 a, vec2 b, vec2 c, vec2 d){
+	return max(a, max(b, max(c,d)));
+}
 
 void main()
 {

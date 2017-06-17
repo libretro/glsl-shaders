@@ -6,59 +6,11 @@
 
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter VL    "MDAPT Vertical Lines"	0.0 0.0 1.0 1.0
 #pragma parameter CB    "MDAPT Checkerboard"	1.0 0.0 1.0 1.0
 #pragma parameter DEBUG "MDAPT Adjust View"	0.0 0.0 1.0 1.0
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float VL;
-uniform COMPAT_PRECISION float CB;
-uniform COMPAT_PRECISION float DEBUG;
-#else
-#define VL 0.0
-#define CB 1.0
-#define DEBUG 0.0
-#endif
-
-#define TEX(dx,dy)   texture(Source, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
-#define TEXt0(dx,dy) texture(Original, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
-
-bool eq(vec3 A, vec3 B){
-	return (A == B);
-}
-
-float and(float a, float b){
-	return min(a,b);
-}
-
-float or(float a, float b){
-	return max(a,b);
-}
-
-float or(float a, float b, float c, float d, float e, float f, float g, float h, float i){
-	return max(a, max(b, max(c, max(d, max(e, max(f, max(g, max(h,i))))))));
-}
-
-vec2 and(vec2 a, vec2 b){
-	return min(a,b);
-}
-
-vec2 or(vec2 a, vec2 b){
-	return max(a,b);
-}
-
-vec2 or(vec2 a, vec2 b, vec2 c, vec2 d){
-	return max(a, max(b, max(c,d)));
-}
+#pragma parameter linear_gamma "MDAPT Linear Gamma Blend"	0.0 0.0 1.0 1.0
 
 #if defined(VERTEX)
 
@@ -143,6 +95,59 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float VL;
+uniform COMPAT_PRECISION float CB;
+uniform COMPAT_PRECISION float DEBUG;
+uniform COMPAT_PRECISION float linear_gamma;
+#else
+#define VL 0.0
+#define CB 1.0
+#define DEBUG 0.0
+#define linear_gamma 0.0
+#endif
+
+//#define TEX(dx,dy)   texture(Source, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
+//#define TEXt0(dx,dy) texture(Original, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
+
+vec4 TEX(float dx, float dy){
+	if(linear_gamma > 0.5) return pow(texture(Source, vTexCoord+vec2((dx),(dy))*SourceSize.zw), vec4(2.2));
+	else return texture(Source, vTexCoord+vec2((dx),(dy))*SourceSize.zw);
+}
+
+vec4 TEXt0(float dx, float dy){
+	if(linear_gamma > 0.5) return pow(texture(Original, vTexCoord+vec2((dx),(dy))*SourceSize.zw), vec4(2.2));
+	else return texture(Original, vTexCoord+vec2((dx),(dy))*SourceSize.zw);
+}
+
+bool eq(vec3 A, vec3 B){
+	return (A == B);
+}
+
+float and(float a, float b){
+	return min(a,b);
+}
+
+float or(float a, float b){
+	return max(a,b);
+}
+
+float or(float a, float b, float c, float d, float e, float f, float g, float h, float i){
+	return max(a, max(b, max(c, max(d, max(e, max(f, max(g, max(h,i))))))));
+}
+
+vec2 and(vec2 a, vec2 b){
+	return min(a,b);
+}
+
+vec2 or(vec2 a, vec2 b){
+	return max(a,b);
+}
+
+vec2 or(vec2 a, vec2 b, vec2 c, vec2 d){
+	return max(a, max(b, max(c,d)));
+}
+
 void main()
 {
 	/*
@@ -213,6 +218,7 @@ void main()
 	if(DEBUG > 0.5)
 		FragColor = vec4(prVL, prCB, 0.0, 0.0);
 
-   FragColor = (prCB >= prVL) ? vec4(mix(c, fCB, prCB), 1.0) : vec4(mix(c, fVL, prVL), 1.0);
+	vec4 final = (prCB >= prVL) ? vec4(mix(c, fCB, prCB), 1.0) : vec4(mix(c, fVL, prVL), 1.0);
+	FragColor = (linear_gamma > 0.5) ? pow(final, vec4(1.0 / 2.2)) : final;
 }
 #endif

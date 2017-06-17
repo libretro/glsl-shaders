@@ -6,39 +6,11 @@
 
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter VL_LO "MDAPT VL LO Thresh" 1.25 0.0 10.0 0.05
 #pragma parameter VL_HI "MDAPT VL HI Thresh" 1.75 0.0 10.0 0.05
 #pragma parameter CB_LO "MDAPT CB LO Thresh" 5.25 0.0 25.0 0.05
 #pragma parameter CB_HI "MDAPT CB HI Thresh" 5.75 0.0 25.0 0.05
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float VL_LO;
-uniform COMPAT_PRECISION float VL_HI;
-uniform COMPAT_PRECISION float CB_LO;
-uniform COMPAT_PRECISION float CB_HI;
-#else
-#define VL_LO 1.25
-#define VL_HI 1.75
-#define CB_LO 5.25
-#define CB_HI 5.75
-#endif
-
-#define TEX(dx,dy) texture(Source, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
-#define and(x,y) min(x,y)
-#define or(x,y)  max(x,y)
-
-vec2 sigmoid(vec2 signal){
-	return smoothstep(vec2(VL_LO, CB_LO), vec2(VL_HI, CB_HI), signal);
-}
 
 #if defined(VERTEX)
 
@@ -120,6 +92,27 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float VL_LO;
+uniform COMPAT_PRECISION float VL_HI;
+uniform COMPAT_PRECISION float CB_LO;
+uniform COMPAT_PRECISION float CB_HI;
+#else
+#define VL_LO 1.25
+#define VL_HI 1.75
+#define CB_LO 5.25
+#define CB_HI 5.75
+#endif
+
+#define TEX(dx,dy) texture(Source, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
+#define and(x,y) min(x,y)
+#define or(x,y)  max(x,y)
+
+vec2 sigmoid(vec2 signal){
+	return smoothstep(vec2(VL_LO, CB_LO), vec2(VL_HI, CB_HI), signal);
+}
 
 void main()
 {

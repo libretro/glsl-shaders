@@ -6,43 +6,9 @@
 
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter MODE "MDAPT Monochrome Analysis"	0.0 0.0 1.0 1.0
 #pragma parameter PWR  "MDAPT Color Metric Exp"		2.0 0.0 10.0 0.1
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float MODE;
-uniform COMPAT_PRECISION float PWR;
-#else
-#define MODE 0.0
-#define PWR 2.0
-#endif
-
-#define dot(x,y) clamp(dot(x,y), 0.0, 1.0)	// NVIDIA Fix
-#define TEX(dx,dy) texture(Source, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
-
-// Reference: http://www.compuphase.com/cmetric.htm
-float eq(vec3 A, vec3 B)
-{
-	vec3 diff = A-B;
-	float  ravg = (A.x + B.x) * 0.5;
-
-	diff *= diff * vec3(2.0 + ravg, 4.0, 3.0 - ravg);
-
-	return pow( smoothstep(3.0, 0.0, sqrt(diff.x + diff.y + diff.z)), PWR );
-}
-
-float and(float a, float b, float c, float d, float e, float f){
-	return min(a, min(b, min(c, min(d, min(e,f)))));
-}
 
 #if defined(VERTEX)
 
@@ -124,6 +90,33 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float MODE;
+uniform COMPAT_PRECISION float PWR;
+#else
+#define MODE 0.0
+#define PWR 2.0
+#endif
+
+#define dot(x,y) clamp(dot(x,y), 0.0, 1.0)	// NVIDIA Fix
+#define TEX(dx,dy) texture(Source, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
+
+// Reference: http://www.compuphase.com/cmetric.htm
+float eq(vec3 A, vec3 B)
+{
+	vec3 diff = A-B;
+	float  ravg = (A.x + B.x) * 0.5;
+
+	diff *= diff * vec3(2.0 + ravg, 4.0, 3.0 - ravg);
+
+	return pow( smoothstep(3.0, 0.0, sqrt(diff.x + diff.y + diff.z)), PWR );
+}
+
+float and(float a, float b, float c, float d, float e, float f){
+	return min(a, min(b, min(c, min(d, min(e,f)))));
+}
 
 void main()
 {
