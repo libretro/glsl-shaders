@@ -1,5 +1,5 @@
 // Parameter lines go here:
-#pragma parameter LUT_Size "LUT Size" 16.0 16.0 64.0 1.0
+#pragma parameter LUT_Size "LUT Size" 16.0 1.0 64.0 1.0
 
 #if defined(VERTEX)
 
