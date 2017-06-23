@@ -26,18 +26,6 @@
 
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
-const float XBR_EDGE_STR = 0.0;
-const float XBR_WEIGHT = 0.0;
-const float XBR_ANTI_RINGING = 0.0;
-
 #define mul(a,b) (b*a)
 
 #define XBR_RES 2.0
@@ -51,59 +39,6 @@ const float XBR_ANTI_RINGING = 0.0;
 
 #define weight1 (XBR_WEIGHT*1.29633/10.0)
 #define weight2 (XBR_WEIGHT*1.75068/10.0/2.0)
-
-const vec3 Y = vec3(.2126, .7152, .0722);
-
-const vec3 dtt = vec3(65536.,255.,1.);
-
-vec4 reduce4(vec3 A, vec3 B, vec3 C, vec3 D)
-{
-  return mul(mat4x3(A, B, C, D), dtt);
-}
-
-float RGBtoYUV(vec3 color)
-{
-  return dot(color, Y);
-}
-
-float df(float A, float B)
-{
-  return abs(A-B);
-}
-
-bool eq(float A, float B)
-{
-	return (df(A, B) < 15.0);
-}
-
-/*
-                              P1
-     |P0|B |C |P1|         C     F4          |a0|b1|c2|d3|
-     |D |E |F |F4|      B     F     I4       |b0|c1|d2|e3|   |e1|i1|i2|e2|
-     |G |H |I |I4|   P0    E  A  I     P3    |c0|d1|e2|f3|   |e3|i3|i4|e4|
-     |P2|H5|I5|P3|      D     H     I5       |d0|e1|f2|g3|
-                           G     H5
-                              P2
-*/
-
-float d_wd(float b0, float b1, float c0, float c1, float c2, float d0, float d1, float d2, float d3, float e1, float e2, float e3, float f2, float f3)
-{
-	return (wp1*(df(c1,c2) + df(c1,c0) + df(e2,e1) + df(e2,e3)) + wp2*(df(d2,d3) + df(d0,d1)) + wp3*(df(d1,d3) + df(d0,d2)) + wp4*df(d1,d2) + wp5*(df(c0,c2) + df(e1,e3)) + wp6*(df(b0,b1) + df(f2,f3)));
-}
-
-float hv_wd(float i1, float i2, float i3, float i4, float e1, float e2, float e3, float e4)
-{
-	return ( wp4*(df(i1,i2)+df(i3,i4)) + wp1*(df(i1,e1)+df(i2,e2)+df(i3,e3)+df(i4,e4)) + wp3*(df(i1,e2)+df(i3,e4)+df(e1,i2)+df(e3,i4)));
-}
-
-vec3 min4(vec3 a, vec3 b, vec3 c, vec3 d)
-{
-    return min(a, min(b, min(c, d)));
-}
-vec3 max4(vec3 a, vec3 b, vec3 c, vec3 d)
-{
-    return max(a, max(b, max(c, d)));
-}
 
 #if defined(VERTEX)
 
@@ -128,7 +63,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -184,6 +118,63 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+
+const float XBR_EDGE_STR = 0.0;
+const float XBR_WEIGHT = 0.0;
+const float XBR_ANTI_RINGING = 0.0;
+
+const vec3 Y = vec3(.2126, .7152, .0722);
+
+const vec3 dtt = vec3(65536.,255.,1.);
+
+vec4 reduce4(vec3 A, vec3 B, vec3 C, vec3 D)
+{
+  return mul(mat4x3(A, B, C, D), dtt);
+}
+
+float RGBtoYUV(vec3 color)
+{
+  return dot(color, Y);
+}
+
+float df(float A, float B)
+{
+  return abs(A-B);
+}
+
+bool eq(float A, float B)
+{
+	return (df(A, B) < 15.0);
+}
+
+/*
+                              P1
+     |P0|B |C |P1|         C     F4          |a0|b1|c2|d3|
+     |D |E |F |F4|      B     F     I4       |b0|c1|d2|e3|   |e1|i1|i2|e2|
+     |G |H |I |I4|   P0    E  A  I     P3    |c0|d1|e2|f3|   |e3|i3|i4|e4|
+     |P2|H5|I5|P3|      D     H     I5       |d0|e1|f2|g3|
+                           G     H5
+                              P2
+*/
+
+float d_wd(float b0, float b1, float c0, float c1, float c2, float d0, float d1, float d2, float d3, float e1, float e2, float e3, float f2, float f3)
+{
+	return (wp1*(df(c1,c2) + df(c1,c0) + df(e2,e1) + df(e2,e3)) + wp2*(df(d2,d3) + df(d0,d1)) + wp3*(df(d1,d3) + df(d0,d2)) + wp4*df(d1,d2) + wp5*(df(c0,c2) + df(e1,e3)) + wp6*(df(b0,b1) + df(f2,f3)));
+}
+
+float hv_wd(float i1, float i2, float i3, float i4, float e1, float e2, float e3, float e4)
+{
+	return ( wp4*(df(i1,i2)+df(i3,i4)) + wp1*(df(i1,e1)+df(i2,e2)+df(i3,e3)+df(i4,e4)) + wp3*(df(i1,e2)+df(i3,e4)+df(e1,i2)+df(e3,i4)));
+}
+
+vec3 min4(vec3 a, vec3 b, vec3 c, vec3 d)
+{
+    return min(a, min(b, min(c, d)));
+}
+vec3 max4(vec3 a, vec3 b, vec3 c, vec3 d)
+{
+    return max(a, max(b, max(c, d)));
+}
 
 void main()
 {

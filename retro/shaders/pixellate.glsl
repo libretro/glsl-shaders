@@ -14,21 +14,8 @@
 //    licence in this forum post:
 //        http://board.byuu.org/viewtopic.php?p=57295#p57295
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter INTERPOLATE_IN_LINEAR_GAMMA "Linear Gamma Weight" 1.0 0.0 1.0 1.0
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float INTERPOLATE_IN_LINEAR_GAMMA;
-#else
-#define INTERPOLATE_IN_LINEAR_GAMMA 1.0
-#endif
 
 #if defined(VERTEX)
 
@@ -111,6 +98,12 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float INTERPOLATE_IN_LINEAR_GAMMA;
+#else
+#define INTERPOLATE_IN_LINEAR_GAMMA 1.0
+#endif
+
 void main()
 {
    vec2 texelSize = SourceSize.zw;
@@ -123,21 +116,17 @@ void main()
    float right  = vTexCoord.x + range.x;
    float bottom = vTexCoord.y - range.y;
    
-   vec3 topLeftColor;
-   vec3 bottomRightColor;
-   vec3 bottomLeftColor;
-   vec3 topRightColor;
+   vec3 topLeftColor     = texture(Source, (floor(vec2(left, top)     / texelSize) + 0.5) * texelSize).rgb;
+   vec3 bottomRightColor = texture(Source, (floor(vec2(right, bottom) / texelSize) + 0.5) * texelSize).rgb;
+   vec3 bottomLeftColor  = texture(Source, (floor(vec2(left, bottom)  / texelSize) + 0.5) * texelSize).rgb;
+   vec3 topRightColor    = texture(Source, (floor(vec2(right, top)    / texelSize) + 0.5) * texelSize).rgb;
 
    if (INTERPOLATE_IN_LINEAR_GAMMA > 0.5){
-   topLeftColor     = pow(texture(Source, (floor(vec2(left, top)     / texelSize) + 0.5) * texelSize).rgb, vec3(2.2));
-   bottomRightColor = pow(texture(Source, (floor(vec2(right, bottom) / texelSize) + 0.5) * texelSize).rgb, vec3(2.2));
-   bottomLeftColor  = pow(texture(Source, (floor(vec2(left, bottom)  / texelSize) + 0.5) * texelSize).rgb, vec3(2.2));
-   topRightColor    = pow(texture(Source, (floor(vec2(right, top)    / texelSize) + 0.5) * texelSize).rgb, vec3(2.2));
-   }else{
-   topLeftColor     = texture(Source, (floor(vec2(left, top)     / texelSize) + 0.5) * texelSize).rgb;
-   bottomRightColor = texture(Source, (floor(vec2(right, bottom) / texelSize) + 0.5) * texelSize).rgb;
-   bottomLeftColor  = texture(Source, (floor(vec2(left, bottom)  / texelSize) + 0.5) * texelSize).rgb;
-   topRightColor    = texture(Source, (floor(vec2(right, top)    / texelSize) + 0.5) * texelSize).rgb;}
+	topLeftColor     = pow(topLeftColor, vec3(2.2));
+	bottomRightColor = pow(bottomRightColor, vec3(2.2));
+	bottomLeftColor  = pow(bottomLeftColor, vec3(2.2));
+	topRightColor    = pow(topRightColor, vec3(2.2));
+   }
 
    vec2 border = clamp(floor((vTexCoord / texelSize) + vec2(0.5)) * texelSize, vec2(left, bottom), vec2(right, top));
 

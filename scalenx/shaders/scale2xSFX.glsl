@@ -9,27 +9,10 @@ Scale2SFX improves upon the original Scale2x (aka EPX) by avoiding the occurence
 
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter YTR "SCALE2xSFX Y Threshold" 48.0 0.0 255.0 1.0
 #pragma parameter UTR "SCALE2xSFX U Threshold"  7.0 0.0 255.0 1.0
 #pragma parameter VTR "SCALE2xSFX V Threshold"  6.0 0.0 255.0 1.0
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float YTR;
-uniform COMPAT_PRECISION float UTR;
-uniform COMPAT_PRECISION float VTR;
-#else
-#define YTR 48.0
-#define UTR 7.0
-#define VTR 6.0
-#endif
 
 #define saturate(c) clamp(c, 0.0, 1.0)
 #define lerp(a,b,c) mix(a,b,c)
@@ -52,17 +35,6 @@ uniform COMPAT_PRECISION float VTR;
 #define float4x3 mat4x3
 
 #define decal Source
-
-const mat3 YUV  = mat3(0.299, -0.168736, 0.5, 0.587, -0.331264, -0.418688, 0.114, 0.5, -0.081312);	// transponed
-float3 thresh = float3(YTR, UTR, VTR)/255.0;
-
-bool eq(float3 A, float3 B){
-	return (A==B);
-}
-
-bool neq(float3 A, float3 B){
-	return (A!=B);
-}
 
 #if defined(VERTEX)
 
@@ -163,6 +135,27 @@ COMPAT_VARYING vec4 t5;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float YTR;
+uniform COMPAT_PRECISION float UTR;
+uniform COMPAT_PRECISION float VTR;
+#else
+#define YTR 48.0
+#define UTR 7.0
+#define VTR 6.0
+#endif
+
+const mat3 YUV  = mat3(0.299, -0.168736, 0.5, 0.587, -0.331264, -0.418688, 0.114, 0.5, -0.081312);	// transponed
+float3 thresh = float3(YTR, UTR, VTR)/255.0;
+
+bool eq(float3 A, float3 B){
+	return (A==B);
+}
+
+bool neq(float3 A, float3 B){
+	return (A!=B);
+}
 
 void main()
 {

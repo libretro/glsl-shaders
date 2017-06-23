@@ -27,72 +27,12 @@
    Incorporates some of the ideas from SABR shader. Thanks to Joshua Street.
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter XBR_Y_WEIGHT "Y Weight" 48.0 0.0 100.0 1.0
 #pragma parameter XBR_EQ_THRESHOLD "EQ Threshold" 10.0 0.0 50.0 1.0
 #pragma parameter XBR_EQ_THRESHOLD2 "EQ Threshold 2" 2.0 0.0 4.0 1.0
 #pragma parameter XBR_LV2_COEFFICIENT "Lv2 Coefficient" 2.0 1.0 3.0 1.0
 #pragma parameter corner_type "Corner Calculation" 3.0 1.0 3.0 1.0
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float XBR_Y_WEIGHT;
-uniform COMPAT_PRECISION float XBR_EQ_THRESHOLD;
-uniform COMPAT_PRECISION float XBR_EQ_THRESHOLD2;
-uniform COMPAT_PRECISION float XBR_LV2_COEFFICIENT;
-uniform COMPAT_PRECISION float corner_type;
-#else
-#define XBR_Y_WEIGHT 48.0
-#define XBR_EQ_THRESHOLD 10.0
-#define XBR_EQ_THRESHOLD2 2.0
-#define XBR_LV2_COEFFICIENT 2.0
-#define corner_type 3.0
-#endif
-
-const mat3 yuv = mat3(0.299, 0.587, 0.114, -0.169, -0.331, 0.499, 0.499, -0.418, -0.0813);
-const vec4 delta = vec4(0.4, 0.4, 0.4, 0.4);
-
-vec4 df(vec4 A, vec4 B)
-{
-	return vec4(abs(A-B));
-}
-
-float c_df(vec3 c1, vec3 c2) {
-	vec3 df = abs(c1 - c2);
-	return df.r + df.g + df.b;
-}
-
-bvec4 eq(vec4 A, vec4 B)
-{
-	return lessThan(df(A, B), vec4(XBR_EQ_THRESHOLD));
-}
-
-bvec4 eq2(vec4 A, vec4 B)
-{
-	return lessThan(df(A, B), vec4(XBR_EQ_THRESHOLD2));
-}
-
-bvec4 and(bvec4 A, bvec4 B)
-{
-	return bvec4(A.x && B.x, A.y && B.y, A.z && B.z, A.w && B.w);
-}
-
-bvec4 or(bvec4 A, bvec4 B)
-{
-	return bvec4(A.x || B.x, A.y || B.y, A.z || B.z, A.w || B.w);
-}
-
-vec4 weighted_distance(vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, vec4 f, vec4 g, vec4 h)
-{
-	return (df(a,b) + df(a,c) + df(d,e) + df(d,f) + 4.0*df(g,h));
-}
 
 #if defined(VERTEX)
 
@@ -201,6 +141,58 @@ COMPAT_VARYING vec4 t7;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float XBR_Y_WEIGHT;
+uniform COMPAT_PRECISION float XBR_EQ_THRESHOLD;
+uniform COMPAT_PRECISION float XBR_EQ_THRESHOLD2;
+uniform COMPAT_PRECISION float XBR_LV2_COEFFICIENT;
+uniform COMPAT_PRECISION float corner_type;
+#else
+#define XBR_Y_WEIGHT 48.0
+#define XBR_EQ_THRESHOLD 10.0
+#define XBR_EQ_THRESHOLD2 2.0
+#define XBR_LV2_COEFFICIENT 2.0
+#define corner_type 3.0
+#endif
+
+const mat3 yuv = mat3(0.299, 0.587, 0.114, -0.169, -0.331, 0.499, 0.499, -0.418, -0.0813);
+const vec4 delta = vec4(0.4, 0.4, 0.4, 0.4);
+
+vec4 df(vec4 A, vec4 B)
+{
+	return vec4(abs(A-B));
+}
+
+float c_df(vec3 c1, vec3 c2) {
+	vec3 df = abs(c1 - c2);
+	return df.r + df.g + df.b;
+}
+
+bvec4 eq(vec4 A, vec4 B)
+{
+	return lessThan(df(A, B), vec4(XBR_EQ_THRESHOLD));
+}
+
+bvec4 eq2(vec4 A, vec4 B)
+{
+	return lessThan(df(A, B), vec4(XBR_EQ_THRESHOLD2));
+}
+
+bvec4 and(bvec4 A, bvec4 B)
+{
+	return bvec4(A.x && B.x, A.y && B.y, A.z && B.z, A.w && B.w);
+}
+
+bvec4 or(bvec4 A, bvec4 B)
+{
+	return bvec4(A.x || B.x, A.y || B.y, A.z || B.z, A.w || B.w);
+}
+
+vec4 weighted_distance(vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, vec4 f, vec4 g, vec4 h)
+{
+	return (df(a,b) + df(a,c) + df(d,e) + df(d,f) + 4.0*df(g,h));
+}
 
 void main()
 {

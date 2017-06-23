@@ -39,14 +39,6 @@
 
 */ 
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 #define BLEND_NONE 0
 #define BLEND_NORMAL 1
 #define BLEND_DOMINANT 2
@@ -54,53 +46,6 @@ precision mediump float;
 #define EQUAL_COLOR_TOLERANCE 30.0/255.0
 #define STEEP_DIRECTION_THRESHOLD 2.2
 #define DOMINANT_DIRECTION_THRESHOLD 3.6
-
-	const float  one_sixth = 1.0 / 6.0;
-	const float  two_sixth = 2.0 / 6.0;
-	const float four_sixth = 4.0 / 6.0;
-	const float five_sixth = 5.0 / 6.0;
-
-	float reduce(const vec3 color)
-	{
-		return dot(color, vec3(65536.0, 256.0, 1.0));
-	}
-	
-	float DistYCbCr(const vec3 pixA, const vec3 pixB)
-	{
-		const vec3 w = vec3(0.2627, 0.6780, 0.0593);
-		const float scaleB = 0.5 / (1.0 - w.b);
-		const float scaleR = 0.5 / (1.0 - w.r);
-		vec3 diff = pixA - pixB;
-		float Y = dot(diff, w);
-		float Cb = scaleB * (diff.b - Y);
-		float Cr = scaleR * (diff.r - Y);
-		
-		return sqrt( ((LUMINANCE_WEIGHT * Y) * (LUMINANCE_WEIGHT * Y)) + (Cb * Cb) + (Cr * Cr) );
-	}
-	
-	bool IsPixEqual(const vec3 pixA, const vec3 pixB)
-	{
-		return (DistYCbCr(pixA, pixB) < EQUAL_COLOR_TOLERANCE);
-	}
-	
-	bool IsBlendingNeeded(const ivec4 blend)
-	{
-		return any(notEqual(blend, ivec4(BLEND_NONE)));
-	}
-	
-	//---------------------------------------
-	// Input Pixel Mapping:    --|21|22|23|--
-	//                         19|06|07|08|09
-	//                         18|05|00|01|10
-	//                         17|04|03|02|11
-	//                         --|15|14|13|--
-	//
-	// Output Pixel Mapping: 20|21|22|23|24|25
-	//                       19|06|07|08|09|26
-	//                       18|05|00|01|10|27
-	//                       17|04|03|02|11|28
-	//                       16|15|14|13|12|29
-	//                       35|34|33|32|31|30
 
 #if defined(VERTEX)
 
@@ -214,7 +159,52 @@ COMPAT_VARYING vec4 t7;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
-// delete all '' or 'registers.' or whatever in the fragment
+	const float  one_sixth = 1.0 / 6.0;
+	const float  two_sixth = 2.0 / 6.0;
+	const float four_sixth = 4.0 / 6.0;
+	const float five_sixth = 5.0 / 6.0;
+
+	float reduce(const vec3 color)
+	{
+		return dot(color, vec3(65536.0, 256.0, 1.0));
+	}
+	
+	float DistYCbCr(const vec3 pixA, const vec3 pixB)
+	{
+		const vec3 w = vec3(0.2627, 0.6780, 0.0593);
+		const float scaleB = 0.5 / (1.0 - w.b);
+		const float scaleR = 0.5 / (1.0 - w.r);
+		vec3 diff = pixA - pixB;
+		float Y = dot(diff, w);
+		float Cb = scaleB * (diff.b - Y);
+		float Cr = scaleR * (diff.r - Y);
+		
+		return sqrt( ((LUMINANCE_WEIGHT * Y) * (LUMINANCE_WEIGHT * Y)) + (Cb * Cb) + (Cr * Cr) );
+	}
+	
+	bool IsPixEqual(const vec3 pixA, const vec3 pixB)
+	{
+		return (DistYCbCr(pixA, pixB) < EQUAL_COLOR_TOLERANCE);
+	}
+	
+	bool IsBlendingNeeded(const ivec4 blend)
+	{
+		return any(notEqual(blend, ivec4(BLEND_NONE)));
+	}
+	
+	//---------------------------------------
+	// Input Pixel Mapping:    --|21|22|23|--
+	//                         19|06|07|08|09
+	//                         18|05|00|01|10
+	//                         17|04|03|02|11
+	//                         --|15|14|13|--
+	//
+	// Output Pixel Mapping: 20|21|22|23|24|25
+	//                       19|06|07|08|09|26
+	//                       18|05|00|01|10|27
+	//                       17|04|03|02|11|28
+	//                       16|15|14|13|12|29
+	//                       35|34|33|32|31|30
 
 void main()
 {

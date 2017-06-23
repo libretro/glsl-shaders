@@ -1,26 +1,3 @@
-//#version 130
-
-/*
-//#pragma parameter JINC2_WINDOW_SINC "Window Sinc Param" 0.39 0.0 1.0 0.01
-//#pragma parameter JINC2_SINC "Sinc Param" 0.82 0.0 1.0 0.01
-//#pragma parameter JINC2_AR_STRENGTH "Anti-ringing Strength" 0.8 0.0 1.0 0.1
-//#ifdef PARAMETER_UNIFORM
-//uniform float JINC2_WINDOW_SINC;
-//uniform float JINC2_SINC;
-//uniform float JINC2_AR_STRENGTH;
-//#else
-*/
-#define JINC2_WINDOW_SINC 0.39
-#define JINC2_SINC 0.82
-#define JINC2_AR_STRENGTH 0.8
-//#endif
-// END PARAMETERS //
-
-/* COMPATIBILITY
-   - HLSL compilers
-   - Cg   compilers
-*/
-
 /*
    Hyllian's jinc windowed-jinc 2-lobe sharper with anti-ringing Shader
    
@@ -46,38 +23,9 @@
 
 */
 
-
-const   float halfpi            = 1.5707963267948966192313216916398;
-const   float pi                = 3.1415926535897932384626433832795;
-const   float wa                = JINC2_WINDOW_SINC*pi;
-const   float wb                = JINC2_SINC*pi;
-
-// Calculates the distance between two points
-float d(vec2 pt1, vec2 pt2)
-{
-  vec2 v = pt2 - pt1;
-  return sqrt(dot(v,v));
-}
-
-vec3 min4(vec3 a, vec3 b, vec3 c, vec3 d)
-{
-    return min(a, min(b, min(c, d)));
-}
-
-vec3 max4(vec3 a, vec3 b, vec3 c, vec3 d)
-{
-    return max(a, max(b, max(c, d)));
-}
-
-vec4 resampler(vec4 x)
-{
-   vec4 res;
-
-   res = (x==vec4(0.0, 0.0, 0.0, 0.0)) ?  vec4(wa*wb)  :  sin(x*wa)*sin(x*wb)/(x*x);
-
-   return res;
-}
-
+#define JINC2_WINDOW_SINC 0.39
+#define JINC2_SINC 0.82
+#define JINC2_AR_STRENGTH 0.8
 
 #define texCoord TEX0
 
@@ -94,11 +42,10 @@ vec4 resampler(vec4 x)
 #endif
 
 #ifdef GL_ES
-#define PRECISION mediump
+#define COMPAT_PRECISION mediump
 #else
-#define PRECISION
+#define COMPAT_PRECISION
 #endif
-
 
 IN  vec4 VertexCoord;
 IN  vec4 Color;
@@ -107,11 +54,11 @@ OUT vec4 color;
 OUT vec2 texCoord;
 
 uniform mat4 MVPMatrix;
-uniform int  FrameDirection;
-uniform int  FrameCount;
-uniform PRECISION vec2 OutputSize;
-uniform PRECISION vec2 TextureSize;
-uniform PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION int  FrameDirection;
+uniform COMPAT_PRECISION int  FrameCount;
+uniform COMPAT_PRECISION vec2 OutputSize;
+uniform COMPAT_PRECISION vec2 TextureSize;
+uniform COMPAT_PRECISION vec2 InputSize;
 
 void main()
 {
@@ -119,7 +66,6 @@ void main()
     color = Color;
     texCoord = TexCoord;
 }
-
 
 #elif defined(FRAGMENT)
 
@@ -152,6 +98,36 @@ uniform PRECISION vec2 InputSize;
 uniform sampler2D s_p;
 IN vec2 texCoord;
 
+const   float halfpi            = 1.5707963267948966192313216916398;
+const   float pi                = 3.1415926535897932384626433832795;
+const   float wa                = JINC2_WINDOW_SINC*pi;
+const   float wb                = JINC2_SINC*pi;
+
+// Calculates the distance between two points
+float d(vec2 pt1, vec2 pt2)
+{
+  vec2 v = pt2 - pt1;
+  return sqrt(dot(v,v));
+}
+
+vec3 min4(vec3 a, vec3 b, vec3 c, vec3 d)
+{
+    return min(a, min(b, min(c, d)));
+}
+
+vec3 max4(vec3 a, vec3 b, vec3 c, vec3 d)
+{
+    return max(a, max(b, max(c, d)));
+}
+
+vec4 resampler(vec4 x)
+{
+   vec4 res;
+
+   res = (x==vec4(0.0, 0.0, 0.0, 0.0)) ?  vec4(wa*wb)  :  sin(x*wa)*sin(x*wb)/(x*x);
+
+   return res;
+}
 
 void main()
 {

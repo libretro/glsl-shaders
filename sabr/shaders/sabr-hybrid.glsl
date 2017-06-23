@@ -21,25 +21,9 @@
 
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter minimum "Edge Thresh Min" 0.05 0.0 1.0 0.01
 #pragma parameter maximum "Edge Thresh Max" 0.08 0.0 1.0 0.01
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float minimum;
-uniform COMPAT_PRECISION float maximum;
-#else
-#define minimum 0.05
-#define maximum 0.08
-#endif
 
 #if defined(VERTEX)
 
@@ -150,6 +134,14 @@ COMPAT_VARYING vec4 xyp_21_22_23;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float minimum;
+uniform COMPAT_PRECISION float maximum;
+#else
+#define minimum 0.05
+#define maximum 0.08
+#endif
 
 /*
 	Constants
@@ -298,7 +290,7 @@ float normpdf(in float x, in float sigma)
 
 vec4 Sharp(sampler2D tex, vec2 tc, vec4 xyp_1_2_3, vec4 xyp_5_10_15, vec4 xyp_6_7_8, vec4 xyp_9_14_9, vec4 xyp_11_12_13, vec4 xyp_16_17_18, vec4 xyp_21_22_23){
 /*
-Mask for algorhithm
+Mask for algorithm
 +-----+-----+-----+-----+-----+
 |     |  1  |  2  |  3  |     |
 +-----+-----+-----+-----+-----+

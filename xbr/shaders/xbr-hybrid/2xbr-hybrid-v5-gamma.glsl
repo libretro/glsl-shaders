@@ -52,74 +52,14 @@
  *
  */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 #define mul(a,b) (b*a)
 
-const float coef           = 2.0;
-const vec4 eq_threshold  = vec4(15.0, 15.0, 15.0, 15.0);
-const float y_weight        = 48.0;
-const float u_weight        = 7.0;
-const float v_weight        = 6.0;
-const mat3x3 yuv          = mat3x3(0.299, 0.587, 0.114, -0.169, -0.331, 0.499, 0.499, -0.418, -0.0813);
-const mat3x3 yuv_weighted = mat3x3(y_weight*yuv[0], u_weight*yuv[1], v_weight*yuv[2]);
-const vec4 delta         = vec4(0.5, 0.5, 0.5, 0.5);
-const float sharpness      = 0.65;
+// Constants used with gamma correction.
+#define InputGamma 2.4
+#define OutputGamma 2.2
 
-        // Constants used with gamma correction.
-        #define InputGamma 2.4
-        #define OutputGamma 2.2
-
-        #define GAMMA_IN(color) pow(color, vec3(InputGamma, InputGamma, InputGamma))
-        #define GAMMA_OUT(color) pow(color, vec3(1.0 / OutputGamma, 1.0 / OutputGamma, 1.0 / OutputGamma))
-
-
-float lum(vec3 A, vec3 B)
-{
-    return abs(dot(A-B, yuv_weighted[0]));
-}
-
-vec4 df(vec4 A, vec4 B)
-{
-    return vec4(abs(A-B));
-}
-
-bvec4 eq(vec4 A, vec4 B)
-{
-    return lessThan(df(A, B) , vec4(15.0, 15.0, 15.0, 15.0));
-}
-
-bvec4 eq2(vec4 A, vec4 B)
-{
-    return lessThan(df(A, B) , vec4(2.0, 2.0, 2.0, 2.0));
-}
-
-bvec4 eq3(vec4 A, vec4 B)
-{
-    return lessThan(df(A, B) , vec4(5.0, 5.0, 5.0, 5.0));
-}
-
-
-vec4 weighted_distance(vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, vec4 f, vec4 g, vec4 h)
-{
-    return (df(a,b) + df(a,c) + df(d,e) + df(d,f) + 4.0*df(g,h));
-}
-
-bvec4 and(bvec4 A, bvec4 B)
-{
-	return bvec4(A.x && B.x, A.y && B.y, A.z && B.z, A.w && B.w);
-}
-
-bvec4 or(bvec4 A, bvec4 B)
-{
-	return bvec4(A.x || B.x, A.y || B.y, A.z || B.z, A.w || B.w);
-}
+#define GAMMA_IN(color) pow(color, vec3(InputGamma, InputGamma, InputGamma))
+#define GAMMA_OUT(color) pow(color, vec3(1.0 / OutputGamma, 1.0 / OutputGamma, 1.0 / OutputGamma))
 
 #if defined(VERTEX)
 
@@ -232,6 +172,57 @@ COMPAT_VARYING vec4 t7;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
+
+const float coef           = 2.0;
+const vec4 eq_threshold  = vec4(15.0, 15.0, 15.0, 15.0);
+const float y_weight        = 48.0;
+const float u_weight        = 7.0;
+const float v_weight        = 6.0;
+const mat3x3 yuv          = mat3x3(0.299, 0.587, 0.114, -0.169, -0.331, 0.499, 0.499, -0.418, -0.0813);
+const mat3x3 yuv_weighted = mat3x3(y_weight*yuv[0], u_weight*yuv[1], v_weight*yuv[2]);
+const vec4 delta         = vec4(0.5, 0.5, 0.5, 0.5);
+const float sharpness      = 0.65;
+
+float lum(vec3 A, vec3 B)
+{
+    return abs(dot(A-B, yuv_weighted[0]));
+}
+
+vec4 df(vec4 A, vec4 B)
+{
+    return vec4(abs(A-B));
+}
+
+bvec4 eq(vec4 A, vec4 B)
+{
+    return lessThan(df(A, B) , vec4(15.0, 15.0, 15.0, 15.0));
+}
+
+bvec4 eq2(vec4 A, vec4 B)
+{
+    return lessThan(df(A, B) , vec4(2.0, 2.0, 2.0, 2.0));
+}
+
+bvec4 eq3(vec4 A, vec4 B)
+{
+    return lessThan(df(A, B) , vec4(5.0, 5.0, 5.0, 5.0));
+}
+
+
+vec4 weighted_distance(vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, vec4 f, vec4 g, vec4 h)
+{
+    return (df(a,b) + df(a,c) + df(d,e) + df(d,f) + 4.0*df(g,h));
+}
+
+bvec4 and(bvec4 A, bvec4 B)
+{
+	return bvec4(A.x && B.x, A.y && B.y, A.z && B.z, A.w && B.w);
+}
+
+bvec4 or(bvec4 A, bvec4 B)
+{
+	return bvec4(A.x || B.x, A.y || B.y, A.z || B.z, A.w || B.w);
+}
 
 void main()
 {

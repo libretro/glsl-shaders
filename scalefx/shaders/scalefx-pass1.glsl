@@ -40,24 +40,9 @@ THE SOFTWARE.
 
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter SFX_CLR "ScaleFX Threshold" 0.50 0.01 1.00 0.01
 #pragma parameter SFX_SAA "ScaleFX Filter AA" 1.00 0.00 1.00 1.00
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float SFX_CLR;
-uniform COMPAT_PRECISION float SFX_SAA;
-#else
-#define SFX_CLR 0.5
-#define SFX_SAA 1.0
-#endif
 
 #if defined(VERTEX)
 
@@ -151,6 +136,14 @@ COMPAT_VARYING vec4 t3;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float SFX_CLR;
+uniform COMPAT_PRECISION float SFX_SAA;
+#else
+#define SFX_CLR 0.5
+#define SFX_SAA 1.0
+#endif
 
 // corner strength
 float str(float d, vec2 a, vec2 b){

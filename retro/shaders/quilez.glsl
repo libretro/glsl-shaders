@@ -3,22 +3,6 @@
 	Original description: http://www.iquilezles.org/www/articles/texture/texture.htm
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
-// Parameter lines go here:
-#pragma parameter RETRO_PIXEL_SIZE "Retro Pixel Size" 0.84 0.0 1.0 0.01
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float RETRO_PIXEL_SIZE;
-#else
-#define RETRO_PIXEL_SIZE 0.84
-#endif
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130

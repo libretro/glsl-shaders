@@ -18,31 +18,10 @@
 
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter RESOLUTION_X "4xSoft Input Resolution X" 0.0 0.0 1920.0 1.0
 #pragma parameter RESOLUTION_Y "4xSoft Input Resolution Y" 0.0 0.0 1920.0 1.0
 #pragma parameter CONTRAST     "4xSoft Contrast"           3.0 0.0 10.0 0.1
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float RESOLUTION_X;
-uniform COMPAT_PRECISION float RESOLUTION_Y;
-uniform COMPAT_PRECISION float CONTRAST;
-#else
-#define RESOLUTION_X 0.0
-#define RESOLUTION_Y 0.0
-#define CONTRAST 3.0
-#endif
-
-const vec3 dt = vec3(1.0, 1.0, 1.0);
-const vec3 dtt = vec3(0.001,0.001,0.001);
 
 #define RESOLUTION_X_DEF SourceSize.x
 #define RESOLUTION_Y_DEF SourceSize.y
@@ -88,6 +67,16 @@ uniform COMPAT_PRECISION vec2 InputSize;
 #define vTexCoord TEX0.xy
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float RESOLUTION_X;
+uniform COMPAT_PRECISION float RESOLUTION_Y;
+uniform COMPAT_PRECISION float CONTRAST;
+#else
+#define RESOLUTION_X 0.0
+#define RESOLUTION_Y 0.0
+#define CONTRAST 3.0
+#endif
 
 void main()
 {
@@ -153,6 +142,15 @@ COMPAT_VARYING vec4 t6;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float RESOLUTION_X;
+uniform COMPAT_PRECISION float RESOLUTION_Y;
+uniform COMPAT_PRECISION float CONTRAST;
+#endif
+
+const vec3 dt = vec3(1.0, 1.0, 1.0);
+const vec3 dtt = vec3(0.001,0.001,0.001);
 
 void main()
 {

@@ -21,28 +21,10 @@
 
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision highp float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter JINC2_WINDOW_SINC "Window Sinc Param" 0.42 0.0 1.0 0.01
 #pragma parameter JINC2_SINC "Sinc Param" 0.92 0.0 1.0 0.01
 #pragma parameter JINC2_AR_STRENGTH "Anti-ringing Strength" 0.0 0.0 1.0 0.1
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float JINC2_WINDOW_SINC;
-uniform COMPAT_PRECISION float JINC2_SINC;
-uniform COMPAT_PRECISION float JINC2_AR_STRENGTH;
-#else
-#define JINC2_WINDOW_SINC 0.42
-#define JINC2_SINC 0.92
-#define JINC2_AR_STRENGTH 0.0
-#endif
 
 #define mul(a,b) (b*a)
 
@@ -60,36 +42,6 @@ uniform COMPAT_PRECISION float JINC2_AR_STRENGTH;
 #define pi    3.1415926535897932384626433832795
 #define wa    (JINC2_WINDOW_SINC*pi)
 #define wb    (JINC2_SINC*pi)
-
-const vec3 Y = vec3(0.299, 0.587, 0.114);
-
-float df(float A, float B)
-{
-	return abs(A-B);
-}
-
-// Calculates the distance between two points
-float d(vec2 pt1, vec2 pt2)
-{
-  vec2 v = pt2 - pt1;
-  return sqrt(dot(v,v));
-}
-
-vec3 min4(vec3 a, vec3 b, vec3 c, vec3 d)
-{
-    return min(a, min(b, min(c, d)));
-}
-vec3 max4(vec3 a, vec3 b, vec3 c, vec3 d)
-{
-    return max(a, max(b, max(c, d)));
-}
-
-vec4 resampler(vec4 x)
-{
-	vec4 res;
-	res = (x == vec4(0.0, 0.0, 0.0, 0.0)) ?  vec4(wa*wb)  :  sin(x*wa)*sin(x*wb)/(x*x);
-	return res;
-}
 
 #if defined(VERTEX)
 
@@ -167,6 +119,46 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float JINC2_WINDOW_SINC;
+uniform COMPAT_PRECISION float JINC2_SINC;
+uniform COMPAT_PRECISION float JINC2_AR_STRENGTH;
+#else
+#define JINC2_WINDOW_SINC 0.42
+#define JINC2_SINC 0.92
+#define JINC2_AR_STRENGTH 0.0
+#endif
+
+const vec3 Y = vec3(0.299, 0.587, 0.114);
+
+float df(float A, float B)
+{
+	return abs(A-B);
+}
+
+// Calculates the distance between two points
+float d(vec2 pt1, vec2 pt2)
+{
+  vec2 v = pt2 - pt1;
+  return sqrt(dot(v,v));
+}
+
+vec3 min4(vec3 a, vec3 b, vec3 c, vec3 d)
+{
+    return min(a, min(b, min(c, d)));
+}
+vec3 max4(vec3 a, vec3 b, vec3 c, vec3 d)
+{
+    return max(a, max(b, max(c, d)));
+}
+
+vec4 resampler(vec4 x)
+{
+	vec4 res;
+	res = (x == vec4(0.0, 0.0, 0.0, 0.0)) ?  vec4(wa*wb)  :  sin(x*wa)*sin(x*wb)/(x*x);
+	return res;
+}
 
 void main()
 {

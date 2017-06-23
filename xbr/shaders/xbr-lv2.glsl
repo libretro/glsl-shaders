@@ -1,41 +1,7 @@
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
-//#pragma parameter XBR_SCALE "xBR Scale" 3.0 1.0 5.0 1.0
-#pragma parameter XBR_Y_WEIGHT "Y Weight" 48.0 0.0 100.0 1.0
-#pragma parameter XBR_EQ_THRESHOLD "Eq Threshold" 15.0 0.0 50.0 1.0
-#pragma parameter XBR_LV1_COEFFICIENT "Lv1 Coefficient" 0.5 0.0 30.0 0.5
-#pragma parameter XBR_LV2_COEFFICIENT "Lv2 Coefficient" 2.0 1.0 3.0 0.1
-#ifdef PARAMETER_UNIFORM
-//uniform float XBR_SCALE;
-uniform float XBR_Y_WEIGHT;
-uniform float XBR_EQ_THRESHOLD;
-uniform float XBR_LV1_COEFFICIENT;
-uniform float XBR_LV2_COEFFICIENT;
-#else
-//#define XBR_SCALE 3.0
-#define XBR_Y_WEIGHT 48.0
-#define XBR_EQ_THRESHOLD 15.0
-#define XBR_LV1_COEFFICIENT 0.5
-#define XBR_LV2_COEFFICIENT 2.0
-#endif
-// END PARAMETERS //
-
-/* COMPATIBILITY 
-   - HLSL compilers
-   - Cg   compilers
-*/
-
-
 /*
    Hyllian's xBR-lv2 Shader
    
-   Copyright (C) 2011-2015 Hyllian - sergiogdb@gmail.com
+   Copyright (C) 2011-2016 Hyllian - sergiogdb@gmail.com
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
@@ -58,6 +24,11 @@ uniform float XBR_LV2_COEFFICIENT;
    Incorporates some of the ideas from SABR shader. Thanks to Joshua Street.
 */
 
+//#pragma parameter XBR_SCALE "xBR Scale" 3.0 1.0 5.0 1.0
+#pragma parameter XBR_Y_WEIGHT "Y Weight" 48.0 0.0 100.0 1.0
+#pragma parameter XBR_EQ_THRESHOLD "Eq Threshold" 15.0 0.0 50.0 1.0
+#pragma parameter XBR_LV1_COEFFICIENT "Lv1 Coefficient" 0.5 0.0 30.0 0.5
+#pragma parameter XBR_LV2_COEFFICIENT "Lv2 Coefficient" 2.0 1.0 3.0 0.1
 
 // Uncomment just one of the three params below to choose the corner detection
 //#define CORNER_A
@@ -73,63 +44,6 @@ uniform float XBR_LV2_COEFFICIENT;
 
 #define lv2_cf XBR_LV2_COEFFICIENT
  
-const   float coef          = 2.0;
-const   vec3  rgbw          = vec3(14.352, 28.176, 5.472);
-const   vec4  eq_threshold  = vec4(15.0, 15.0, 15.0, 15.0);
-
-const vec4 delta   = vec4(1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE);
-const vec4 delta_l = vec4(0.5/XBR_SCALE, 1.0/XBR_SCALE, 0.5/XBR_SCALE, 1.0/XBR_SCALE);
-const vec4 delta_u = delta_l.yxwz;
-
-const  vec4 Ao = vec4( 1.0, -1.0, -1.0, 1.0 );
-const  vec4 Bo = vec4( 1.0,  1.0, -1.0,-1.0 );
-const  vec4 Co = vec4( 1.5,  0.5, -0.5, 0.5 );
-const  vec4 Ax = vec4( 1.0, -1.0, -1.0, 1.0 );
-const  vec4 Bx = vec4( 0.5,  2.0, -0.5,-2.0 );
-const  vec4 Cx = vec4( 1.0,  1.0, -0.5, 0.0 );
-const  vec4 Ay = vec4( 1.0, -1.0, -1.0, 1.0 );
-const  vec4 By = vec4( 2.0,  0.5, -2.0,-0.5 );
-const  vec4 Cy = vec4( 2.0,  0.0, -1.0, 0.5 );
-const  vec4 Ci = vec4(0.25, 0.25, 0.25, 0.25);
-
-
-// Difference between vector components.
-vec4 df(vec4 A, vec4 B)
-{
-    return vec4(abs(A-B));
-}
-
-// Compare two vectors and return their components are different.
-vec4 diff(vec4 A, vec4 B)
-{
-    return vec4(notEqual(A, B));
-}
-
-// Determine if two vector components are equal based on a threshold.
-vec4 eq(vec4 A, vec4 B)
-{
-    return (step(df(A, B), vec4(XBR_EQ_THRESHOLD)));
-}
-
-// Determine if two vector components are NOT equal based on a threshold.
-vec4 neq(vec4 A, vec4 B)
-{
-    return (vec4(1.0, 1.0, 1.0, 1.0) - eq(A, B));
-}
-
-// Weighted distance.
-vec4 wd(vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, vec4 f, vec4 g, vec4 h)
-{
-    return (df(a,b) + df(a,c) + df(d,e) + df(d,f) + 4.0*df(g,h));
-}
-
-float c_df(vec3 c1, vec3 c2) 
-{
-      vec3 df = abs(c1 - c2);
-      return df.r + df.g + df.b;
-}
-
-
 #define texCoord TEX0
 #define t1 TEX1
 #define t2 TEX2
@@ -188,6 +102,7 @@ void main()
     float dy = (1.0/TextureSize.y);
 
     texCoord     = TexCoord;
+	texCoord.x *= 1.0000001;
     t1 = TexCoord.xxxy + vec4( -dx, 0, dx,-2.0*dy); // A1 B1 C1
     t2 = TexCoord.xxxy + vec4( -dx, 0, dx,    -dy); //  A  B  C
     t3 = TexCoord.xxxy + vec4( -dx, 0, dx,      0); //  D  E  F
@@ -236,6 +151,76 @@ IN vec4 t5;
 IN vec4 t6;
 IN vec4 t7;
 
+#ifdef PARAMETER_UNIFORM
+//uniform float XBR_SCALE;
+uniform float XBR_Y_WEIGHT;
+uniform float XBR_EQ_THRESHOLD;
+uniform float XBR_LV1_COEFFICIENT;
+uniform float XBR_LV2_COEFFICIENT;
+#else
+//#define XBR_SCALE 3.0
+#define XBR_Y_WEIGHT 48.0
+#define XBR_EQ_THRESHOLD 15.0
+#define XBR_LV1_COEFFICIENT 0.5
+#define XBR_LV2_COEFFICIENT 2.0
+#endif
+// END PARAMETERS //
+
+const   float coef          = 2.0;
+const   vec3  rgbw          = vec3(14.352, 28.176, 5.472);
+const   vec4  eq_threshold  = vec4(15.0, 15.0, 15.0, 15.0);
+
+const vec4 delta   = vec4(1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE);
+const vec4 delta_l = vec4(0.5/XBR_SCALE, 1.0/XBR_SCALE, 0.5/XBR_SCALE, 1.0/XBR_SCALE);
+const vec4 delta_u = delta_l.yxwz;
+
+const  vec4 Ao = vec4( 1.0, -1.0, -1.0, 1.0 );
+const  vec4 Bo = vec4( 1.0,  1.0, -1.0,-1.0 );
+const  vec4 Co = vec4( 1.5,  0.5, -0.5, 0.5 );
+const  vec4 Ax = vec4( 1.0, -1.0, -1.0, 1.0 );
+const  vec4 Bx = vec4( 0.5,  2.0, -0.5,-2.0 );
+const  vec4 Cx = vec4( 1.0,  1.0, -0.5, 0.0 );
+const  vec4 Ay = vec4( 1.0, -1.0, -1.0, 1.0 );
+const  vec4 By = vec4( 2.0,  0.5, -2.0,-0.5 );
+const  vec4 Cy = vec4( 2.0,  0.0, -1.0, 0.5 );
+const  vec4 Ci = vec4(0.25, 0.25, 0.25, 0.25);
+
+
+// Difference between vector components.
+vec4 df(vec4 A, vec4 B)
+{
+    return vec4(abs(A-B));
+}
+
+// Compare two vectors and return their components are different.
+vec4 diff(vec4 A, vec4 B)
+{
+    return vec4(notEqual(A, B));
+}
+
+// Determine if two vector components are equal based on a threshold.
+vec4 eq(vec4 A, vec4 B)
+{
+    return (step(df(A, B), vec4(XBR_EQ_THRESHOLD)));
+}
+
+// Determine if two vector components are NOT equal based on a threshold.
+vec4 neq(vec4 A, vec4 B)
+{
+    return (vec4(1.0, 1.0, 1.0, 1.0) - eq(A, B));
+}
+
+// Weighted distance.
+vec4 wd(vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, vec4 f, vec4 g, vec4 h)
+{
+    return (df(a,b) + df(a,c) + df(d,e) + df(d,f) + 4.0*df(g,h));
+}
+
+float c_df(vec3 c1, vec3 c2) 
+{
+      vec3 df = abs(c1 - c2);
+      return df.r + df.g + df.b;
+}
 
 void main()
 {

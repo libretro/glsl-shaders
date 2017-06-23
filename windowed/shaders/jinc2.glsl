@@ -1,26 +1,3 @@
-//#version 130
-
-/*
-//#pragma parameter JINC2_WINDOW_SINC "Window Sinc Param" 0.44 0.0 1.0 0.01
-//#pragma parameter JINC2_SINC "Sinc Param" 0.82 0.0 1.0 0.01
-//#pragma parameter JINC2_AR_STRENGTH "Anti-ringing Strength" 0.8 0.0 1.0 0.1
-//#ifdef PARAMETER_UNIFORM
-//uniform float JINC2_WINDOW_SINC;
-//uniform float JINC2_SINC;
-//uniform float JINC2_AR_STRENGTH;
-//#else
-*/
-#define JINC2_WINDOW_SINC 0.44
-#define JINC2_SINC 0.82
-#define JINC2_AR_STRENGTH 0.8
-//#endif
-// END PARAMETERS //
-
-/* COMPATIBILITY
-   - HLSL compilers
-   - Cg   compilers
-*/
-
 /*
    Hyllian's jinc windowed-jinc 2-lobe sharper with anti-ringing Shader
    
@@ -46,6 +23,81 @@
 
 */
 
+#define JINC2_WINDOW_SINC 0.44
+#define JINC2_SINC 0.82
+#define JINC2_AR_STRENGTH 0.8
+
+#define texCoord TEX0
+
+#if defined(VERTEX)
+
+#if __VERSION__ >= 130
+#define OUT out
+#define IN  in
+#define tex2D texture
+#else
+#define OUT varying
+#define IN attribute
+#define tex2D texture2D
+#endif
+
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
+
+IN  vec4 VertexCoord;
+IN  vec4 Color;
+IN  vec2 TexCoord;
+OUT vec4 color;
+OUT vec2 texCoord;
+
+uniform mat4 MVPMatrix;
+uniform COMPAT_PRECISION int  FrameDirection;
+uniform COMPAT_PRECISION int  FrameCount;
+uniform COMPAT_PRECISION vec2 OutputSize;
+uniform COMPAT_PRECISION vec2 TextureSize;
+uniform COMPAT_PRECISION vec2 InputSize;
+
+void main()
+{
+    gl_Position = MVPMatrix * VertexCoord;
+    color = Color;
+    texCoord = TexCoord;
+}
+
+#elif defined(FRAGMENT)
+
+#if __VERSION__ >= 130
+#define IN in
+#define tex2D texture
+out vec4 FragColor;
+#else
+#define IN varying
+#define FragColor gl_FragColor
+#define tex2D texture2D
+#endif
+
+#ifdef GL_ES
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
+uniform COMPAT_PRECISION vec2 OutputSize;
+uniform COMPAT_PRECISION vec2 TextureSize;
+uniform COMPAT_PRECISION vec2 InputSize;
+uniform sampler2D s_p;
+IN vec2 texCoord;
 
 const   float halfpi            = 1.5707963267948966192313216916398;
 const   float pi                = 3.1415926535897932384626433832795;
@@ -77,81 +129,6 @@ vec4 resampler(vec4 x)
 
    return res;
 }
-
-
-#define texCoord TEX0
-
-#if defined(VERTEX)
-
-#if __VERSION__ >= 130
-#define OUT out
-#define IN  in
-#define tex2D texture
-#else
-#define OUT varying
-#define IN attribute
-#define tex2D texture2D
-#endif
-
-#ifdef GL_ES
-#define PRECISION mediump
-#else
-#define PRECISION
-#endif
-
-
-IN  vec4 VertexCoord;
-IN  vec4 Color;
-IN  vec2 TexCoord;
-OUT vec4 color;
-OUT vec2 texCoord;
-
-uniform mat4 MVPMatrix;
-uniform int  FrameDirection;
-uniform int  FrameCount;
-uniform PRECISION vec2 OutputSize;
-uniform PRECISION vec2 TextureSize;
-uniform PRECISION vec2 InputSize;
-
-void main()
-{
-    gl_Position = MVPMatrix * VertexCoord;
-    color = Color;
-    texCoord = TexCoord;
-}
-
-
-#elif defined(FRAGMENT)
-
-#if __VERSION__ >= 130
-#define IN in
-#define tex2D texture
-out vec4 FragColor;
-#else
-#define IN varying
-#define FragColor gl_FragColor
-#define tex2D texture2D
-#endif
-
-#ifdef GL_ES
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
-#endif
-#define PRECISION mediump
-#else
-#define PRECISION
-#endif
-
-uniform int FrameDirection;
-uniform int FrameCount;
-uniform PRECISION vec2 OutputSize;
-uniform PRECISION vec2 TextureSize;
-uniform PRECISION vec2 InputSize;
-uniform sampler2D s_p;
-IN vec2 texCoord;
-
 
 void main()
 {
