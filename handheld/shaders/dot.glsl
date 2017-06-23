@@ -3,48 +3,10 @@
    License: Public domain
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter gamma "Dot Gamma" 2.4 0.0 5.0 0.05
 #pragma parameter shine "Dot Shine" 0.05 0.0 0.5 0.01
 #pragma parameter blend "Dot Blend" 0.65 0.0 1.0 0.01
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float gamma;
-uniform COMPAT_PRECISION float shine;
-uniform COMPAT_PRECISION float blend;
-#else
-#define gamma 2.4
-#define shine 0.05
-#define blend 0.65
-#endif
-
-COMPAT_PRECISION float dist(vec2 coord, vec2 source)
-{
-   vec2 delta = coord - source;
-   return sqrt(dot(delta, delta));
-}
-
-COMPAT_PRECISION float color_bloom(vec3 color)
-{
-   const vec3 gray_coeff = vec3(0.30, 0.59, 0.11);
-   float bright = dot(color, gray_coeff);
-   return mix(1.0 + shine, 1.0 - shine, bright);
-}
-
-vec3 lookup(vec2 pixel_no, float offset_x, float offset_y, vec3 color)
-{
-   vec2 offset = vec2(offset_x, offset_y);
-   float delta = dist(fract(pixel_no), offset + vec2(0.5, 0.5));
-   return color * exp(-gamma * delta * color_bloom(color));
-}
 
 #if defined(VERTEX)
 
@@ -149,6 +111,37 @@ COMPAT_VARYING vec2 pixel_no;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float gamma;
+uniform COMPAT_PRECISION float shine;
+uniform COMPAT_PRECISION float blend;
+#else
+#define gamma 2.4
+#define shine 0.05
+#define blend 0.65
+#endif
+
+COMPAT_PRECISION float dist(vec2 coord, vec2 source)
+{
+   vec2 delta = coord - source;
+   return sqrt(dot(delta, delta));
+}
+
+COMPAT_PRECISION float color_bloom(vec3 color)
+{
+   const vec3 gray_coeff = vec3(0.30, 0.59, 0.11);
+   float bright = dot(color, gray_coeff);
+   return mix(1.0 + shine, 1.0 - shine, bright);
+}
+
+vec3 lookup(vec2 pixel_no, float offset_x, float offset_y, vec3 color)
+{
+   vec2 offset = vec2(offset_x, offset_y);
+   float delta = dist(fract(pixel_no), offset + vec2(0.5, 0.5));
+   return color * exp(-gamma * delta * color_bloom(color));
+}
 
 #define TEX(coord) texture(Source, vTexCoord).rgb
 

@@ -66,7 +66,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 COMPAT_VARYING vec4 t1;
 COMPAT_VARYING vec2 loc;
 
@@ -126,7 +125,6 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-// in variables go here as COMPAT_VARYING whatever
 COMPAT_VARYING vec4 t1;
 COMPAT_VARYING vec2 loc;
 
@@ -143,7 +141,7 @@ const COMPAT_PRECISION float3 Y = float3(.2126, .7152, .0722);
 
 float luma(float3 color)
 {
-  return dot(color, Y);
+	return dot(color, Y);
 }
 
 COMPAT_PRECISION float3 bilinear(float p, float q, float3 A, float3 B, float3 C, float3 D)
@@ -153,7 +151,7 @@ COMPAT_PRECISION float3 bilinear(float p, float q, float3 A, float3 B, float3 C,
 
 void main()
 {
-float2 pos = frac(loc * 1.00001)-float2(0.4999, 0.4999); // pos = pixel position
+	float2 pos = frac(loc * 1.00001)-float2(0.4999, 0.4999); // pos = pixel position
 	float2 dir = sign(pos); // dir = pixel direction
 
 	float2 g1 = dir*t1.xy;
@@ -195,6 +193,6 @@ float2 pos = frac(loc * 1.00001)-float2(0.4999, 0.4999); // pos = pixel position
 	}
 
 	float3 color = bilinear(p, q, A, B, C, D);
-   FragColor = vec4(color, 1.0);
+	FragColor = vec4(color, 1.0);
 } 
 #endif

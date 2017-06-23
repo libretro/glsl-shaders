@@ -6,27 +6,10 @@
 
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter STEPS "GDAPT Error Prevention LVL"	1.0 0.0 5.0 1.0
 #pragma parameter DEBUG "GDAPT Adjust View"		0.0 0.0 1.0 1.0
 #pragma parameter linear_gamma "Use Linear Gamma"		0.0 0.0 1.0 1.0
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float STEPS;
-uniform COMPAT_PRECISION float DEBUG;
-uniform COMPAT_PRECISION float linear_gamma;
-#else
-#define STEPS 1.0
-#define DEBUG 0.0
-#define linear_gamma 0.0
-#endif
 
 #if defined(VERTEX)
 
@@ -110,6 +93,17 @@ COMPAT_VARYING vec2 t1;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float STEPS;
+uniform COMPAT_PRECISION float DEBUG;
+uniform COMPAT_PRECISION float linear_gamma;
+#else
+#define STEPS 1.0
+#define DEBUG 0.0
+#define linear_gamma 0.0
+#endif
 
 #define TEX(dx,dy) texture(Source, vTexCoord+vec2((dx),(dy))*t1)
 

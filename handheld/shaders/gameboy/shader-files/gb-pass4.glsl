@@ -19,13 +19,6 @@
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 // Config                                                                     //
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,28 +56,6 @@
 
 // Screen offset - [-infinity, infinity] [DEFAULT: 0]
 #pragma parameter screen_offset_y "Screen Offset Vert" 0.0 -5.0 5.0 0.5   
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float contrast;
-uniform COMPAT_PRECISION float screen_light;
-uniform COMPAT_PRECISION float pixel_opacity;
-uniform COMPAT_PRECISION float bg_smoothing;
-uniform COMPAT_PRECISION float shadow_opacity;
-uniform COMPAT_PRECISION float shadow_offset_x;
-uniform COMPAT_PRECISION float shadow_offset_y;
-uniform COMPAT_PRECISION float screen_offset_x;
-uniform COMPAT_PRECISION float screen_offset_y;
-#else
-#define contrast 0.95
-#define screen_light 1.0
-#define pixel_opacity 1.0
-#define bg_smoothing 0.75
-#define shadow_opacity 0.55
-#define shadow_offset_x 1.0
-#define shadow_offset_y 1.0
-#define screen_offset_x 0.0
-#define screen_offset_y 0.0
-#endif
 
 #if defined(VERTEX)
 
@@ -178,6 +149,29 @@ COMPAT_VARYING vec2 texel;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float contrast;
+uniform COMPAT_PRECISION float screen_light;
+uniform COMPAT_PRECISION float pixel_opacity;
+uniform COMPAT_PRECISION float bg_smoothing;
+uniform COMPAT_PRECISION float shadow_opacity;
+uniform COMPAT_PRECISION float shadow_offset_x;
+uniform COMPAT_PRECISION float shadow_offset_y;
+uniform COMPAT_PRECISION float screen_offset_x;
+uniform COMPAT_PRECISION float screen_offset_y;
+#else
+#define contrast 0.95
+#define screen_light 1.0
+#define pixel_opacity 1.0
+#define bg_smoothing 0.75
+#define shadow_opacity 0.55
+#define shadow_offset_x 1.0
+#define shadow_offset_y 1.0
+#define screen_offset_x 0.0
+#define screen_offset_y 0.0
+#endif
 
 #define bg_color texture(COLOR_PALETTE, vec2(0.25, 0.5)) 
 

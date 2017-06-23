@@ -1,13 +1,5 @@
 #version 130
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION highp
-precision highp float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter RSUBPIX_R  "Colour of R subpixel: R" 1.0 0.0 1.0 0.01
 #pragma parameter RSUBPIX_G  "Colour of R subpixel: G" 0.0 0.0 1.0 0.01
@@ -24,40 +16,6 @@ precision highp float;
 #pragma parameter blacklevel "Black level"             0.05 0.0 0.5 0.01
 #pragma parameter ambient    "Ambient"                 0.0 0.0 0.5 0.01
 #pragma parameter BGR        "BGR"                     0 0 1 1
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float RSUBPIX_R;
-uniform COMPAT_PRECISION float RSUBPIX_G;
-uniform COMPAT_PRECISION float RSUBPIX_B;
-uniform COMPAT_PRECISION float GSUBPIX_R;
-uniform COMPAT_PRECISION float GSUBPIX_G;
-uniform COMPAT_PRECISION float GSUBPIX_B;
-uniform COMPAT_PRECISION float BSUBPIX_R;
-uniform COMPAT_PRECISION float BSUBPIX_G;
-uniform COMPAT_PRECISION float BSUBPIX_B;
-uniform COMPAT_PRECISION float gain;
-uniform COMPAT_PRECISION float gamma;
-uniform COMPAT_PRECISION float outgamma;
-uniform COMPAT_PRECISION float blacklevel;
-uniform COMPAT_PRECISION float ambient;
-uniform COMPAT_PRECISION float BGR;
-#else
-#define RSUBPIX_R 1.0
-#define RSUBPIX_G 0.0
-#define RSUBPIX_B 0.0
-#define GSUBPIX_R 0.0
-#define GSUBPIX_G 1.0
-#define GSUBPIX_B 0.0
-#define BSUBPIX_R 0.0
-#define BSUBPIX_G 0.0
-#define BSUBPIX_B 1.0
-#define gain 1.0
-#define gamma 3.0
-#define outgamma 2.2
-#define blacklevel 0.05
-#define ambient 0.0
-#define BGR 0
-#endif
 
 #if defined(VERTEX)
 
@@ -135,6 +93,41 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float RSUBPIX_R;
+uniform COMPAT_PRECISION float RSUBPIX_G;
+uniform COMPAT_PRECISION float RSUBPIX_B;
+uniform COMPAT_PRECISION float GSUBPIX_R;
+uniform COMPAT_PRECISION float GSUBPIX_G;
+uniform COMPAT_PRECISION float GSUBPIX_B;
+uniform COMPAT_PRECISION float BSUBPIX_R;
+uniform COMPAT_PRECISION float BSUBPIX_G;
+uniform COMPAT_PRECISION float BSUBPIX_B;
+uniform COMPAT_PRECISION float gain;
+uniform COMPAT_PRECISION float gamma;
+uniform COMPAT_PRECISION float outgamma;
+uniform COMPAT_PRECISION float blacklevel;
+uniform COMPAT_PRECISION float ambient;
+uniform COMPAT_PRECISION float BGR;
+#else
+#define RSUBPIX_R 1.0
+#define RSUBPIX_G 0.0
+#define RSUBPIX_B 0.0
+#define GSUBPIX_R 0.0
+#define GSUBPIX_G 1.0
+#define GSUBPIX_B 0.0
+#define BSUBPIX_R 0.0
+#define BSUBPIX_G 0.0
+#define BSUBPIX_B 1.0
+#define gain 1.0
+#define gamma 3.0
+#define outgamma 2.2
+#define blacklevel 0.05
+#define ambient 0.0
+#define BGR 0
+#endif
 
 #define fetch_offset(coord, offset) (pow(vec3(gain) * texelFetchOffset(Source, (coord), 0, (offset)).rgb + vec3(blacklevel), vec3(gamma)) + vec3(ambient))
 

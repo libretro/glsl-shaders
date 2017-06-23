@@ -1,10 +1,3 @@
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter box_scale "Image Scale" 4.0 1.0 10.0 1.0
 #pragma parameter location_x "Viewport X Pos." 0.5 0.0 1.0 0.05
@@ -14,26 +7,6 @@
 #pragma parameter border_on_top "Show Viewport" 1.0 0.0 1.0 1.0
 #pragma parameter border_zoom_x "Border Zoom X" 1.0 0.0 4.0 0.01
 #pragma parameter border_zoom_y "Border Zoom Y" 1.0 0.0 4.0 0.01
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float box_scale;
-uniform COMPAT_PRECISION float location_x;
-uniform COMPAT_PRECISION float location_y;
-uniform COMPAT_PRECISION float in_res_x;
-uniform COMPAT_PRECISION float in_res_y;
-uniform COMPAT_PRECISION float border_on_top;
-uniform COMPAT_PRECISION float border_zoom_x;
-uniform COMPAT_PRECISION float border_zoom_y;
-#else
-#define box_scale 4.0
-#define location_x 0.5
-#define location_y 0.5
-#define in_res_x 320.0
-#define in_res_y 240.0
-#define border_on_top 1.0
-#define border_zoom_x 1.0
-#define border_zoom_y 1.0
-#endif
 
 #if defined(VERTEX)
 
@@ -66,6 +39,27 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 COMPAT_VARYING vec2 screen_coord;
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float box_scale;
+uniform COMPAT_PRECISION float location_x;
+uniform COMPAT_PRECISION float location_y;
+uniform COMPAT_PRECISION float in_res_x;
+uniform COMPAT_PRECISION float in_res_y;
+uniform COMPAT_PRECISION float border_on_top;
+uniform COMPAT_PRECISION float border_zoom_x;
+uniform COMPAT_PRECISION float border_zoom_y;
+#else
+#define box_scale 4.0
+#define location_x 0.5
+#define location_y 0.5
+#define in_res_x 320.0
+#define in_res_y 240.0
+#define border_on_top 1.0
+#define border_zoom_x 1.0
+#define border_zoom_y 1.0
+#endif
 
 void main()
 {
@@ -119,6 +113,17 @@ COMPAT_VARYING vec2 screen_coord;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float box_scale;
+uniform COMPAT_PRECISION float location_x;
+uniform COMPAT_PRECISION float location_y;
+uniform COMPAT_PRECISION float in_res_x;
+uniform COMPAT_PRECISION float in_res_y;
+uniform COMPAT_PRECISION float border_on_top;
+uniform COMPAT_PRECISION float border_zoom_x;
+uniform COMPAT_PRECISION float border_zoom_y;
+#endif
 
 void main()
 {

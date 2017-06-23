@@ -19,14 +19,6 @@
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
-// Parameter lines go here:
 ////////////////////////////////////////////////////////////////////////////////
 // Config                                                                     //
 ////////////////////////////////////////////////////////////////////////////////
@@ -37,14 +29,6 @@
 
 // The amount of alpha swapped between neighboring texels
 #pragma parameter adjacent_texel_alpha_blending "Neighbor Blending" 0.1755 0.0 1.0 0.05
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float blending_mode;
-uniform COMPAT_PRECISION float adjacent_texel_alpha_blending;
-#else
-#define blending_mode 1.0
-#define adjacent_texel_alpha_blending 0.1755
-#endif
 
 #if defined(VERTEX)
 ////////////////////////////////////////////////////////////////////////////////
@@ -150,6 +134,14 @@ COMPAT_VARYING vec2 blur_coords_upper_bound;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float blending_mode;
+uniform COMPAT_PRECISION float adjacent_texel_alpha_blending;
+#else
+#define blending_mode 1.0
+#define adjacent_texel_alpha_blending 0.1755
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Fragment definitions                                                       //

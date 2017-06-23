@@ -21,59 +21,8 @@
     
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision highp float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter filterparam "Edge Size" 7.0 1.0 25.0 1.0
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float filterparam;
-#else
-#define filterparam 7.0
-#endif
-
-//const   vec4 Size = vec4( 1024.0, 512.0, 0.0009765625, 0.001953125 );
-const   vec4 Size = vec4( 2048.0, 1024.0, 0.00048828125, 0.0009765625 );
-
-float CLength(vec3 c1){
-
-	float rmean = c1.r*0.5;
-
-	c1*= c1;
-
-	return sqrt((2.0+rmean)*c1.r+4.0*c1.g+(3.0-rmean)*c1.b);
-}
-
-float Cdistance(vec3 c1, vec3 c2){
-
-	float rmean = (c1.r+c2.r)*0.5;
-
-	c1 = pow(c1-c2,vec3(2.0));
-
-	return sqrt((2.0+rmean)*c1.r+4.0*c1.g+(3.0-rmean)*c1.b);
-}
-
-vec3 ColMin(vec3 a, vec3 b){
-
-	float dist = step(0.01,sign(CLength(a) - CLength(b)));
-
-	return mix(a,b,dist);
-
-}
-
-vec3 ColMax(vec3 a, vec3 b){
-
-	float dist = step(0.01,sign(CLength(a) - CLength(b)));
-
-	return mix(b,a,dist);
-
-}
 
 #if defined(VERTEX)
 
@@ -151,6 +100,50 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float filterparam;
+#else
+#define filterparam 7.0
+#endif
+
+//const   vec4 Size = vec4( 1024.0, 512.0, 0.0009765625, 0.001953125 );
+const   vec4 Size = vec4( 2048.0, 1024.0, 0.00048828125, 0.0009765625 );
+
+float CLength(vec3 c1){
+
+	float rmean = c1.r*0.5;
+
+	c1*= c1;
+
+	return sqrt((2.0+rmean)*c1.r+4.0*c1.g+(3.0-rmean)*c1.b);
+}
+
+float Cdistance(vec3 c1, vec3 c2){
+
+	float rmean = (c1.r+c2.r)*0.5;
+
+	c1 = pow(c1-c2,vec3(2.0));
+
+	return sqrt((2.0+rmean)*c1.r+4.0*c1.g+(3.0-rmean)*c1.b);
+}
+
+vec3 ColMin(vec3 a, vec3 b){
+
+	float dist = step(0.01,sign(CLength(a) - CLength(b)));
+
+	return mix(a,b,dist);
+
+}
+
+vec3 ColMax(vec3 a, vec3 b){
+
+	float dist = step(0.01,sign(CLength(a) - CLength(b)));
+
+	return mix(b,a,dist);
+
+}
 
 vec3 Blur( sampler2D Frame, vec2 TexCoord ) {
 	vec2 shift  = Size.zw * 0.5;

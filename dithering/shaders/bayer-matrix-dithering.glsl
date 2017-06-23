@@ -6,47 +6,9 @@
 // url: http://devlog-martinsh.blogspot.com/2011/03/glsl-8x8-bayer-matrix-dithering.html
 // adapted for RetroArch by hunterk
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter animate "Dithering Animation" 0.0 0.0 1.0 1.0
 #pragma parameter dither_size "Dither Size" 0.0 0.0 0.95 0.05
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float animate;
-uniform COMPAT_PRECISION float dither_size;
-#else
-#define animate 0.0
-#define dither_size 0.0
-#endif
-
-float find_closest(int x, int y, float c0)
-{
-int dither[8][8] = {
-{ 0, 32, 8, 40, 2, 34, 10, 42}, /* 8x8 Bayer ordered dithering */
-{48, 16, 56, 24, 50, 18, 58, 26}, /* pattern. Each input pixel */
-{12, 44, 4, 36, 14, 46, 6, 38}, /* is scaled to the 0..63 range */
-{60, 28, 52, 20, 62, 30, 54, 22}, /* before looking in this table */
-{ 3, 35, 11, 43, 1, 33, 9, 41}, /* to determine the action. */
-{51, 19, 59, 27, 49, 17, 57, 25},
-{15, 47, 7, 39, 13, 45, 5, 37},
-{63, 31, 55, 23, 61, 29, 53, 21} }; 
-
-float limit = 0.0;
-if(x < 8)
-{
-limit = (dither[x][y]+1)/64.0;
-}
-
-if(c0 < limit)
-return 0.0;
-return 1.0;
-}
 
 #if defined(VERTEX)
 
@@ -123,6 +85,38 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float animate;
+uniform COMPAT_PRECISION float dither_size;
+#else
+#define animate 0.0
+#define dither_size 0.0
+#endif
+
+float find_closest(int x, int y, float c0)
+{
+int dither[8][8] = {
+{ 0, 32, 8, 40, 2, 34, 10, 42}, /* 8x8 Bayer ordered dithering */
+{48, 16, 56, 24, 50, 18, 58, 26}, /* pattern. Each input pixel */
+{12, 44, 4, 36, 14, 46, 6, 38}, /* is scaled to the 0..63 range */
+{60, 28, 52, 20, 62, 30, 54, 22}, /* before looking in this table */
+{ 3, 35, 11, 43, 1, 33, 9, 41}, /* to determine the action. */
+{51, 19, 59, 27, 49, 17, 57, 25},
+{15, 47, 7, 39, 13, 45, 5, 37},
+{63, 31, 55, 23, 61, 29, 53, 21} }; 
+
+float limit = 0.0;
+if(x < 8)
+{
+limit = (dither[x][y]+1)/64.0;
+}
+
+if(c0 < limit)
+return 0.0;
+return 1.0;
+}
 
 void main()
 {

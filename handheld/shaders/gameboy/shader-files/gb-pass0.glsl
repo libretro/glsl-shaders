@@ -19,13 +19,6 @@
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 // Config                                                                     //
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,18 +36,6 @@
 
 // Set video scale when used in console-border shaders
 #pragma parameter video_scale "Video Scale" 3.0 3.0 5.0 1.0
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float baseline_alpha;
-uniform COMPAT_PRECISION float response_time;
-uniform COMPAT_PRECISION float console_border_enable;
-uniform COMPAT_PRECISION float video_scale;
-#else
-#define baseline_alpha 0.10
-#define response_time 0.333
-#define console_border_enable 0.0
-#define video_scale 3.0
-#endif
 
 #if defined(VERTEX)
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,6 +73,18 @@ uniform int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float baseline_alpha;
+uniform COMPAT_PRECISION float response_time;
+uniform COMPAT_PRECISION float console_border_enable;
+uniform COMPAT_PRECISION float video_scale;
+#else
+#define baseline_alpha 0.10
+#define response_time 0.333
+#define console_border_enable 0.0
+#define video_scale 3.0
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Vertex definitions                                                         //
@@ -173,6 +166,13 @@ COMPAT_VARYING vec2 one_texel;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float baseline_alpha;
+uniform COMPAT_PRECISION float response_time;
+uniform COMPAT_PRECISION float console_border_enable;
+uniform COMPAT_PRECISION float video_scale;
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //fragment definitions                                                        //

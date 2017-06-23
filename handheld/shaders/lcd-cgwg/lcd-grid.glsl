@@ -1,39 +1,6 @@
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION highp
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter GRID_STRENGTH "LCD Grid Strength" 0.05 0.0 1.0 0.01
 #pragma parameter gamma "LCD Input Gamma" 2.2 1.0 5.0 0.1
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float GRID_STRENGTH;
-uniform COMPAT_PRECISION float gamma;
-#else
-#define GRID_STRENGTH 0.05
-#define gamma 2.2
-#endif
-
-float intsmear_func(float z)
-{
-  float z2 = z*z;
-  float z4 = z2*z2;
-  float z8 = z4*z4;
-  return z - 2.0/3.0*z*z2 - 1.0/5.0*z*z4 + 4.0/7.0*z*z2*z4 - 1.0/9.0*z*z8
-    - 2.0/11.0*z*z2*z8 + 1.0/13.0*z*z4*z8;
-}
-
-float intsmear(float x, float dx)
-{
-  const float d = 1.5;
-  float zl = clamp((x-dx)/d,-1.0,1.0);
-  float zh = clamp((x+dx)/d,-1.0,1.0);
-  return d * ( intsmear_func(zh) - intsmear_func(zl) )/(2.0*dx);
-}
 
 #if defined(VERTEX)
 
@@ -110,6 +77,32 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float GRID_STRENGTH;
+uniform COMPAT_PRECISION float gamma;
+#else
+#define GRID_STRENGTH 0.05
+#define gamma 2.2
+#endif
+
+float intsmear_func(float z)
+{
+  float z2 = z*z;
+  float z4 = z2*z2;
+  float z8 = z4*z4;
+  return z - 2.0/3.0*z*z2 - 1.0/5.0*z*z4 + 4.0/7.0*z*z2*z4 - 1.0/9.0*z*z8
+    - 2.0/11.0*z*z2*z8 + 1.0/13.0*z*z4*z8;
+}
+
+float intsmear(float x, float dx)
+{
+  const float d = 1.5;
+  float zl = clamp((x-dx)/d,-1.0,1.0);
+  float zh = clamp((x+dx)/d,-1.0,1.0);
+  return d * ( intsmear_func(zh) - intsmear_func(zl) )/(2.0*dx);
+}
 
 #define round(x) floor( (x) + 0.5 )
 #define TEX2D(c) pow(texture(Source, (c)), vec4(gamma))
