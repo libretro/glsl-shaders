@@ -1,11 +1,91 @@
 #version 130
 
-#ifdef GL_ES
-precision mediump float;
-#endif
-
 #define NTSC_CRT_GAMMA 2.5
 #define NTSC_MONITOR_GAMMA 2.0
+
+#define fetch_offset(offset, one_x) \
+   texture(Source, vTexCoord + vec2((offset) * (one_x), 0.0)).xyz
+
+#if defined(VERTEX)
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING out
+#define COMPAT_ATTRIBUTE in
+#define COMPAT_TEXTURE texture
+#else
+#define COMPAT_VARYING varying
+#define COMPAT_ATTRIBUTE attribute
+#define COMPAT_TEXTURE texture2D
+#endif
+
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
+COMPAT_ATTRIBUTE vec4 VertexCoord;
+COMPAT_ATTRIBUTE vec4 COLOR;
+COMPAT_ATTRIBUTE vec4 TexCoord;
+COMPAT_VARYING vec4 COL0;
+COMPAT_VARYING vec4 TEX0;
+
+uniform mat4 MVPMatrix;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
+uniform COMPAT_PRECISION vec2 OutputSize;
+uniform COMPAT_PRECISION vec2 TextureSize;
+uniform COMPAT_PRECISION vec2 InputSize;
+
+// vertex compatibility #defines
+#define vTexCoord TEX0.xy
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
+#define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+void main()
+{
+    gl_Position = MVPMatrix * VertexCoord;
+    COL0 = COLOR;
+    TEX0.xy = TexCoord.xy - vec2(0.5 / SourceSize.x, 0.0); // Compensate for decimate-by-2.
+}
+
+#elif defined(FRAGMENT)
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
+#endif
+
+#ifdef GL_ES
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
+uniform COMPAT_PRECISION vec2 OutputSize;
+uniform COMPAT_PRECISION vec2 TextureSize;
+uniform COMPAT_PRECISION vec2 InputSize;
+uniform sampler2D Texture;
+COMPAT_VARYING vec4 TEX0;
+
+// fragment compatibility #defines
+#define Source Texture
+#define vTexCoord TEX0.xy
+#define texture(c, d) COMPAT_TEXTURE(c, d)
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
+#define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 // begin ntsc-rgbyuv
 mat3 yiq2rgb_mat = mat3(
@@ -142,92 +222,6 @@ const float chroma_filter[TAPS + 1] = float[TAPS + 1](
 #endif
 // end ntsc-decode-filter-3phase
 
-#define fetch_offset(offset, one_x) \
-   texture(Source, vTexCoord + vec2((offset) * (one_x), 0.0)).xyz
-
-#if defined(VERTEX)
-
-#if __VERSION__ >= 130
-#define COMPAT_VARYING out
-#define COMPAT_ATTRIBUTE in
-#define COMPAT_TEXTURE texture
-#else
-#define COMPAT_VARYING varying
-#define COMPAT_ATTRIBUTE attribute
-#define COMPAT_TEXTURE texture2D
-#endif
-
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
-COMPAT_ATTRIBUTE vec4 VertexCoord;
-COMPAT_ATTRIBUTE vec4 COLOR;
-COMPAT_ATTRIBUTE vec4 TexCoord;
-COMPAT_VARYING vec4 COL0;
-COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
-
-uniform mat4 MVPMatrix;
-uniform COMPAT_PRECISION int FrameDirection;
-uniform COMPAT_PRECISION int FrameCount;
-uniform COMPAT_PRECISION vec2 OutputSize;
-uniform COMPAT_PRECISION vec2 TextureSize;
-uniform COMPAT_PRECISION vec2 InputSize;
-
-// vertex compatibility #defines
-#define vTexCoord TEX0.xy
-#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define outsize vec4(OutputSize, 1.0 / OutputSize)
-
-void main()
-{
-    gl_Position = MVPMatrix * VertexCoord;
-    COL0 = COLOR;
-    TEX0.xy = TexCoord.xy - vec2(0.5 / SourceSize.x, 0.0); // Compensate for decimate-by-2.
-}
-
-#elif defined(FRAGMENT)
-
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
-
-#ifdef GL_ES
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
-#endif
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
-uniform COMPAT_PRECISION int FrameDirection;
-uniform COMPAT_PRECISION int FrameCount;
-uniform COMPAT_PRECISION vec2 OutputSize;
-uniform COMPAT_PRECISION vec2 TextureSize;
-uniform COMPAT_PRECISION vec2 InputSize;
-uniform sampler2D Texture;
-COMPAT_VARYING vec4 TEX0;
-// in variables go here as COMPAT_VARYING whatever
-
-// fragment compatibility #defines
-#define Source Texture
-#define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
-#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define outsize vec4(OutputSize, 1.0 / OutputSize)
-
 void main()
 {
 // begin ntsc-pass2-decode
@@ -236,151 +230,36 @@ void main()
 #if __VERSION__ <= 130
 	float offset;
 	vec3 sums;
+	
+	#define macro_loopz(c) offset = float(c) - 1.0.; \
+		sums = fetch_offset(offset - 24., one_x) + fetch_offset(24. - offset, one_x); \
+		signal += sums * vec3(luma_filter##c, chroma_filter##c, chroma_filter##c);
 
 	// unrolling the loopz
-	// TAP = 1
-	offset = 0.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter1, chroma_filter1, chroma_filter1);
-
-	// TAP = 2
-	offset = 1.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter2, chroma_filter2, chroma_filter2);
-
-	// TAP = 3
-	offset = 2.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter3, chroma_filter3, chroma_filter3);
-
-	// TAP = 4
-	offset = 3.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter4, chroma_filter4, chroma_filter4);
-
-	// TAP = 5
-	offset = 4.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter5, chroma_filter5, chroma_filter5);
-
-	// TAP = 6
-	offset = 5.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter6, chroma_filter6, chroma_filter6);
-
-	// TAP = 7
-	offset = 6.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter7, chroma_filter7, chroma_filter7);
-
-	// TAP = 8
-	offset = 7.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter8, chroma_filter8, chroma_filter8);
-
-	// TAP = 9
-	offset = 8.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter9, chroma_filter9, chroma_filter9);
-
-	// TAP = 10
-	offset = 9.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter10, chroma_filter10, chroma_filter10);
-
-	// TAP = 11
-	offset = 10.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter11, chroma_filter11, chroma_filter11);
-
-	// TAP = 12
-	offset = 11.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter12, chroma_filter12, chroma_filter12);
-
-	// TAP = 13
-	offset = 12.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter13, chroma_filter13, chroma_filter13);
-
-	// TAP = 14
-	offset = 13.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter14, chroma_filter14, chroma_filter14);
-
-	// TAP = 15
-	offset = 14.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter15, chroma_filter15, chroma_filter15);
-
-	// TAP = 16
-	offset = 15.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter16, chroma_filter16, chroma_filter16);
-
-	// TAP = 17
-	offset = 16.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter17, chroma_filter17, chroma_filter17);
-
-	// TAP = 18
-	offset = 17.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter18, chroma_filter18, chroma_filter18);
-
-	// TAP = 19
-	offset = 18.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter19, chroma_filter19, chroma_filter19);
-
-	// TAP = 20
-	offset = 19.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter20, chroma_filter20, chroma_filter20);
-
-	// TAP = 21
-	offset = 20.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter21, chroma_filter21, chroma_filter21);
-
-	// TAP = 22
-	offset = 21.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter22, chroma_filter22, chroma_filter22);
-
-	// TAP = 23
-	offset = 22.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter23, chroma_filter23, chroma_filter23);
-
-	// TAP = 24
-	offset = 23.;
-	sums = fetch_offset(offset - 24., one_x) +
-		fetch_offset(24. - offset, one_x);
-	signal += sums * vec3(luma_filter24, chroma_filter24, chroma_filter24);
+	macro_loopz(1)
+	macro_loopz(2)
+	macro_loopz(3)
+	macro_loopz(4)
+	macro_loopz(5)
+	macro_loopz(6)
+	macro_loopz(7)
+	macro_loopz(8)
+	macro_loopz(9)
+	macro_loopz(10)
+	macro_loopz(11)
+	macro_loopz(12)
+	macro_loopz(13)
+	macro_loopz(14)
+	macro_loopz(15)
+	macro_loopz(16)
+	macro_loopz(17)
+	macro_loopz(18)
+	macro_loopz(19)
+	macro_loopz(20)
+	macro_loopz(21)
+	macro_loopz(22)
+	macro_loopz(23)
+	macro_loopz(24)
 
 	signal += COMPAT_TEXTURE(Texture, TEX0.xy).xyz *
 		vec3(luma_filter25, chroma_filter25, chroma_filter25);

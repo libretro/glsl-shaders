@@ -41,28 +41,10 @@
     THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision highp float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter FIR_GAIN    "FIR lowpass gain"               1.5 0.0 5.0 0.1
 #pragma parameter FIR_INVGAIN "Inverse gain for luma recovery" 1.1 0.0 5.0 0.1
 #pragma parameter PHASE_NOISE "Phase noise"                    1.0 0.0 5.0 0.1
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float FIR_GAIN;
-uniform COMPAT_PRECISION float FIR_INVGAIN;
-uniform COMPAT_PRECISION float PHASE_NOISE;
-#else
-#define FIR_GAIN 1.5
-#define FIR_INVGAIN 1.1
-#define PHASE_NOISE 1.0
-#endif
 
 #if defined(VERTEX)
 
@@ -87,7 +69,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 uniform mat4 MVPMatrix;
 uniform int FrameDirection;
@@ -106,8 +87,6 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
-// Paste vertex contents here:
-
 }
 
 #elif defined(FRAGMENT)
@@ -147,6 +126,17 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float FIR_GAIN;
+uniform COMPAT_PRECISION float FIR_INVGAIN;
+uniform COMPAT_PRECISION float PHASE_NOISE;
+#else
+#define FIR_GAIN 1.5
+#define FIR_INVGAIN 1.1
+#define PHASE_NOISE 1.0
+#endif
 
 /* Subcarrier frequency */
 #define FSC          4433618.75
@@ -282,51 +272,35 @@ void main()
     height_ratio = SourceSize.y / VISIBLELINES;
     altv         = mod(floor(xy.y * VISIBLELINES + 0.5), 2.0) * PI;
     invx         = 0.25 * (counts_per_scanline_reciprocal); // equals 4 samples per Fsc period
-   
+
     // lowpass U/V at baseband
     vec2 filtered = vec2(0.0, 0.0);
-#if __VERSION__ < 130 //unroll the loop
+#ifdef __VERSION__ < 130 //unroll the loop
 	vec2 uv;
-	uv   = modem_uv(xy, 1. - FIRTAPS*0.5);
-        filtered += FIR_GAIN * uv * FIR1;
-	uv   = modem_uv(xy, 2. - FIRTAPS*0.5);
-        filtered += FIR_GAIN * uv * FIR2;
-	uv   = modem_uv(xy, 3. - FIRTAPS*0.5);
-        filtered += FIR_GAIN * uv * FIR3;
-	uv   = modem_uv(xy, 4. - FIRTAPS*0.5);
-        filtered += FIR_GAIN * uv * FIR4;
-	uv   = modem_uv(xy, 5. - FIRTAPS*0.5);
-        filtered += FIR_GAIN * uv * FIR5;
-	uv   = modem_uv(xy, 6. - FIRTAPS*0.5);
-        filtered += FIR_GAIN * uv * FIR6;
-	uv   = modem_uv(xy, 7. - FIRTAPS*0.5);
-        filtered += FIR_GAIN * uv * FIR7;
-	uv   = modem_uv(xy, 8. - FIRTAPS*0.5);
-        filtered += FIR_GAIN * uv * FIR8;
-	uv   = modem_uv(xy, 9. - FIRTAPS*0.5);
-        filtered += FIR_GAIN * uv * FIR9;
-	uv   = modem_uv(xy, 10. - FIRTAPS*0.5);
-        filtered += FIR_GAIN * uv * FIR10;
-	uv   = modem_uv(xy, 11. - FIRTAPS*0.5);
-        filtered += FIR_GAIN * uv * FIR11;
-	uv   = modem_uv(xy, 12. - FIRTAPS*0.5);
-        filtered += FIR_GAIN * uv * FIR12;
-	uv   = modem_uv(xy, 13. - FIRTAPS*0.5);
-        filtered += FIR_GAIN * uv * FIR13;
-	uv   = modem_uv(xy, 14. - FIRTAPS*0.5);
-        filtered += FIR_GAIN * uv * FIR14;
-	uv   = modem_uv(xy, 15. - FIRTAPS*0.5);
-        filtered += FIR_GAIN * uv * FIR15;
-	uv   = modem_uv(xy, 16. - FIRTAPS*0.5);
-        filtered += FIR_GAIN * uv * FIR16;
-	uv   = modem_uv(xy, 17. - FIRTAPS*0.5);
-        filtered += FIR_GAIN * uv * FIR17;
-	uv   = modem_uv(xy, 18. - FIRTAPS*0.5);
-        filtered += FIR_GAIN * uv * FIR18;
-	uv   = modem_uv(xy, 19. - FIRTAPS*0.5);
-        filtered += FIR_GAIN * uv * FIR19;
-	uv   = modem_uv(xy, 20. - FIRTAPS*0.5);
-        filtered += FIR_GAIN * uv * FIR20;
+	
+	#define macro_loopz(c)	uv = modem_uv(xy, float(c) - FIRTAPS*0.5); \
+        filtered += FIR_GAIN * uv * FIR##c;
+		
+	macro_loopz(1)
+	macro_loopz(2)
+	macro_loopz(3)
+	macro_loopz(4)
+	macro_loopz(5)
+	macro_loopz(6)
+	macro_loopz(7)
+	macro_loopz(8)
+	macro_loopz(9)
+	macro_loopz(10)
+	macro_loopz(11)
+	macro_loopz(12)
+	macro_loopz(13)
+	macro_loopz(14)
+	macro_loopz(15)
+	macro_loopz(16)
+	macro_loopz(17)
+	macro_loopz(18)
+	macro_loopz(19)
+	macro_loopz(20)
 #else
     for (int i = 0; i < FIRTAPS; i++) {
         vec2 uv   = modem_uv(xy, i - FIRTAPS*0.5);

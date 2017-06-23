@@ -1,7 +1,3 @@
-#ifdef GL_ES
-precision mediump float;
-#endif
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130

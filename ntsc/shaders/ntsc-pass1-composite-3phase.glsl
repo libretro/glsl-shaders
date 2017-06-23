@@ -1,9 +1,5 @@
 #version 130
 
-#ifdef GL_ES
-precision mediump float;
-#endif
-
 #define THREE_PHASE
 #define COMPOSITE
 
@@ -27,39 +23,7 @@ precision mediump float;
 	#define ARTIFACTING 0.0
 	#define FRINGING 0.0
 #endif
-
-#if defined(COMPOSITE) || defined(SVIDEO)
-mat3 mix_mat = mat3(
-	BRIGHTNESS, FRINGING, FRINGING,
-	ARTIFACTING, 2.0 * SATURATION, 0.0,
-	ARTIFACTING, 0.0, 2.0 * SATURATION
-);
-#endif
 // end params
-
-// begin ntsc-rgbyuv
-mat3 yiq2rgb_mat = mat3(
-   1.0, 1.0, 1.0,
-   0.956, -0.2720, -1.1060,
-   0.6210, -0.6474, 1.7046
-);
-
-vec3 yiq2rgb(vec3 yiq)
-{
-   return (yiq * yiq2rgb_mat);
-}
-
-mat3 yiq_mat = mat3(
-      0.2989, 0.5959, 0.2115,
-      0.5870, -0.2744, -0.5229,
-      0.1140, -0.3216, 0.3114
-);
-
-vec3 rgb2yiq(vec3 col)
-{
-   return (col * yiq_mat);
-}
-// end ntsc-rgbyuv
 
 #if defined(VERTEX)
 
@@ -145,7 +109,38 @@ COMPAT_VARYING vec2 pix_no;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
-// delete all 'params.' or 'registers.' or whatever in the fragment
+#if defined(COMPOSITE) || defined(SVIDEO)
+mat3 mix_mat = mat3(
+	BRIGHTNESS, FRINGING, FRINGING,
+	ARTIFACTING, 2.0 * SATURATION, 0.0,
+	ARTIFACTING, 0.0, 2.0 * SATURATION
+);
+#endif
+
+
+// begin ntsc-rgbyuv
+mat3 yiq2rgb_mat = mat3(
+   1.0, 1.0, 1.0,
+   0.956, -0.2720, -1.1060,
+   0.6210, -0.6474, 1.7046
+);
+
+vec3 yiq2rgb(vec3 yiq)
+{
+   return (yiq * yiq2rgb_mat);
+}
+
+mat3 yiq_mat = mat3(
+      0.2989, 0.5959, 0.2115,
+      0.5870, -0.2744, -0.5229,
+      0.1140, -0.3216, 0.3114
+);
+
+vec3 rgb2yiq(vec3 col)
+{
+   return (col * yiq_mat);
+}
+// end ntsc-rgbyuv
 
 void main()
 {
