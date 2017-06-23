@@ -19,37 +19,9 @@
 
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter EQ_THRESH1 "Eq Limit Horizontal" 0.01 0.0 1.0 0.01
 #pragma parameter DIFF_THRESH1 "Diff Limit Horizontal" 0.06 0.0 1.0 0.01
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float EQ_THRESH1;
-uniform COMPAT_PRECISION float DIFF_THRESH1;
-#else
-#define EQ_THRESH1 0.01
-#define DIFF_THRESH1 0.06
-#endif
-
-#define EQ   EQ_THRESH1
-#define DF  DIFF_THRESH1
-
-vec3 df3(vec3 c1, vec3 c2)
-{
-      return abs(c1 - c2);
-}
-
-bvec3 eq3(vec3 A, vec3 B)
-{
-	return lessThanEqual(df3(A, B) , vec3(EQ));
-}
 
 #if defined(VERTEX)
 
@@ -136,6 +108,27 @@ COMPAT_VARYING vec4 t1;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float EQ_THRESH1;
+uniform COMPAT_PRECISION float DIFF_THRESH1;
+#else
+#define EQ_THRESH1 0.01
+#define DIFF_THRESH1 0.06
+#endif
+
+#define EQ   EQ_THRESH1
+#define DF  DIFF_THRESH1
+
+vec3 df3(vec3 c1, vec3 c2)
+{
+      return abs(c1 - c2);
+}
+
+bvec3 eq3(vec3 A, vec3 B)
+{
+	return lessThanEqual(df3(A, B) , vec3(EQ));
+}
 
 void main()
 {

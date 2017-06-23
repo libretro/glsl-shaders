@@ -1,10 +1,3 @@
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 /*
    NES NTSC Color Decoder shader
    Ported from Bisqwit's C++ NES Palette Generator
@@ -25,6 +18,92 @@
 #pragma parameter nes_gamma "Gamma" 1.8 1.0 2.5 0.05
 #pragma parameter nes_sony_matrix "Sony CXA2025AS US colors" 0.0 0.0 1.0 1.0
 #pragma parameter nes_clip_method "Palette clipping method" 0.0 0.0 2.0 1.0
+
+#define saturation nes_saturation
+#define hue nes_hue
+#define contrast nes_contrast
+#define brightness nes_brightness
+#define gamma nes_gamma
+
+//comment the define out to use the "common" conversion matrix instead of the FCC sanctioned one
+#define USE_FCC_MATRIX
+
+#if defined(VERTEX)
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING out
+#define COMPAT_ATTRIBUTE in
+#define COMPAT_TEXTURE texture
+#else
+#define COMPAT_VARYING varying 
+#define COMPAT_ATTRIBUTE attribute 
+#define COMPAT_TEXTURE texture2D
+#endif
+
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
+COMPAT_ATTRIBUTE vec4 VertexCoord;
+COMPAT_ATTRIBUTE vec4 COLOR;
+COMPAT_ATTRIBUTE vec4 TexCoord;
+COMPAT_VARYING vec4 COL0;
+COMPAT_VARYING vec4 TEX0;
+
+vec4 _oPosition1; 
+uniform mat4 MVPMatrix;
+uniform int FrameDirection;
+uniform int FrameCount;
+uniform COMPAT_PRECISION vec2 OutputSize;
+uniform COMPAT_PRECISION vec2 TextureSize;
+uniform COMPAT_PRECISION vec2 InputSize;
+
+void main()
+{
+    gl_Position = MVPMatrix * VertexCoord;
+    COL0 = COLOR;
+    TEX0.xy = TexCoord.xy;
+}
+
+#elif defined(FRAGMENT)
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
+#endif
+
+#ifdef GL_ES
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
+uniform int FrameDirection;
+uniform int FrameCount;
+uniform COMPAT_PRECISION vec2 OutputSize;
+uniform COMPAT_PRECISION vec2 TextureSize;
+uniform COMPAT_PRECISION vec2 InputSize;
+uniform sampler2D Texture;
+COMPAT_VARYING vec4 TEX0;
+
+// compatibility #defines
+#define Source Texture
+#define vTexCoord TEX0.xy
+#define texture(c, d) COMPAT_TEXTURE(c, d)
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
+
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
 uniform COMPAT_PRECISION float nes_saturation;
@@ -43,15 +122,6 @@ uniform COMPAT_PRECISION float nes_clip_method;
 #define nes_sony_matrix 0.0
 #define nes_clip_method 0.0
 #endif
-
-#define saturation nes_saturation
-#define hue nes_hue
-#define contrast nes_contrast
-#define brightness nes_brightness
-#define gamma nes_gamma
-
-//comment the define out to use the "common" conversion matrix instead of the FCC sanctioned one
-#define USE_FCC_MATRIX
 
 bool wave (int p, int color)
 {
@@ -240,82 +310,6 @@ vec3 MakeRGBColor(int emphasis, int level, int color)
 
    return corrected_rgb;
 }
-
-#if defined(VERTEX)
-
-#if __VERSION__ >= 130
-#define COMPAT_VARYING out
-#define COMPAT_ATTRIBUTE in
-#define COMPAT_TEXTURE texture
-#else
-#define COMPAT_VARYING varying 
-#define COMPAT_ATTRIBUTE attribute 
-#define COMPAT_TEXTURE texture2D
-#endif
-
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
-COMPAT_ATTRIBUTE vec4 VertexCoord;
-COMPAT_ATTRIBUTE vec4 COLOR;
-COMPAT_ATTRIBUTE vec4 TexCoord;
-COMPAT_VARYING vec4 COL0;
-COMPAT_VARYING vec4 TEX0;
-
-vec4 _oPosition1; 
-uniform mat4 MVPMatrix;
-uniform int FrameDirection;
-uniform int FrameCount;
-uniform COMPAT_PRECISION vec2 OutputSize;
-uniform COMPAT_PRECISION vec2 TextureSize;
-uniform COMPAT_PRECISION vec2 InputSize;
-
-void main()
-{
-    gl_Position = MVPMatrix * VertexCoord;
-    COL0 = COLOR;
-    TEX0.xy = TexCoord.xy;
-}
-
-#elif defined(FRAGMENT)
-
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
-
-#ifdef GL_ES
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
-#endif
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
-uniform int FrameDirection;
-uniform int FrameCount;
-uniform COMPAT_PRECISION vec2 OutputSize;
-uniform COMPAT_PRECISION vec2 TextureSize;
-uniform COMPAT_PRECISION vec2 InputSize;
-uniform sampler2D Texture;
-COMPAT_VARYING vec4 TEX0;
-
-// compatibility #defines
-#define Source Texture
-#define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
-#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 
 void main()
 {

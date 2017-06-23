@@ -13,13 +13,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130

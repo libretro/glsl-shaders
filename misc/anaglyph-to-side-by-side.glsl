@@ -8,34 +8,6 @@
 #pragma parameter warpX "warpX" 0.3 0.0 0.5 0.05
 #pragma parameter warpY "warpY" 0.3 0.0 0.5 0.05
 
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
-#ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float eye_sep;
-uniform COMPAT_PRECISION float y_loc;
-uniform COMPAT_PRECISION float ana_zoom;
-uniform COMPAT_PRECISION float WIDTH;
-uniform COMPAT_PRECISION float BOTH;
-uniform COMPAT_PRECISION float HEIGHT;
-uniform COMPAT_PRECISION float palette;
-uniform COMPAT_PRECISION float warpX;
-uniform COMPAT_PRECISION float warpY;
-#else
-#define eye_sep 0.35
-#define y_loc 0.30
-#define ana_zoom 0.75
-#define WIDTH 3.05
-#define BOTH 0.64
-#define HEIGHT 2.0
-#define palette 0.0
-#define warpX 0.3
-#define warpY 0.3
-#endif
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -67,6 +39,28 @@ uniform int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float eye_sep;
+uniform COMPAT_PRECISION float y_loc;
+uniform COMPAT_PRECISION float ana_zoom;
+uniform COMPAT_PRECISION float WIDTH;
+uniform COMPAT_PRECISION float BOTH;
+uniform COMPAT_PRECISION float HEIGHT;
+uniform COMPAT_PRECISION float palette;
+uniform COMPAT_PRECISION float warpX;
+uniform COMPAT_PRECISION float warpY;
+#else
+#define eye_sep 0.35
+#define y_loc 0.30
+#define ana_zoom 0.75
+#define WIDTH 3.05
+#define BOTH 0.64
+#define HEIGHT 2.0
+#define palette 0.0
+#define warpX 0.3
+#define warpY 0.3
+#endif
 
 void main()
 {
@@ -115,7 +109,18 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-//standard texture sample looks like this: COMPAT_TEXTURE(Texture, TEX0.xy);
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float eye_sep;
+uniform COMPAT_PRECISION float y_loc;
+uniform COMPAT_PRECISION float ana_zoom;
+uniform COMPAT_PRECISION float WIDTH;
+uniform COMPAT_PRECISION float BOTH;
+uniform COMPAT_PRECISION float HEIGHT;
+uniform COMPAT_PRECISION float palette;
+uniform COMPAT_PRECISION float warpX;
+uniform COMPAT_PRECISION float warpY;
+#endif
 
 //distortion
 vec2 Warp(vec2 pos){

@@ -81,12 +81,6 @@ precision mediump float;
 #define sqr(x) (dot(x,x))
 #define I (float2x2(1.,0.,0.,1.))
 
-//Cramer's method
-float2 solve(float2x2 A,float2 b)
-{
-	return float2(determinant(float2x2(b,A[1])),determinant(float2x2(A[0],b)))/determinant(A);
-}
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -167,6 +161,12 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
+
+//Cramer's method
+float2 solve(float2x2 A,float2 b)
+{
+	return float2(determinant(float2x2(b,A[1])),determinant(float2x2(A[0],b)))/determinant(A);
+}
 
 void main()
 {

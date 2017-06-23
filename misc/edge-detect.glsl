@@ -1,21 +1,6 @@
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter minimum "Edge Thresh Min" 0.05 0.0 1.0 0.01
 #pragma parameter maximum "Edge Thresh Max" 0.35 0.0 1.0 0.01
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float minimum;
-uniform COMPAT_PRECISION float maximum;
-#else
-#define minimum 0.05
-#define maximum 0.35
-#endif
 
 #if defined(VERTEX)
 
@@ -40,7 +25,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 uniform mat4 MVPMatrix;
 uniform int FrameDirection;
@@ -59,8 +43,6 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
-// Paste vertex contents here:
-
 }
 
 #elif defined(FRAGMENT)
@@ -105,6 +87,14 @@ COMPAT_VARYING vec4 TEX0;
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 #define Smooth PassPrev1
 #define Sharp PassPrev
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float minimum;
+uniform COMPAT_PRECISION float maximum;
+#else
+#define minimum 0.05
+#define maximum 0.35
+#endif
 
 float threshold(float thr1, float thr2 , float val) {
  val = (val < thr1) ? 0.0 : val;
@@ -151,8 +141,8 @@ float IsEdge(sampler2D tex, vec2 coords){
 void main()
 {
    float test = IsEdge(Original, vTexCoord);
-   vec4 hybrid = vec4(0.0);
-   hybrid = (test > 0.01) ? texture(Sharp, vTexCoord) : texture(Smooth, vTexCoord);
-   FragColor = hybrid;
+//   vec4 hybrid = vec4(0.0);
+//   hybrid = (test > 0.01) ? texture(Sharp, vTexCoord) : texture(Smooth, vTexCoord);
+   FragColor = vec4(test);
 } 
 #endif

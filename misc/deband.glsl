@@ -25,64 +25,11 @@
  * Modified and optimized for RetroArch by hunterk
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 // Parameter lines go here:
 #pragma parameter iterations "Deband Iterations" 2.0 1.0 10.0 1.0
 #pragma parameter threshold "Deband Threshold" 1.0 1.0 16.0 0.5
 #pragma parameter range "Deband Range" 1.5 0.0 10.0 0.5
 #pragma parameter grain "Deband Grain" 0.0 0.0 2.0 0.1
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float iterations;
-uniform COMPAT_PRECISION float threshold;
-uniform COMPAT_PRECISION float range;
-uniform COMPAT_PRECISION float grain;
-#else
-#define iterations 2.0
-#define threshold 1.0
-#define range 1.5
-#define grain 0.0
-#endif
-
-// Wide usage friendly PRNG, shamelessly stolen from a GLSL tricks forum post.
-// Obtain random numbers by calling rand(h), followed by h = permute(h) to
-// update the state. Assumes the texture was hooked.
-float mod289(float x)
-{
-	return x - floor(x / 289.0) * 289.0;
-}
-
-float permute(float x)
-{
-	return mod289((34.0 * x + 1.0) * x);
-}
-
-float rand(float x)
-{
-	return fract(x * 0.024390243);
-}
-
-vec4 average(sampler2D tex, vec2 coord, float range, inout float h, vec2 size)
-{
-	float dist = rand(h) * range;	h = permute(h);
-	float dir = rand(h) * 6.2831853;	h = permute(h);
-	vec2 o = vec2(cos(dir), sin(dir));
-	vec2 pt = dist / size.xy;
-	
-	vec4 ref[4];
-	ref[0] = texture(tex, coord + pt * vec2( o.x, o.y));
-	ref[1] = texture(tex, coord + pt * vec2(-o.y, o.x));
-	ref[2] = texture(tex, coord + pt * vec2(-o.x,-o.y));
-	ref[3] = texture(tex, coord + pt * vec2( o.y,-o.x));
-	
-	return (ref[0] + ref[1] + ref[2] + ref[3]) * 0.25;
-}
 
 #if defined(VERTEX)
 
@@ -157,7 +104,7 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-// in variables go here as COMPAT_VARYING whatever
+
 
 // compatibility #defines
 #define Source Texture
@@ -166,7 +113,52 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
-// delete all '' or 'registers.' or whatever in the fragment
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float iterations;
+uniform COMPAT_PRECISION float threshold;
+uniform COMPAT_PRECISION float range;
+uniform COMPAT_PRECISION float grain;
+#else
+#define iterations 2.0
+#define threshold 1.0
+#define range 1.5
+#define grain 0.0
+#endif
+
+// Wide usage friendly PRNG, shamelessly stolen from a GLSL tricks forum post.
+// Obtain random numbers by calling rand(h), followed by h = permute(h) to
+// update the state. Assumes the texture was hooked.
+float mod289(float x)
+{
+	return x - floor(x / 289.0) * 289.0;
+}
+
+float permute(float x)
+{
+	return mod289((34.0 * x + 1.0) * x);
+}
+
+float rand(float x)
+{
+	return fract(x * 0.024390243);
+}
+
+vec4 average(sampler2D tex, vec2 coord, float range, inout float h, vec2 size)
+{
+	float dist = rand(h) * range;	h = permute(h);
+	float dir = rand(h) * 6.2831853;	h = permute(h);
+	vec2 o = vec2(cos(dir), sin(dir));
+	vec2 pt = dist / size.xy;
+	
+	vec4 ref[4];
+	ref[0] = texture(tex, coord + pt * vec2( o.x, o.y));
+	ref[1] = texture(tex, coord + pt * vec2(-o.y, o.x));
+	ref[2] = texture(tex, coord + pt * vec2(-o.x,-o.y));
+	ref[3] = texture(tex, coord + pt * vec2( o.y,-o.x));
+	
+	return (ref[0] + ref[1] + ref[2] + ref[3]) * 0.25;
+}
 
 void main()
 {

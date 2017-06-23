@@ -16,50 +16,6 @@
 #pragma parameter blg "Black-Green Tint" 0.0 0.0 1.0 0.005
 #pragma parameter blb "Black-Blue Tint" 0.0 0.0 1.0 0.005
 
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
-#ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float display_gamma;
-uniform COMPAT_PRECISION float target_gamma;
-uniform COMPAT_PRECISION float sat;
-uniform COMPAT_PRECISION float lum;
-uniform COMPAT_PRECISION float cntrst;
-uniform COMPAT_PRECISION float blr;
-uniform COMPAT_PRECISION float blg;
-uniform COMPAT_PRECISION float blb;
-uniform COMPAT_PRECISION float r;
-uniform COMPAT_PRECISION float g;
-uniform COMPAT_PRECISION float b;
-uniform COMPAT_PRECISION float rg;
-uniform COMPAT_PRECISION float rb;
-uniform COMPAT_PRECISION float gr;
-uniform COMPAT_PRECISION float gb;
-uniform COMPAT_PRECISION float br;
-uniform COMPAT_PRECISION float bg;
-#else
-#define display_gamma 2.2
-#define target_gamma 2.2
-#define sat 1.0
-#define lum 1.0
-#define cntrst 1.0
-#define blr 0.0
-#define blg 0.0
-#define blb 0.0
-#define r 1.0
-#define g 1.0
-#define b 1.0
-#define rg 0.0
-#define rb 0.0
-#define gr 0.0
-#define gb 0.0
-#define br 0.0
-#define bg 0.0
-#endif
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -138,7 +94,44 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-//standard texture sample looks like this: COMPAT_TEXTURE(Texture, TEX0.xy);
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float display_gamma;
+uniform COMPAT_PRECISION float target_gamma;
+uniform COMPAT_PRECISION float sat;
+uniform COMPAT_PRECISION float lum;
+uniform COMPAT_PRECISION float cntrst;
+uniform COMPAT_PRECISION float blr;
+uniform COMPAT_PRECISION float blg;
+uniform COMPAT_PRECISION float blb;
+uniform COMPAT_PRECISION float r;
+uniform COMPAT_PRECISION float g;
+uniform COMPAT_PRECISION float b;
+uniform COMPAT_PRECISION float rg;
+uniform COMPAT_PRECISION float rb;
+uniform COMPAT_PRECISION float gr;
+uniform COMPAT_PRECISION float gb;
+uniform COMPAT_PRECISION float br;
+uniform COMPAT_PRECISION float bg;
+#else
+#define display_gamma 2.2
+#define target_gamma 2.2
+#define sat 1.0
+#define lum 1.0
+#define cntrst 1.0
+#define blr 0.0
+#define blg 0.0
+#define blb 0.0
+#define r 1.0
+#define g 1.0
+#define b 1.0
+#define rg 0.0
+#define rb 0.0
+#define gr 0.0
+#define gb 0.0
+#define br 0.0
+#define bg 0.0
+#endif
 
 void main()
 {
