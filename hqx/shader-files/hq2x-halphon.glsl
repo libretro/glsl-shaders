@@ -2,7 +2,7 @@
 
 // HQ2x
 // by Lior Halphon
-// ported to slang by hunterk
+// ported to RetroArch's shader formats by hunterk
 
 /* Based on this (really good) article: http://blog.pkh.me/p/19-butchering-hqx-scaling-filters.html */
 
@@ -30,43 +30,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-precision mediump float;
-#else
-#define COMPAT_PRECISION
-#endif
-
 #define uResolution outsize.xy
 #define textureDimensions SourceSize.xy
-
-/* The colorspace used by the HQnx filters is not really YUV, despite the algorithm description claims it is. It is
-   also not normalized. Therefore, we shall call the colorspace used by HQnx "HQ Colorspace" to avoid confusion. */
-vec3 rgb_to_hq_colospace(vec4 rgb)
-{
-    return vec3( 0.250 * rgb.r + 0.250 * rgb.g + 0.250 * rgb.b,
-                 0.250 * rgb.r - 0.000 * rgb.g - 0.250 * rgb.b,
-                -0.125 * rgb.r + 0.250 * rgb.g - 0.125 * rgb.b);
-}
-
-bool is_different(vec4 a, vec4 b)
-{
-    vec3 diff = abs(rgb_to_hq_colospace(a) - rgb_to_hq_colospace(b));
-    return diff.x > 0.188 || diff.y > 0.027 || diff.z > 0.031;
-}
-
-#define P(m, r) ((pattern & (m)) == (r))
-
-vec4 interp_2px(vec4 c1, float w1, vec4 c2, float w2)
-{
-    return (c1 * w1 + c2 * w2) / (w1 + w2);
-}
-
-vec4 interp_3px(vec4 c1, float w1, vec4 c2, float w2, vec4 c3, float w3)
-{
-    return (c1 * w1 + c2 * w2 + c3 * w3) / (w1 + w2 + w3);
-}
 
 #if defined(VERTEX)
 
@@ -91,7 +56,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 uniform mat4 MVPMatrix;
 uniform COMPAT_PRECISION int FrameDirection;
@@ -149,6 +113,33 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+/* The colorspace used by the HQnx filters is not really YUV, despite the algorithm description claims it is. It is
+   also not normalized. Therefore, we shall call the colorspace used by HQnx "HQ Colorspace" to avoid confusion. */
+vec3 rgb_to_hq_colospace(vec4 rgb)
+{
+    return vec3( 0.250 * rgb.r + 0.250 * rgb.g + 0.250 * rgb.b,
+                 0.250 * rgb.r - 0.000 * rgb.g - 0.250 * rgb.b,
+                -0.125 * rgb.r + 0.250 * rgb.g - 0.125 * rgb.b);
+}
+
+bool is_different(vec4 a, vec4 b)
+{
+    vec3 diff = abs(rgb_to_hq_colospace(a) - rgb_to_hq_colospace(b));
+    return diff.x > 0.188 || diff.y > 0.027 || diff.z > 0.031;
+}
+
+#define P(m, r) ((pattern & (m)) == (r))
+
+vec4 interp_2px(vec4 c1, float w1, vec4 c2, float w2)
+{
+    return (c1 * w1 + c2 * w2) / (w1 + w2);
+}
+
+vec4 interp_3px(vec4 c1, float w1, vec4 c2, float w2, vec4 c3, float w3)
+{
+    return (c1 * w1 + c2 * w2 + c3 * w3) / (w1 + w2 + w3);
+}
 
 vec4 scale(sampler2D image, vec2 coord)
 {
