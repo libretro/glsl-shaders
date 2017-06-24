@@ -194,7 +194,7 @@ void main()
     n += float(FIR_SIZE)/2.0;
     
     //Separate luma(Y) & chroma(IQ) signals
-    for(int i = 0;i < FIR_SIZE;i++)
+    for(int i = 0;i < int(FIR_SIZE);i++)
     {
         int tpidx = int(FIR_SIZE) - i - 1;
         float lp = Lowpass(Flumlp, Fs, int(FIR_SIZE), tpidx);

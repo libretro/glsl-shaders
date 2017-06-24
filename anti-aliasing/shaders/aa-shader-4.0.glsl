@@ -35,8 +35,8 @@ COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 
 uniform mat4 MVPMatrix;
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -71,8 +71,8 @@ out vec4 FragColor;
 #define FragColor gl_FragColor
 #endif
 
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -91,7 +91,7 @@ uniform COMPAT_PRECISION float INTERNAL_RES;
 
 vec3 dt = vec3(1.0,1.0,1.0);
 
-vec3 texture2d (sampler2D tex, vec2 coord, vec4 yx) {
+COMPAT_PRECISION vec3 texture2d (sampler2D tex, vec2 coord, vec4 yx) {
 
 	vec3 s00 = texture(tex, coord + yx.zw).xyz; 
 	vec3 s20 = texture(tex, coord + yx.xw).xyz; 

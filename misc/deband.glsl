@@ -57,8 +57,8 @@ COMPAT_VARYING vec4 TEX0;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -97,8 +97,8 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -163,7 +163,7 @@ vec4 average(sampler2D tex, vec2 coord, float range, inout float h, vec2 size)
 void main()
 {
 	// Initialize the PRNG by hashing the position + a random uniform
-	vec3 m = vec3(vTexCoord, rand(sin(vTexCoord.x / vTexCoord.y) * mod(FrameCount, 79) + 22.759)) + vec3(1.0);
+	vec3 m = vec3(vTexCoord, rand(sin(vTexCoord.x / vTexCoord.y) * mod(float(FrameCount), 79.) + 22.759)) + vec3(1.0);
 	float h = permute(permute(permute(m.x) + m.y) + m.z);
 	
 	vec4 avg;
@@ -176,9 +176,9 @@ void main()
 		{
 			// Sample the average pixel and use it instead of the original if
 			// the difference is below the given threshold
-			avg = average(Source, vTexCoord, i * range, h, TextureSize.xy);
+			avg = average(Source, vTexCoord, float(i) * range, h, TextureSize.xy);
 			diff = abs(color - avg);
-			color = mix(avg, color, greaterThan(diff, vec4(threshold / (i * 10.0))));
+			color = mix(avg, color, float(greaterThan(diff, vec4(threshold / (float(i) * 10.0)))));
 		}
 	if (grain > 0.0)
 		{

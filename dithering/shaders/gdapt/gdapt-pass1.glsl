@@ -37,8 +37,8 @@ COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 t1;
 
 uniform mat4 MVPMatrix;
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -78,8 +78,8 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -115,9 +115,9 @@ void main()
 	
 	if(linear_gamma > 0.5)
 	{
-		C.xyz = pow(TEX( 0, 0), vec3(2.2)).xyz;
-		L.xyz = pow(TEX(-1, 0), vec3(2.2)).xyz;
-		R.xyz = pow(TEX( 1, 0), vec3(2.2)).xyz;
+		C.xyz = pow(TEX( 0, 0).xyz, vec3(2.2)).xyz;
+		L.xyz = pow(TEX(-1, 0).xyz, vec3(2.2)).xyz;
+		R.xyz = pow(TEX( 1, 0).xyz, vec3(2.2)).xyz;
 	}
 	
 	float str = 0.0;

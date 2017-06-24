@@ -68,8 +68,8 @@ COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 
 uniform mat4 MVPMatrix;
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -88,16 +88,6 @@ void main()
 
 #elif defined(FRAGMENT)
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
-
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
@@ -109,8 +99,18 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
-uniform int FrameDirection;
-uniform int FrameCount;
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out COMPAT_PRECISION vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
+#endif
+
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -135,12 +135,12 @@ uniform COMPAT_PRECISION float SFX_RAA;
 
 // extract corners
 vec4 loadCrn(vec4 x){
-	return floor(mod(x*80 + 0.5, 9));
+	return floor(mod(x*80. + 0.5, 9.));
 }
 
 // extract mids
 vec4 loadMid(vec4 x){
-	return floor(mod(x*8.888888 + 0.055555, 9));
+	return floor(mod(x*8.888888 + 0.055555, 9.));
 }
 
 vec3 res2x(vec3 pre2, vec3 pre1, vec3 px, vec3 pos1, vec3 pos2)
@@ -150,9 +150,9 @@ vec3 res2x(vec3 pre2, vec3 pre1, vec3 px, vec3 pos1, vec3 pos2)
 	mat4x3 pos = mat4x3(pre1,   px, pos1, pos2);
 	mat4x3  df = pos - pre;
 	
-	m = mix(px, 1-px, step(px, vec3(0.5)));	
+	m = mix(px, 1.-px, step(px, vec3(0.5)));	
 	m = SFX_RAA * min(m, min(abs(df[1]), abs(df[2])));
-	t = (7 * (df[1] + df[2]) - 3 * (df[0] + df[3])) / 16;
+	t = (7. * (df[1] + df[2]) - 3. * (df[0] + df[3])) / 16.;
 	t = clamp(t, -m, m);
    
 	return t;
@@ -176,14 +176,14 @@ void main()
 	vec2 fp = floor(3.0 * fc);
 	
 	// check adjacent pixels to prevent artifacts
-	vec4 hn = texture(Source, vTexCoord + vec2(fp.x - 1, 0) / SourceSize.xy);
-	vec4 vn = texture(Source, vTexCoord + vec2(0, fp.y - 1) / SourceSize.xy);
+	vec4 hn = texture(Source, vTexCoord + vec2(fp.x - 1., 0.) / SourceSize.xy);
+	vec4 vn = texture(Source, vTexCoord + vec2(0., fp.y - 1.) / SourceSize.xy);
 
 	// extract data
 	vec4 crn = loadCrn(E), hc = loadCrn(hn), vc = loadCrn(vn);
 	vec4 mid = loadMid(E), hm = loadMid(hn), vm = loadMid(vn);
 
-	vec3 res = fp.y == 0 ? (fp.x == 0 ? vec3(crn.x, hc.y, vc.w) : fp.x == 1 ? vec3(mid.x, 0, vm.z) : vec3(crn.y, hc.x, vc.z)) : (fp.y == 1 ? (fp.x == 0 ? vec3(mid.w, hm.y, 0) : fp.x == 1 ? vec3(0) : vec3(mid.y, hm.w, 0)) : (fp.x == 0 ? vec3(crn.w, hc.z, vc.x) : fp.x == 1 ? vec3(mid.z, 0, vm.x) : vec3(crn.z, hc.w, vc.y)));	
+	vec3 res = fp.y == 0. ? (fp.x == 0. ? vec3(crn.x, hc.y, vc.w) : fp.x == 1. ? vec3(mid.x, 0., vm.z) : vec3(crn.y, hc.x, vc.z)) : (fp.y == 1. ? (fp.x == 0. ? vec3(mid.w, hm.y, 0.) : fp.x == 1. ? vec3(0.) : vec3(mid.y, hm.w, 0.)) : (fp.x == 0. ? vec3(crn.w, hc.z, vc.x) : fp.x == 1. ? vec3(mid.z, 0., vm.x) : vec3(crn.z, hc.w, vc.y)));	
 	
 
 #define TEX(x, y) textureOffset(Original, vTexCoord, ivec2(x, y)).rgb
@@ -194,12 +194,12 @@ void main()
 	vec3 D0 = TEX(-1, 0), D1 = TEX(-2, 0), F0 = TEX( 1, 0), F1 = TEX( 2, 0);
 
 	// output coordinate - 0 = E0, 1 = D0, 2 = D1, 3 = F0, 4 = F1, 5 = B0, 6 = B1, 7 = H0, 8 = H1
-	vec3 sfx = res.x == 1 ? D0 : res.x == 2 ? D1 : res.x == 3 ? F0 : res.x == 4 ? F1 : res.x == 5 ? B0 : res.x == 6 ? B1 : res.x == 7 ? H0 : H1;
+	vec3 sfx = res.x == 1. ? D0 : res.x == 2. ? D1 : res.x == 3. ? F0 : res.x == 4. ? F1 : res.x == 5. ? B0 : res.x == 6. ? B1 : res.x == 7. ? H0 : H1;
 
 	// rAA weight
-	vec2 w = 2 * fc - 1;
-	w.x = res.y == 0 ? w.x : 0;
-	w.y = res.z == 0 ? w.y : 0;
+	vec2 w = 2. * fc - 1.;
+	w.x = res.y == 0. ? w.x : 0.;
+	w.y = res.z == 0. ? w.y : 0.;
 
 	// rAA filter
 	vec3 t1 = res2x(D1, D0, E0, F0, F1);
@@ -210,6 +210,6 @@ void main()
 	vec3 raa = clamp(E0 + w.x*t1 + w.y*t2, a, b);
 
 	// hybrid output
-	FragColor = vec4((res.x != 0) ? sfx : raa, 0);	
+	FragColor = vec4((res.x != 0.) ? sfx : raa, 0.);	
 } 
 #endif
