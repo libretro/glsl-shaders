@@ -1,0 +1,46 @@
+shaders = "9"
+
+shader0 = "../xbr/shaders/super-xbr/super-xbr-pass0.glsl"
+filter_linear0 = "false"
+scale_type0 = "source"
+scale0 = "1.000000"
+
+shader1 = "../xbr/shaders/super-xbr/super-xbr-pass1.glsl"
+filter_linear1 = "false"
+scale_type1 = "source"
+scale1 = "2.000000"
+
+shader2 = "../xbr/shaders/super-xbr/super-xbr-pass2.glsl"
+filter_linear2 = "false"
+scale_type2 = "source"
+scale2 = "1.000000"
+alias2 = "REF"
+
+shader3 = "../cubic/shaders/cubic.glsl"
+filter_linear3 = "false"
+scale_type3 = "source"
+scale3 = "0.500000"
+
+shader4 = "shaders/diff.glsl"
+filter_linear4 = "false"
+scale_type4 = "source"
+scale4 = "1.000000"
+
+shader5 = "shaders/super-res-ex.glsl"
+filter_linear5 = "true"
+scale_type5 = "source"
+scale5 = "2.000000"
+
+shader6 = "../misc/deposterize-pass0.glsl"
+filter_linear6 = "false"
+scale_type6 = "source"
+scale6 = "1.000000"
+
+shader7 = "../misc/deposterize-pass1.glsl"
+filter_linear7 = "false"
+scale_type7 = "source"
+scale7 = "1.000000"
+
+shader8 = "../xbr/shaders/super-xbr/custom-jinc2-sharper.glsl"
+filter_linear8 = "false"
+
