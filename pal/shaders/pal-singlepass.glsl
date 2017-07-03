@@ -275,7 +275,7 @@ void main()
 
     // lowpass U/V at baseband
     vec2 filtered = vec2(0.0, 0.0);
-#ifdef __VERSION__ < 130 //unroll the loop
+#if __VERSION__ < 130 //unroll the loop
 	vec2 uv;
 	
 	#define macro_loopz(c)	uv = modem_uv(xy, float(c) - FIRTAPS*0.5); \

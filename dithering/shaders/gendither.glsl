@@ -126,19 +126,19 @@ void main()
 
 	reduceme.r = pow(final.r, why);  
 	reduceme.r *= radooct;	
-	reduceme.r = int(floor(reduceme.r));
+	reduceme.r = floor(reduceme.r);
 	reduceme.r /= radooct; 
 	reduceme.r = pow(reduceme.r, why);
 
 	reduceme.g = pow(final.g, why);  
 	reduceme.g *= radooct;		
-	reduceme.g = int(floor(reduceme.g));	
+	reduceme.g = floor(reduceme.g);	
 	reduceme.g /= radooct;	
 	reduceme.g = pow(reduceme.g, why);
 
 	reduceme.b = pow(final.b, why);  
 	reduceme.b *= radooct;	
-	reduceme.b = int(floor(reduceme.b));	
+	reduceme.b = floor(reduceme.b);	
 	reduceme.b /= radooct;	
 	reduceme.b = pow(reduceme.b, why);
 

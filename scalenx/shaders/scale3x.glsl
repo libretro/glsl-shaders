@@ -173,6 +173,6 @@ void main()
 	float3 E8 = eqHF ? H : E;
 
 	// general condition & subpixel output
-	FragColor = vec4(neq(B,H) && neq(D,F) ? (fp.y == 0 ? (fp.x == 0 ? E0 : fp.x == 1 ? E1 : E2) : (fp.y == 1 ? (fp.x == 0 ? E3 : fp.x == 1 ? E : E5) : (fp.x == 0 ? E6 : fp.x == 1 ? E7 : E8))) : E, 1.0);
+	FragColor = vec4(neq(B,H) && neq(D,F) ? (fp.y == 0. ? (fp.x == 0. ? E0 : fp.x == 1. ? E1 : E2) : (fp.y == 1. ? (fp.x == 0. ? E3 : fp.x == 1. ? E : E5) : (fp.x == 0. ? E6 : fp.x == 1. ? E7 : E8))) : E, 1.0);
 } 
 #endif

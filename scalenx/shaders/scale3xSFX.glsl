@@ -87,11 +87,11 @@ void main()
 	float dx = ps.x;
 	float dy = ps.y;
 
-	t1 = TEX0.xxxy + float4(-dx,  0, dx,-dy);	// A, B, C
-	t2 = TEX0.xxxy + float4(-dx,  0, dx,  0);	// D, E, F
-	t3 = TEX0.xxxy + float4(-dx,  0, dx, dy);	// G, H, I
-	t4 = TEX0.xyxy + float4(    0,-2*dy,-2*dx,    0);	// J, K
-	t5 = TEX0.xyxy + float4( 2*dx,    0,    0, 2*dy);	// L, M
+	t1 = TEX0.xxxy + float4(-dx,  0., dx,-dy);	// A, B, C
+	t2 = TEX0.xxxy + float4(-dx,  0., dx,  0.);	// D, E, F
+	t3 = TEX0.xxxy + float4(-dx,  0., dx, dy);	// G, H, I
+	t4 = TEX0.xyxy + float4(    0.,-2.*dy,-2.*dx,    0.);	// J, K
+	t5 = TEX0.xyxy + float4( 2.*dx,    0.,    0., 2.*dy);	// L, M
 }
 
 #elif defined(FRAGMENT)
@@ -218,6 +218,6 @@ void main()
 	float3 E3 = eq(F,H) == bool3(true) && par0 == true && (EI == false || art0 == true || eq(I,L) == bool3(true) || eq(I,M) == bool3(true)) ? 0.5*(h+f) : e;
 
 	// subpixel output
-	FragColor = vec4(fp.y == 0 ? (fp.x == 0 ? E0 : E1) : (fp.x == 0 ? E2 : E3), 1.0);
+	FragColor = vec4(fp.y == 0. ? (fp.x == 0. ? E0 : E1) : (fp.x == 0. ? E2 : E3), 1.0);
 } 
 #endif

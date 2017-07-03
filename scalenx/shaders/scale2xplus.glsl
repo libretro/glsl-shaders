@@ -146,6 +146,6 @@ void main()
    float3 E3 = H == F && B != H && D != F ? F : E;
 
    // Product interpolation
-   FragColor = float4((E3*fp.x+E2*(1-fp.x))*fp.y+(E1*fp.x+E0*(1-fp.x))*(1-fp.y),1);
+   FragColor = float4((E3*fp.x+E2*(1.-fp.x))*fp.y+(E1*fp.x+E0*(1.-fp.x))*(1.-fp.y),1.);
 } 
 #endif

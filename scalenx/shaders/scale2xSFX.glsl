@@ -1,3 +1,5 @@
+#version 130
+
 /*
 	Scale2xSFX
 	by Sp00kyFox, 2015
@@ -66,8 +68,8 @@ COMPAT_VARYING vec4 t4;
 COMPAT_VARYING vec4 t5;
 
 uniform mat4 MVPMatrix;
-uniform int FrameDirection;
-uniform int FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -86,24 +88,14 @@ void main()
 	float dx = ps.x;
 	float dy = ps.y;
 
-	t1 = TEX0.xxxy + float4(-dx,  0, dx,-dy);	// A, B, C
-	t2 = TEX0.xxxy + float4(-dx,  0, dx,  0);	// D, E, F
-	t3 = TEX0.xxxy + float4(-dx,  0, dx, dy);	// G, H, I
-	t4 = TEX0.xyxy + float4(    0,-2*dy,-2*dx,    0);	// J, K
-	t5 = TEX0.xyxy + float4( 2*dx,    0,    0, 2*dy);	// L, M
+	t1 = TEX0.xxxy + float4(-dx,  0., dx,-dy);	// A, B, C
+	t2 = TEX0.xxxy + float4(-dx,  0., dx,  0.);	// D, E, F
+	t3 = TEX0.xxxy + float4(-dx,  0., dx, dy);	// G, H, I
+	t4 = TEX0.xyxy + float4(    0.,-2.*dy,-2.*dx,    0.);	// J, K
+	t5 = TEX0.xyxy + float4( 2.*dx,    0.,    0., 2.*dy);	// L, M
 }
 
 #elif defined(FRAGMENT)
-
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
 
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
@@ -116,8 +108,18 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
-uniform int FrameDirection;
-uniform int FrameCount;
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out COMPAT_PRECISION vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
+#endif
+
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -146,8 +148,8 @@ uniform COMPAT_PRECISION float VTR;
 #define VTR 6.0
 #endif
 
-const mat3 YUV  = mat3(0.299, -0.168736, 0.5, 0.587, -0.331264, -0.418688, 0.114, 0.5, -0.081312);	// transponed
-float3 thresh = float3(YTR, UTR, VTR)/255.0;
+mat3 YUV  = mat3(0.299, -0.168736, 0.5, 0.587, -0.331264, -0.418688, 0.114, 0.5, -0.081312);	// transponed
+float3 thresh = float3(0.188235294, 0.02745098, 0.023529412);
 
 bool eq(float3 A, float3 B){
 	return (A==B);
@@ -218,6 +220,6 @@ void main()
 	float3 E3 = eq(F,H) && par0 && (!EI || art0 || eq(I,L) || eq(I,M)) ? 0.5*(h+f) : e;
 
 	// subpixel output
-	FragColor = vec4(fp.y == 0 ? (fp.x == 0 ? E0 : E1) : (fp.x == 0 ? E2 : E3), 1.0);
+	FragColor = vec4(fp.y == 0. ? (fp.x == 0. ? E0 : E1) : (fp.x == 0. ? E2 : E3), 1.0);
 } 
 #endif
