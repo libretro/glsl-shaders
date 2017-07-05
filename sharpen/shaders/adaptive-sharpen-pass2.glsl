@@ -1,3 +1,5 @@
+#version 130
+
 /* Ported by Hyllian and hunterk - 2015 / 2017 */
 
 // Copyright (c) 2015-2017, bacondither
@@ -74,13 +76,13 @@
 //-------------------------------------------------------------------------------------------------
 
 // Soft if, fast approx
-#define soft_if(a,b,c) ( saturate((a + b + c - 3*w_offset + 0.06)/(abs(maxedge) + 0.03) - 0.85) )
+#define soft_if(a,b,c) ( saturate((a + b + c - 3.*w_offset + 0.06)/(abs(maxedge) + 0.03) - 0.85) )
 
 // Soft limit, modified tanh
-#define soft_lim(v,s)  ( ((exp(2.*min(abs(v), s*24.)/s) - 1.)/(exp(2*min(abs(v), s*24.)/s) + 1.))*s )
+#define soft_lim(v,s)  ( ((exp(2.*min(abs(v), s*24.)/s) - 1.)/(exp(2.*min(abs(v), s*24.)/s) + 1.))*s )
 
 // Weighted power mean
-#define wpmean(a,b,w)  ( pow((w*pow(abs(a), pm_p) + abs(1-w)*pow(abs(b), pm_p)), (1.0/pm_p)) )
+#define wpmean(a,b,w)  ( pow((w*pow(abs(a), pm_p) + abs(1.-w)*pow(abs(b), pm_p)), (1.0/pm_p)) )
 
 // Get destination pixel values
 #define get(x,y)       ( texture(Source, coord + vec2(x*(px), y*(py))) )
@@ -142,16 +144,6 @@ void main()
 
 #elif defined(FRAGMENT)
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
-
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
@@ -161,6 +153,16 @@ precision mediump float;
 #define COMPAT_PRECISION mediump
 #else
 #define COMPAT_PRECISION
+#endif
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out COMPAT_PRECISION vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
 #endif
 
 uniform COMPAT_PRECISION int FrameDirection;
@@ -201,11 +203,11 @@ vec4 frag_op(vec4 orig, vec2 coord, float c_edge, float px, float py)
 	// [      c20, c6,  c7,  c8, c17      ]
 	// [           c15, c12, c14          ]
 	// [                c13               ]
-	vec4 c[25] = { sat( orig), get(-1,-1), get( 0,-1), get( 1,-1), get(-1, 0),
-	                 get( 1, 0), get(-1, 1), get( 0, 1), get( 1, 1), get( 0,-2),
-	                 get(-2, 0), get( 2, 0), get( 0, 2), get( 0, 3), get( 1, 2),
-	                 get(-1, 2), get( 3, 0), get( 2, 1), get( 2,-1), get(-3, 0),
-	                 get(-2, 1), get(-2,-1), get( 0,-3), get( 1,-2), get(-1,-2) };
+	vec4 c[25] = vec4[25]( sat( orig), get(-1.,-1.), get( 0.,-1.), get( 1.,-1.), get(-1., 0.),
+	                 get( 1., 0.), get(-1., 1.), get( 0., 1.), get( 1., 1.), get( 0.,-2.),
+	                 get(-2., 0.), get( 2., 0.), get( 0., 2.), get( 0., 3.), get( 1., 2.),
+	                 get(-1., 2.), get( 3., 0.), get( 2., 1.), get( 2.,-1.), get(-3., 0.),
+	                 get(-2., 1.), get(-2.,-1.), get( 0.,-3.), get( 1.,-2.), get(-1.,-2.) );
 
 	// Allow for higher overshoot if the current edge pixel is surrounded by similar edge pixels
 	float maxedge = max4( max4(c[1].w,c[2].w,c[3].w,c[4].w), max4(c[5].w,c[6].w,c[7].w,c[8].w),
@@ -224,15 +226,15 @@ vec4 frag_op(vec4 orig, vec2 coord, float c_edge, float px, float py)
 	          + soft_if(c[3].w,c[23].w,c[18].w)*soft_if(c[6].w,c[20].w,c[15].w); // w dir
 
 	vec2 cs = mix( vec2(L_compr_low,  D_compr_low),
-	                  vec2(L_compr_high, D_compr_high), smoothstep(2, 3.1, sbe) );
+	                  vec2(L_compr_high, D_compr_high), smoothstep(2., 3.1, sbe) );
 
 	// RGB to luma
 	float c0_Y = CtL(c[0]);
 
-	float luma[25] = { c0_Y, CtL(c[1]), CtL(c[2]), CtL(c[3]), CtL(c[4]), CtL(c[5]), CtL(c[6]),
+	float luma[25] = float[25]( c0_Y, CtL(c[1]), CtL(c[2]), CtL(c[3]), CtL(c[4]), CtL(c[5]), CtL(c[6]),
 	                   CtL(c[7]),  CtL(c[8]),  CtL(c[9]),  CtL(c[10]), CtL(c[11]), CtL(c[12]),
 	                   CtL(c[13]), CtL(c[14]), CtL(c[15]), CtL(c[16]), CtL(c[17]), CtL(c[18]),
-	                   CtL(c[19]), CtL(c[20]), CtL(c[21]), CtL(c[22]), CtL(c[23]), CtL(c[24]) };
+	                   CtL(c[19]), CtL(c[20]), CtL(c[21]), CtL(c[22]), CtL(c[23]), CtL(c[24]) );
 
 	// Pre-calculated default squared kernel weights
 	const vec3 W1 = vec3(0.5,           1.0, 1.41421356237); // 0.25, 1.0, 2.0
@@ -241,14 +243,14 @@ vec4 frag_op(vec4 orig, vec2 coord, float c_edge, float px, float py)
 	// Transition to a concave kernel if the center edge val is above thr
 	vec3 dW = pow(mix( W1, W2, smoothstep(dW_lothr, dW_hithr, c_edge) ), vec3(2.0));
 
-	float mdiff_c0 = 0.02 + 3*( abs(luma[0]-luma[2]) + abs(luma[0]-luma[4])
+	float mdiff_c0 = 0.02 + 3.*( abs(luma[0]-luma[2]) + abs(luma[0]-luma[4])
 	                          + abs(luma[0]-luma[5]) + abs(luma[0]-luma[7])
 	                          + 0.25*(abs(luma[0]-luma[1]) + abs(luma[0]-luma[3])
 	                                 +abs(luma[0]-luma[6]) + abs(luma[0]-luma[8])) );
 
 	// Use lower weights for pixels in a more active area relative to center pixel area
 	// This results in narrower and less visible overshoots around sharp edges
-	float weights[12] = { ( min(mdiff_c0/mdiff(24, 21, 2,  4,  9,  10, 1),  dW.y) ),   // c1
+	float weights[12] = float[12]( ( min(mdiff_c0/mdiff(24, 21, 2,  4,  9,  10, 1),  dW.y) ),   // c1
 	                      ( dW.x ),                                                    // c2
 	                      ( min(mdiff_c0/mdiff(23, 18, 5,  2,  9,  11, 3),  dW.y) ),   // c3
 	                      ( dW.x ),                                                    // c4
@@ -259,12 +261,12 @@ vec4 frag_op(vec4 orig, vec2 coord, float c_edge, float px, float py)
 	                      ( min(mdiff_c0/mdiff(2,  24, 23, 22, 1,  3,  9),  dW.z) ),   // c9
 	                      ( min(mdiff_c0/mdiff(20, 19, 21, 4,  1,  6,  10), dW.z) ),   // c10
 	                      ( min(mdiff_c0/mdiff(17, 5,  18, 16, 3,  8,  11), dW.z) ),   // c11
-	                      ( min(mdiff_c0/mdiff(13, 15, 7,  14, 6,  8,  12), dW.z) ) }; // c12
+	                      ( min(mdiff_c0/mdiff(13, 15, 7,  14, 6,  8,  12), dW.z) ) ); // c12
 
-	weights[0] = (max(max((weights[8]  + weights[9])/4,  weights[0]), 0.25) + weights[0])/2;
-	weights[2] = (max(max((weights[8]  + weights[10])/4, weights[2]), 0.25) + weights[2])/2;
-	weights[5] = (max(max((weights[9]  + weights[11])/4, weights[5]), 0.25) + weights[5])/2;
-	weights[7] = (max(max((weights[10] + weights[11])/4, weights[7]), 0.25) + weights[7])/2;
+	weights[0] = (max(max((weights[8]  + weights[9])/4.,  weights[0]), 0.25) + weights[0])/2.;
+	weights[2] = (max(max((weights[8]  + weights[10])/4., weights[2]), 0.25) + weights[2])/2.;
+	weights[5] = (max(max((weights[9]  + weights[11])/4., weights[5]), 0.25) + weights[5])/2.;
+	weights[7] = (max(max((weights[10] + weights[11])/4., weights[7]), 0.25) + weights[7])/2.;
 
 	// Calculate the negative part of the laplace kernel and the low threshold weight
 	float lowthrsum   = 0.;
@@ -332,7 +334,7 @@ vec4 frag_op(vec4 orig, vec2 coord, float c_edge, float px, float py)
 	// Compensate for saturation loss/gain while making pixels brighter/darker
 	float sharpdiff_lim = saturate(c0_Y + sharpdiff) - c0_Y;
 	float satmul = (c0_Y + sharpdiff_lim + 0.03)/(c0_Y + 0.03);
-	vec3 res = c0_Y + (sharpdiff_lim*3 + sharpdiff)/4 + (c[0].rgb - c0_Y)*satmul;
+	vec3 res = c0_Y + (sharpdiff_lim*3. + sharpdiff)/4. + (c[0].rgb - c0_Y)*satmul;
 
 	return vec4( (video_level_out == 1.0 ? orig.rgb + (res - c[0].rgb) : res), alpha_out );
 }

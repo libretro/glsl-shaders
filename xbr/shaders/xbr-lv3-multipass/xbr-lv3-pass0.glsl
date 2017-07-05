@@ -1,3 +1,5 @@
+#version 130
+
 /*
    Hyllian's xBR level 3 pass0 Shader
    
@@ -98,16 +100,6 @@ void main()
 
 #elif defined(FRAGMENT)
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
-
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
@@ -117,6 +109,16 @@ precision mediump float;
 #define COMPAT_PRECISION mediump
 #else
 #define COMPAT_PRECISION
+#endif
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out COMPAT_PRECISION vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
 #endif
 
 uniform COMPAT_PRECISION int FrameDirection;
@@ -241,7 +243,6 @@ void main()
 	bvec2 px0, px1, px2, px3;
 	bvec4 lin0, lin1, lin2, lin3;
 
-
 	vec3 A1 = texture(Source, t1.xw).rgb;
 	vec3 B1 = texture(Source, t1.yw).rgb;
 	vec3 C1 = texture(Source, t1.zw).rgb;
@@ -288,7 +289,6 @@ void main()
 	vec4 g0 = i5.wxyz;
 	vec4 b1 = h5.zwxy;
 	vec4 d0 = h5.wxyz;
-
 
 	bvec4 interp_restriction_lv0 = and(notEqual(e,f)  ,  notEqual(e,h));
 	bvec4 comp1 = and(not(eq(h,h5)) , not(eq(h,i5)));

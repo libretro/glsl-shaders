@@ -20,6 +20,8 @@
    License along with this library.
 */   
 
+#define round(c) floor(c + 0.5)
+
 // -- Edge detection options -- 
 #define strength 0.8
 #define softness 0.3
@@ -37,10 +39,10 @@
 
 // -- Input processing --
 //Current high res value
-#define Get(x,y)    (texture(refTex,ddxddy*(pos+ivec2(x,y)+0.5)).xyz)
-#define GetY(x,y)    (texture(Source,ddxddy*(pos+ivec2(x,y)+0.5)).a)
+#define Get(x,y)    (texture(refTex,ddxddy*(pos+vec2(x,y)+0.5)).xyz)
+#define GetY(x,y)    (texture(Source,ddxddy*(pos+vec2(x,y)+0.5)).a)
 //Downsampled result
-#define Diff(x,y)     (texture(Source,ddxddy*(pos+ivec2(x,y)+0.5)).xyz)
+#define Diff(x,y)     (texture(Source,ddxddy*(pos+vec2(x,y)+0.5)).xyz)
 
 #if defined(VERTEX)
 
@@ -156,7 +158,7 @@ void main()
 
 	// Loop unrolled for better compatibility.
 
-	float dI2 = sqr(acuity*(c0y - GetY(-1,-1)));
+	float dI2 = sqr(acuity*(c0y - GetY(-1.,-1.)));
         float dXY2 = sqr(vec2(-1,-1) - offset);
         float w = exp(-dXY2/(2.*radius*radius))*pow(1. + dI2/power, - power);
         diff += w*Diff(-1,-1);

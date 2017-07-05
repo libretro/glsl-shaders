@@ -1,3 +1,5 @@
+#version 130
+
 /* Ported by Hyllian and hunterk - 2015 / 2017 */
 
 // Copyright (c) 2015-2017, bacondither
@@ -41,7 +43,7 @@
 #define get(x,y)    ( saturate(texture(Source, coord + vec2(x*(px), y*(py))).rgb) )
 
 // Component-wise distance
-#define b_diff(pix) ( abs(blur - c[pix]) )
+#define b_diff(pix) ( abs(blur - c##pix) )
 
 #if defined(VERTEX)
 
@@ -88,16 +90,6 @@ void main()
 
 #elif defined(FRAGMENT)
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
-
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
@@ -107,6 +99,16 @@ precision mediump float;
 #define COMPAT_PRECISION mediump
 #else
 #define COMPAT_PRECISION
+#endif
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out COMPAT_PRECISION vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
 #endif
 
 uniform COMPAT_PRECISION int FrameDirection;
@@ -132,12 +134,25 @@ vec4 frag_op(sampler2D Source, vec2 coord, float px, float py)
 	// [      c10, c4,  c0,  c5, c11      ]
 	// [           c6,  c7,  c8           ]
 	// [                c12               ]
-	vec3 c[13] = { get( 0, 0), get(-1,-1), get( 0,-1), get( 1,-1), get(-1, 0),
-	                 get( 1, 0), get(-1, 1), get( 0, 1), get( 1, 1), get( 0,-2),
-	                 get(-2, 0), get( 2, 0), get( 0, 2) };
+//	vec3 c[13] = vec3[]( get( 0., 0.), get(-1.,-1.), get( 0.,-1.), get( 1.,-1.), get(-1., 0.),
+//	                 get( 1., 0.), get(-1., 1.), get( 0., 1.), get( 1., 1.), get( 0.,-2.),
+//	                 get(-2., 0.), get( 2., 0.), get( 0., 2.) );
+	vec3 c0 = get( 0., 0.);
+	vec3 c1 = get(-1.,-1.);
+	vec3 c2 = get( 0.,-1.);
+	vec3 c3 = get( 1.,-1.);
+	vec3 c4 = get(-1., 0.);
+	vec3 c5 = get( 1., 0.);
+	vec3 c6 = get(-1., 1.);
+	vec3 c7 = get( 0., 1.);
+	vec3 c8 = get( 1., 1.);
+	vec3 c9 = get( 0.,-2.);
+	vec3 c10 = get(-2., 0.);
+	vec3 c11 = get( 2., 0.);
+	vec3 c12 = get( 0., 2.);
 
 	// Blur, gauss 3x3
-	vec3 blur  = (2.*(c[2]+c[4]+c[5]+c[7]) + (c[1]+c[3]+c[6]+c[8]) + 4.*c[0])/16.;
+	vec3 blur  = (2.*(c2+c4+c5+c7) + (c1+c3+c6+c8) + 4.*c0)/16.;
 	float blur_Y = (blur.r/3. + blur.g/3. + blur.b/3.);
 
 	// Contrast compression, center = 0.5, scaled to 1/3
