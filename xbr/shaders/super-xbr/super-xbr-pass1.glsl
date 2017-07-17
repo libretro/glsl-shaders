@@ -31,7 +31,7 @@
 #define wp1  8.0
 #define wp2  0.0
 #define wp3  0.0
-#define wp4  4.0
+#define wp4  0.0
 #define wp5  0.0
 #define wp6  0.0
 
