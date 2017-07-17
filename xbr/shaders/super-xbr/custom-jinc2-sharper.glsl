@@ -24,7 +24,7 @@
 // Parameter lines go here:
 #pragma parameter JINC2_WINDOW_SINC "Window Sinc Param" 0.42 0.0 1.0 0.01
 #pragma parameter JINC2_SINC "Sinc Param" 0.92 0.0 1.0 0.01
-#pragma parameter JINC2_AR_STRENGTH "Anti-ringing Strength" 0.0 0.0 1.0 0.1
+#pragma parameter JINC2_AR_STRENGTH "Anti-ringing Strength" 1.0 0.0 1.0 0.1
 
 #define mul(a,b) (b*a)
 
@@ -127,7 +127,7 @@ uniform COMPAT_PRECISION float JINC2_AR_STRENGTH;
 #else
 #define JINC2_WINDOW_SINC 0.42
 #define JINC2_SINC 0.92
-#define JINC2_AR_STRENGTH 0.0
+#define JINC2_AR_STRENGTH 1.0
 #endif
 
 const vec3 Y = vec3(0.299, 0.587, 0.114);
