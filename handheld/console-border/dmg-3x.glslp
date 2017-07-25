@@ -31,15 +31,26 @@ scale4 = 1.0
 alias4 = "PASS4"
 
 shader5 = shader-files/gb-pass-5.glsl
+filter_linear5 = true
 
-parameters = "video_scale;SCALE;OUT_X;OUT_Y;adjacent_texel_alpha_blending;pixel_opacity;shadow_opacity;console_border_enable"
+parameters = "baseline_alpha;grey_balance;response_time;console_border_enable;video_scale;blending_mode;adjacent_texel_alpha_blending;contrast;screen_light;pixel_opacity;bg_smoothing;shadow_opacity;shadow_offset_x;shadow_offset_y;screen_offset_x;screen_offset_y;SCALE;OUT_X;OUT_Y"
 video_scale = "3.0"
 SCALE = "1.0"
 OUT_X = "2400.0"
 OUT_Y = "1200.0"
-adjacent_texel_alpha_blending = "0.15"
-pixel_opacity = "0.80"
-shadow_opacity = "0.80"
+baseline_alpha = "0.03"
+response_time = "0.333"
+grey_balance = "3.5"
+console_border_enable = "1.0"
+blending_mode = "0.0"
+adjacent_texel_alpha_blending = "0.38"
+contrast = "0.8"
+screen_light = "0.9"
+pixel_opacity = "0.95"
+bg_smoothing = "0.0"
+shadow_opacity = "0.55"
+shadow_offset_x = "-1.5"
+shadow_offset_y = "1.5"
 console_border_enable = "1.0"
 
 textures = COLOR_PALETTE;BACKGROUND;BORDER
