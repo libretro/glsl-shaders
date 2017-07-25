@@ -1,4 +1,5 @@
-INSTALLDIR := /usr/share/libretro/shaders/shaders_glsl
+PREFIX := /usr
+INSTALLDIR := $(PREFIX)/share/libretro/shaders/shaders_glsl
 
 all:
 	@echo "Nothing to make for glsl-shaders."
