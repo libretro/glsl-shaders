@@ -31,8 +31,8 @@
 #define wp1  1.0
 #define wp2  0.0
 #define wp3  0.0
-#define wp4  0.0
-#define wp5  0.0
+//#define wp4  0.0
+//#define wp5  0.0
 #define wp6  0.0
 
 #define weight1 (XBR_WEIGHT*1.75068/10.0)
@@ -117,9 +117,17 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
 
-const float XBR_EDGE_STR = 0.6;
-const float XBR_WEIGHT = 1.0;
-const float XBR_ANTI_RINGING = 1.0;
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float XBR_EDGE_STR;
+uniform COMPAT_PRECISION float XBR_WEIGHT;
+uniform COMPAT_PRECISION float XBR_ANTI_RINGING;
+uniform COMPAT_PRECISION float DETAILS;
+#else
+#define XBR_EDGE_STR 0.6
+#define XBR_WEIGHT 1.0
+#define XBR_ANTI_RINGING 1.0
+#define DETAILS 0.0
+#endif
 
 const vec3 Y = vec3(.2126, .7152, .0722);
 
@@ -145,11 +153,19 @@ float df(float A, float B)
 
 float d_wd(float b0, float b1, float c0, float c1, float c2, float d0, float d1, float d2, float d3, float e1, float e2, float e3, float f2, float f3)
 {
+	float wp4 = 0.0;
+	float wp5 = 0.0;
+	if(DETAILS > 0.5)
+	{
+		wp4 =  1.0;
+		wp5 = -1.0;
+	}
 	return (wp1*(df(c1,c2) + df(c1,c0) + df(e2,e1) + df(e2,e3)) + wp2*(df(d2,d3) + df(d0,d1)) + wp3*(df(d1,d3) + df(d0,d2)) + wp4*df(d1,d2) + wp5*(df(c0,c2) + df(e1,e3)) + wp6*(df(b0,b1) + df(f2,f3)));
 }
 
 float hv_wd(float i1, float i2, float i3, float i4, float e1, float e2, float e3, float e4)
 {
+	float wp4 = (DETAILS > 0.5) ? 1.0 : 0.0;
 	return ( wp4*(df(i1,i2)+df(i3,i4)) + wp1*(df(i1,e1)+df(i2,e2)+df(i3,e3)+df(i4,e4)) + wp3*(df(i1,e2)+df(i3,e4)+df(e1,i2)+df(e3,i4)));
 }
 
