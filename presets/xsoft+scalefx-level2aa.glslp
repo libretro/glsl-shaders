@@ -1,0 +1,47 @@
+shaders = 8
+
+shader0 = ../scalefx/shaders/scalefx-pass0.glsl
+filter_linear0 = false
+scale_type0 = source
+scale0 = 1.0
+float_framebuffer0 = true
+
+shader1 = ../scalefx/shaders/scalefx-pass1.glsl
+filter_linear1 = false
+scale_type1 = source
+scale1 = 1.0
+float_framebuffer1 = true
+
+shader2 = ../scalefx/shaders/scalefx-pass2.glsl
+filter_linear2 = false
+scale_type2 = source
+scale2 = 1.0
+
+shader3 = ../scalefx/shaders/scalefx-pass3.glsl
+filter_linear3 = false
+scale_type3 = source
+scale3 = 1.0
+
+shader4 = ../scalefx/shaders/scalefx-pass4.glsl
+filter_linear4 = false
+scale_type4 = source
+scale4 = 3.0 
+
+shader5 = ../stock.glsl
+filter_linear5 = false
+scale_type5 = source
+scale5 = 2.0
+
+shader6 = ../anti-aliasing/shaders/aa-shader-4.0-level2/aa-shader-4.0-level2-pass1.glsl
+filter_linear6 = true
+scale_type6 = source
+scale6 = 1.0
+
+shader7 = ../anti-aliasing/shaders/aa-shader-4.0-level2/aa-shader-4.0-level2-pass2.glsl
+filter_linear7 = true
+scale_type7 = source
+scale7 = 1.0
+
+parameters = "SFX_CLR;SFX_SAA"
+SFX_SAA = 0.00
+SFX_CLR = 0.60

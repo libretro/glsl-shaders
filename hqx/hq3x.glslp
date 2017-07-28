@@ -1,6 +1,6 @@
 shaders = 2
-shader0 = shader-files/pass1.glsl
-shader1 = shader-files/hq3x.glsl
+shader0 = shader-files/hqx-pass1.glsl
+shader1 = shader-files/hqx-pass2.glsl
 
 filter_linear0 = false
 scale_type0 = source
@@ -13,3 +13,6 @@ scale1 = 3.0
 textures = LUT
 LUT = resources/hq3x.png
 LUT_linear = false
+
+parameters = "SCALE"
+SCALE = 3.0

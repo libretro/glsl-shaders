@@ -1,0 +1,4 @@
+shaders = 1
+
+shader0 = shaders/sedi-v1.0.glsl
+filter_linear0 = true

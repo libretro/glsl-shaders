@@ -1,0 +1,6 @@
+shaders = 1
+
+shader0 = shaders/omniscale-legacy.glsl
+scale_type0 = source
+filter_linear0 = false
+scale0 = 5.0

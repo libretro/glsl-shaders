@@ -1,0 +1,4 @@
+shaders = 1
+
+shader0 = shaders/3d-2d-mixed.glsl
+filter_linear0 = true

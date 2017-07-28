@@ -1,0 +1,23 @@
+shaders = 4
+
+shader0 = ../stock.glsl
+scale_x0 = "640.0"
+scale_type_x0 = absolute
+
+shader1 = shaders/artifact-colors/artifact-colors0.glsl
+scale1 = 1.0
+scale_type1 = source
+filter_linear1 = false
+alias1 = Pass1
+
+shader2 = shaders/artifact-colors/artifact-colors1.glsl
+scale2 = 1.0
+scale_type2 = source
+filter_linear2 = false
+alias2 = Pass2
+float_framebuffer2 = true
+
+shader3 = shaders/artifact-colors/artifact-colors2.glsl
+scale3 = 1.0
+scale_type3 = source
+filter_linear3 = false

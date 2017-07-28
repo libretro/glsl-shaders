@@ -1,0 +1,13 @@
+shaders = 1
+
+shader0 = shaders/metacrt/bufC.glsl
+
+//shader1 = shaders/metacrt/bufD.glsl
+
+//shader2 = shaders/metacrt/Image.glsl
+
+textures = "cubeMap;table"
+cubeMap = shaders/metacrt/basilica.png
+cubeMap_wrap_mode = repeat
+table = shaders/metacrt/woodgrain.png
+table_wrap_mode = repeat

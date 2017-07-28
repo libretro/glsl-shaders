@@ -1,40 +1,3 @@
-#pragma parameter OutputGamma "CRT - Output Gamma" 2.2 0.0 5.0 0.1
-#pragma parameter PHOSPHOR "CRT - Phosphor ON/OFF" 1.0 0.0 1.0 1.0
-#pragma parameter COLOR_BOOST "CRT - Color Boost" 1.5 1.0 2.0 0.05
-#pragma parameter RED_BOOST "CRT - Red Boost" 1.0 1.0 2.0 0.01
-#pragma parameter GREEN_BOOST "CRT - Green Boost" 1.0 1.0 2.0 0.01
-#pragma parameter BLUE_BOOST "CRT - Blue Boost" 1.0 1.0 2.0 0.01
-#pragma parameter SCANLINES_STRENGTH "CRT - Scanline Strength" 0.72 0.0 1.0 0.02
-#pragma parameter BEAM_MIN_WIDTH "CRT - Min Beam Width" 0.86 0.0 1.0 0.02
-#pragma parameter BEAM_MAX_WIDTH "CRT - Max Beam Width" 1.0 0.0 1.0 0.02
-#ifdef PARAMETER_UNIFORM
-uniform float OutputGamma;
-uniform float PHOSPHOR;
-uniform float COLOR_BOOST;
-uniform float RED_BOOST;
-uniform float GREEN_BOOST;
-uniform float BLUE_BOOST;
-uniform float SCANLINES_STRENGTH;
-uniform float BEAM_MIN_WIDTH;
-uniform float BEAM_MAX_WIDTH;
-#else
-#define OutputGamma 2.2
-#define PHOSPHOR 1.0
-#define COLOR_BOOST 1.5
-#define RED_BOOST 1.0
-#define GREEN_BOOST 1.0
-#define BLUE_BOOST 1.0
-#define SCANLINES_STRENGTH 0.72
-#define BEAM_MIN_WIDTH 0.86
-#define BEAM_MAX_WIDTH 1.0
-#endif
-// END PARAMETERS //
-
-/* COMPATIBILITY
-   - HLSL compilers
-   - Cg   compilers
-*/
-
 /*
    Hyllian's CRT Shader - pass1
   
@@ -60,8 +23,17 @@ uniform float BEAM_MAX_WIDTH;
 
 */
 
-#define GAMMA_OUT(color)    pow(color, vec3(1.0 / OutputGamma, 1.0 / OutputGamma, 1.0 / OutputGamma))
+#pragma parameter OutputGamma "CRT - Output Gamma" 2.2 0.0 5.0 0.1
+#pragma parameter PHOSPHOR "CRT - Phosphor ON/OFF" 1.0 0.0 1.0 1.0
+#pragma parameter COLOR_BOOST "CRT - Color Boost" 1.5 1.0 2.0 0.05
+#pragma parameter RED_BOOST "CRT - Red Boost" 1.0 1.0 2.0 0.01
+#pragma parameter GREEN_BOOST "CRT - Green Boost" 1.0 1.0 2.0 0.01
+#pragma parameter BLUE_BOOST "CRT - Blue Boost" 1.0 1.0 2.0 0.01
+#pragma parameter SCANLINES_STRENGTH "CRT - Scanline Strength" 0.72 0.0 1.0 0.02
+#pragma parameter BEAM_MIN_WIDTH "CRT - Min Beam Width" 0.86 0.0 1.0 0.02
+#pragma parameter BEAM_MAX_WIDTH "CRT - Max Beam Width" 1.0 0.0 1.0 0.02
 
+#define GAMMA_OUT(color)    pow(color, vec3(1.0 / OutputGamma, 1.0 / OutputGamma, 1.0 / OutputGamma))
 
 #define texCoord TEX0
 
@@ -141,6 +113,28 @@ uniform PRECISION vec2 Pass1InputSize;
 uniform sampler2D s_p;
 IN vec2 texCoord;
 
+#ifdef PARAMETER_UNIFORM
+uniform PRECISION float OutputGamma;
+uniform PRECISION float PHOSPHOR;
+uniform PRECISION float COLOR_BOOST;
+uniform PRECISION float RED_BOOST;
+uniform PRECISION float GREEN_BOOST;
+uniform PRECISION float BLUE_BOOST;
+uniform PRECISION float SCANLINES_STRENGTH;
+uniform PRECISION float BEAM_MIN_WIDTH;
+uniform PRECISION float BEAM_MAX_WIDTH;
+#else
+#define OutputGamma 2.2
+#define PHOSPHOR 1.0
+#define COLOR_BOOST 1.5
+#define RED_BOOST 1.0
+#define GREEN_BOOST 1.0
+#define BLUE_BOOST 1.0
+#define SCANLINES_STRENGTH 0.72
+#define BEAM_MIN_WIDTH 0.86
+#define BEAM_MAX_WIDTH 1.0
+#endif
+// END PARAMETERS //
 
 void main()
 {
@@ -159,7 +153,7 @@ void main()
     vec3 color1 = tex2D(s_p, tc     ).xyz;
 
     float pos0 = fp.y;
-    float pos1 = 1 - fp.y;
+    float pos1 = 1. - fp.y;
 
     vec3 lum0 = mix(vec3(BEAM_MIN_WIDTH), vec3(BEAM_MAX_WIDTH), color0);
     vec3 lum1 = mix(vec3(BEAM_MIN_WIDTH), vec3(BEAM_MAX_WIDTH), color1);

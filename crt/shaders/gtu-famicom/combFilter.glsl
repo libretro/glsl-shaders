@@ -1,0 +1,133 @@
+////////////////////////////////////////////////////////
+//  GTU version 0.50
+//  Author: aliaspider - aliaspider@gmail.com
+//  License: GPLv3
+////////////////////////////////////////////////////////
+
+// Parameter lines go here:
+#pragma parameter combFilter "comb filter" 0.0 0.0 1.0 1.0
+#pragma parameter phaseOffset "phase offset" 0.0 -0.5 0.5 0.01
+
+#define pi          3.14159265358
+
+#if defined(VERTEX)
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING out
+#define COMPAT_ATTRIBUTE in
+#define COMPAT_TEXTURE texture
+#else
+#define COMPAT_VARYING varying 
+#define COMPAT_ATTRIBUTE attribute 
+#define COMPAT_TEXTURE texture2D
+#endif
+
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
+COMPAT_ATTRIBUTE vec4 VertexCoord;
+COMPAT_ATTRIBUTE vec4 COLOR;
+COMPAT_ATTRIBUTE vec4 TexCoord;
+COMPAT_VARYING vec4 COL0;
+COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING float colorPhase;
+
+uniform mat4 MVPMatrix;
+uniform int FrameDirection;
+uniform int FrameCount;
+uniform COMPAT_PRECISION vec2 OutputSize;
+uniform COMPAT_PRECISION vec2 TextureSize;
+uniform COMPAT_PRECISION vec2 InputSize;
+
+// vertex compatibility #defines
+#define vTexCoord TEX0.xy
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
+#define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float phaseOffset;
+#else
+#define phaseOffset 0.0
+#endif
+
+void main()
+{
+    gl_Position = MVPMatrix * VertexCoord;
+    COL0 = COLOR;
+    TEX0.xy = TexCoord.xy;
+    vec2 pos = (TEX0.xy*outsize.xy*TextureSize.xy/InputSize.xy)-0.5;
+    colorPhase = 8.0 + pos.x + pos.y * 4.0 + float(FrameCount) * 4.0 + 4.0 + phaseOffset * 12.0;
+}
+
+#elif defined(FRAGMENT)
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
+#endif
+
+#ifdef GL_ES
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
+uniform int FrameDirection;
+uniform int FrameCount;
+uniform COMPAT_PRECISION vec2 OutputSize;
+uniform COMPAT_PRECISION vec2 TextureSize;
+uniform COMPAT_PRECISION vec2 InputSize;
+uniform sampler2D Texture;
+COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING float colorPhase;
+
+// fragment compatibility #defines
+#define Source Texture
+#define vTexCoord TEX0.xy
+#define texture(c, d) COMPAT_TEXTURE(c, d)
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
+#define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float combFilter;
+#else
+#define combFilter 0.0
+#endif
+
+void main()
+{
+    float current = texture(Source,vTexCoord.xy).r;
+    
+    float signal, I, Q;
+    
+    if (combFilter > 0.0)
+    {
+        float prev6 = texture(Source, vTexCoord.xy - vec2(6.0 * (outsize.x * SourceSize.x / InputSize.x), 0.0)).r;
+        signal = (current + prev6) * 0.5;
+        float chromaSignal = current - signal;
+        I = chromaSignal * cos (colorPhase * (2.0 * pi / 12.0)) * 2.0;
+        Q = chromaSignal * sin (colorPhase * (2.0 * pi / 12.0)) * 2.0;
+    }
+    else
+    {
+        signal = current;
+        I = signal * cos (colorPhase * (2.0 * pi / 12.0))*2.0;
+        Q = signal * sin (colorPhase * (2.0 * pi / 12.0))*2.0;
+    }
+    
+    FragColor = vec4(signal, I, Q, 1.0);
+} 
+#endif

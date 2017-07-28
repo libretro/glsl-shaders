@@ -1,16 +1,3 @@
-#pragma parameter percent "Interlacing Scanline Bright %" 0.0 0.0 1.0 0.05
-#pragma parameter enable_480i "Enable 480i Mode" 1.0 0.0 1.0 1.0
-#pragma parameter top_field_first "Top Field First Enable" 0.0 0.0 1.0 1.0
-#ifdef PARAMETER_UNIFORM
-uniform float percent;
-uniform float enable_480i;
-uniform float top_field_first;
-#else
-#define percent 0.0
-#define enable_480i 1.0
-#define top_field_first 0.0
-#endif
-
 /*
    Interlacing
    Author: hunterk
@@ -19,6 +6,10 @@ uniform float top_field_first;
    Note: This shader is designed to work with the typical interlaced output from an emulator, which displays both even and odd fields twice.
    This shader will un-weave the image, resulting in a standard, alternating-field interlacing.
 */
+
+#pragma parameter percent "Interlacing Scanline Bright %" 0.0 0.0 1.0 0.05
+#pragma parameter enable_480i "Enable 480i Mode" 1.0 0.0 1.0 1.0
+#pragma parameter top_field_first "Top Field First Enable" 0.0 0.0 1.0 1.0
 
 #if defined(VERTEX)
 
@@ -124,6 +115,17 @@ uniform int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float percent;
+uniform COMPAT_PRECISION float enable_480i;
+uniform COMPAT_PRECISION float top_field_first;
+#else
+#define percent 0.0
+#define enable_480i 1.0
+#define top_field_first 0.0
+#endif
+
 void main()
 {
     vec4 _res;

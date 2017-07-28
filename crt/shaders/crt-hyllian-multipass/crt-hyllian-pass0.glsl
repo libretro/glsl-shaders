@@ -1,22 +1,3 @@
-#pragma parameter SHARPNESS "CRT - Sharpness Hack" 1.0 1.0 5.0 1.0
-#pragma parameter CRT_ANTI_RINGING "CRT - Anti-Ringing" 0.8 0.0 1.0 0.1
-#pragma parameter InputGamma "CRT - Input gamma" 2.5 0.0 5.0 0.1
-#ifdef PARAMETER_UNIFORM
-uniform float SHARPNESS;
-uniform float CRT_ANTI_RINGING;
-uniform float InputGamma;
-#else
-#define SHARPNESS 1.0
-#define CRT_ANTI_RINGING 0.8 
-#define InputGamma 2.5
-#endif
-// END PARAMETERS //
-
-/* COMPATIBILITY
-   - HLSL compilers
-   - Cg   compilers
-*/
-
 /*
    Hyllian's CRT Shader - pass0
   
@@ -42,7 +23,11 @@ uniform float InputGamma;
 
 */
 
-#define GAMMA_IN(color)     pow(color, vec3(InputGamma, InputGamma, InputGamma))
+#pragma parameter SHARPNESS "CRT - Sharpness Hack" 1.0 1.0 5.0 1.0
+#pragma parameter CRT_ANTI_RINGING "CRT - Anti-Ringing" 0.8 0.0 1.0 0.1
+#pragma parameter InputGamma "CRT - Input gamma" 2.5 0.0 5.0 0.1
+
+#define GAMMA_IN(color)     pow(color, vec4(InputGamma, InputGamma, InputGamma, InputGamma))
 
 // Horizontal cubic filter.
 
@@ -56,19 +41,7 @@ uniform float InputGamma;
 //    B = 0.2620, C = 0.3690  =>  Robidoux Sharp filter.
 //    B = 0.36, C = 0.28  =>  My best config for ringing elimination in pixel art (Hyllian).
 
-
 // For more info, see: http://www.imagemagick.org/Usage/img_diagrams/cubic_survey.gif
-
-// Change these params to configure the horizontal filter.
-const  float  B =  0.0; 
-const  float  C =  0.5;  
-
-const  mat4 invX = mat4(                          (-B - 6.0*C)/6.0,   (12.0 - 9.0*B - 6.0*C)/6.0,  -(12.0 - 9.0*B - 6.0*C)/6.0,   (B + 6.0*C)/6.0,
-                                              (3.0*B + 12.0*C)/6.0, (-18.0 + 12.0*B + 6.0*C)/6.0, (18.0 - 15.0*B - 12.0*C)/6.0,                -C,
-                                              (-3.0*B - 6.0*C)/6.0,                          0.0,          (3.0*B + 6.0*C)/6.0,               0.0,
-                                                             B/6.0,            (6.0 - 2.0*B)/6.0,                        B/6.0,               0.0);
-
-
 
 #define texCoord TEX0
 
@@ -143,12 +116,31 @@ uniform PRECISION vec2 InputSize;
 uniform sampler2D s_p;
 IN vec2 texCoord;
 
+#ifdef PARAMETER_UNIFORM
+uniform PRECISION float SHARPNESS;
+uniform PRECISION float CRT_ANTI_RINGING;
+uniform PRECISION float InputGamma;
+#else
+#define SHARPNESS 1.0
+#define CRT_ANTI_RINGING 0.8 
+#define InputGamma 2.5
+#endif
+// END PARAMETERS //
+
+// Change these params to configure the horizontal filter.
+const  float  B =  0.0; 
+const  float  C =  0.5;  
+
+const  mat4 invX = mat4(                          (-B - 6.0*C)/6.0,   (12.0 - 9.0*B - 6.0*C)/6.0,  -(12.0 - 9.0*B - 6.0*C)/6.0,   (B + 6.0*C)/6.0,
+                                              (3.0*B + 12.0*C)/6.0, (-18.0 + 12.0*B + 6.0*C)/6.0, (18.0 - 15.0*B - 12.0*C)/6.0,                -C,
+                                              (-3.0*B - 6.0*C)/6.0,                          0.0,          (3.0*B + 6.0*C)/6.0,               0.0,
+                                                             B/6.0,            (6.0 - 2.0*B)/6.0,                        B/6.0,               0.0);
 
 void main()
 {
     vec2 texture_size = vec2(SHARPNESS*TextureSize.x, TextureSize.y);
 
-    vec3 color;
+    vec4 color;
     vec2 dx = vec2(1.0/texture_size.x, 0.0);
     vec2 dy = vec2(0.0, 1.0/texture_size.y);
     vec2 pix_coord = texCoord*texture_size+vec2(-0.5,0.0);
@@ -157,16 +149,16 @@ void main()
 
     vec2 fp = fract(pix_coord);
 
-    vec3 c10 = GAMMA_IN(tex2D(s_p, tc     - dx).xyz);
-    vec3 c11 = GAMMA_IN(tex2D(s_p, tc         ).xyz);
-    vec3 c12 = GAMMA_IN(tex2D(s_p, tc     + dx).xyz);
-    vec3 c13 = GAMMA_IN(tex2D(s_p, tc + 2.0*dx).xyz);
+    vec4 c10 = GAMMA_IN(tex2D(s_p, tc     - dx).xyzw);
+    vec4 c11 = GAMMA_IN(tex2D(s_p, tc         ).xyzw);
+    vec4 c12 = GAMMA_IN(tex2D(s_p, tc     + dx).xyzw);
+    vec4 c13 = GAMMA_IN(tex2D(s_p, tc + 2.0*dx).xyzw);
 
     //  Get min/max samples
-    vec3 min_sample = min(c11,c12);
-    vec3 max_sample = max(c11,c12);
+    vec4 min_sample = min(c11,c12);
+    vec4 max_sample = max(c11,c12);
 
-    mat4x3 color_matrix = mat4x3(c10, c11, c12, c13);
+    mat4 color_matrix = mat4(c10, c11, c12, c13);
 
     vec4 lobes = vec4(fp.x*fp.x*fp.x, fp.x*fp.x, fp.x, 1.0);
 
@@ -174,10 +166,10 @@ void main()
     color         = color_matrix * invX_Px;
 
     // Anti-ringing
-    vec3 aux = color;
+    vec4 aux = color;
     color = clamp(color, min_sample, max_sample);
     color = mix(aux, color, CRT_ANTI_RINGING);
 
-    FragColor =  vec4(color, 1.0);
+    FragColor =  vec4(color);
 }
 #endif
