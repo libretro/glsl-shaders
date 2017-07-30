@@ -10,7 +10,7 @@ filter_linear1 = "false"
 scale_type1 = "viewport"
 scale1 = "1.0"
 
-shader2 = "shaders/color/psp-color.glsl"
+shader2 = "shaders/color/palm-color.glsl"
 filter_linear2 = "false"
 scale_type2 = "source"
 scale2 = "1.0"

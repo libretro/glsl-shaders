@@ -6,9 +6,23 @@
 */
 // Shader that replicates the LCD dynamics from a GameBoy Advance
 
-// Parameter lines go here:
-#pragma parameter target_gamma "Darken Intensity" 2.9 1.0 2.9 0.05
+// Compatibility #ifdefs needed for parameters
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
 
+// Parameter lines go here:
+#pragma parameter darken_screen "Darken Intensity" 1.0 0.0 1.0 0.05
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float darken_screen;
+#else
+#define darken_screen 1.0
+#endif
+
+#define target_gamma 1.45
 #define display_gamma 1.45
 #define sat 1.0
 #define lum 1.0
@@ -104,16 +118,9 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float target_gamma;
-#else
-#define target_gamma 2.9
-#endif
-
 void main()
 {
-   vec4 screen = pow(texture(Source, vTexCoord), vec4(target_gamma)).rgba;
+   vec4 screen = pow(texture(Source, vTexCoord), vec4(target_gamma + (darken_screen * 1.7))).rgba;
    vec4 avglum = vec4(0.5);
    screen = mix(screen, avglum, (1.0 - contrast));
    

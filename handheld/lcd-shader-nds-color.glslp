@@ -1,0 +1,31 @@
+shaders = 5
+shader0 = shaders/lcd-shader/lcd-pass-0.glsl
+shader1 = shaders/lcd-shader/lcd-pass-1.glsl
+shader2 = shaders/lcd-shader/lcd-pass-2.glsl
+shader3 = shaders/lcd-shader/lcd-pass-3.glsl
+shader4 = shaders/color/nds-color.glsl
+
+scale_type0 = viewport
+scale0 = 1
+
+scale_type1 = source
+scale1 = 1
+
+scale_type2 = source
+scale2 = 1
+
+scale_type3 = source
+scale3 = 1
+
+scale_type4 = source
+scale4 = 1
+
+filter_linear0 = false
+filter_linear1 = false
+filter_linear2 = false
+filter_linear3 = false
+filter_linear4 = false
+
+textures = BACKGROUND
+BACKGROUND = shaders/lcd-shader/background.png
+BACKGROUND_linear = true
