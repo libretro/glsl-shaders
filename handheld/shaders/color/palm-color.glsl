@@ -4,22 +4,13 @@
    Author: hunterk
    License: Public domain
 */
-// Shader that replicates the LCD dynamics from a GameBoy Advance
+// Shader that replicates the LCD dynamics from Palm OS Phones
 
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
 #else
 #define COMPAT_PRECISION
-#endif
-
-// Parameter lines go here:
-#pragma parameter darken_screen "Darken Screen" 0.5 0.0 2.0 0.05
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float darken_screen;
-#else
-#define darken_screen 0.6
 #endif
 
 #define target_gamma 2.2
@@ -30,15 +21,15 @@ uniform COMPAT_PRECISION float darken_screen;
 #define blr 0.0
 #define blg 0.0
 #define blb 0.0
-#define r 0.82
-#define g 0.67
-#define b 0.73
-#define rg 0.09
-#define rb 0.16
-#define gr 0.24
-#define gb 0.11
+#define r 0.745
+#define g 0.69
+#define b 0.775
+#define rg 0.06
+#define rb 0.085
+#define gr 0.315
+#define gb 0.14
 #define br -0.06
-#define bg 0.24
+#define bg 0.25
 #define overscan_percent_x 0.0
 #define overscan_percent_y 0.0
 
@@ -120,7 +111,7 @@ COMPAT_VARYING vec4 TEX0;
 
 void main()
 {
-   vec4 screen = pow(texture(Source, vTexCoord), vec4(target_gamma + darken_screen)).rgba;
+   vec4 screen = pow(texture(Source, vTexCoord), vec4(target_gamma)).rgba;
    vec4 avglum = vec4(0.5);
    screen = mix(screen, avglum, (1.0 - contrast));
    

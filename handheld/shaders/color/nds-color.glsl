@@ -6,25 +6,30 @@
 */
 // Shader that replicates the LCD dynamics from a Nintendo DS Phat
 
-// Parameter lines go here:
-#pragma parameter target_gamma "Gamma Mode" 2.0 2.0 2.4 0.2
+// Compatibility #ifdefs needed for parameters
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
 
-#define display_gamma 2.20
-#define sat 1.01
+#define target_gamma 2.2
+#define display_gamma 2.2
+#define sat 1.0
 #define lum 1.0
 #define contrast 1.0
 #define blr 0.0
 #define blg 0.0
 #define blb 0.0
-#define r 0.74
-#define g 0.63
-#define b 0.74
-#define rg 0.10
+#define r 0.81
+#define g 0.665
+#define b 0.80
+#define rg 0.09
 #define rb 0.09
 #define gr 0.26
 #define gb 0.11
-#define br 0.0
-#define bg 0.27
+#define br -0.07
+#define bg 0.245
 #define overscan_percent_x 0.0
 #define overscan_percent_y 0.0
 
@@ -103,13 +108,6 @@ COMPAT_VARYING vec4 TEX0;
 #define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
-
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float target_gamma;
-#else
-#define target_gamma 2.0
-#endif
 
 void main()
 {

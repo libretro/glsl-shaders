@@ -1,8 +1,8 @@
 shaders = 4
-shader0 = lcd-pass-0.glsl
-shader1 = lcd-pass-1.glsl
-shader2 = lcd-pass-2.glsl
-shader3 = lcd-pass-3.glsl
+shader0 = shaders/lcd-shader/lcd-pass-0.glsl
+shader1 = shaders/lcd-shader/lcd-pass-1.glsl
+shader2 = shaders/lcd-shader/lcd-pass-2.glsl
+shader3 = shaders/lcd-shader/lcd-pass-3.glsl
 
 scale_type0 = viewport
 scale0 = 1
@@ -22,5 +22,5 @@ filter_linear2 = false
 filter_linear3 = false
 
 textures = BACKGROUND
-BACKGROUND = background.png
+BACKGROUND = shaders/lcd-shader/background.png
 BACKGROUND_linear = true
