@@ -1,0 +1,3 @@
+shaders = 1
+
+shader0 = resources/shiny-iterations.glsl
