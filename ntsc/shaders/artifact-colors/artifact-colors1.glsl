@@ -178,6 +178,12 @@ vec2 Oscillator(float Fo, float Fs, float N)
     return vec2(cos(phase),sin(phase));
 }
 
+// use this to avoid needing float framebuffers
+vec4 remap(vec4 c)
+{
+	return (c + vec4(0.07));
+}
+
 void main()
 {
     float Fs = SourceSize.x;
@@ -207,6 +213,7 @@ void main()
     //Shift IQ signal down from Fcol to DC 
     vec2 iq_sig_mix = cmul(vec2(iq_sig, 0.), cOsc);
     
-   FragColor = vec4(y_sig, iq_sig_mix, 0.);
+   vec4 final = vec4(y_sig, iq_sig_mix, 0.);
+	FragColor = remap(final);
 } 
 #endif

@@ -147,10 +147,15 @@ mat2 rotate(float a)
                 -sin(a), cos(a));
 }
 
+vec4 remap(vec4 c)
+{
+	return c - vec4(0.07);
+}
+
 //Non-normalized texture sampling.
 vec4 sample2D(sampler2D tex,vec2 resolution, vec2 uv)
 {
-    return texture(tex, uv / resolution);
+    return remap(texture(tex, uv / resolution));
 }
 
 float sinc(float x)
