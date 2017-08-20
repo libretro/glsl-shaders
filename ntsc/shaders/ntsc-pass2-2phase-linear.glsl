@@ -262,7 +262,7 @@ void main()
 	float offset;
 	vec3 sums;
 	
-	#define macro_loopz(c) offset = float(c) - 1.; \
+	#define macro_loopz(c) offset = float(c) - 1.0; \
 		sums = fetch_offset(offset - 32., one_x) + fetch_offset(32. - offset, one_x); \
 		signal += sums * vec3(luma_filter##c, chroma_filter##c, chroma_filter##c);
 
