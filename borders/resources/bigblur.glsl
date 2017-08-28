@@ -5,12 +5,17 @@
 #pragma parameter aspect_x "Aspect Ratio Numerator" 64.0 1.0 256. 1.0
 #pragma parameter aspect_y "Aspect Ratio Denominator" 49.0 1.0 256. 1.0
 #pragma parameter ZOOM "Border Zoom" 1.5 0.5 10 0.5
+#pragma parameter BRIGHTNESS "Border Brightness Mod" 0.0 -1.0 1.0 0.05
 #pragma parameter integer_scale "Force Integer Scaling" 1.0 0.0 1.0 1.0
 #pragma parameter overscale "Integer Overscale" 0.0 0.0 1.0 1.0
 #pragma parameter scanline_toggle "Scanline Toggle" 0.0 0.0 1.0 1.0
 #pragma parameter interp_toggle "Sharpen Linear Scaling" 0.0 0.0 1.0 1.0
 #pragma parameter THICKNESS "Scanline Thickness" 2.0 1.0 12.0 1.0
 #pragma parameter DARKNESS "Scanline Darkness" 0.35 0.0 1.0 0.05
+#pragma parameter OS_MASK_TOP "OS Mask Top" 0.0 0.0 1.0 0.005
+#pragma parameter OS_MASK_BOTTOM "OS Mask Bottom" 0.0 0.0 1.0 0.005
+#pragma parameter OS_MASK_LEFT "OS Mask Left" 0.0 0.0 1.0 0.005
+#pragma parameter OS_MASK_RIGHT "OS Mask Right" 0.0 0.0 1.0 0.005
 #ifndef PARAMETER_UNIFORM
 #define aspect_x 64.0
 #define aspect_y 49.0
@@ -21,6 +26,10 @@
 #define THICKNESS 2.0
 #define DARKNESS 0.35
 #define interp_toggle 0.0
+#define OS_MASK_TOP 0.0
+#define OS_MASK_BOTTOM 0.0
+#define OS_MASK_LEFT 0.0
+#define OS_MASK_RIGHT 0.0
 #endif
 
 #if defined(VERTEX)
@@ -65,12 +74,17 @@ uniform COMPAT_PRECISION vec2 InputSize;
 uniform COMPAT_PRECISION float aspect_x;
 uniform COMPAT_PRECISION float aspect_y;
 uniform COMPAT_PRECISION float ZOOM;
+uniform COMPAT_PRECISION float BRIGHTNESS;
 uniform COMPAT_PRECISION float integer_scale;
 uniform COMPAT_PRECISION float overscale;
 uniform COMPAT_PRECISION float scanline_toggle;
 uniform COMPAT_PRECISION float THICKNESS;
 uniform COMPAT_PRECISION float DARKNESS;
 uniform COMPAT_PRECISION float interp_toggle;
+uniform COMPAT_PRECISION float OS_MASK_TOP;
+uniform COMPAT_PRECISION float OS_MASK_BOTTOM;
+uniform COMPAT_PRECISION float OS_MASK_LEFT;
+uniform COMPAT_PRECISION float OS_MASK_RIGHT;
 #endif
 
 void main()
@@ -134,12 +148,17 @@ COMPAT_VARYING vec2 tex_border;
 uniform COMPAT_PRECISION float aspect_x;
 uniform COMPAT_PRECISION float aspect_y;
 uniform COMPAT_PRECISION float ZOOM;
+uniform COMPAT_PRECISION float BRIGHTNESS;
 uniform COMPAT_PRECISION float integer_scale;
 uniform COMPAT_PRECISION float overscale;
 uniform COMPAT_PRECISION float scanline_toggle;
 uniform COMPAT_PRECISION float THICKNESS;
 uniform COMPAT_PRECISION float DARKNESS;
 uniform COMPAT_PRECISION float interp_toggle;
+uniform COMPAT_PRECISION float OS_MASK_TOP;
+uniform COMPAT_PRECISION float OS_MASK_BOTTOM;
+uniform COMPAT_PRECISION float OS_MASK_LEFT;
+uniform COMPAT_PRECISION float OS_MASK_RIGHT;
 #endif
 
 vec4 scanlines(vec4 frame, vec2 coord, vec2 texture_size, vec2
@@ -169,12 +188,14 @@ vec4 border(vec2 texture_size, vec2 video_size, vec2 output_size,
 	float frame_count, vec2 tex, sampler2D decal, vec2 tex_border, sampler2D ORIG)
 {
 	vec4 effect = COMPAT_TEXTURE(decal, tex_border);
+	effect += vec4(vec3(BRIGHTNESS), effect.w);
 	
 	vec2 coord = (interp_toggle < 0.5) ? tex : interp_coord(tex, texture_size);
 	vec4 frame = COMPAT_TEXTURE(ORIG, coord);
 	frame = scanlines(frame, tex, texture_size, video_size, output_size);
 	vec2 fragcoord = (tex.xy * (TextureSize.xy/InputSize.xy));
-	if (fragcoord.x < 1.0 && fragcoord.x > 0.0 && fragcoord.y < 1.0 && fragcoord.y > 0.0)
+	if (fragcoord.x < 1.0 - OS_MASK_RIGHT && fragcoord.x > 0.0 + OS_MASK_LEFT &&
+		fragcoord.y < 1.0 - OS_MASK_BOTTOM && fragcoord.y > 0.0 + OS_MASK_TOP)
 		return frame;
 	
 	else return effect;

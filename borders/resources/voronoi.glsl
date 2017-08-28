@@ -10,6 +10,10 @@
 #pragma parameter interp_toggle "Sharpen Linear Scaling" 0.0 0.0 1.0 1.0
 #pragma parameter THICKNESS "Scanline Thickness" 2.0 1.0 12.0 1.0
 #pragma parameter DARKNESS "Scanline Darkness" 0.35 0.0 1.0 0.05
+#pragma parameter OS_MASK_TOP "OS Mask Top" 0.0 0.0 1.0 0.005
+#pragma parameter OS_MASK_BOTTOM "OS Mask Bottom" 0.0 0.0 1.0 0.005
+#pragma parameter OS_MASK_LEFT "OS Mask Left" 0.0 0.0 1.0 0.005
+#pragma parameter OS_MASK_RIGHT "OS Mask Right" 0.0 0.0 1.0 0.005
 #ifndef PARAMETER_UNIFORM
 #define aspect_x 64.0
 #define aspect_y 49.0
@@ -19,6 +23,10 @@
 #define THICKNESS 2.0
 #define DARKNESS 0.35
 #define interp_toggle 0.0
+#define OS_MASK_TOP 0.0
+#define OS_MASK_BOTTOM 0.0
+#define OS_MASK_LEFT 0.0
+#define OS_MASK_RIGHT 0.0
 #endif
 
 #if defined(VERTEX)
@@ -68,6 +76,10 @@ uniform COMPAT_PRECISION float scanline_toggle;
 uniform COMPAT_PRECISION float THICKNESS;
 uniform COMPAT_PRECISION float DARKNESS;
 uniform COMPAT_PRECISION float interp_toggle;
+uniform COMPAT_PRECISION float OS_MASK_TOP;
+uniform COMPAT_PRECISION float OS_MASK_BOTTOM;
+uniform COMPAT_PRECISION float OS_MASK_LEFT;
+uniform COMPAT_PRECISION float OS_MASK_RIGHT;
 #endif
 
 void main()
@@ -133,6 +145,10 @@ uniform COMPAT_PRECISION float scanline_toggle;
 uniform COMPAT_PRECISION float THICKNESS;
 uniform COMPAT_PRECISION float DARKNESS;
 uniform COMPAT_PRECISION float interp_toggle;
+uniform COMPAT_PRECISION float OS_MASK_TOP;
+uniform COMPAT_PRECISION float OS_MASK_BOTTOM;
+uniform COMPAT_PRECISION float OS_MASK_LEFT;
+uniform COMPAT_PRECISION float OS_MASK_RIGHT;
 #endif
 
 float hash1( float n )

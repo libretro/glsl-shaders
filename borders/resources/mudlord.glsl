@@ -18,6 +18,10 @@
 #pragma parameter R "Red" 0.0 0.0 1.0 0.1
 #pragma parameter G "Green" 0.3 0.0 1.0 0.1
 #pragma parameter B "Blue" 0.5 0.0 1.0 0.1
+#pragma parameter OS_MASK_TOP "OS Mask Top" 0.0 0.0 1.0 0.005
+#pragma parameter OS_MASK_BOTTOM "OS Mask Bottom" 0.0 0.0 1.0 0.005
+#pragma parameter OS_MASK_LEFT "OS Mask Left" 0.0 0.0 1.0 0.005
+#pragma parameter OS_MASK_RIGHT "OS Mask Right" 0.0 0.0 1.0 0.005
 #ifndef PARAMETER_UNIFORM
 #define aspect_x 64.0
 #define aspect_y 49.0
@@ -36,6 +40,10 @@
 #define R 0.0
 #define G 0.3
 #define B 0.5
+#define OS_MASK_TOP 0.0
+#define OS_MASK_BOTTOM 0.0
+#define OS_MASK_LEFT 0.0
+#define OS_MASK_RIGHT 0.0
 #endif
 
 #if defined(VERTEX)
@@ -94,6 +102,10 @@ uniform COMPAT_PRECISION float PARAM6;
 uniform COMPAT_PRECISION float R;
 uniform COMPAT_PRECISION float G;
 uniform COMPAT_PRECISION float B;
+uniform COMPAT_PRECISION float OS_MASK_TOP;
+uniform COMPAT_PRECISION float OS_MASK_BOTTOM;
+uniform COMPAT_PRECISION float OS_MASK_LEFT;
+uniform COMPAT_PRECISION float OS_MASK_RIGHT;
 #endif
 
 void main()
@@ -168,6 +180,10 @@ uniform COMPAT_PRECISION float PARAM6;
 uniform COMPAT_PRECISION float R;
 uniform COMPAT_PRECISION float G;
 uniform COMPAT_PRECISION float B;
+uniform COMPAT_PRECISION float OS_MASK_TOP;
+uniform COMPAT_PRECISION float OS_MASK_BOTTOM;
+uniform COMPAT_PRECISION float OS_MASK_LEFT;
+uniform COMPAT_PRECISION float OS_MASK_RIGHT;
 #endif
 
 vec4 mudscape(vec2 texture_size, float frame_count, vec2 uv)
