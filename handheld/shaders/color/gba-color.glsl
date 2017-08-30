@@ -19,7 +19,7 @@
 // All parameter floats need to have COMPAT_PRECISION in front of them
 uniform COMPAT_PRECISION float darken_screen;
 #else
-#define darken_screen 0.6
+#define darken_screen 0.5
 #endif
 
 #define target_gamma 2.2
@@ -30,14 +30,14 @@ uniform COMPAT_PRECISION float darken_screen;
 #define blr 0.0
 #define blg 0.0
 #define blb 0.0
-#define r 0.82
+#define r 0.81
 #define g 0.67
 #define b 0.73
 #define rg 0.09
-#define rb 0.16
-#define gr 0.24
-#define gb 0.11
-#define br -0.06
+#define rb 0.15
+#define gr 0.23
+#define gb 0.12
+#define br -0.04
 #define bg 0.24
 #define overscan_percent_x 0.0
 #define overscan_percent_y 0.0
