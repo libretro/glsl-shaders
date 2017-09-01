@@ -71,8 +71,8 @@ OUT vec4 color;
 OUT vec2 texCoord;
 
 uniform mat4 MVPMatrix;
-uniform int  FrameDirection;
-uniform int  FrameCount;
+uniform PRECISION int FrameDirection;
+uniform PRECISION int FrameCount;
 uniform PRECISION vec2 OutputSize;
 uniform PRECISION vec2 TextureSize;
 uniform PRECISION vec2 InputSize;
@@ -108,8 +108,8 @@ precision mediump float;
 #define PRECISION
 #endif
 
-uniform COMPAT_PRECISION int FrameDirection;
-uniform COMPAT_PRECISION int FrameCount;
+uniform PRECISION int FrameDirection;
+uniform PRECISION int FrameCount;
 uniform PRECISION vec2 OutputSize;
 uniform PRECISION vec2 TextureSize;
 uniform PRECISION vec2 InputSize;
