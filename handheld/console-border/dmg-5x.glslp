@@ -1,30 +1,30 @@
 shaders = 6
 
-shader0 = ../shaders/gameboy/shader-files/gb-pass0.glsl
+shader0 = shader-files/gb-pass0.glsl
 filter_linear0 = false
 scale_type0 = viewport
 scale0 = 1.0
 alias0 = "PASS0"
 
-shader1 = ../shaders/gameboy/shader-files/gb-pass1.glsl
+shader1 = shader-files/gb-pass1.glsl
 filter_linear1 = false
 scale_type1 = source
 scale1 = 1.0
 alias1 = "PASS1"
 
-shader2 = ../shaders/gameboy/shader-files/gb-pass2.glsl
+shader2 = shader-files/gb-pass2.glsl
 filter_linear2 = false
 scale_type2 = source
 scale2 = 1.0
 alias2 = "PASS2"
 
-shader3 = ../shaders/gameboy/shader-files/gb-pass3.glsl
+shader3 = shader-files/gb-pass3.glsl
 filter_linear3 = false
 scale_type3 = source
 scale3 = 1.0
 alias3 = "PASS3"
 
-shader4 = ../shaders/gameboy/shader-files/gb-pass4.glsl
+shader4 = shader-files/gb-pass4.glsl
 filter_linear4 = false
 scale_type4 = viewport
 scale4 = 1.0
