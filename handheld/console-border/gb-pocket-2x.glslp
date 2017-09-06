@@ -35,11 +35,17 @@ filter_linear5 = true
 scale_type5 = source
 scale5 = 1.0
 
-parameters = "video_scale;SCALE;OUT_X;OUT_Y"
+parameters = "video_scale;SCALE;OUT_X;OUT_Y;baseline_alpha;grey_balance;contrast;screen_light;pixel_opacity"
 video_scale = "3.0"
 SCALE = "0.6667"
 OUT_X = "1600.0"
 OUT_Y = "800.0"
+baseline_alpha = "0.03"
+grey_balance = "3.5"
+contrast = "0.8"
+screen_light = "0.9"
+pixel_opacity = "0.95"
+shadow_opacity = "0.9"
 
 textures = COLOR_PALETTE;BACKGROUND;BORDER
 COLOR_PALETTE = resources/pocket-palette.png

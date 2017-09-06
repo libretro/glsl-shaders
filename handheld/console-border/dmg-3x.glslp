@@ -33,14 +33,11 @@ alias4 = "PASS4"
 shader5 = shader-files/gb-pass-5.glsl
 filter_linear5 = true
 
-parameters = "video_scale;SCALE;OUT_X;OUT_Y;adjacent_texel_alpha_blending;pixel_opacity;shadow_opacity"
+parameters = "video_scale;SCALE;OUT_X;OUT_Y"
 video_scale = "3.0"
 SCALE = "1.0"
 OUT_X = "2400.0"
 OUT_Y = "1200.0"
-adjacent_texel_alpha_blending = "0.42"
-pixel_opacity = "0.80"
-shadow_opacity = "0.80"
 
 textures = COLOR_PALETTE;BACKGROUND;BORDER
 COLOR_PALETTE = resources/dmg-palette.png
