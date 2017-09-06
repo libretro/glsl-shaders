@@ -25,17 +25,14 @@
 
 // The alpha value of dots in their "off" state
 // Does not affect the border region of the screen - [0, 1]
-#pragma parameter baseline_alpha "Baseline Alpha" 0.10 0.0 1.0 0.01
+#pragma parameter baseline_alpha "Baseline Alpha" 0.05 0.0 1.0 0.01
 
 // Fine-tune the balance between the different shades of grey
-#pragma parameter grey_balance "Grey Balance" 3.0 2.0 4.0 0.1
+#pragma parameter grey_balance "Grey Balance" 2.6 2.0 4.0 0.1
 
 // Simulate response time
 // Higher values result in longer color transition periods - [0, 1]
-#pragma parameter response_time "LCD Response Time" 0.333 0.0 0.777 0.111
-
-// Change scaling to enable use in console-border shaders
-#pragma parameter console_border_enable "Console-Border Enable" 0.0 0.0 1.0 1.0
+#pragma parameter response_time "LCD Response Time" 0.20 0.0 0.777 0.111
 
 // Set video scale when used in console-border shaders
 #pragma parameter video_scale "Video Scale" 3.0 3.0 5.0 1.0
@@ -81,13 +78,11 @@ uniform COMPAT_PRECISION vec2 InputSize;
 uniform COMPAT_PRECISION float baseline_alpha;
 uniform COMPAT_PRECISION float grey_balance;
 uniform COMPAT_PRECISION float response_time;
-uniform COMPAT_PRECISION float console_border_enable;
 uniform COMPAT_PRECISION float video_scale;
 #else
 #define baseline_alpha 0.10
 #define grey_balance 3.0
 #define response_time 0.333
-#define console_border_enable 0.0
 #define video_scale 3.0
 #endif
 
@@ -110,15 +105,12 @@ uniform COMPAT_PRECISION float video_scale;
 
 void main()
 {
-	float video_scale_factor = floor(outsize.y / InputSize.y);
-	if (console_border_enable > 0.5) video_scale_factor = video_scale;
-	vec2 scaled_video_out = (InputSize.xy * vec2(video_scale_factor));
+	vec2 scaled_video_out = (InputSize.xy * vec2(video_scale));
     // Remaps position to integer scaled output
     gl_Position = MVPMatrix * VertexCoord / vec4( vec2(outsize.xy / scaled_video_out), 1.0, 1.0 );
-    COL0 = COLOR;
     TEX0.xy = TexCoord.xy + half_pixel;
     dot_size = SourceSize.zw;
-    one_texel = 1.0 / (SourceSize.xy * video_scale_factor);
+    one_texel = 1.0 / (SourceSize.xy * video_scale);
 }
 
 #elif defined(FRAGMENT)

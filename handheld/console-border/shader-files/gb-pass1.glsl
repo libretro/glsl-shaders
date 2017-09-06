@@ -28,7 +28,7 @@
 #pragma parameter blending_mode "Blending Mode" 0.0 0.0 1.0 1.0            
 
 // The amount of alpha swapped between neighboring texels
-#pragma parameter adjacent_texel_alpha_blending "Neighbor Blending" 0.1755 0.0 1.0 0.05
+#pragma parameter adjacent_texel_alpha_blending "Neighbor Blending" 0.38 0.0 1.0 0.05
 
 #if defined(VERTEX)
 ////////////////////////////////////////////////////////////////////////////////
