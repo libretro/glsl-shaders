@@ -4550,6 +4550,7 @@ out vec4 FragColor;
 precision highp float;
 #else
 precision mediump float;
+precision mediump int;
 #endif
 #define COMPAT_PRECISION mediump
 #else
