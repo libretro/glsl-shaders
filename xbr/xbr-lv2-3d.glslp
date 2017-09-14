@@ -1,0 +1,4 @@
+shaders = 1
+
+shader0 = shaders/xbr-lv2-3d.glsl
+filter_linear0 = false
