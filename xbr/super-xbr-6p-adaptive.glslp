@@ -38,3 +38,6 @@ scale_y5 = "1.000000"
 shader6 = "shaders/super-xbr/custom-jinc2-sharper.glsl"
 filter_linear6 = false
 
+parameters = "MODE;XBR_EDGE_STR"
+MODE = "2.0"
+XBR_EDGE_STR = "2.0"

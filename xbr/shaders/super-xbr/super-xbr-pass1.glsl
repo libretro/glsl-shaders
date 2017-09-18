@@ -28,16 +28,6 @@
 
 #define mul(a,b) (b*a)
 
-#define wp1  1.0
-#define wp2  0.0
-#define wp3  0.0
-//#define wp4  0.0
-//#define wp5  0.0
-#define wp6  0.0
-
-#define weight1 (XBR_WEIGHT*1.75068/10.0)
-#define weight2 (XBR_WEIGHT*1.29633/10.0/2.0)
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -121,12 +111,16 @@ COMPAT_VARYING vec4 TEX0;
 uniform COMPAT_PRECISION float XBR_EDGE_STR;
 uniform COMPAT_PRECISION float XBR_WEIGHT;
 uniform COMPAT_PRECISION float XBR_ANTI_RINGING;
-uniform COMPAT_PRECISION float DETAILS;
+uniform COMPAT_PRECISION float MODE;
+uniform COMPAT_PRECISION float XBR_EDGE_SHP;
+uniform COMPAT_PRECISION float XBR_TEXTURE_SHP;
 #else
 #define XBR_EDGE_STR 0.6
 #define XBR_WEIGHT 1.0
 #define XBR_ANTI_RINGING 1.0
-#define DETAILS 0.0
+#define MODE 0.0
+#define XBR_EDGE_SHP 0.4
+#define XBR_TEXTURE_SHP 1.0
 #endif
 
 const vec3 Y = vec3(.2126, .7152, .0722);
@@ -151,21 +145,13 @@ float df(float A, float B)
                               P2
 */
 
-float d_wd(float b0, float b1, float c0, float c1, float c2, float d0, float d1, float d2, float d3, float e1, float e2, float e3, float f2, float f3)
+float d_wd(float wp1, float wp2, float wp3, float wp4, float wp5, float wp6, float b0, float b1, float c0, float c1, float c2, float d0, float d1, float d2, float d3, float e1, float e2, float e3, float f2, float f3)
 {
-	float wp4 = 0.0;
-	float wp5 = 0.0;
-	if(DETAILS > 0.5)
-	{
-		wp4 =  1.0;
-		wp5 = -1.0;
-	}
 	return (wp1*(df(c1,c2) + df(c1,c0) + df(e2,e1) + df(e2,e3)) + wp2*(df(d2,d3) + df(d0,d1)) + wp3*(df(d1,d3) + df(d0,d2)) + wp4*df(d1,d2) + wp5*(df(c0,c2) + df(e1,e3)) + wp6*(df(b0,b1) + df(f2,f3)));
 }
 
-float hv_wd(float i1, float i2, float i3, float i4, float e1, float e2, float e3, float e4)
+float hv_wd(float wp1, float wp2, float wp3, float wp4, float wp5, float wp6, float i1, float i2, float i3, float i4, float e1, float e2, float e3, float e4)
 {
-	float wp4 = (DETAILS > 0.5) ? 1.0 : 0.0;
 	return ( wp4*(df(i1,i2)+df(i3,i4)) + wp1*(df(i1,e1)+df(i2,e2)+df(i3,e3)+df(i4,e4)) + wp3*(df(i1,e2)+df(i3,e4)+df(e1,i2)+df(e3,i4)));
 }
 
@@ -178,15 +164,62 @@ vec3 max4(vec3 a, vec3 b, vec3 c, vec3 d)
     return max(a, max(b, max(c, d)));
 }
 
+float max4float(float a, float b, float c, float d)
+{
+    return max(a, max(b, max(c, d)));
+}
+
 void main()
 {
-	//Skip pixels on wrong grid
-	vec2 fp = fract(vTexCoord*SourceSize.xy);
-	vec2 dir = fp - vec2(0.5,0.5);
- 	if ((dir.x*dir.y)>0.0){
-	FragColor = (fp.x>0.5) ? texture(Source, vTexCoord) : texture(Original, vTexCoord);
-	}else{
+// settings //
+	float wp1, wp2, wp3, wp4, wp5, wp6, weight1, weight2;
+	if (MODE == 1.0)
+	{
+		wp1	=	1.0;
+		wp2	=	0.0;
+		wp3	=	0.0;
+		wp4	=	1.0;
+		wp5	=	-1.0;
+		wp6	=	0.0;
 
+		weight1	=	(XBR_WEIGHT*1.75068/10.0);
+		weight2	=	(XBR_WEIGHT*1.29633/10.0/2.0);
+	}
+	else if (MODE == 2.0)
+	{
+		wp1	=	8.0;
+		wp2	=	0.0;
+		wp3	=	0.0;
+		wp4	=	0.0;
+		wp5	=	0.0;
+		wp6	=	0.0;
+
+		weight1	=	(1.75068/10.0);
+		weight2	=	(1.29633/10.0/2.0);
+	}
+	else
+	{
+		wp1	=	8.0;
+		wp2	=	0.0;
+		wp3	=	0.0;
+		wp4	=	0.0;
+		wp5	=	0.0;
+		wp6	=	0.0;
+
+		weight1	=	(XBR_WEIGHT*1.75068/10.0);
+		weight2	=	(XBR_WEIGHT*1.29633/10.0/2.0);
+	}
+// end settings //
+
+	//Skip pixels on wrong grid
+	vec2 fp = fract(vTexCoord.xy * SourceSize.xy);
+	vec2 dir = fp - vec2(0.5,0.5);
+ 	if ((dir.x*dir.y)>0.0)
+	{
+		FragColor = (fp.x>0.5) ? texture(Source, vTexCoord) : texture(Original, vTexCoord);
+	}
+	else
+	{
 	vec2 g1 = (fp.x>0.5) ? vec2(0.5/SourceSize.x, 0.0) : vec2(0.0, 0.5/SourceSize.y);
 	vec2 g2 = (fp.x>0.5) ? vec2(0.0, 0.5/SourceSize.y) : vec2(0.5/SourceSize.x, 0.0);
 
@@ -224,23 +257,41 @@ void main()
 	float f4 = RGBtoYUV( F4 ); float p3 = RGBtoYUV( P3 );
 
 	/* Calc edgeness in diagonal directions. */
-	float d_edge  = (d_wd( d, b, g, e, c, p2, h, f, p1, h5, i, f4, i5, i4 ) - d_wd( c, f4, b, f, i4, p0, e, i, p3, d, h, i5, g, h5 ));
+	float d_edge  = (d_wd( wp1, wp2, wp3, wp4, wp5, wp6, d, b, g, e, c, p2, h, f, p1, h5, i, f4, i5, i4 ) - d_wd( wp1, wp2, wp3, wp4, wp5, wp6, c, f4, b, f, i4, p0, e, i, p3, d, h, i5, g, h5 ));
 
 	/* Calc edgeness in horizontal/vertical directions. */
-	float hv_edge = (hv_wd(f, i, e, h, c, i5, b, h5) - hv_wd(e, f, h, i, d, f4, g, i4));
+	float hv_edge = (hv_wd(wp1, wp2, wp3, wp4, wp5, wp6, f, i, e, h, c, i5, b, h5) - hv_wd(wp1, wp2, wp3, wp4, wp5, wp6, e, f, h, i, d, f4, g, i4));
 
 	float limits = XBR_EDGE_STR + 0.000001;
 	float edge_strength = smoothstep(0.0, limits, abs(d_edge));
+	
+	vec4 w1, w2;
+	vec3 c3, c4;
+	if (MODE == 2.0)
+	{
+		float contrast = max(max4float(df(e,f),df(e,i),df(e,h),df(f,h)),max(df(f,i),df(h,i)))/(e+0.001);
 
-	/* Filter weights. Two taps only. */
-	vec4 w1 = vec4(-weight1, weight1+0.5, weight1+0.5, -weight1);
-	vec4 w2 = vec4(-weight2, weight2+0.25, weight2+0.25, -weight2);
+		float wgt1 = weight1*(smoothstep(0.0, 0.6, contrast)*XBR_EDGE_SHP + XBR_TEXTURE_SHP);
+		float wgt2 = weight2*(smoothstep(0.0, 0.6, contrast)*XBR_EDGE_SHP + XBR_TEXTURE_SHP);
+	
+		/* Filter weights. Two taps only. */
+		w1 = vec4(-wgt1, wgt1+ 0.5, wgt1+ 0.5, -wgt1);
+		w2 = vec4(-wgt2, wgt2+0.25, wgt2+0.25, -wgt2);
+		c3 = mul(w2, mat4x3(P0+2.0*(D+G)+P2, B+2.0*(E+H)+H5, C+2.0*(F+I)+I5, P1+2.0*(F4+I4)+P3))/3.0;
+        c4 = mul(w2, mat4x3(P0+2.0*(C+B)+P1, D+2.0*(F+E)+F4, G+2.0*(I+H)+I4, P2+2.0*(I5+H5)+P3))/3.0;
+	}
+	else
+	{
+		/* Filter weights. Two taps only. */
+		w1 = vec4(-weight1, weight1+0.5, weight1+0.5, -weight1);
+		w2 = vec4(-weight2, weight2+0.25, weight2+0.25, -weight2);
+		c3 = mul(w2, mat4x3(D+G, E+H, F+I, F4+I4));
+		c4 = mul(w2, mat4x3(C+B, F+E, I+H, I5+H5));
+	}
 
 	/* Filtering and normalization in four direction generating four colors. */
     vec3 c1 = mul(w1, mat4x3( P2,   H,   F,   P1 ));
     vec3 c2 = mul(w1, mat4x3( P0,   E,   I,   P3 ));
-	vec3 c3 = mul(w2, mat4x3(D+G, E+H, F+I, F4+I4));
-    vec3 c4 = mul(w2, mat4x3(C+B, F+E, I+H, I5+H5));
 
 	/* Smoothly blends the two strongest directions (one in diagonal and the other in vert/horiz direction). */
 	vec3 color =  mix(mix(c1, c2, step(0.0, d_edge)), mix(c3, c4, step(0.0, hv_edge)), 1. - edge_strength);
@@ -250,7 +301,7 @@ void main()
 	vec3 max_sample = max4( E, F, H, I ) - (1.-XBR_ANTI_RINGING)*mix((P2-H)*(F-P1), (P0-E)*(I-P3), step(0.0, d_edge));
 	color = clamp(color, min_sample, max_sample);
 	
-   FragColor = vec4(color, 1.0);
-   }
+	FragColor = vec4(color, 1.0);
+	}
 } 
 #endif
