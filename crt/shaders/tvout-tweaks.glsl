@@ -187,7 +187,7 @@ mat3 YIQ_to_RGB = mat3(1.0,0.9563,0.6210,
 vec3 tempColor=vec3(0.0,0.0,0.0);
 float	offset	= fract((TEX0.x * TextureSize.x) - 0.5);
    float oneT=1.0/TextureSize.x;
-   float oneI=1.0/TextureSize.x;
+   float oneI=1.0/InputSize.x;
 
    float X;
    vec3 c;
