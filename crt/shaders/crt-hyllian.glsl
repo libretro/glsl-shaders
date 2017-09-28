@@ -24,6 +24,7 @@
 */
 
 #pragma parameter PHOSPHOR "CRT - Phosphor ON/OFF" 1.0 0.0 1.0 1.0
+#pragma parameter VSCANLINES "CRT - Scanlines Direction" 0.0 0.0 1.0 1.0
 #pragma parameter InputGamma "CRT - Input gamma" 2.4 0.0 5.0 0.1
 #pragma parameter OutputGamma "CRT - Output Gamma" 2.2 0.0 5.0 0.1
 #pragma parameter SHARPNESS "CRT - Sharpness Hack" 1.0 1.0 5.0 1.0
@@ -128,6 +129,7 @@ IN vec2 texCoord;
 
 #ifdef PARAMETER_UNIFORM
 uniform PRECISION float PHOSPHOR;
+uniform PRECISION float VSCANLINES;
 uniform PRECISION float InputGamma;
 uniform PRECISION float OutputGamma;
 uniform PRECISION float SHARPNESS;
@@ -141,6 +143,7 @@ uniform PRECISION float BEAM_MAX_WIDTH;
 uniform PRECISION float CRT_ANTI_RINGING;
 #else
 #define PHOSPHOR 1.0
+#define VSCANLINES 0.0
 #define InputGamma 2.4
 #define OutputGamma 2.2
 #define SHARPNESS 1.0
@@ -169,13 +172,14 @@ void main()
     vec2 texture_size = vec2(SHARPNESS*TextureSize.x, TextureSize.y);
 
     vec4 color;
-    vec2 dx = vec2(1.0/texture_size.x, 0.0);
-    vec2 dy = vec2(0.0, 1.0/texture_size.y);
+    vec2 dx = mix(vec2(1.0/texture_size.x, 0.0), vec2(0.0, 1.0/texture_size.y), VSCANLINES);
+    vec2 dy = mix(vec2(0.0, 1.0/texture_size.y), vec2(1.0/texture_size.x, 0.0), VSCANLINES);
+
     vec2 pix_coord = texCoord*texture_size+vec2(-0.5,0.5);
 
-    vec2 tc = (floor(pix_coord)+vec2(0.5,0.5))/texture_size;
+    vec2 tc = mix((floor(pix_coord) + vec2(0.5, 0.5))/texture_size, (floor(pix_coord) + vec2(1.0, -0.5))/texture_size, VSCANLINES);
 
-    vec2 fp = fract(pix_coord);
+    vec2 fp = mix(fract(pix_coord), fract(pix_coord.yx), VSCANLINES);
 
     vec4 c00 = GAMMA_IN(tex2D(s_p, tc     - dx - dy).xyzw);
     vec4 c01 = GAMMA_IN(tex2D(s_p, tc          - dy).xyzw);
