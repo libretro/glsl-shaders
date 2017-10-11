@@ -1,0 +1,10 @@
+shaders = 2
+
+shader0 = shaders/LUT/LUT.glsl
+shader1 = ../misc/cmyk-halftone-dot.glsl
+filter_linear1 = true
+
+textures = SamplerLUT
+
+SamplerLUT = shaders/LUT/cmyk-16.png
+SamplerLUT_linear = true
