@@ -217,7 +217,7 @@ void main()
     	FragColor = vec4(color, 0.);
     
     #elif(VIEW_MODE == RGB)
-   		FragColor = texture(Original, vTexCoord.xy);
+   		FragColor = COMPAT_TEXTURE(Original, vTexCoord.xy);
     
     #elif(VIEW_MODE == LUMA) 
     	FragColor = vec4(luma);
@@ -231,7 +231,7 @@ void main()
     #elif(VIEW_MODE == SPLIT)
     	if(vTexCoord.x < 0.30)
         {
-            FragColor = texture(Original, vTexCoord.xy);
+            FragColor = COMPAT_TEXTURE(Original, vTexCoord.xy);
         }
         else
         {

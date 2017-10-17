@@ -116,7 +116,7 @@ void main()
 	vec2 tex = vTexCoord;
 
 	vec4 c0 = COMPAT_TEXTURE(Source, tex);
-	vec4 c1 = texture(Original, tex);
+	vec4 c1 = COMPAT_TEXTURE(Original, tex);
 
 	FragColor = vec4(c0.xyz - c1.xyz, RGBtoYUV(c0.rgb));
 } 

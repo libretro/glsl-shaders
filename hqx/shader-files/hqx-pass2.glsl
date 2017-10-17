@@ -121,10 +121,10 @@ void main()
 	float dx = SourceSize.z;
 	float dy = SourceSize.w;
 
-	vec3 p1 = texture(Original, vTexCoord).rgb;
-	vec3 p2 = texture(Original, vTexCoord + vec2(dx, dy) * quad).rgb;
-	vec3 p3 = texture(Original, vTexCoord + vec2(dx, 0.0) * quad).rgb;
-	vec3 p4 = texture(Original, vTexCoord + vec2(0.0, dy) * quad).rgb;
+	vec3 p1 = COMPAT_TEXTURE(Original, vTexCoord).rgb;
+	vec3 p2 = COMPAT_TEXTURE(Original, vTexCoord + vec2(dx, dy) * quad).rgb;
+	vec3 p3 = COMPAT_TEXTURE(Original, vTexCoord + vec2(dx, 0.0) * quad).rgb;
+	vec3 p4 = COMPAT_TEXTURE(Original, vTexCoord + vec2(0.0, dy) * quad).rgb;
 
 	vec2 index = COMPAT_TEXTURE(Source, vTexCoord).xy * vec2(255.0, 15.0 * (SCALE * SCALE));
 	index.y += dot(floor(fp * SCALE), vec2(1.0, SCALE));

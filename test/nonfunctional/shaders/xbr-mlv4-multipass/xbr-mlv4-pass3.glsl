@@ -202,12 +202,12 @@ void main()
 	vec2	g1	=	dir * ( saturate(-dir.y*dir.x) * t1.zw + saturate( dir.y*dir.x) * t1.xy );
 	vec2	g2	=	dir * ( saturate( dir.y*dir.x) * t1.zw + saturate(-dir.y*dir.x) * t1.xy );
 
-	vec3	E	=	texture(Original, vTexCoord    ).rgb;
-	vec3	F	=	texture(Original, vTexCoord + g1).rgb;
-	vec3	H	=	texture(Original, vTexCoord + g2).rgb;
-	vec3	I	=	texture(Original, vTexCoord + g1 + g2).rgb;
-	vec3	F4	=	texture(Original, vTexCoord + 2.0 * g1).rgb;
-	vec3	H5	=	texture(Original, vTexCoord + 2.0 * g2).rgb;
+	vec3	E	=	COMPAT_TEXTURE(Original, vTexCoord    ).rgb;
+	vec3	F	=	COMPAT_TEXTURE(Original, vTexCoord + g1).rgb;
+	vec3	H	=	COMPAT_TEXTURE(Original, vTexCoord + g2).rgb;
+	vec3	I	=	COMPAT_TEXTURE(Original, vTexCoord + g1 + g2).rgb;
+	vec3	F4	=	COMPAT_TEXTURE(Original, vTexCoord + 2.0 * g1).rgb;
+	vec3	H5	=	COMPAT_TEXTURE(Original, vTexCoord + 2.0 * g2).rgb;
 
 	float	e	=	dot(E,  yuv_weighted0);
 	float	f	=	dot(F,  yuv_weighted0);

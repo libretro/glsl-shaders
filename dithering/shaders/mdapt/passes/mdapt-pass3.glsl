@@ -90,7 +90,7 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #define TEX(dx,dy)   COMPAT_TEXTURE(Source, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
-#define TEXt0(dx,dy) texture(Original, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
+#define TEXt0(dx,dy) COMPAT_TEXTURE(Original, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
 
 bool eq(vec3 A, vec3 B){
 	return (A == B);

@@ -222,15 +222,15 @@ void main()
 
 	vec3 A = COMPAT_TEXTURE(Source, vTexCoord).xyz;
 
-	vec3 F6 = texture(Original, tex +g1+0.25*g1+0.25*g2).xyz;
-	vec3 F7 = texture(Original, tex +g1+0.25*g1-0.25*g2).xyz;
-	vec3 F8 = texture(Original, tex +g1-0.25*g1-0.25*g2).xyz;
-	vec3 F9 = texture(Original, tex +g1-0.25*g1+0.25*g2).xyz;
+	vec3 F6 = COMPAT_TEXTURE(Original, tex +g1+0.25*g1+0.25*g2).xyz;
+	vec3 F7 = COMPAT_TEXTURE(Original, tex +g1+0.25*g1-0.25*g2).xyz;
+	vec3 F8 = COMPAT_TEXTURE(Original, tex +g1-0.25*g1-0.25*g2).xyz;
+	vec3 F9 = COMPAT_TEXTURE(Original, tex +g1-0.25*g1+0.25*g2).xyz;
 
-	vec3 H6 = texture(Original, tex +0.25*g1+0.25*g2+g2).xyz;
-	vec3 H7 = texture(Original, tex +0.25*g1-0.25*g2+g2).xyz;
-	vec3 H8 = texture(Original, tex -0.25*g1-0.25*g2+g2).xyz;
-	vec3 H9 = texture(Original, tex -0.25*g1+0.25*g2+g2).xyz;
+	vec3 H6 = COMPAT_TEXTURE(Original, tex +0.25*g1+0.25*g2+g2).xyz;
+	vec3 H7 = COMPAT_TEXTURE(Original, tex +0.25*g1-0.25*g2+g2).xyz;
+	vec3 H8 = COMPAT_TEXTURE(Original, tex -0.25*g1-0.25*g2+g2).xyz;
+	vec3 H9 = COMPAT_TEXTURE(Original, tex -0.25*g1+0.25*g2+g2).xyz;
 
 	vec4 f0 = reduce4(F6, F7, F8, F9);
 	vec4 h0 = reduce4(H6, H7, H8, H9);

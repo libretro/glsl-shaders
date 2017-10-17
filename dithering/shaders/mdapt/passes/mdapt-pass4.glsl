@@ -108,7 +108,7 @@ uniform COMPAT_PRECISION float linear_gamma;
 #endif
 
 //#define TEX(dx,dy)   COMPAT_TEXTURE(Source, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
-//#define TEXt0(dx,dy) texture(Original, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
+//#define TEXt0(dx,dy) COMPAT_TEXTURE(Original, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
 
 vec4 TEX(float dx, float dy){
 	if(linear_gamma > 0.5) return pow(COMPAT_TEXTURE(Source, vTexCoord+vec2((dx),(dy))*SourceSize.zw), vec4(2.2));
@@ -116,8 +116,8 @@ vec4 TEX(float dx, float dy){
 }
 
 vec4 TEXt0(float dx, float dy){
-	if(linear_gamma > 0.5) return pow(texture(Original, vTexCoord+vec2((dx),(dy))*SourceSize.zw), vec4(2.2));
-	else return texture(Original, vTexCoord+vec2((dx),(dy))*SourceSize.zw);
+	if(linear_gamma > 0.5) return pow(COMPAT_TEXTURE(Original, vTexCoord+vec2((dx),(dy))*SourceSize.zw), vec4(2.2));
+	else return COMPAT_TEXTURE(Original, vTexCoord+vec2((dx),(dy))*SourceSize.zw);
 }
 
 bool eq(vec3 A, vec3 B){

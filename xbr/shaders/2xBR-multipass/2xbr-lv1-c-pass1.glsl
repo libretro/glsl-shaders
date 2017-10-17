@@ -128,9 +128,9 @@ void main()
    vec2 g1  = dir*t1.xy;
    vec2 g2  = dir*t1.zw;
 
-   vec3 F   = texture(Original, OriginalCoord +g1).rgb;
-   vec3 H   = texture(Original, OriginalCoord +g2).rgb;
-   vec3 E   = texture(Original, OriginalCoord    ).rgb;
+   vec3 F   = COMPAT_TEXTURE(Original, OriginalCoord +g1).rgb;
+   vec3 H   = COMPAT_TEXTURE(Original, OriginalCoord +g2).rgb;
+   vec3 E   = COMPAT_TEXTURE(Original, OriginalCoord    ).rgb;
 
    vec4 icomp = round(clamp(dir*sym_vectors, vec4(0.0), vec4(1.0))); // choose info component
    float  info  = remapFrom01(dot(COMPAT_TEXTURE(Source, vTexCoord), icomp), 255.0f); // retrieve 1st pass info
