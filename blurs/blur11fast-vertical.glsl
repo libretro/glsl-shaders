@@ -22,6 +22,11 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 //  IN THE SOFTWARE.
 
+#if __VERSION__ >= 130
+#define COMPAT_TEXTURE texture
+#else
+#define COMPAT_TEXTURE texture2D
+#endif
 
 /////////////////////////////  SETTINGS MANAGEMENT  ////////////////////////////
 

@@ -18,12 +18,12 @@
 //  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
 //  Place, Suite 330, Boston, MA 02111-1307 USA
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
+#if __VERSION__ >= 130
+#define COMPAT_TEXTURE texture
 #else
-#define COMPAT_PRECISION
+#define COMPAT_TEXTURE texture2D
 #endif
+
 /*
 // Parameter lines go here:
 #pragma parameter crt_gamma "crt_gamma" 2.5 1.0 5.0 0.025

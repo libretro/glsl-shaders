@@ -18,11 +18,10 @@
 //  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
 //  Place, Suite 330, Boston, MA 02111-1307 USA
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
+#if __VERSION__ >= 130
+#define COMPAT_TEXTURE texture
 #else
-#define COMPAT_PRECISION
+#define COMPAT_TEXTURE texture2D
 #endif
 
 // Parameter lines go here:
