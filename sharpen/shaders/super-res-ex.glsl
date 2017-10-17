@@ -39,7 +39,7 @@
 
 // -- Input processing --
 //Current high res value
-#define Get(x,y)    (texture(refTex,ddxddy*(pos+vec2(x,y)+0.5)).xyz)
+#define Get(x,y)    (COMPAT_TEXTURE(refTex,ddxddy*(pos+vec2(x,y)+0.5)).xyz)
 #define GetY(x,y)    (COMPAT_TEXTURE(Source,ddxddy*(pos+vec2(x,y)+0.5)).a)
 //Downsampled result
 #define Diff(x,y)     (COMPAT_TEXTURE(Source,ddxddy*(pos+vec2(x,y)+0.5)).xyz)
@@ -141,7 +141,7 @@ void main()
 {
     vec2 tex = vTexCoord;
 
-    vec4 c0 = texture(refTex, tex);
+    vec4 c0 = COMPAT_TEXTURE(refTex, tex);
 
     // Calculate position
     vec2 pos = tex * refTexSize.xy - 0.5;

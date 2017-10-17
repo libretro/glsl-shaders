@@ -32,7 +32,7 @@
 #define half2 vec2
 #define half float
 #define lerp(a, b, c) mix(a, b, c)
-#define tex2D(a, b) texture(a, b)
+#define tex2D(a, b) COMPAT_TEXTURE(a, b)
 #define mul(a, b) (b * a)
 #define saturate(c) clamp(c, 0.0, 1.0)
 
@@ -199,7 +199,7 @@ void main()
 	vec4 PreBloom = vec4(0.0);
 	// Mask effect cancels curvature due to righteous moire
 	overscanuv = (mask_toggle > 0.5) ? fragcoord : overscanuv; */
-	PreBloom = (mask_toggle > 0.5) ? SampleCRT(shadowMaskSampler, CRTPASS, overscanuv) : texture(CRTPASS, overscanuv);
+	PreBloom = (mask_toggle > 0.5) ? SampleCRT(shadowMaskSampler, CRTPASS, overscanuv) : COMPAT_TEXTURE(CRTPASS, overscanuv);
 
 	vec4 Blurred = COMPAT_TEXTURE(Source, overscanuv);
    FragColor = vec4(PreBloom + (ColorPow(Blurred, BloomPower) * BloomScalar));//vec4(mix(PreBloom, Blurred, mixfactor));

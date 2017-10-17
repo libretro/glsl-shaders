@@ -106,7 +106,7 @@ COMPAT_VARYING vec2 tex_border;
 void main()
 {
 	vec4 frame	=	COMPAT_TEXTURE(Source, vTexCoord).rgba;
-	vec4 border	=	texture(BORDER, tex_border).rgba;
+	vec4 border	=	COMPAT_TEXTURE(BORDER, tex_border).rgba;
 	FragColor	=	vec4(mix(frame, border, border.a));
 } 
 #endif

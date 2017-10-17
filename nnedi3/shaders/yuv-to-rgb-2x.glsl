@@ -98,7 +98,7 @@ COMPAT_VARYING vec4 TEX0;
 
 void main()
 {
-	vec4 inputY = texture(PassOutput3, vTexCoord.xy);
+	vec4 inputY = COMPAT_TEXTURE(PassOutput3, vTexCoord.xy);
 	vec4 inputUV = COMPAT_TEXTURE(Source, vTexCoord.xy);
 
 	vec4 yuva = vec4(inputY.x, (inputUV.y - 0.5), (inputUV.z - 0.5), 1.0);

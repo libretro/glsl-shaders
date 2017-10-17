@@ -25,7 +25,7 @@
 #define half float
 #define float2 vec2
 #define lerp(a, b, c) mix(a, b, c)
-#define tex2D(a, b) texture(a, b)
+#define tex2D(a, b) COMPAT_TEXTURE(a, b)
 #define mul(a, b) (b * a)
 #define saturate(c) clamp(c, 0.0, 1.0)
 

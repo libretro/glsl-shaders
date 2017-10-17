@@ -82,7 +82,7 @@ COMPAT_VARYING vec4 TEX0;
 
 void main()
 {
-vec3 diff = clamp(COMPAT_TEXTURE(Source, vTexCoord).rgb - texture(PassPrev3Texture, vTexCoord).rgb, 0.0, 1.0);
+vec3 diff = clamp(COMPAT_TEXTURE(Source, vTexCoord).rgb - COMPAT_TEXTURE(PassPrev3Texture, vTexCoord).rgb, 0.0, 1.0);
    FragColor = vec4(diff, 1.0);
 } 
 #endif

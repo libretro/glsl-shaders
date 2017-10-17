@@ -201,9 +201,9 @@ vec3 ToSrgb(vec3 c)
 vec3 Fetch(vec2 pos,vec2 off){
   pos=(floor(pos*SourceSize.xy+off)+vec2(0.5,0.5))/SourceSize.xy;
 #ifdef SIMPLE_LINEAR_GAMMA
-  return ToLinear(brightBoost * pow(texture(OrigTexture,pos.xy).rgb, vec3(2.2)));
+  return ToLinear(brightBoost * pow(COMPAT_TEXTURE(OrigTexture,pos.xy).rgb, vec3(2.2)));
 #else
-  return ToLinear(brightBoost * texture(OrigTexture,pos.xy).rgb);
+  return ToLinear(brightBoost * COMPAT_TEXTURE(OrigTexture,pos.xy).rgb);
 #endif
 }
 

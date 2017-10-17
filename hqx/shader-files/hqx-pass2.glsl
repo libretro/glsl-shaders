@@ -131,7 +131,7 @@ void main()
 
 	vec2 step = 1.0 / vec2(256.0, 16.0 * (SCALE * SCALE));
 	vec2 offset = step / 2.0;
-	vec4 weights = texture(LUT, index * step + offset);
+	vec4 weights = COMPAT_TEXTURE(LUT, index * step + offset);
 	float sum = dot(weights, vec4(1.0));
 	vec4 tmp = vec4(float((weights/sum).x), float((weights/sum).y), float((weights/sum).z), float((weights/sum).w));
 	vec3 res = tmp.x * p1.xyz;

@@ -128,7 +128,7 @@ uniform COMPAT_PRECISION float border_zoom_y;
 void main()
 {
 vec4 screen = COMPAT_TEXTURE(Source, screen_coord); //the main video screen
-vec4 background = vec4(texture(BORDER, vTexCoord)); //put your background function's output here
+vec4 background = vec4(COMPAT_TEXTURE(BORDER, vTexCoord)); //put your background function's output here
 if ( screen_coord.x < 0.9999 && screen_coord.x > 0.0001 && screen_coord.y < 0.9999 && screen_coord.y > 0.0001 && border_on_top > 0.5 )
 background.a *= 0.0;
    FragColor = vec4(mix(screen, background, background.a));

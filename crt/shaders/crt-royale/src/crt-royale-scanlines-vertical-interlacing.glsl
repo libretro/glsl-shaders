@@ -1171,13 +1171,13 @@ vec4 encode_output(vec4 color)
     }
 }
 
-#define tex2D_linearize(C, D) decode_input(vec4(texture(C, D)))
+#define tex2D_linearize(C, D) decode_input(vec4(COMPAT_TEXTURE(C, D)))
 //vec4 tex2D_linearize(sampler2D tex, vec2 tex_coords)
-//{   return decode_input(vec4(texture(tex, tex_coords)));   }
+//{   return decode_input(vec4(COMPAT_TEXTURE(tex, tex_coords)));   }
 
-//#define tex2D_linearize(C, D, E) decode_input(vec4(texture(C, D, E)))
+//#define tex2D_linearize(C, D, E) decode_input(vec4(COMPAT_TEXTURE(C, D, E)))
 //vec4 tex2D_linearize(sampler2D tex, vec2 tex_coords, int texel_off)
-//{   return decode_input(vec4(texture(tex, tex_coords, texel_off)));    }
+//{   return decode_input(vec4(COMPAT_TEXTURE(tex, tex_coords, texel_off)));    }
 
 #endif  //  GAMMA_MANAGEMENT_H
 /////////////   END #include gamma-management.h     ///////////////////
@@ -1817,14 +1817,14 @@ vec3 get_scanline_color(sampler2D tex, vec2 scanline_uv,
     //              nearby texels, according to weights and the conventions of
     //              get_interpolated_linear_color().
     //  We can ignore the outside texture lookups for Quilez resampling.
-    vec3 color1 = texture(tex, scanline_uv).rgb;
-    vec3 color2 = texture(tex, scanline_uv + uv_step_x).rgb;
+    vec3 color1 = COMPAT_TEXTURE(tex, scanline_uv).rgb;
+    vec3 color2 = COMPAT_TEXTURE(tex, scanline_uv + uv_step_x).rgb;
     vec3 color0 = vec3(0.0);
     vec3 color3 = vec3(0.0);
     if(beam_horiz_filter > 0.5)
     {
-        color0 = texture(tex, scanline_uv - uv_step_x).rgb;
-        color3 = texture(tex, scanline_uv + 2.0 * uv_step_x).rgb;
+        color0 = COMPAT_TEXTURE(tex, scanline_uv - uv_step_x).rgb;
+        color3 = COMPAT_TEXTURE(tex, scanline_uv + 2.0 * uv_step_x).rgb;
     }
     //  Sample the texture as-is, whether it's linear or gamma-encoded:
     //  get_interpolated_linear_color() will handle the difference.

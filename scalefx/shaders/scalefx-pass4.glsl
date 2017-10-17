@@ -174,6 +174,6 @@ void main()
 	vec2 res = sp == 0. ? vec2(0.,0.) : sp == 1. ? vec2(-1.,0.) : sp == 2. ? vec2(-2.,0.) : sp == 3. ? vec2(1.,0.) : sp == 4. ? vec2(2.,0.) : sp == 5. ? vec2(0,-1) : sp == 6. ? vec2(0.,-2.) : sp == 7. ? vec2(0.,1.) : vec2(0.,2.);
 
 	// ouput
-	FragColor = texture(OrigTexture, vTexCoord + res / SourceSize.xy);
+	FragColor = COMPAT_TEXTURE(OrigTexture, vTexCoord + res / SourceSize.xy);
 } 
 #endif

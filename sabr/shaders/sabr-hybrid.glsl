@@ -221,7 +221,7 @@ float avg_intensity(vec4 pix) {
 }
 
 vec4 get_pixel(sampler2D tex, vec2 coords, float dx, float dy) {
- return texture(tex, coords + vec2(dx, dy));
+ return COMPAT_TEXTURE(tex, coords + vec2(dx, dy));
 }
 
 // returns pixel color

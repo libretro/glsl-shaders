@@ -26,7 +26,7 @@
     uv *= 10.;
     uv.x -= floor(uv.x);
     uv.y -= floor(uv.y);
-	fragColor = luma*texture(iChannel0, uv);
+	fragColor = luma*COMPAT_TEXTURE(iChannel0, uv);
     float k = 1.0;
     float test = fragCoord.x/k;
     float xpos = test-floor(test/3.0)*3.;

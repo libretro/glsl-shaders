@@ -163,7 +163,7 @@ void main()
 	*/
 
 #ifdef GL_ES
-	#define TEXm(x) texture(Pass1Texture, x)
+	#define TEXm(x) COMPAT_TEXTURE(Pass1Texture, x)
 	#define TEXs(x) COMPAT_TEXTURE(Source, x)
 
 	// metric data

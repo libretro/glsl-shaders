@@ -121,7 +121,7 @@ float tau = 6.283185308;//atan(1.0)*8.0;
 //Non-normalized texture sampling.
 vec4 sample2D(sampler2D tex,vec2 resolution, vec2 uv)
 {
-    return texture(tex, uv / resolution);
+    return COMPAT_TEXTURE(tex, uv / resolution);
 }
 
 //Complex multiply

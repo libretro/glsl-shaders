@@ -100,6 +100,6 @@ void main()
     pixmapCoord.x = c.x * (15.0 / (16.0 * 4.0)) + c.y * (3.0 / 4.0) +(0.5 / (16.0 * 4.0));
     pixmapCoord.y = 1.0 - (floor(mod(colorPhase + 0.5, 12.0)) / (12.0 * 8.0) + c.z * (7.0 / 8.0) + (0.5 / (12.0 * 8.0)));
 
-    FragColor = vec4(GET_LEVEL(texture(nestable, pixmapCoord.xy).r));//vec4(signal);
+    FragColor = vec4(GET_LEVEL(COMPAT_TEXTURE(nestable, pixmapCoord.xy).r));//vec4(signal);
 } 
 #endif

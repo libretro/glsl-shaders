@@ -193,13 +193,13 @@ vec4 encode_output(vec4 color)
     }
 }
 
-#define tex2D_linearize(C, D) decode_input(vec4(texture(C, D)))
+#define tex2D_linearize(C, D) decode_input(vec4(COMPAT_TEXTURE(C, D)))
 //vec4 tex2D_linearize(sampler2D tex, vec2 tex_coords)
-//{   return decode_input(vec4(texture(tex, tex_coords)));   }
+//{   return decode_input(vec4(COMPAT_TEXTURE(tex, tex_coords)));   }
 
-//#define tex2D_linearize(C, D, E) decode_input(vec4(texture(C, D, E)))
+//#define tex2D_linearize(C, D, E) decode_input(vec4(COMPAT_TEXTURE(C, D, E)))
 //vec4 tex2D_linearize(sampler2D tex, vec2 tex_coords, int texel_off)
-//{   return decode_input(vec4(texture(tex, tex_coords, texel_off)));    }
+//{   return decode_input(vec4(COMPAT_TEXTURE(tex, tex_coords, texel_off)));    }
 
 #endif  //  GAMMA_MANAGEMENT_H
 

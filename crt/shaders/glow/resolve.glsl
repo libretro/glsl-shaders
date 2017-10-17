@@ -98,7 +98,7 @@ void main()
     vec3 source = BLOOM_STRENGTH * COMPAT_TEXTURE(Source, vTexCoord).rgb;
 #else
 
-    vec3 source = 1.15 * texture(PassPrev4Texture, vTexCoord * vec2(1.0, 1.004)).rgb;
+    vec3 source = 1.15 * COMPAT_TEXTURE(PassPrev4Texture, vTexCoord * vec2(1.0, 1.004)).rgb;
     vec3 bloom  = COMPAT_TEXTURE(Source, vTexCoord).rgb;
     source     += BLOOM_STRENGTH * bloom;
 #endif

@@ -105,10 +105,10 @@ void main()
 	vec2 LUTeffectiveCoord = vec2(fract(vTexCoord.x * SourceSize.x / PHOSPHOR_SCALE_X), fract(vTexCoord.y * SourceSize.y / PHOSPHOR_SCALE_Y));
 	vec4 phosphor_grid;
 
-	vec4 screen = vec4(texture(firstPass, vTexCoord).rgb, 1.0);
-	if (phosphor_layout == 1.0) phosphor_grid = vec4(texture(shadow, LUTeffectiveCoord).rgb, 1.0);
-	if (phosphor_layout == 2.0) phosphor_grid = vec4(texture(aperture, LUTeffectiveCoord).rgb, 1.0);
-	if (phosphor_layout == 3.0) phosphor_grid = vec4(texture(slot, LUTeffectiveCoord).rgb, 1.0);
+	vec4 screen = vec4(COMPAT_TEXTURE(firstPass, vTexCoord).rgb, 1.0);
+	if (phosphor_layout == 1.0) phosphor_grid = vec4(COMPAT_TEXTURE(shadow, LUTeffectiveCoord).rgb, 1.0);
+	if (phosphor_layout == 2.0) phosphor_grid = vec4(COMPAT_TEXTURE(aperture, LUTeffectiveCoord).rgb, 1.0);
+	if (phosphor_layout == 3.0) phosphor_grid = vec4(COMPAT_TEXTURE(slot, LUTeffectiveCoord).rgb, 1.0);
    FragColor = screen * phosphor_grid;
 } 
 #endif

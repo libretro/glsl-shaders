@@ -71,7 +71,7 @@ float df(float A, float B)
 	ax.x = round(  info  );\
 	iq.x = dot( ax, bin ) - 2.0;\
 	iq.y = dot( ay, bin ) - 2.0;\
-	PIXEL = texture( Original, vTexCoord + iq.x * t1.xy + iq.y * t1.zw ).xyz;
+	PIXEL = COMPAT_TEXTURE( Original, vTexCoord + iq.x * t1.xy + iq.y * t1.zw ).xyz;
 
 #if defined(VERTEX)
 
@@ -192,7 +192,7 @@ void main()
 	vec4	dlparam	=	remapFrom01( DL, low, high ); // retrieve 1st pass info
 	vec4	drparam	=	remapFrom01( DR, low, high ); // retrieve 1st pass info
 	
-	vec3 E = texture( Original, vTexCoord ).xyz;
+	vec3 E = COMPAT_TEXTURE( Original, vTexCoord ).xyz;
 
 	vec3 ax, ay, PX, PY, PZ, PW;
 	float info;

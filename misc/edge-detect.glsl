@@ -109,7 +109,7 @@ float avg_intensity(vec4 pix) {
 }
 
 vec4 get_pixel(sampler2D tex, vec2 coords, float dx, float dy) {
- return texture(tex, coords + vec2(dx, dy));
+ return COMPAT_TEXTURE(tex, coords + vec2(dx, dy));
 }
 
 // returns pixel color
@@ -143,7 +143,7 @@ void main()
 {
    float test = IsEdge(Original, vTexCoord);
 //   vec4 hybrid = vec4(0.0);
-//   hybrid = (test > 0.01) ? texture(Sharp, vTexCoord) : texture(Smooth, vTexCoord);
+//   hybrid = (test > 0.01) ? COMPAT_TEXTURE(Sharp, vTexCoord) : COMPAT_TEXTURE(Smooth, vTexCoord);
    FragColor = vec4(test);
 } 
 #endif

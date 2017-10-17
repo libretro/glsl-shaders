@@ -21,7 +21,7 @@ Scale2SFX improves upon the original Scale2x (aka EPX) by avoiding the occurence
 #define mul(a,b) (b*a)
 #define fmod(c,d) mod(c,d)
 #define frac(c) fract(c)
-#define tex2D(c,d) texture(c,d)
+#define tex2D(c,d) COMPAT_TEXTURE(c,d)
 #define float2 vec2
 #define float3 vec3
 #define float4 vec4

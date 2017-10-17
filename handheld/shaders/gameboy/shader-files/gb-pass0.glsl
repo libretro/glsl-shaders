@@ -184,19 +184,19 @@ uniform COMPAT_PRECISION float video_scale;
 //fragment definitions                                                        //
 ////////////////////////////////////////////////////////////////////////////////
 
-#define foreground_color texture(COLOR_PALETTE, vec2(0.75, 0.5)).rgb                 //hardcoded to look up the foreground color from the right half of the palette image
+#define foreground_color COMPAT_TEXTURE(COLOR_PALETTE, vec2(0.75, 0.5)).rgb                 //hardcoded to look up the foreground color from the right half of the palette image
 //#define rgb_to_alpha(rgb) ( ((rgb.r + rgb.g + rgb.b) / 3.0) + (is_on_dot * vec2(baseline_alpha), 1.0) )       //averages rgb values (allows it to work with color games), modified for contrast and base alpha
 
 
 // Frame sampling definitions
 #define curr_rgb  abs(1.0 - COMPAT_TEXTURE(Source,       vTexCoord).rgb)
-#define prev0_rgb abs(1.0 - texture(PrevTexture,  vTexCoord).rgb)
-#define prev1_rgb abs(1.0 - texture(Prev1Texture, vTexCoord).rgb)
-#define prev2_rgb abs(1.0 - texture(Prev2Texture, vTexCoord).rgb)
-#define prev3_rgb abs(1.0 - texture(Prev3Texture, vTexCoord).rgb)
-#define prev4_rgb abs(1.0 - texture(Prev4Texture, vTexCoord).rgb)
-#define prev5_rgb abs(1.0 - texture(Prev5Texture, vTexCoord).rgb)
-#define prev6_rgb abs(1.0 - texture(Prev6Texture, vTexCoord).rgb)
+#define prev0_rgb abs(1.0 - COMPAT_TEXTURE(PrevTexture,  vTexCoord).rgb)
+#define prev1_rgb abs(1.0 - COMPAT_TEXTURE(Prev1Texture, vTexCoord).rgb)
+#define prev2_rgb abs(1.0 - COMPAT_TEXTURE(Prev2Texture, vTexCoord).rgb)
+#define prev3_rgb abs(1.0 - COMPAT_TEXTURE(Prev3Texture, vTexCoord).rgb)
+#define prev4_rgb abs(1.0 - COMPAT_TEXTURE(Prev4Texture, vTexCoord).rgb)
+#define prev5_rgb abs(1.0 - COMPAT_TEXTURE(Prev5Texture, vTexCoord).rgb)
+#define prev6_rgb abs(1.0 - COMPAT_TEXTURE(Prev6Texture, vTexCoord).rgb)
 
 void main()
 {
