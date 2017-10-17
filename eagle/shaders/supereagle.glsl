@@ -118,7 +118,7 @@ COMPAT_VARYING vec4 t8;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -149,22 +149,22 @@ void main()
 
    // Reading the texels
 
-   vec3 C0 = texture(Source, t1.xy).xyz; 
-   vec3 C1 = texture(Source, t1.zw).xyz;
-   vec3 C2 = texture(Source, t2.xy).xyz;
-   vec3 D3 = texture(Source, t2.zw).xyz;
-   vec3 C3 = texture(Source, t3.xy).xyz;
-   vec3 C4 = texture(Source, vTexCoord).xyz;
-   vec3 C5 = texture(Source, t3.zw).xyz;
-   vec3 D4 = texture(Source, t4.xy).xyz;
-   vec3 C6 = texture(Source, t4.zw).xyz;
-   vec3 C7 = texture(Source, t5.xy).xyz;
-   vec3 C8 = texture(Source, t5.zw).xyz;
-   vec3 D5 = texture(Source, t6.xy).xyz;
-   vec3 D0 = texture(Source, t6.zw).xyz;
-   vec3 D1 = texture(Source, t7.xy).xyz;
-   vec3 D2 = texture(Source, t7.zw).xyz;
-   vec3 D6 = texture(Source, t8.xy).xyz;
+   vec3 C0 = COMPAT_TEXTURE(Source, t1.xy).xyz; 
+   vec3 C1 = COMPAT_TEXTURE(Source, t1.zw).xyz;
+   vec3 C2 = COMPAT_TEXTURE(Source, t2.xy).xyz;
+   vec3 D3 = COMPAT_TEXTURE(Source, t2.zw).xyz;
+   vec3 C3 = COMPAT_TEXTURE(Source, t3.xy).xyz;
+   vec3 C4 = COMPAT_TEXTURE(Source, vTexCoord).xyz;
+   vec3 C5 = COMPAT_TEXTURE(Source, t3.zw).xyz;
+   vec3 D4 = COMPAT_TEXTURE(Source, t4.xy).xyz;
+   vec3 C6 = COMPAT_TEXTURE(Source, t4.zw).xyz;
+   vec3 C7 = COMPAT_TEXTURE(Source, t5.xy).xyz;
+   vec3 C8 = COMPAT_TEXTURE(Source, t5.zw).xyz;
+   vec3 D5 = COMPAT_TEXTURE(Source, t6.xy).xyz;
+   vec3 D0 = COMPAT_TEXTURE(Source, t6.zw).xyz;
+   vec3 D1 = COMPAT_TEXTURE(Source, t7.xy).xyz;
+   vec3 D2 = COMPAT_TEXTURE(Source, t7.zw).xyz;
+   vec3 D6 = COMPAT_TEXTURE(Source, t8.xy).xyz;
 
    vec3 p00,p10,p01,p11;
 

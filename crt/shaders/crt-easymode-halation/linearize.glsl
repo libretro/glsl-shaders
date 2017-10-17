@@ -70,7 +70,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -85,6 +85,6 @@ uniform COMPAT_PRECISION float GAMMA_INPUT;
 
 void main()
 {
-   FragColor = pow(vec4(texture(Source, vTexCoord)), vec4(GAMMA_INPUT));
+   FragColor = pow(vec4(COMPAT_TEXTURE(Source, vTexCoord)), vec4(GAMMA_INPUT));
 } 
 #endif

@@ -10,7 +10,7 @@
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 
 #if defined(VERTEX)
 
@@ -93,10 +93,10 @@ vec3 dt = vec3(1.0,1.0,1.0);
 
 COMPAT_PRECISION vec3 texture2d (sampler2D tex, vec2 coord, vec4 yx) {
 
-	vec3 s00 = texture(tex, coord + yx.zw).xyz; 
-	vec3 s20 = texture(tex, coord + yx.xw).xyz; 
-	vec3 s22 = texture(tex, coord + yx.xy).xyz; 
-	vec3 s02 = texture(tex, coord + yx.zy).xyz; 
+	vec3 s00 = COMPAT_TEXTURE(tex, coord + yx.zw).xyz; 
+	vec3 s20 = COMPAT_TEXTURE(tex, coord + yx.xw).xyz; 
+	vec3 s22 = COMPAT_TEXTURE(tex, coord + yx.xy).xyz; 
+	vec3 s02 = COMPAT_TEXTURE(tex, coord + yx.zy).xyz; 
 
 	float m1=dot(abs(s00-s22),dt)+0.001;
 	float m2=dot(abs(s02-s20),dt)+0.001;

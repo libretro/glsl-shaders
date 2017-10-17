@@ -101,7 +101,7 @@ COMPAT_VARYING vec4 TEX0;
 // fragment compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -121,17 +121,17 @@ void main()
 	float dx = SourceSize.z;
 	float dy = SourceSize.w;
 
-	vec3 p1 = texture(Original, vTexCoord).rgb;
-	vec3 p2 = texture(Original, vTexCoord + vec2(dx, dy) * quad).rgb;
-	vec3 p3 = texture(Original, vTexCoord + vec2(dx, 0.0) * quad).rgb;
-	vec3 p4 = texture(Original, vTexCoord + vec2(0.0, dy) * quad).rgb;
+	vec3 p1 = COMPAT_TEXTURE(Original, vTexCoord).rgb;
+	vec3 p2 = COMPAT_TEXTURE(Original, vTexCoord + vec2(dx, dy) * quad).rgb;
+	vec3 p3 = COMPAT_TEXTURE(Original, vTexCoord + vec2(dx, 0.0) * quad).rgb;
+	vec3 p4 = COMPAT_TEXTURE(Original, vTexCoord + vec2(0.0, dy) * quad).rgb;
 
-	vec2 index = texture(Source, vTexCoord).xy * vec2(255.0, 15.0 * (SCALE * SCALE));
+	vec2 index = COMPAT_TEXTURE(Source, vTexCoord).xy * vec2(255.0, 15.0 * (SCALE * SCALE));
 	index.y += dot(floor(fp * SCALE), vec2(1.0, SCALE));
 
 	vec2 step = 1.0 / vec2(256.0, 16.0 * (SCALE * SCALE));
 	vec2 offset = step / 2.0;
-	vec4 weights = texture(LUT, index * step + offset);
+	vec4 weights = COMPAT_TEXTURE(LUT, index * step + offset);
 	float sum = dot(weights, vec4(1.0));
 	vec4 tmp = vec4(float((weights/sum).x), float((weights/sum).y), float((weights/sum).z), float((weights/sum).w));
 	vec3 res = tmp.x * p1.xyz;

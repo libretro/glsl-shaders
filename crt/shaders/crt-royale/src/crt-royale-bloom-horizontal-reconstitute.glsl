@@ -18,14 +18,11 @@
 //  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
 //  Place, Suite 330, Boston, MA 02111-1307 USA
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
+#if __VERSION__ >= 130
+#define COMPAT_TEXTURE texture
 #else
-#define COMPAT_PRECISION
+#define COMPAT_TEXTURE texture2D
 #endif
-
-// Parameter lines go here:
 
 //  Disable runtime shader params if the user doesn't explicitly want them.
 //  Static constants will be defined in place of uniforms of the same name.
@@ -1167,13 +1164,13 @@ vec4 encode_output(vec4 color)
     }
 }
 
-#define tex2D_linearize(C, D) decode_input(vec4(texture(C, D)))
+#define tex2D_linearize(C, D) decode_input(vec4(COMPAT_TEXTURE(C, D)))
 //vec4 tex2D_linearize(sampler2D tex, vec2 tex_coords)
-//{   return decode_input(vec4(texture(tex, tex_coords)));   }
+//{   return decode_input(vec4(COMPAT_TEXTURE(tex, tex_coords)));   }
 
-//#define tex2D_linearize(C, D, E) decode_input(vec4(texture(C, D, E)))
+//#define tex2D_linearize(C, D, E) decode_input(vec4(COMPAT_TEXTURE(C, D, E)))
 //vec4 tex2D_linearize(sampler2D tex, vec2 tex_coords, int texel_off)
-//{   return decode_input(vec4(texture(tex, tex_coords, texel_off)));    }
+//{   return decode_input(vec4(COMPAT_TEXTURE(tex, tex_coords, texel_off)));    }
 
 #endif  //  GAMMA_MANAGEMENT_H
 /////////////   END #include gamma-management.h     ///////////////////
@@ -1368,7 +1365,7 @@ vec4 tex2Dlod0try(sampler2D tex, vec2 tex_uv)
         #ifdef ANISOTROPIC_RESAMPLING_COMPAT_TEX2DBIAS
             return tex2Dbias(tex, vec4(tex_uv, 0.0, -16.0));
         #else
-            return texture(tex, tex_uv);
+            return COMPAT_TEXTURE(tex, tex_uv);
         #endif
     #endif
 }
@@ -4037,14 +4034,14 @@ vec3 get_scanline_color(sampler2D tex, vec2 scanline_uv,
     //              nearby texels, according to weights and the conventions of
     //              get_interpolated_linear_color().
     //  We can ignore the outside texture lookups for Quilez resampling.
-    vec3 color1 = texture(tex, scanline_uv).rgb;
-    vec3 color2 = texture(tex, scanline_uv + uv_step_x).rgb;
+    vec3 color1 = COMPAT_TEXTURE(tex, scanline_uv).rgb;
+    vec3 color2 = COMPAT_TEXTURE(tex, scanline_uv + uv_step_x).rgb;
     vec3 color0 = vec3(0.0);
     vec3 color3 = vec3(0.0);
     if(beam_horiz_filter > 0.5)
     {
-        color0 = texture(tex, scanline_uv - uv_step_x).rgb;
-        color3 = texture(tex, scanline_uv + 2.0 * uv_step_x).rgb;
+        color0 = COMPAT_TEXTURE(tex, scanline_uv - uv_step_x).rgb;
+        color3 = COMPAT_TEXTURE(tex, scanline_uv + 2.0 * uv_step_x).rgb;
     }
     //  Sample the texture as-is, whether it's linear or gamma-encoded:
     //  get_interpolated_linear_color() will handle the difference.
@@ -4581,7 +4578,7 @@ COMPAT_VARYING float bloom_sigma_runtime;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 

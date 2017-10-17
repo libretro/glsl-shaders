@@ -89,7 +89,7 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 
 /*
 FXAA_PRESET - Choose compile-in knob preset 0-5.
@@ -172,7 +172,7 @@ vec3 FxaaLerp3(vec3 a, vec3 b, float amountOfA) {
 vec4 FxaaTexOff(sampler2D tex, vec2 pos, ivec2 off, vec2 rcpFrame) {
     float x = pos.x + float(off.x) * rcpFrame.x;
     float y = pos.y + float(off.y) * rcpFrame.y;
-    return texture(tex, vec2(x, y));
+    return COMPAT_TEXTURE(tex, vec2(x, y));
 }
 
 // pos is the output of FxaaVertexShader interpolated across screen.
@@ -268,11 +268,11 @@ vec3 FxaaPixelShader(vec2 pos, sampler2D tex, vec2 rcpFrame)
     for(int i = 0; i < FXAA_SEARCH_STEPS; i++) {
         if(!doneN)
         {
-            lumaEndN = FxaaLuma(texture(tex, posN.xy).xyz);
+            lumaEndN = FxaaLuma(COMPAT_TEXTURE(tex, posN.xy).xyz);
         }
         if(!doneP)
         {
-            lumaEndP = FxaaLuma(texture(tex, posP.xy).xyz);
+            lumaEndP = FxaaLuma(COMPAT_TEXTURE(tex, posP.xy).xyz);
         }
         
         doneN = doneN || (abs(lumaEndN - lumaN) >= gradientN);
@@ -306,7 +306,7 @@ vec3 FxaaPixelShader(vec2 pos, sampler2D tex, vec2 rcpFrame)
     float spanLength = (dstP + dstN);
     dstN = directionN ? dstN : dstP;
     float subPixelOffset = (0.5 + (dstN * (-1.0/spanLength))) * lengthSign;
-    vec3 rgbF = texture(tex, vec2(
+    vec3 rgbF = COMPAT_TEXTURE(tex, vec2(
         pos.x + (horzSpan ? 0.0 : subPixelOffset),
         pos.y + (horzSpan ? subPixelOffset : 0.0))).xyz;
     return FxaaLerp3(rgbL, rgbF, blendL); 

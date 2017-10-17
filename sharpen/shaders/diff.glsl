@@ -99,7 +99,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -115,8 +115,8 @@ void main()
 {
 	vec2 tex = vTexCoord;
 
-	vec4 c0 = texture(Source, tex);
-	vec4 c1 = texture(Original, tex);
+	vec4 c0 = COMPAT_TEXTURE(Source, tex);
+	vec4 c1 = COMPAT_TEXTURE(Original, tex);
 
 	FragColor = vec4(c0.xyz - c1.xyz, RGBtoYUV(c0.rgb));
 } 

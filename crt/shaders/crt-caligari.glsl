@@ -111,7 +111,7 @@ COMPAT_VARYING vec2 oney;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -133,7 +133,7 @@ uniform COMPAT_PRECISION float OutputGamma;
 #define GAMMA_IN(color)     pow(color,vec4(InputGamma))
 #define GAMMA_OUT(color)    pow(color, vec4(1.0 / OutputGamma))
 
-#define TEX2D(coords)	GAMMA_IN( texture(Source, coords) )
+#define TEX2D(coords)	GAMMA_IN( COMPAT_TEXTURE(Source, coords) )
 
 // Macro for weights computing
 #define WEIGHT(w) \

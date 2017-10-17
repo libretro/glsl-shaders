@@ -71,7 +71,7 @@ float df(float A, float B)
 	ax.x = round(  info  );\
 	iq.x = dot( ax, bin ) - 2.0;\
 	iq.y = dot( ay, bin ) - 2.0;\
-	PIXEL = texture( Original, vTexCoord + iq.x * t1.xy + iq.y * t1.zw ).xyz;
+	PIXEL = COMPAT_TEXTURE( Original, vTexCoord + iq.x * t1.xy + iq.y * t1.zw ).xyz;
 
 #if defined(VERTEX)
 
@@ -171,7 +171,7 @@ COMPAT_VARYING float scale_factor;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 #define OriginalSize vec4(OrigTextureSize.xy, 1.0 / OrigTextureSize.xy)
@@ -182,17 +182,17 @@ void main()
 
 	vec2	pxcoord	=	floor(vTexCoord * OriginalSize.xy) * OriginalSize.zw;
 
-	vec4	UL	=	texture(Source, pxcoord + 0.25 * t1.xy + 0.25 * t1.zw );
-	vec4	UR	=	texture(Source, pxcoord + 0.75 * t1.xy + 0.25 * t1.zw );
-	vec4	DL	=	texture(Source, pxcoord + 0.25 * t1.xy + 0.75 * t1.zw );
-	vec4	DR	=	texture(Source, pxcoord + 0.75 * t1.xy + 0.75 * t1.zw );
+	vec4	UL	=	COMPAT_TEXTURE(Source, pxcoord + 0.25 * t1.xy + 0.25 * t1.zw );
+	vec4	UR	=	COMPAT_TEXTURE(Source, pxcoord + 0.75 * t1.xy + 0.25 * t1.zw );
+	vec4	DL	=	COMPAT_TEXTURE(Source, pxcoord + 0.25 * t1.xy + 0.75 * t1.zw );
+	vec4	DR	=	COMPAT_TEXTURE(Source, pxcoord + 0.75 * t1.xy + 0.75 * t1.zw );
 
 	vec4	ulparam	=	remapFrom01( UL, low, high ); // retrieve 1st pass info
 	vec4	urparam	=	remapFrom01( UR, low, high ); // retrieve 1st pass info
 	vec4	dlparam	=	remapFrom01( DL, low, high ); // retrieve 1st pass info
 	vec4	drparam	=	remapFrom01( DR, low, high ); // retrieve 1st pass info
 	
-	vec3 E = texture( Original, vTexCoord ).xyz;
+	vec3 E = COMPAT_TEXTURE( Original, vTexCoord ).xyz;
 
 	vec3 ax, ay, PX, PY, PZ, PW;
 	float info;

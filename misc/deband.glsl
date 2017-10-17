@@ -109,7 +109,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -152,10 +152,10 @@ vec4 average(sampler2D tex, vec2 coord, float range, inout float h, vec2 size)
 	vec2 pt = dist / size.xy;
 	
 	vec4 ref[4];
-	ref[0] = texture(tex, coord + pt * vec2( o.x, o.y));
-	ref[1] = texture(tex, coord + pt * vec2(-o.y, o.x));
-	ref[2] = texture(tex, coord + pt * vec2(-o.x,-o.y));
-	ref[3] = texture(tex, coord + pt * vec2( o.y,-o.x));
+	ref[0] = COMPAT_TEXTURE(tex, coord + pt * vec2( o.x, o.y));
+	ref[1] = COMPAT_TEXTURE(tex, coord + pt * vec2(-o.y, o.x));
+	ref[2] = COMPAT_TEXTURE(tex, coord + pt * vec2(-o.x,-o.y));
+	ref[3] = COMPAT_TEXTURE(tex, coord + pt * vec2( o.y,-o.x));
 	
 	return (ref[0] + ref[1] + ref[2] + ref[3]) * 0.25;
 }
@@ -170,7 +170,7 @@ void main()
 	vec4 diff;
 	
 	// Sample the source pixel
-	vec4 color = texture(Source, vTexCoord).rgba;
+	vec4 color = COMPAT_TEXTURE(Source, vTexCoord).rgba;
 	
 	for (int i = 1; i <= int(iterations); i++)
 		{

@@ -120,7 +120,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -148,31 +148,31 @@ void main()
 // [      c20, c6,  c7,  c8, c17      ]
 // [           c15, c12, c14          ]
 // [                c13               ]
-	vec3	 c19	=	clamp( texture(Source, vTexCoord + vec2(-3.*px,   0.)).rgb, 0.0, 1.0);
-	vec3	 c21	=	clamp( texture(Source, vTexCoord + vec2(-2.*px,  -py)).rgb, 0.0, 1.0);
-	vec3	 c10	=	clamp( texture(Source, vTexCoord + vec2(-2.*px,   0.)).rgb, 0.0, 1.0);
-	vec3	 c20	=	clamp( texture(Source, vTexCoord + vec2(-2.*px,   py)).rgb, 0.0, 1.0);
-	vec3	 c24	=	clamp( texture(Source, vTexCoord + vec2(  -px,-2.*py)).rgb, 0.0, 1.0);
-	vec3	 c1 	=	clamp( texture(Source, vTexCoord + vec2(  -px,  -py)).rgb, 0.0, 1.0);
-	vec3	 c4 	=	clamp( texture(Source, vTexCoord + vec2(  -px,   0.)).rgb, 0.0, 1.0);
-	vec3	 c6 	=	clamp( texture(Source, vTexCoord + vec2(  -px,   py)).rgb, 0.0, 1.0);
-	vec3	 c15	=	clamp( texture(Source, vTexCoord + vec2(  -px, 2.*py)).rgb, 0.0, 1.0);
-	vec3	 c22	=	clamp( texture(Source, vTexCoord + vec2(   0., -3.*py)).rgb, 0.0, 1.0);
-	vec3	 c9 	=	clamp( texture(Source, vTexCoord + vec2(   0., -2.*py)).rgb, 0.0, 1.0);
-	vec3	 c2 	=	clamp( texture(Source, vTexCoord + vec2(   0.,   -py)).rgb, 0.0, 1.0);
-	vec3	 c0 	=	clamp( texture(Source, vTexCoord).rgb, 0.0, 1.0);
-	vec3	 c7 	=	clamp( texture(Source, vTexCoord + vec2(   0.,    py)).rgb, 0.0, 1.0);
-	vec3	 c12	=	clamp( texture(Source, vTexCoord + vec2(   0.,  2.*py)).rgb, 0.0, 1.0);
-	vec3	 c13	=	clamp( texture(Source, vTexCoord + vec2(   0.,  3.*py)).rgb, 0.0, 1.0);
-	vec3	 c23	=	clamp( texture(Source, vTexCoord + vec2(   px,-2.*py)).rgb, 0.0, 1.0);
-	vec3	 c3 	=	clamp( texture(Source, vTexCoord + vec2(   px,  -py)).rgb, 0.0, 1.0);
-	vec3	 c5 	=	clamp( texture(Source, vTexCoord + vec2(   px,   0.)).rgb, 0.0, 1.0);
-	vec3	 c8 	=	clamp( texture(Source, vTexCoord + vec2(   px,   py)).rgb, 0.0, 1.0);
-	vec3	 c14	=	clamp( texture(Source, vTexCoord + vec2(   px, 2.*py)).rgb, 0.0, 1.0);
-	vec3	 c18	=	clamp( texture(Source, vTexCoord + vec2( 2.*px,  -py)).rgb, 0.0, 1.0);
-	vec3	 c11	=	clamp( texture(Source, vTexCoord + vec2( 2.*px,   0.)).rgb, 0.0, 1.0);
-	vec3	 c17	=	clamp( texture(Source, vTexCoord + vec2( 2.*px,   py)).rgb, 0.0, 1.0);
-	vec3	 c16	=	clamp( texture(Source, vTexCoord + vec2( 3.*px,   0.)).rgb, 0.0, 1.0 );
+	vec3	 c19	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2(-3.*px,   0.)).rgb, 0.0, 1.0);
+	vec3	 c21	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2(-2.*px,  -py)).rgb, 0.0, 1.0);
+	vec3	 c10	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2(-2.*px,   0.)).rgb, 0.0, 1.0);
+	vec3	 c20	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2(-2.*px,   py)).rgb, 0.0, 1.0);
+	vec3	 c24	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2(  -px,-2.*py)).rgb, 0.0, 1.0);
+	vec3	 c1 	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2(  -px,  -py)).rgb, 0.0, 1.0);
+	vec3	 c4 	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2(  -px,   0.)).rgb, 0.0, 1.0);
+	vec3	 c6 	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2(  -px,   py)).rgb, 0.0, 1.0);
+	vec3	 c15	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2(  -px, 2.*py)).rgb, 0.0, 1.0);
+	vec3	 c22	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2(   0., -3.*py)).rgb, 0.0, 1.0);
+	vec3	 c9 	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2(   0., -2.*py)).rgb, 0.0, 1.0);
+	vec3	 c2 	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2(   0.,   -py)).rgb, 0.0, 1.0);
+	vec3	 c0 	=	clamp( COMPAT_TEXTURE(Source, vTexCoord).rgb, 0.0, 1.0);
+	vec3	 c7 	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2(   0.,    py)).rgb, 0.0, 1.0);
+	vec3	 c12	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2(   0.,  2.*py)).rgb, 0.0, 1.0);
+	vec3	 c13	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2(   0.,  3.*py)).rgb, 0.0, 1.0);
+	vec3	 c23	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2(   px,-2.*py)).rgb, 0.0, 1.0);
+	vec3	 c3 	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2(   px,  -py)).rgb, 0.0, 1.0);
+	vec3	 c5 	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2(   px,   0.)).rgb, 0.0, 1.0);
+	vec3	 c8 	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2(   px,   py)).rgb, 0.0, 1.0);
+	vec3	 c14	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2(   px, 2.*py)).rgb, 0.0, 1.0);
+	vec3	 c18	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2( 2.*px,  -py)).rgb, 0.0, 1.0);
+	vec3	 c11	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2( 2.*px,   0.)).rgb, 0.0, 1.0);
+	vec3	 c17	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2( 2.*px,   py)).rgb, 0.0, 1.0);
+	vec3	 c16	=	clamp( COMPAT_TEXTURE(Source, vTexCoord + vec2( 3.*px,   0.)).rgb, 0.0, 1.0 );
 	
 // Blur, gauss 3x3
 	vec3	blur	=	(2.*(c2 + c4 + c5 + c7) + (c1 + c3 + c6 +c8) + 4.*c0)/16.;
@@ -273,7 +273,7 @@ void main()
 	sharpdiff			=	mix( (tanh((max(sharpdiff, 0.0))*nmax_scale)/nmax_scale), (max(sharpdiff, 0.0)), L_comp_ratio )
 						+	mix( (tanh((min(sharpdiff, 0.0))*nmin_scale)/nmin_scale), (min(sharpdiff, 0.0)), D_comp_ratio );
 
-//	if	(video_level_out	==	1.0) { texture(Source, vTexCoord) + sharpdiff; }
+//	if	(video_level_out	==	1.0) { COMPAT_TEXTURE(Source, vTexCoord) + sharpdiff; }
    FragColor = vec4(c0.rgbb + sharpdiff);
 } 
 #endif

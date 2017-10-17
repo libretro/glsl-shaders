@@ -99,14 +99,14 @@ COMPAT_VARYING vec2 tex_border;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 void main()
 {
-	vec4 frame	=	texture(Source, vTexCoord).rgba;
-	vec4 border	=	texture(BORDER, tex_border).rgba;
+	vec4 frame	=	COMPAT_TEXTURE(Source, vTexCoord).rgba;
+	vec4 border	=	COMPAT_TEXTURE(BORDER, tex_border).rgba;
 	FragColor	=	vec4(mix(frame, border, border.a));
 } 
 #endif

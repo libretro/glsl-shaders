@@ -103,7 +103,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -111,18 +111,18 @@ void main()
 {
   vec2 uv = vTexCoord - (SourceSize.zw) * 0.25;
   vec2 uv_shift = (SourceSize.zw);
-	vec3 src = texture(Source, uv).rgb;
+	vec3 src = COMPAT_TEXTURE(Source, uv).rgb;
 
   // Searching for the Vertical Dithering Zones
-	vec3 dither_v_zone = vec3(texture(Source, uv + vec2(uv_shift.x, 0.)).rgb == texture(Source, uv - vec2(uv_shift.x, 0.)).rgb);
+	vec3 dither_v_zone = vec3(COMPAT_TEXTURE(Source, uv + vec2(uv_shift.x, 0.)).rgb == COMPAT_TEXTURE(Source, uv - vec2(uv_shift.x, 0.)).rgb);
   dither_v_zone = vec3(smoothstep(0.2, 1.0, dot(dither_v_zone, vec3(0.33333))));
 
   // Searching for High Contrast "Safe" Zones
-  vec3 safe_zone = vec3(abs(dot(texture(Source, uv).rgb - texture(Source, uv - vec2(uv_shift.x, 0.)).rgb, vec3(0.3333))));
+  vec3 safe_zone = vec3(abs(dot(COMPAT_TEXTURE(Source, uv).rgb - COMPAT_TEXTURE(Source, uv - vec2(uv_shift.x, 0.)).rgb, vec3(0.3333))));
   safe_zone = vec3(lessThan(safe_zone , vec3(0.45)));
 
   // Horizontal Bluring by 1 pixel
-  vec3 blur_h = (texture(Source, uv).rgb + texture(Source, uv - vec2(uv_shift.x, 0.)).rgb) * 0.5;
+  vec3 blur_h = (COMPAT_TEXTURE(Source, uv).rgb + COMPAT_TEXTURE(Source, uv - vec2(uv_shift.x, 0.)).rgb) * 0.5;
 
   // Final Blend between Source and Blur using Dithering Zone and Safe Zone
   vec3 finalcolor = mix(src, blur_h, dither_v_zone * safe_zone);

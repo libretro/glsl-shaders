@@ -133,7 +133,7 @@ COMPAT_VARYING vec2 ratio_scale;
 
 // compatibility #defines
 #define Source Texture
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them

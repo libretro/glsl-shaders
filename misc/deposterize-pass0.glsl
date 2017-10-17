@@ -105,7 +105,7 @@ COMPAT_VARYING vec4 t1;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -134,9 +134,9 @@ void main()
 {
 	vec3 res;
 
-	vec3 D  = texture(Source, t1.xw).rgb;
-	vec3 E  = texture(Source, t1.yw).rgb;
-	vec3 F  = texture(Source, t1.zw).rgb;
+	vec3 D  = COMPAT_TEXTURE(Source, t1.xw).rgb;
+	vec3 E  = COMPAT_TEXTURE(Source, t1.yw).rgb;
+	vec3 F  = COMPAT_TEXTURE(Source, t1.zw).rgb;
 	
 	bvec3 test1 = eq3(D, F);
 	bvec3 test2 = eq3(D, E);

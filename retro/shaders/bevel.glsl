@@ -102,7 +102,7 @@ COMPAT_VARYING vec4 TEX0;
 // fragment compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -136,7 +136,7 @@ void main()
 {
     vec2 position = fract(vTexCoord*SourceSize.xy);
 
-    vec3 color = GAMMA_IN(texture(Source, vTexCoord).rgb);
+    vec3 color = GAMMA_IN(COMPAT_TEXTURE(Source, vTexCoord).rgb);
 
     color = clamp(bevel(position, color), 0.0, 1.0);
 

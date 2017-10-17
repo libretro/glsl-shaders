@@ -113,7 +113,7 @@ COMPAT_VARYING vec4 TEX0;
 #define Source Texture
 #define Original OrigTexture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -168,30 +168,30 @@ void main()
 	vec2 fp = fract(vTexCoord*SourceSize.xy);
 	vec2 dir = fp - vec2(0.5,0.5);
  	if ((dir.x*dir.y)>0.0){
-	FragColor = (fp.x>0.5) ? texture(Source, vTexCoord) : texture(Original, vTexCoord);
+	FragColor = (fp.x>0.5) ? COMPAT_TEXTURE(Source, vTexCoord) : COMPAT_TEXTURE(Original, vTexCoord);
 	}else{
 
 	vec2 g1 = (fp.x>0.5) ? vec2(0.5/SourceSize.x, 0.0) : vec2(0.0, 0.5/SourceSize.y);
 	vec2 g2 = (fp.x>0.5) ? vec2(0.0, 0.5/SourceSize.y) : vec2(0.5/SourceSize.x, 0.0);
 
-	vec3 P0 = texture(Original,	vTexCoord -3.0*g1        ).xyz;
-	vec3 P1 = texture(Source,	vTexCoord         -3.0*g2).xyz;
-	vec3 P2 = texture(Source,	vTexCoord         +3.0*g2).xyz;
-	vec3 P3 = texture(Original,	vTexCoord +3.0*g1        ).xyz;
+	vec3 P0 = COMPAT_TEXTURE(Original,	vTexCoord -3.0*g1        ).xyz;
+	vec3 P1 = COMPAT_TEXTURE(Source,	vTexCoord         -3.0*g2).xyz;
+	vec3 P2 = COMPAT_TEXTURE(Source,	vTexCoord         +3.0*g2).xyz;
+	vec3 P3 = COMPAT_TEXTURE(Original,	vTexCoord +3.0*g1        ).xyz;
 
-	vec3  B = texture(Source,	vTexCoord -2.0*g1     -g2).xyz;
-	vec3  C = texture(Original,	vTexCoord     -g1 -2.0*g2).xyz;
-	vec3  D = texture(Source,	vTexCoord -2.0*g1     +g2).xyz;
-	vec3  E = texture(Original,	vTexCoord     -g1        ).xyz;
-	vec3  F = texture(Source,	vTexCoord             -g2).xyz;
-	vec3  G = texture(Original,	vTexCoord     -g1 +2.0*g2).xyz;
-	vec3  H = texture(Source,	vTexCoord             +g2).xyz;
-	vec3  I = texture(Original,	vTexCoord     +g1        ).xyz;
+	vec3  B = COMPAT_TEXTURE(Source,	vTexCoord -2.0*g1     -g2).xyz;
+	vec3  C = COMPAT_TEXTURE(Original,	vTexCoord     -g1 -2.0*g2).xyz;
+	vec3  D = COMPAT_TEXTURE(Source,	vTexCoord -2.0*g1     +g2).xyz;
+	vec3  E = COMPAT_TEXTURE(Original,	vTexCoord     -g1        ).xyz;
+	vec3  F = COMPAT_TEXTURE(Source,	vTexCoord             -g2).xyz;
+	vec3  G = COMPAT_TEXTURE(Original,	vTexCoord     -g1 +2.0*g2).xyz;
+	vec3  H = COMPAT_TEXTURE(Source,	vTexCoord             +g2).xyz;
+	vec3  I = COMPAT_TEXTURE(Original,	vTexCoord     +g1        ).xyz;
 
-	vec3 F4 = texture(Original,	vTexCoord     +g1 -2.0*g2).xyz;
-	vec3 I4 = texture(Source,	vTexCoord +2.0*g1     -g2).xyz;
-	vec3 H5 = texture(Original,	vTexCoord     +g1 +2.0*g2).xyz;
-	vec3 I5 = texture(Source,	vTexCoord +2.0*g1     +g2).xyz;
+	vec3 F4 = COMPAT_TEXTURE(Original,	vTexCoord     +g1 -2.0*g2).xyz;
+	vec3 I4 = COMPAT_TEXTURE(Source,	vTexCoord +2.0*g1     -g2).xyz;
+	vec3 H5 = COMPAT_TEXTURE(Original,	vTexCoord     +g1 +2.0*g2).xyz;
+	vec3 I5 = COMPAT_TEXTURE(Source,	vTexCoord +2.0*g1     +g2).xyz;
 
 	float b = RGBtoYUV( B );
 	float c = RGBtoYUV( C );

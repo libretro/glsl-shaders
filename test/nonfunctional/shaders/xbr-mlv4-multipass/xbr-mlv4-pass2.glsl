@@ -213,52 +213,52 @@ COMPAT_VARYING vec4 t7;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 #define OriginalSize vec4(OrigTextureSize.xy, 1.0 / OrigTextureSize.xy)
 
 void main()
 {
-	vec4 PA  = texture(Source, t2.xw);
-	vec4 PB  = texture(Source, t2.yw);
-	vec4 PC  = texture(Source, t2.zw);
+	vec4 PA  = COMPAT_TEXTURE(Source, t2.xw);
+	vec4 PB  = COMPAT_TEXTURE(Source, t2.yw);
+	vec4 PC  = COMPAT_TEXTURE(Source, t2.zw);
 
-	vec4 PD  = texture(Source, t3.xw);
-	vec4 PE  = texture(Source, t3.yw);
-	vec4 PF  = texture(Source, t3.zw);
+	vec4 PD  = COMPAT_TEXTURE(Source, t3.xw);
+	vec4 PE  = COMPAT_TEXTURE(Source, t3.yw);
+	vec4 PF  = COMPAT_TEXTURE(Source, t3.zw);
 
-	vec4 PG  = texture(Source, t4.xw);
-	vec4 PH  = texture(Source, t4.yw);
-	vec4 PI  = texture(Source, t4.zw);
+	vec4 PG  = COMPAT_TEXTURE(Source, t4.xw);
+	vec4 PH  = COMPAT_TEXTURE(Source, t4.yw);
+	vec4 PI  = COMPAT_TEXTURE(Source, t4.zw);
 	
-	vec3 A1 = texture(Original, t1.xw).rgb;
-	vec3 B1 = texture(Original, t1.yw).rgb;
-	vec3 C1 = texture(Original, t1.zw).rgb;
+	vec3 A1 = COMPAT_TEXTURE(Original, t1.xw).rgb;
+	vec3 B1 = COMPAT_TEXTURE(Original, t1.yw).rgb;
+	vec3 C1 = COMPAT_TEXTURE(Original, t1.zw).rgb;
 
-	vec3 A  = texture(Original, t2.xw).rgb;
-	vec3 B  = texture(Original, t2.yw).rgb;
-	vec3 C  = texture(Original, t2.zw).rgb;
+	vec3 A  = COMPAT_TEXTURE(Original, t2.xw).rgb;
+	vec3 B  = COMPAT_TEXTURE(Original, t2.yw).rgb;
+	vec3 C  = COMPAT_TEXTURE(Original, t2.zw).rgb;
 
-	vec3 D  = texture(Original, t3.xw).rgb;
-	vec3 E  = texture(Original, t3.yw).rgb;
-	vec3 F  = texture(Original, t3.zw).rgb;
+	vec3 D  = COMPAT_TEXTURE(Original, t3.xw).rgb;
+	vec3 E  = COMPAT_TEXTURE(Original, t3.yw).rgb;
+	vec3 F  = COMPAT_TEXTURE(Original, t3.zw).rgb;
 
-	vec3 G  = texture(Original, t4.xw).rgb;
-	vec3 H  = texture(Original, t4.yw).rgb;
-	vec3 I  = texture(Original, t4.zw).rgb;
+	vec3 G  = COMPAT_TEXTURE(Original, t4.xw).rgb;
+	vec3 H  = COMPAT_TEXTURE(Original, t4.yw).rgb;
+	vec3 I  = COMPAT_TEXTURE(Original, t4.zw).rgb;
 
-	vec3 G5 = texture(Original, t5.xw).rgb;
-	vec3 H5 = texture(Original, t5.yw).rgb;
-	vec3 I5 = texture(Original, t5.zw).rgb;
+	vec3 G5 = COMPAT_TEXTURE(Original, t5.xw).rgb;
+	vec3 H5 = COMPAT_TEXTURE(Original, t5.yw).rgb;
+	vec3 I5 = COMPAT_TEXTURE(Original, t5.zw).rgb;
 
-	vec3 A0 = texture(Original, t6.xy).rgb;
-	vec3 D0 = texture(Original, t6.xz).rgb;
-	vec3 G0 = texture(Original, t6.xw).rgb;
+	vec3 A0 = COMPAT_TEXTURE(Original, t6.xy).rgb;
+	vec3 D0 = COMPAT_TEXTURE(Original, t6.xz).rgb;
+	vec3 G0 = COMPAT_TEXTURE(Original, t6.xw).rgb;
 
-	vec3 C4 = texture(Original, t7.xy).rgb;
-	vec3 F4 = texture(Original, t7.xz).rgb;
-	vec3 I4 = texture(Original, t7.xw).rgb;
+	vec3 C4 = COMPAT_TEXTURE(Original, t7.xy).rgb;
+	vec3 F4 = COMPAT_TEXTURE(Original, t7.xz).rgb;
+	vec3 I4 = COMPAT_TEXTURE(Original, t7.xw).rgb;
 	
 	vec4 b = mul( mat4x3(B, D, H, F), yuv_weighted0 );
 	vec4 c = mul( mat4x3(C, A, G, I), yuv_weighted0 );

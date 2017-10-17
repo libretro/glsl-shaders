@@ -110,7 +110,7 @@ COMPAT_VARYING vec2 upper_bound;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -171,20 +171,20 @@ void main()
     float weights5 = 0.13 - (5.0 * shadow_blur2 / 100.0); //0.08167444001912718529866079800870;
 	
 	// Sample the current fragment and apply its weight
-    vec4 out_color = texture(Source, clamp(vTexCoord, lower_bound, upper_bound)) * weights1;
+    vec4 out_color = COMPAT_TEXTURE(Source, clamp(vTexCoord, lower_bound, upper_bound)) * weights1;
 
     // Iterate across the offsets in both directions sampling texels
     // and adding their weighted alpha values to the total	
-	out_color.a += texture(Source, clamp(vTexCoord + vec2(0.0, offsets1 * texel.y), lower_bound, upper_bound)).a * weights1;
-    out_color.a += texture(Source, clamp(vTexCoord - vec2(0.0, offsets1 * texel.y), lower_bound, upper_bound)).a * weights1;
-	out_color.a += texture(Source, clamp(vTexCoord + vec2(0.0, offsets2 * texel.y), lower_bound, upper_bound)).a * weights2;
-    out_color.a += texture(Source, clamp(vTexCoord - vec2(0.0, offsets2 * texel.y), lower_bound, upper_bound)).a * weights2;
-	out_color.a += texture(Source, clamp(vTexCoord + vec2(0.0, offsets3 * texel.y), lower_bound, upper_bound)).a * weights3;
-    out_color.a += texture(Source, clamp(vTexCoord - vec2(0.0, offsets3 * texel.y), lower_bound, upper_bound)).a * weights3;
-	out_color.a += texture(Source, clamp(vTexCoord + vec2(0.0, offsets4 * texel.y), lower_bound, upper_bound)).a * weights4;
-    out_color.a += texture(Source, clamp(vTexCoord - vec2(0.0, offsets4 * texel.y), lower_bound, upper_bound)).a * weights4;
-	out_color.a += texture(Source, clamp(vTexCoord + vec2(0.0, offsets5 * texel.y), lower_bound, upper_bound)).a * weights5;
-    out_color.a += texture(Source, clamp(vTexCoord - vec2(0.0, offsets5 * texel.y), lower_bound, upper_bound)).a * weights5;
+	out_color.a += COMPAT_TEXTURE(Source, clamp(vTexCoord + vec2(0.0, offsets1 * texel.y), lower_bound, upper_bound)).a * weights1;
+    out_color.a += COMPAT_TEXTURE(Source, clamp(vTexCoord - vec2(0.0, offsets1 * texel.y), lower_bound, upper_bound)).a * weights1;
+	out_color.a += COMPAT_TEXTURE(Source, clamp(vTexCoord + vec2(0.0, offsets2 * texel.y), lower_bound, upper_bound)).a * weights2;
+    out_color.a += COMPAT_TEXTURE(Source, clamp(vTexCoord - vec2(0.0, offsets2 * texel.y), lower_bound, upper_bound)).a * weights2;
+	out_color.a += COMPAT_TEXTURE(Source, clamp(vTexCoord + vec2(0.0, offsets3 * texel.y), lower_bound, upper_bound)).a * weights3;
+    out_color.a += COMPAT_TEXTURE(Source, clamp(vTexCoord - vec2(0.0, offsets3 * texel.y), lower_bound, upper_bound)).a * weights3;
+	out_color.a += COMPAT_TEXTURE(Source, clamp(vTexCoord + vec2(0.0, offsets4 * texel.y), lower_bound, upper_bound)).a * weights4;
+    out_color.a += COMPAT_TEXTURE(Source, clamp(vTexCoord - vec2(0.0, offsets4 * texel.y), lower_bound, upper_bound)).a * weights4;
+	out_color.a += COMPAT_TEXTURE(Source, clamp(vTexCoord + vec2(0.0, offsets5 * texel.y), lower_bound, upper_bound)).a * weights5;
+    out_color.a += COMPAT_TEXTURE(Source, clamp(vTexCoord - vec2(0.0, offsets5 * texel.y), lower_bound, upper_bound)).a * weights5;
 #else
     // Define offsets and weights - change this for both the X and Y passes if you change the sigma value or number of texels sampled
     float offsets[5] = float[](0.0, 1.0, 2.0, 3.0, 4.0);
@@ -204,14 +204,14 @@ void main()
                                 0.13 - (5.0 * shadow_blur2 / 100.0)); //0.08167444001912718529866079800870 );
 
     // Sample the current fragment and apply its weight
-    vec4 out_color = texture(Source, clamp(vTexCoord, lower_bound, upper_bound)) * weights[0];
+    vec4 out_color = COMPAT_TEXTURE(Source, clamp(vTexCoord, lower_bound, upper_bound)) * weights[0];
 
     // Iterate across the offsets in both directions sampling texels
     // and adding their weighted alpha values to the total
     for (int i = 1; i < 5; i++)
     {
-        out_color.a += texture(Source, clamp(vTexCoord + vec2(0.0, offsets[i] * texel.y), lower_bound, upper_bound)).a * weights[i];
-        out_color.a += texture(Source, clamp(vTexCoord - vec2(0.0, offsets[i] * texel.y), lower_bound, upper_bound)).a * weights[i];
+        out_color.a += COMPAT_TEXTURE(Source, clamp(vTexCoord + vec2(0.0, offsets[i] * texel.y), lower_bound, upper_bound)).a * weights[i];
+        out_color.a += COMPAT_TEXTURE(Source, clamp(vTexCoord - vec2(0.0, offsets[i] * texel.y), lower_bound, upper_bound)).a * weights[i];
     }
 #endif
     FragColor = out_color;

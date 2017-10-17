@@ -118,7 +118,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -180,22 +180,22 @@ void main()
 	 
 	 // reading the texels
 	 
-	  float c00 = texture(Source, tc    -dx    -dy).x;
-	  float c10 = texture(Source, tc           -dy).x;
-	  float c20 = texture(Source, tc    +dx    -dy).x;
-	  float c30 = texture(Source, tc+2.0*dx    -dy).x;
-	  float c01 = texture(Source, tc    -dx       ).x;
-	  float c11 = texture(Source, tc              ).x;
-	  float c21 = texture(Source, tc    +dx       ).x;
-	  float c31 = texture(Source, tc+2.0*dx       ).x;
-	  float c02 = texture(Source, tc    -dx    +dy).x;
-	  float c12 = texture(Source, tc           +dy).x;
-	  float c22 = texture(Source, tc    +dx    +dy).x;
-	  float c32 = texture(Source, tc+2.0*dx    +dy).x;
-	  float c03 = texture(Source, tc    -dx+2.0*dy).x;
-	  float c13 = texture(Source, tc       +2.0*dy).x;
-	  float c23 = texture(Source, tc    +dx+2.0*dy).x;
-	  float c33 = texture(Source, tc+2.0*dx+2.0*dy).x;
+	  float c00 = COMPAT_TEXTURE(Source, tc    -dx    -dy).x;
+	  float c10 = COMPAT_TEXTURE(Source, tc           -dy).x;
+	  float c20 = COMPAT_TEXTURE(Source, tc    +dx    -dy).x;
+	  float c30 = COMPAT_TEXTURE(Source, tc+2.0*dx    -dy).x;
+	  float c01 = COMPAT_TEXTURE(Source, tc    -dx       ).x;
+	  float c11 = COMPAT_TEXTURE(Source, tc              ).x;
+	  float c21 = COMPAT_TEXTURE(Source, tc    +dx       ).x;
+	  float c31 = COMPAT_TEXTURE(Source, tc+2.0*dx       ).x;
+	  float c02 = COMPAT_TEXTURE(Source, tc    -dx    +dy).x;
+	  float c12 = COMPAT_TEXTURE(Source, tc           +dy).x;
+	  float c22 = COMPAT_TEXTURE(Source, tc    +dx    +dy).x;
+	  float c32 = COMPAT_TEXTURE(Source, tc+2.0*dx    +dy).x;
+	  float c03 = COMPAT_TEXTURE(Source, tc    -dx+2.0*dy).x;
+	  float c13 = COMPAT_TEXTURE(Source, tc       +2.0*dy).x;
+	  float c23 = COMPAT_TEXTURE(Source, tc    +dx+2.0*dy).x;
+	  float c33 = COMPAT_TEXTURE(Source, tc+2.0*dx+2.0*dy).x;
 
 	  //  Get min/max samples
 	  float min_sample = min4(c11, c21, c12, c22);

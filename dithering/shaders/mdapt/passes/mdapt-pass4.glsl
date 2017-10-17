@@ -91,7 +91,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -107,17 +107,17 @@ uniform COMPAT_PRECISION float linear_gamma;
 #define linear_gamma 0.0
 #endif
 
-//#define TEX(dx,dy)   texture(Source, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
-//#define TEXt0(dx,dy) texture(Original, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
+//#define TEX(dx,dy)   COMPAT_TEXTURE(Source, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
+//#define TEXt0(dx,dy) COMPAT_TEXTURE(Original, vTexCoord+vec2((dx),(dy))*SourceSize.zw)
 
 vec4 TEX(float dx, float dy){
-	if(linear_gamma > 0.5) return pow(texture(Source, vTexCoord+vec2((dx),(dy))*SourceSize.zw), vec4(2.2));
-	else return texture(Source, vTexCoord+vec2((dx),(dy))*SourceSize.zw);
+	if(linear_gamma > 0.5) return pow(COMPAT_TEXTURE(Source, vTexCoord+vec2((dx),(dy))*SourceSize.zw), vec4(2.2));
+	else return COMPAT_TEXTURE(Source, vTexCoord+vec2((dx),(dy))*SourceSize.zw);
 }
 
 vec4 TEXt0(float dx, float dy){
-	if(linear_gamma > 0.5) return pow(texture(Original, vTexCoord+vec2((dx),(dy))*SourceSize.zw), vec4(2.2));
-	else return texture(Original, vTexCoord+vec2((dx),(dy))*SourceSize.zw);
+	if(linear_gamma > 0.5) return pow(COMPAT_TEXTURE(Original, vTexCoord+vec2((dx),(dy))*SourceSize.zw), vec4(2.2));
+	else return COMPAT_TEXTURE(Original, vTexCoord+vec2((dx),(dy))*SourceSize.zw);
 }
 
 bool eq(vec3 A, vec3 B){

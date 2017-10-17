@@ -94,7 +94,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -160,7 +160,7 @@ void main()
     float tapR[N];
     for (int i=0; i<N; i++) {
         offsetR[i].zw /= sumR;
-        tapR[i] = pulse(0.0, 1.0, uv.x + offsetR[i].x) * texture(Source, uv + offsetR[i].xy).r;
+        tapR[i] = pulse(0.0, 1.0, uv.x + offsetR[i].x) * COMPAT_TEXTURE(Source, uv + offsetR[i].xy).r;
     }
     offsetR[(N-1)/2].w += 1.0;
     
@@ -191,7 +191,7 @@ void main()
     float tapG[N];
     for (int i=0; i<N; i++) {
         offsetG[i].zw /= sumG;
-        tapG[i] = pulse(0.0, 1.0, uv.x + offsetG[i].x) * texture(Source, uv + offsetG[i].xy).g;
+        tapG[i] = pulse(0.0, 1.0, uv.x + offsetG[i].x) * COMPAT_TEXTURE(Source, uv + offsetG[i].xy).g;
     }
     offsetG[(N-1)/2].w += 1.0;
     
@@ -222,7 +222,7 @@ void main()
     float tapB[N];
     for (int i=0; i<N; i++) {
         offsetB[i].zw /= sumB;
-        tapB[i] = pulse(0.0, 1.0, uv.x + offsetB[i].x) * texture(Source, uv + offsetB[i].xy).b;
+        tapB[i] = pulse(0.0, 1.0, uv.x + offsetB[i].x) * COMPAT_TEXTURE(Source, uv + offsetB[i].xy).b;
     }
     offsetB[(N-1)/2].w += 1.0;
     

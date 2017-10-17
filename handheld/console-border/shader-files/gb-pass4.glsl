@@ -146,7 +146,7 @@ COMPAT_VARYING vec2 texel;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -173,7 +173,7 @@ uniform COMPAT_PRECISION float screen_offset_y;
 #define screen_offset_y 0.0
 #endif
 
-#define bg_color texture(COLOR_PALETTE, vec2(0.25, 0.5)) 
+#define bg_color COMPAT_TEXTURE(COLOR_PALETTE, vec2(0.25, 0.5)) 
 
 // Sample the background color from the palette
 #define shadow_alpha (contrast * shadow_opacity)
@@ -191,9 +191,9 @@ void main()
     vec2 tex = vTexCoord.xy;
     
     // Sample all the relevant textures
-    vec4 foreground = texture(Pass2Texture, tex - screen_offset);
-    vec4 background = texture(BACKGROUND, vTexCoord);
-    vec4 shadows    = texture(Source, vTexCoord - (shadow_offset + screen_offset));
+    vec4 foreground = COMPAT_TEXTURE(Pass2Texture, tex - screen_offset);
+    vec4 background = COMPAT_TEXTURE(BACKGROUND, vTexCoord);
+    vec4 shadows    = COMPAT_TEXTURE(Source, vTexCoord - (shadow_offset + screen_offset));
     vec4 background_color = bg_color;
 
     // Foreground and background are blended with the background color

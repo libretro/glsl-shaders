@@ -153,23 +153,23 @@ COMPAT_VARYING vec4 t3;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 void main()
 {
-	vec3	w1	=	yuv * texture(Source, t1.xw).rgb;
-	vec3	w2	=	yuv * texture(Source, t1.yw).rgb;
-	vec3	w3	=	yuv * texture(Source, t1.zw).rgb;
+	vec3	w1	=	yuv * COMPAT_TEXTURE(Source, t1.xw).rgb;
+	vec3	w2	=	yuv * COMPAT_TEXTURE(Source, t1.yw).rgb;
+	vec3	w3	=	yuv * COMPAT_TEXTURE(Source, t1.zw).rgb;
 
-	vec3	w4	=	yuv * texture(Source, t2.xw).rgb;
-	vec3	w5	=	yuv * texture(Source, t2.yw).rgb;
-	vec3	w6	=	yuv * texture(Source, t2.zw).rgb;
+	vec3	w4	=	yuv * COMPAT_TEXTURE(Source, t2.xw).rgb;
+	vec3	w5	=	yuv * COMPAT_TEXTURE(Source, t2.yw).rgb;
+	vec3	w6	=	yuv * COMPAT_TEXTURE(Source, t2.zw).rgb;
 
-	vec3	w7	=	yuv * texture(Source, t3.xw).rgb;
-	vec3	w8	=	yuv * texture(Source, t3.yw).rgb;
-	vec3	w9	=	yuv * texture(Source, t3.zw).rgb;
+	vec3	w7	=	yuv * COMPAT_TEXTURE(Source, t3.xw).rgb;
+	vec3	w8	=	yuv * COMPAT_TEXTURE(Source, t3.yw).rgb;
+	vec3	w9	=	yuv * COMPAT_TEXTURE(Source, t3.zw).rgb;
 
 	vec3	pattern_1	=	vec3(diff(w5, w1),	diff(w5, w2),	diff(w5, w3));
 	vec3	pattern_2	=	vec3(diff(w5, w4),	false,	diff(w5, w6));

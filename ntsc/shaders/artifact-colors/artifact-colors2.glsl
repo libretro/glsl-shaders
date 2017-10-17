@@ -93,7 +93,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -156,7 +156,7 @@ vec4 remap(vec4 c)
 //Non-normalized texture sampling.
 vec4 sample2D(sampler2D tex,vec2 resolution, vec2 uv)
 {
-    return remap(texture(tex, uv / resolution));
+    return remap(COMPAT_TEXTURE(tex, uv / resolution));
 }
 
 float sinc(float x)
@@ -217,7 +217,7 @@ void main()
     	FragColor = vec4(color, 0.);
     
     #elif(VIEW_MODE == RGB)
-   		FragColor = texture(Original, vTexCoord.xy);
+   		FragColor = COMPAT_TEXTURE(Original, vTexCoord.xy);
     
     #elif(VIEW_MODE == LUMA) 
     	FragColor = vec4(luma);
@@ -226,12 +226,12 @@ void main()
     	FragColor = vec4(40.0*chroma+0.5,0.,0.);
     
     #elif(VIEW_MODE == SIGNAL)
-    	FragColor = 0.5 * texture(Pass2, uv / SourceSize.xy).rrrr+0.25;
+    	FragColor = 0.5 * COMPAT_TEXTURE(Pass2, uv / SourceSize.xy).rrrr+0.25;
     
     #elif(VIEW_MODE == SPLIT)
     	if(vTexCoord.x < 0.30)
         {
-            FragColor = texture(Original, vTexCoord.xy);
+            FragColor = COMPAT_TEXTURE(Original, vTexCoord.xy);
         }
         else
         {

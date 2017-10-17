@@ -92,14 +92,14 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 void main()
 {
-	vec4 inputY = texture(PassOutput6, vTexCoord.xy);
-	vec4 inputUV = texture(Source, vTexCoord.xy);
+	vec4 inputY = COMPAT_TEXTURE(PassOutput6, vTexCoord.xy);
+	vec4 inputUV = COMPAT_TEXTURE(Source, vTexCoord.xy);
 
 	vec4 yuva = vec4(inputY.x, (inputUV.y - 0.5), (inputUV.z - 0.5), 1.0);
 

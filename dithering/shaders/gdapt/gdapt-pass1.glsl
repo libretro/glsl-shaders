@@ -90,7 +90,7 @@ COMPAT_VARYING vec2 t1;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -105,7 +105,7 @@ uniform COMPAT_PRECISION float linear_gamma;
 #define linear_gamma 0.0
 #endif
 
-#define TEX(dx,dy) texture(Source, vTexCoord+vec2((dx),(dy))*t1)
+#define TEX(dx,dy) COMPAT_TEXTURE(Source, vTexCoord+vec2((dx),(dy))*t1)
 
 void main()
 {

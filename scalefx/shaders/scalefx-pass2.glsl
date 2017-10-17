@@ -131,7 +131,7 @@ COMPAT_VARYING vec4 t3;
 // fragment compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -163,8 +163,8 @@ void main()
 	*/
 
 #ifdef GL_ES
-	#define TEXm(x) texture(Pass1Texture, x)
-	#define TEXs(x) texture(Source, x)
+	#define TEXm(x) COMPAT_TEXTURE(Pass1Texture, x)
+	#define TEXs(x) COMPAT_TEXTURE(Source, x)
 
 	// metric data
 	vec4 A = TEXm(t1.xw), B = TEXm(t1.yw);

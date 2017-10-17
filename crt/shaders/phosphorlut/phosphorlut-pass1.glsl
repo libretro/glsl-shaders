@@ -82,7 +82,7 @@ COMPAT_VARYING vec4 TEX0;
 // fragment compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -102,15 +102,15 @@ uniform COMPAT_PRECISION float out_gamma;
 void main()
 {
 #if __VERSION__ < 130 // linearize these textures if srgb_framebuffers aren't guaranteed
-	vec3 scanlines = pow(texture(firstPass, vTexCoord).rgb, vec3(2.2));
-//	vec3 blurV = pow(texture(blurPassV, vTexCoord).rgb, vec3(2.2));
-	vec3 blurH = pow(texture(blurPass, vTexCoord).rgb, vec3(2.2));
-	vec3 phosphors = pow(texture(phosphorPass, vTexCoord).rgb, vec3(2.2));
+	vec3 scanlines = pow(COMPAT_TEXTURE(firstPass, vTexCoord).rgb, vec3(2.2));
+//	vec3 blurV = pow(COMPAT_TEXTURE(blurPassV, vTexCoord).rgb, vec3(2.2));
+	vec3 blurH = pow(COMPAT_TEXTURE(blurPass, vTexCoord).rgb, vec3(2.2));
+	vec3 phosphors = pow(COMPAT_TEXTURE(phosphorPass, vTexCoord).rgb, vec3(2.2));
 #else
-	vec3 scanlines = texture(firstPass, vTexCoord).rgb;
-//	vec3 blurV = texture(blurPassV, vTexCoord).rgb;
-	vec3 blurH = texture(blurPass, vTexCoord).rgb;
-	vec3 phosphors = texture(phosphorPass, vTexCoord).rgb;
+	vec3 scanlines = COMPAT_TEXTURE(firstPass, vTexCoord).rgb;
+//	vec3 blurV = COMPAT_TEXTURE(blurPassV, vTexCoord).rgb;
+	vec3 blurH = COMPAT_TEXTURE(blurPass, vTexCoord).rgb;
+	vec3 phosphors = COMPAT_TEXTURE(phosphorPass, vTexCoord).rgb;
 #endif
 	vec3 blurLines = (scanlines + blurH) / 2.0;
 	vec3 glow = (phosphors + blurH) / 2.0;

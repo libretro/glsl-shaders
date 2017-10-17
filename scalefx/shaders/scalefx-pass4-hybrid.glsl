@@ -121,7 +121,7 @@ COMPAT_VARYING vec4 TEX0;
 // fragment compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 #define Original OrigTexture
@@ -169,15 +169,15 @@ void main()
 
 
 	// read data
-	vec4 E = texture(Source, vTexCoord);
+	vec4 E = COMPAT_TEXTURE(Source, vTexCoord);
 
 	// determine subpixel
 	vec2 fc = fract(vTexCoord * SourceSize.xy);
 	vec2 fp = floor(3.0 * fc);
 	
 	// check adjacent pixels to prevent artifacts
-	vec4 hn = texture(Source, vTexCoord + vec2(fp.x - 1., 0.) / SourceSize.xy);
-	vec4 vn = texture(Source, vTexCoord + vec2(0., fp.y - 1.) / SourceSize.xy);
+	vec4 hn = COMPAT_TEXTURE(Source, vTexCoord + vec2(fp.x - 1., 0.) / SourceSize.xy);
+	vec4 vn = COMPAT_TEXTURE(Source, vTexCoord + vec2(0., fp.y - 1.) / SourceSize.xy);
 
 	// extract data
 	vec4 crn = loadCrn(E), hc = loadCrn(hn), vc = loadCrn(vn);

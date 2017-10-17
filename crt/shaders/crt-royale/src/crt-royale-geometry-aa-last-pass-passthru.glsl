@@ -18,12 +18,12 @@
 //  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
 //  Place, Suite 330, Boston, MA 02111-1307 USA
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
+#if __VERSION__ >= 130
+#define COMPAT_TEXTURE texture
 #else
-#define COMPAT_PRECISION
+#define COMPAT_TEXTURE texture2D
 #endif
+
 /*
 // Parameter lines go here:
 #pragma parameter crt_gamma "crt_gamma" 2.5 1.0 5.0 0.025
@@ -1221,13 +1221,13 @@ vec4 encode_output(vec4 color)
     }
 }
 
-#define tex2D_linearize(C, D) decode_input(vec4(texture(C, D)))
+#define tex2D_linearize(C, D) decode_input(vec4(COMPAT_TEXTURE(C, D)))
 //vec4 tex2D_linearize(sampler2D tex, vec2 tex_coords)
-//{   return decode_input(vec4(texture(tex, tex_coords)));   }
+//{   return decode_input(vec4(COMPAT_TEXTURE(tex, tex_coords)));   }
 
-//#define tex2D_linearize(C, D, E) decode_input(vec4(texture(C, D, E)))
+//#define tex2D_linearize(C, D, E) decode_input(vec4(COMPAT_TEXTURE(C, D, E)))
 //vec4 tex2D_linearize(sampler2D tex, vec2 tex_coords, int texel_off)
-//{   return decode_input(vec4(texture(tex, tex_coords, texel_off)));    }
+//{   return decode_input(vec4(COMPAT_TEXTURE(tex, tex_coords, texel_off)));    }
 
 #endif  //  GAMMA_MANAGEMENT_H
 /////////////   END #include gamma-management.h     ///////////////////
@@ -1311,12 +1311,12 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 void main()
 {
-    FragColor = encode_output(vec4(texture(Source, vTexCoord).rgb, 1.0));
+    FragColor = encode_output(vec4(COMPAT_TEXTURE(Source, vTexCoord).rgb, 1.0));
 } 
 #endif

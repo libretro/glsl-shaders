@@ -85,7 +85,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -118,7 +118,7 @@ void main()
     float Fcol = Fs * F_COL;
     float n = floor(gl_FragCoord.x);
     
-    vec3 cRGB = texture(Source, vTexCoord.xy).rgb;
+    vec3 cRGB = COMPAT_TEXTURE(Source, vTexCoord.xy).rgb;
     vec3 cYIQ = rgb2yiq * cRGB;
     
     vec2 cOsc = Oscillator(Fcol, Fs, n);

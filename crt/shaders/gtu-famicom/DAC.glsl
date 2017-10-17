@@ -130,13 +130,13 @@ COMPAT_VARYING float colorPhase;
 // fragment compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 void main()
 {
-    vec4 c = texture(Source, vTexCoord.xy);
+    vec4 c = COMPAT_TEXTURE(Source, vTexCoord.xy);
 
     int color    = TO_INT4(c.x);
     int level    = TO_INT2(c.y);

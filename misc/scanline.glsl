@@ -81,7 +81,7 @@ COMPAT_VARYING vec2 omega;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -99,7 +99,7 @@ uniform COMPAT_PRECISION float SCANLINE_SINE_COMP_B;
 void main()
 {
    vec2 sine_comp = vec2(SCANLINE_SINE_COMP_A, SCANLINE_SINE_COMP_B);
-   vec3 res = texture(Source, vTexCoord).xyz;
+   vec3 res = COMPAT_TEXTURE(Source, vTexCoord).xyz;
    vec3 scanline = res * (SCANLINE_BASE_BRIGHTNESS + dot(sine_comp * sin(vTexCoord * omega), vec2(1.0, 1.0)));
    FragColor = vec4(scanline.x, scanline.y, scanline.z, 1.0);
 } 

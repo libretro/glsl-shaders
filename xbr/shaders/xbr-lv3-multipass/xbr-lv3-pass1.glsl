@@ -128,7 +128,7 @@ COMPAT_VARYING vec2 delta;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -185,20 +185,20 @@ void main()
 	vec2 g1 = dir*( saturate(-dir.y*dir.x)*t1.zw + saturate( dir.y*dir.x)*t1.xy);
 	vec2 g2 = dir*( saturate( dir.y*dir.x)*t1.zw + saturate(-dir.y*dir.x)*t1.xy);
 
-	vec3 F   = texture(Original, vTexCoord +g1).xyz;
-	vec3 B   = texture(Original, vTexCoord -g2).xyz;
-	vec3 D   = texture(Original, vTexCoord -g1).xyz;
-	vec3 H   = texture(Original, vTexCoord +g2).xyz;
-	vec3 E   = texture(Original, vTexCoord    ).xyz;
+	vec3 F   = COMPAT_TEXTURE(Original, vTexCoord +g1).xyz;
+	vec3 B   = COMPAT_TEXTURE(Original, vTexCoord -g2).xyz;
+	vec3 D   = COMPAT_TEXTURE(Original, vTexCoord -g1).xyz;
+	vec3 H   = COMPAT_TEXTURE(Original, vTexCoord +g2).xyz;
+	vec3 E   = COMPAT_TEXTURE(Original, vTexCoord    ).xyz;
 
-	vec3 F4  = texture(Original, vTexCoord +2.0*g1).xyz;
-	vec3 I   = texture(Original, vTexCoord  +g1+g2).xyz;
-	vec3 H5  = texture(Original, vTexCoord +2.0*g2).xyz;
+	vec3 F4  = COMPAT_TEXTURE(Original, vTexCoord +2.0*g1).xyz;
+	vec3 I   = COMPAT_TEXTURE(Original, vTexCoord  +g1+g2).xyz;
+	vec3 H5  = COMPAT_TEXTURE(Original, vTexCoord +2.0*g2).xyz;
 
 	vec4 icomp    = round(saturate(mul(dir, sym_vectors))); // choose info component
-	float  info     = remapFrom01(dot(texture(Source, vTexCoord   ), icomp), 255.0); // retrieve 1st pass info
-	float  info_nr  = remapFrom01(dot(texture(Source, vTexCoord+g1), icomp), 255.0); // 1st pass info from neighbor r
-	float  info_nd  = remapFrom01(dot(texture(Source, vTexCoord+g2), icomp), 255.0); // 1st pass info from neighbor d
+	float  info     = remapFrom01(dot(COMPAT_TEXTURE(Source, vTexCoord   ), icomp), 255.0); // retrieve 1st pass info
+	float  info_nr  = remapFrom01(dot(COMPAT_TEXTURE(Source, vTexCoord+g1), icomp), 255.0); // 1st pass info from neighbor r
+	float  info_nd  = remapFrom01(dot(COMPAT_TEXTURE(Source, vTexCoord+g2), icomp), 255.0); // 1st pass info from neighbor d
 
 	modf(info/2.0f, info); // discard info
 	modf(info/2.0f, info); // discard info

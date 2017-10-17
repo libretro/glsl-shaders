@@ -106,13 +106,13 @@ COMPAT_VARYING vec4 t3;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
         #define CRTgamma 2.5
         #define display_gamma 2.2
-        #define TEX2D(c) pow(texture(Source,(c)),vec4(CRTgamma))
+        #define TEX2D(c) pow(COMPAT_TEXTURE(Source,(c)),vec4(CRTgamma))
 
 void main()
 {

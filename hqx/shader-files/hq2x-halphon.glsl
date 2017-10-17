@@ -111,7 +111,7 @@ COMPAT_VARYING vec4 TEX0;
 // fragment compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -156,15 +156,15 @@ vec4 scale(sampler2D image, vec2 coord)
     if (p.x > 0.5) o.x = -o.x;
     if (p.y > 0.5) o.y = -o.y;
 
-    vec4 w0 = texture(image, texCoord + vec2( -o.x, -o.y));
-    vec4 w1 = texture(image, texCoord + vec2(    0, -o.y));
-    vec4 w2 = texture(image, texCoord + vec2(  o.x, -o.y));
-    vec4 w3 = texture(image, texCoord + vec2( -o.x,    0));
-    vec4 w4 = texture(image, texCoord + vec2(    0,    0));
-    vec4 w5 = texture(image, texCoord + vec2(  o.x,    0));
-    vec4 w6 = texture(image, texCoord + vec2( -o.x,  o.y));
-    vec4 w7 = texture(image, texCoord + vec2(    0,  o.y));
-    vec4 w8 = texture(image, texCoord + vec2(  o.x,  o.y));
+    vec4 w0 = COMPAT_TEXTURE(image, texCoord + vec2( -o.x, -o.y));
+    vec4 w1 = COMPAT_TEXTURE(image, texCoord + vec2(    0, -o.y));
+    vec4 w2 = COMPAT_TEXTURE(image, texCoord + vec2(  o.x, -o.y));
+    vec4 w3 = COMPAT_TEXTURE(image, texCoord + vec2( -o.x,    0));
+    vec4 w4 = COMPAT_TEXTURE(image, texCoord + vec2(    0,    0));
+    vec4 w5 = COMPAT_TEXTURE(image, texCoord + vec2(  o.x,    0));
+    vec4 w6 = COMPAT_TEXTURE(image, texCoord + vec2( -o.x,  o.y));
+    vec4 w7 = COMPAT_TEXTURE(image, texCoord + vec2(    0,  o.y));
+    vec4 w8 = COMPAT_TEXTURE(image, texCoord + vec2(  o.x,  o.y));
 
     int pattern = 0;
     if (is_different(w0, w4)) pattern |= 1;

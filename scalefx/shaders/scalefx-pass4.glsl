@@ -135,7 +135,7 @@ COMPAT_VARYING vec4 t4;
 // fragment compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -160,7 +160,7 @@ void main()
 
 
 	// read data
-	vec4 E = texture(Source, vTexCoord);
+	vec4 E = COMPAT_TEXTURE(Source, vTexCoord);
 
 	// extract data
 	vec4 crn = loadCrn(E);
@@ -174,6 +174,6 @@ void main()
 	vec2 res = sp == 0. ? vec2(0.,0.) : sp == 1. ? vec2(-1.,0.) : sp == 2. ? vec2(-2.,0.) : sp == 3. ? vec2(1.,0.) : sp == 4. ? vec2(2.,0.) : sp == 5. ? vec2(0,-1) : sp == 6. ? vec2(0.,-2.) : sp == 7. ? vec2(0.,1.) : vec2(0.,2.);
 
 	// ouput
-	FragColor = texture(OrigTexture, vTexCoord + res / SourceSize.xy);
+	FragColor = COMPAT_TEXTURE(OrigTexture, vTexCoord + res / SourceSize.xy);
 } 
 #endif

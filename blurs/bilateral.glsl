@@ -15,7 +15,7 @@ Increasing the radius leads to more pixel lookups and therefore to a lower shade
 #pragma parameter CLR "Bilateral Color Thresh" 0.15 0.01 1.0 0.01
 #pragma parameter CWGHT "Bilateral Central Wght" 0.25 0.0 2.0 0.05
 
-#define TEX(dx,dy) texture(Source, vTexCoord + vec2((dx),(dy)) * t1)
+#define TEX(dx,dy) COMPAT_TEXTURE(Source, vTexCoord + vec2((dx),(dy)) * t1)
 #define mul(a,b) (b*a)
 #define saturate(c) clamp(c, 0.0, 1.0)
 
@@ -99,7 +99,7 @@ COMPAT_VARYING vec2 t1;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 

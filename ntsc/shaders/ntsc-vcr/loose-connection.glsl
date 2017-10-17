@@ -90,7 +90,7 @@ COMPAT_VARYING vec4 TEX0;
 // fragment compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -164,9 +164,9 @@ vec3 distort(sampler2D tex, vec2 uv, float magnitude, float framecount){
 	offset_x.x += rand(vec2(mod(framecount, 9847.0) * 0.03, uv.y * 0.42)) * 0.001 + sin(rand(vec2(mod(framecount, 5583.0) * 0.2, uv.y))) * mag;
 	offset_x.y += rand(vec2(mod(framecount, 5583.0) * 0.004, uv.y * 0.002)) * 0.004 + sin(mod(framecount, 9847.0) * 9.0) * mag;
 	
-	return vec3(texture(tex, vec2(offset_x.x, uv.y)).r,
-				texture(tex, vec2(offset_x.y, uv.y)).g,
-				texture(tex, uv).b);
+	return vec3(COMPAT_TEXTURE(tex, vec2(offset_x.x, uv.y)).r,
+				COMPAT_TEXTURE(tex, vec2(offset_x.y, uv.y)).g,
+				COMPAT_TEXTURE(tex, uv).b);
 }
 
 float onOff(float a, float b, float c, float framecount)
@@ -191,8 +191,8 @@ void main()
 	vec3 res = distort(Source, jumpy(vTexCoord, timer), magnitude, timer);
 	float col = nn(-vTexCoord * SourceSize.y * 4.0, timer);
 	vec3 play = distort(overlay, jumpy(vTexCoord * TextureSize / InputSize, timer), magnitude, timer);
-	float overlay_alpha = texture(overlay, jumpy(vTexCoord * TextureSize / InputSize, timer)).a;
-	float show_overlay = (mod(timer, 100.0) < 50.0) && (timer < 500.0) ? texture(overlay, jumpy(vTexCoord * TextureSize / InputSize, timer)).a : 0.0;
+	float overlay_alpha = COMPAT_TEXTURE(overlay, jumpy(vTexCoord * TextureSize / InputSize, timer)).a;
+	float show_overlay = (mod(timer, 100.0) < 50.0) && (timer < 500.0) ? COMPAT_TEXTURE(overlay, jumpy(vTexCoord * TextureSize / InputSize, timer)).a : 0.0;
 	show_overlay = clamp(show_overlay + always_on * overlay_alpha, 0.0, 1.0);
 	res = mix(res, play, show_overlay);
 

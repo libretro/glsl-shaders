@@ -26,7 +26,7 @@
     uv *= 10.;
     uv.x -= floor(uv.x);
     uv.y -= floor(uv.y);
-	fragColor = luma*texture(iChannel0, uv);
+	fragColor = luma*COMPAT_TEXTURE(iChannel0, uv);
     float k = 1.0;
     float test = fragCoord.x/k;
     float xpos = test-floor(test/3.0)*3.;
@@ -126,7 +126,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -138,7 +138,7 @@ vec3 monitor(vec2 p)
 {
 	vec2 pos = floor(p*size);
 	vec2 uv = vTexCoord.xy;//floor(pos)/size;
-   	vec4 res = texture(Source, uv);
+   	vec4 res = COMPAT_TEXTURE(Source, uv);
     vec3 yuv = res.xyz*mat3(
         0.2126, 0.7152, 0.0722,
 		-0.09991, -0.33609, 0.436,

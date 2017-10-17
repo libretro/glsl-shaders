@@ -104,7 +104,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 
 #ifdef PARAMETER_UNIFORM
@@ -316,7 +316,7 @@ vec3 MakeRGBColor(int emphasis, int level, int color)
 
 void main()
 {
-   vec4 c = texture(Source, vTexCoord.xy);
+   vec4 c = COMPAT_TEXTURE(Source, vTexCoord.xy);
 
    // Extract the chroma, level, and emphasis from the normalized RGB triplet
    int color =    int(floor((c.r * 15.0) + 0.5));

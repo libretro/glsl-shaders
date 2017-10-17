@@ -91,7 +91,7 @@ COMPAT_VARYING vec4 TEX0;
 // fragment compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -212,10 +212,10 @@ void main()
     float ykeep = ystuff.x;
 
     // get points to interpolate across in pseudo-perceptual colorspace
-    vec3 a = rgb2vry(texture(Source, vec2(xstuff.y, ystuff.y)).rgb);
-    vec3 b = rgb2vry(texture(Source, vec2(xstuff.z, ystuff.y)).rgb);
-    vec3 c = rgb2vry(texture(Source, vec2(xstuff.y, ystuff.z)).rgb);
-    vec3 d = rgb2vry(texture(Source, vec2(xstuff.z, ystuff.z)).rgb);
+    vec3 a = rgb2vry(COMPAT_TEXTURE(Source, vec2(xstuff.y, ystuff.y)).rgb);
+    vec3 b = rgb2vry(COMPAT_TEXTURE(Source, vec2(xstuff.z, ystuff.y)).rgb);
+    vec3 c = rgb2vry(COMPAT_TEXTURE(Source, vec2(xstuff.y, ystuff.z)).rgb);
+    vec3 d = rgb2vry(COMPAT_TEXTURE(Source, vec2(xstuff.z, ystuff.z)).rgb);
 
     // interpolate
     vec3 x1     = vry_interp(a,  b,  xkeep);

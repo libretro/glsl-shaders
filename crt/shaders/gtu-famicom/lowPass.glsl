@@ -15,7 +15,7 @@
 #define e(x,b) (pi*b*min(max(a(x)-0.5,-1.0/b),1.0/b))
 #define STU(x,b) ((d(x,b)+sin(d(x,b))-e(x,b)-sin(e(x,b)))/(2.0*pi))
 #define X(i) (offset-(i))
-#define S(i) (texture(Source, vec2(vTexCoord.x - X(i)/SourceSize.x,vTexCoord.y)).x)
+#define S(i) (COMPAT_TEXTURE(Source, vec2(vTexCoord.x - X(i)/SourceSize.x,vTexCoord.y)).x)
 #define VAL(i) (S(i)*STU(X(i),(signalResolution / InputSize.x)))
 
 #if defined(VERTEX)
@@ -95,7 +95,7 @@ COMPAT_VARYING vec4 TEX0;
 // fragment compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 

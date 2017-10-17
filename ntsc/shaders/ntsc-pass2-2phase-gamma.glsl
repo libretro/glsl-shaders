@@ -4,7 +4,7 @@
 #define NTSC_MONITOR_GAMMA 2.0
 
 #define fetch_offset(offset, one_x) \
-   texture(Source, vTexCoord + vec2((offset) * (one_x), 0.0)).xyz
+   COMPAT_TEXTURE(Source, vTexCoord + vec2((offset) * (one_x), 0.0)).xyz
 
 #if defined(VERTEX)
 
@@ -84,7 +84,7 @@ COMPAT_VARYING vec4 TEX0;
 // fragment compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -314,7 +314,7 @@ void main()
 
 		signal += sums * vec3(luma_filter[i], chroma_filter[i], chroma_filter[i]);
 	}
-	signal += texture(Source, vTexCoord).xyz *
+	signal += COMPAT_TEXTURE(Source, vTexCoord).xyz *
 		vec3(luma_filter[TAPS], chroma_filter[TAPS], chroma_filter[TAPS]);
 #endif
 // end ntsc-pass2-decode

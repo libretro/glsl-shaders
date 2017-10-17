@@ -86,7 +86,7 @@ COMPAT_VARYING COMPAT_PRECISION float data_one;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -120,8 +120,8 @@ void main()
     float phase = data_pix_no.y - texel.y;
     vec2  tex   = vec2(texel + 0.5) * SourceSize.zw;
 
-    vec3 top    = texture(Source, tex + vec2(0.0, 0.0 * data_one)).rgb;
-    vec3 bottom = texture(Source, tex + vec2(0.0, 1.0 * data_one)).rgb;
+    vec3 top    = COMPAT_TEXTURE(Source, tex + vec2(0.0, 0.0 * data_one)).rgb;
+    vec3 bottom = COMPAT_TEXTURE(Source, tex + vec2(0.0, 1.0 * data_one)).rgb;
 
     float dist0 = phase;
     float dist1 = 1.0 - phase;

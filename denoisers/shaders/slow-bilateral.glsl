@@ -81,7 +81,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -107,7 +107,7 @@ float normpdf3(in vec3 v, in float sigma)
 void main()
 {
 	vec2 fragcoord = vTexCoord.xy * OutputSize.xy;
-	vec3 c = texture(Source,  (fragcoord.xy / OutputSize.xy)).rgb;
+	vec3 c = COMPAT_TEXTURE(Source,  (fragcoord.xy / OutputSize.xy)).rgb;
 	
 	//declare stuff
 	const int kSize = (MSIZE-1)/2;
@@ -129,7 +129,7 @@ void main()
 	{
 		for (int j=-kSize; j <= kSize; ++j)
 		{
-			cc = texture(Source, (fragcoord.xy+vec2(float(i),float(j))) / OutputSize.xy).rgb;
+			cc = COMPAT_TEXTURE(Source, (fragcoord.xy+vec2(float(i),float(j))) / OutputSize.xy).rgb;
 			factor = normpdf3(cc-c, BSIGMA)*bZ*kernel[kSize+j]*kernel[kSize+i];
 			Z += factor;
 			final_colour += factor*cc;

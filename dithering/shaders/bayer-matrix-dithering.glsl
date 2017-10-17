@@ -83,7 +83,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -123,8 +123,8 @@ void main()
 {
 float Scale = 3.0 + mod(2.0 * FrameCount, 32.0) * animate + dither_size;
 vec4 lum = vec4(0.299, 0.587, 0.114, 0);
-float grayscale = dot(texture(Source, vTexCoord), lum);
-vec3 rgb = texture(Source, vTexCoord).rgb;
+float grayscale = dot(COMPAT_TEXTURE(Source, vTexCoord), lum);
+vec3 rgb = COMPAT_TEXTURE(Source, vTexCoord).rgb;
 
 vec2 xy = (vTexCoord * outsize.xy) * Scale;
 int x = int(mod(xy.x, 8));

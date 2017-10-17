@@ -120,7 +120,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -182,22 +182,22 @@ void main()
 	 
      // reading the texels
      
-      vec3 c00 = texture(PassOutput3, tc    -dx    -dy).xyz;
-      vec3 c10 = texture(PassOutput3, tc           -dy).xyz;
-      vec3 c20 = texture(PassOutput3, tc    +dx    -dy).xyz;
-      vec3 c30 = texture(PassOutput3, tc+2.0*dx    -dy).xyz;
-      vec3 c01 = texture(PassOutput3, tc    -dx       ).xyz;
-      vec3 c11 = texture(PassOutput3, tc              ).xyz;
-      vec3 c21 = texture(PassOutput3, tc    +dx       ).xyz;
-      vec3 c31 = texture(PassOutput3, tc+2.0*dx       ).xyz;
-      vec3 c02 = texture(PassOutput3, tc    -dx    +dy).xyz;
-      vec3 c12 = texture(PassOutput3, tc           +dy).xyz;
-      vec3 c22 = texture(PassOutput3, tc    +dx    +dy).xyz;
-      vec3 c32 = texture(PassOutput3, tc+2.0*dx    +dy).xyz;
-      vec3 c03 = texture(PassOutput3, tc    -dx+2.0*dy).xyz;
-      vec3 c13 = texture(PassOutput3, tc       +2.0*dy).xyz;
-      vec3 c23 = texture(PassOutput3, tc    +dx+2.0*dy).xyz;
-      vec3 c33 = texture(PassOutput3, tc+2.0*dx+2.0*dy).xyz;
+      vec3 c00 = COMPAT_TEXTURE(PassOutput3, tc    -dx    -dy).xyz;
+      vec3 c10 = COMPAT_TEXTURE(PassOutput3, tc           -dy).xyz;
+      vec3 c20 = COMPAT_TEXTURE(PassOutput3, tc    +dx    -dy).xyz;
+      vec3 c30 = COMPAT_TEXTURE(PassOutput3, tc+2.0*dx    -dy).xyz;
+      vec3 c01 = COMPAT_TEXTURE(PassOutput3, tc    -dx       ).xyz;
+      vec3 c11 = COMPAT_TEXTURE(PassOutput3, tc              ).xyz;
+      vec3 c21 = COMPAT_TEXTURE(PassOutput3, tc    +dx       ).xyz;
+      vec3 c31 = COMPAT_TEXTURE(PassOutput3, tc+2.0*dx       ).xyz;
+      vec3 c02 = COMPAT_TEXTURE(PassOutput3, tc    -dx    +dy).xyz;
+      vec3 c12 = COMPAT_TEXTURE(PassOutput3, tc           +dy).xyz;
+      vec3 c22 = COMPAT_TEXTURE(PassOutput3, tc    +dx    +dy).xyz;
+      vec3 c32 = COMPAT_TEXTURE(PassOutput3, tc+2.0*dx    +dy).xyz;
+      vec3 c03 = COMPAT_TEXTURE(PassOutput3, tc    -dx+2.0*dy).xyz;
+      vec3 c13 = COMPAT_TEXTURE(PassOutput3, tc       +2.0*dy).xyz;
+      vec3 c23 = COMPAT_TEXTURE(PassOutput3, tc    +dx+2.0*dy).xyz;
+      vec3 c33 = COMPAT_TEXTURE(PassOutput3, tc+2.0*dx+2.0*dy).xyz;
 
       //  Get min/max samples
       vec3 min_sample = min4(c11, c21, c12, c22);
