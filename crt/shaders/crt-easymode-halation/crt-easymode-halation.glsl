@@ -97,7 +97,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -260,7 +260,7 @@ void main()
     color_matrix[3] = filter_lanczos(coeffs_x, get_color_matrix(PassPrev4Texture, tex_co + 2.0 * dy, dx));
 
     col = filter_lanczos(coeffs_y, color_matrix).rgb;
-    diff = texture(Source, xy).rgb;
+    diff = COMPAT_TEXTURE(Source, xy).rgb;
 
     float rgb_max = max(col.r, max(col.g, col.b));
     float sample_offset = (InputSize.y * outsize.w) * 0.5;

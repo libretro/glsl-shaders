@@ -79,7 +79,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -99,7 +99,7 @@ vec4 mixfix(vec4 a, vec4 b, float c)
 
 void main()
 {
-	vec4 imgColor = texture(Source, vTexCoord.xy);
+	vec4 imgColor = COMPAT_TEXTURE(Source, vTexCoord.xy);
 	float red = ( imgColor.r * (LUT_Size - 1.0) + 0.4999 ) / (LUT_Size * LUT_Size);
 	float green = ( imgColor.g * (LUT_Size - 1.0) + 0.4999 ) / LUT_Size;
 	float blue1 = (floor( imgColor.b  * (LUT_Size - 1.0) ) / LUT_Size) + red;

@@ -92,16 +92,16 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 float nnedi3(int comp) {
     vec2 p = floor(gl_FragCoord.xy);//vec2(floor(vTexCoord.x * OutputSize.x), floor(vTexCoord.y * OutputSize.y));
     if (mod(p.y, 2.0) == 0.0) {
-        return texture(Source, vTexCoord.xy)[comp];
+        return COMPAT_TEXTURE(Source, vTexCoord.xy)[comp];
     }
-#define GET(i, j) texture(Source, vTexCoord.xy + (vec2((i) - (3.000000), (j) - (1.500000))/SourceSize.xy))[comp]
+#define GET(i, j) COMPAT_TEXTURE(Source, vTexCoord.xy + (vec2((i) - (3.000000), (j) - (1.500000))/SourceSize.xy))[comp]
 	vec4 samples[8];
 	samples[0] = vec4(GET(0.0, 0.0), GET(1.0, 0.0), GET(2.0, 0.0), GET(3.0, 0.0));
 	samples[1] = vec4(GET(4.0, 0.0), GET(5.0, 0.0), GET(6.0, 0.0), GET(7.0, 0.0));

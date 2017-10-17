@@ -109,7 +109,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -143,7 +143,7 @@ vec3 scanlines( float x , vec3 c){
 #define STU(x,b) ((d(x,b)+sin(d(x,b))-e(x,b)-sin(e(x,b)))/(2.0*pi))
 
 #define SOURCE(j) vec2(vTexCoord.x,vTexCoord.y - Y(j) * SourceSize.w)
-#define C(j) (texture(Source, SOURCE(j)).xyz)
+#define C(j) (COMPAT_TEXTURE(Source, SOURCE(j)).xyz)
 
 
 #define VAL(j) (C(j)*STU(Y(j),(tvVerticalResolution / InputSize.y)))

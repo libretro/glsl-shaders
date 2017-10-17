@@ -109,7 +109,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -170,7 +170,7 @@ void main()
 	vec4 diff;
 	
 	// Sample the source pixel
-	vec4 color = texture(Source, vTexCoord).rgba;
+	vec4 color = COMPAT_TEXTURE(Source, vTexCoord).rgba;
 	
 	for (int i = 1; i <= int(iterations); i++)
 		{

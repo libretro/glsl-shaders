@@ -131,7 +131,7 @@ COMPAT_VARYING vec2 blur_coords_upper_bound;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -156,7 +156,7 @@ void main()
     // lying in the spaces between two or more texels
 
     // Sample the input textures
-    vec4 out_color = texture(Source, vTexCoord).rgba;
+    vec4 out_color = COMPAT_TEXTURE(Source, vTexCoord).rgba;
 
     // Clamp the blur coords to the input texture size so it doesn't attempt to sample off the texture (it'll retrieve float4(0.0) and darken the edges otherwise)
     vec2 blur_coords_up_clamped    = clamp(blur_coords_up, blur_coords_lower_bound, blur_coords_upper_bound);
@@ -165,10 +165,10 @@ void main()
     vec2 blur_coords_left_clamped  = clamp(blur_coords_left, blur_coords_lower_bound, blur_coords_upper_bound);
 
     //Sample adjacent texels based on the coordinates above
-    vec4 adjacent_texel_1 = texture(Source, blur_coords_up_clamped).rgba;
-    vec4 adjacent_texel_2 = texture(Source, blur_coords_down_clamped).rgba;
-    vec4 adjacent_texel_3 = texture(Source, blur_coords_right_clamped).rgba;
-    vec4 adjacent_texel_4 = texture(Source, blur_coords_left_clamped).rgba;
+    vec4 adjacent_texel_1 = COMPAT_TEXTURE(Source, blur_coords_up_clamped).rgba;
+    vec4 adjacent_texel_2 = COMPAT_TEXTURE(Source, blur_coords_down_clamped).rgba;
+    vec4 adjacent_texel_3 = COMPAT_TEXTURE(Source, blur_coords_right_clamped).rgba;
+    vec4 adjacent_texel_4 = COMPAT_TEXTURE(Source, blur_coords_left_clamped).rgba;
 
     // Sum the alpha differences between neighboring texels, apply modifiers, then subtract the result from the current fragment alpha value
     out_color.a -=  

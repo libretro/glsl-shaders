@@ -132,7 +132,7 @@ COMPAT_VARYING vec4 xyp_21_22_23;
 // fragment compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -305,33 +305,33 @@ Mask for algorithm
 +-----+-----+-----+-----+-----+
 	*/
 	// Get mask values by performing texture lookup with the uniform sampler
-	vec3 P1  = texture(Source, xyp_1_2_3.xw   ).rgb;
-	vec3 P2  = texture(Source, xyp_1_2_3.yw   ).rgb;
-	vec3 P3  = texture(Source, xyp_1_2_3.zw   ).rgb;
+	vec3 P1  = COMPAT_TEXTURE(Source, xyp_1_2_3.xw   ).rgb;
+	vec3 P2  = COMPAT_TEXTURE(Source, xyp_1_2_3.yw   ).rgb;
+	vec3 P3  = COMPAT_TEXTURE(Source, xyp_1_2_3.zw   ).rgb;
 	
-	vec3 P6  = texture(Source, xyp_6_7_8.xw   ).rgb;
-	vec3 P7  = texture(Source, xyp_6_7_8.yw   ).rgb;
-	vec3 P8  = texture(Source, xyp_6_7_8.zw   ).rgb;
+	vec3 P6  = COMPAT_TEXTURE(Source, xyp_6_7_8.xw   ).rgb;
+	vec3 P7  = COMPAT_TEXTURE(Source, xyp_6_7_8.yw   ).rgb;
+	vec3 P8  = COMPAT_TEXTURE(Source, xyp_6_7_8.zw   ).rgb;
 	
-	vec3 P11 = texture(Source, xyp_11_12_13.xw).rgb;
-	vec3 P12 = texture(Source, xyp_11_12_13.yw).rgb;
-	vec3 P13 = texture(Source, xyp_11_12_13.zw).rgb;
+	vec3 P11 = COMPAT_TEXTURE(Source, xyp_11_12_13.xw).rgb;
+	vec3 P12 = COMPAT_TEXTURE(Source, xyp_11_12_13.yw).rgb;
+	vec3 P13 = COMPAT_TEXTURE(Source, xyp_11_12_13.zw).rgb;
 	
-	vec3 P16 = texture(Source, xyp_16_17_18.xw).rgb;
-	vec3 P17 = texture(Source, xyp_16_17_18.yw).rgb;
-	vec3 P18 = texture(Source, xyp_16_17_18.zw).rgb;
+	vec3 P16 = COMPAT_TEXTURE(Source, xyp_16_17_18.xw).rgb;
+	vec3 P17 = COMPAT_TEXTURE(Source, xyp_16_17_18.yw).rgb;
+	vec3 P18 = COMPAT_TEXTURE(Source, xyp_16_17_18.zw).rgb;
 	
-	vec3 P21 = texture(Source, xyp_21_22_23.xw).rgb;
-	vec3 P22 = texture(Source, xyp_21_22_23.yw).rgb;
-	vec3 P23 = texture(Source, xyp_21_22_23.zw).rgb;
+	vec3 P21 = COMPAT_TEXTURE(Source, xyp_21_22_23.xw).rgb;
+	vec3 P22 = COMPAT_TEXTURE(Source, xyp_21_22_23.yw).rgb;
+	vec3 P23 = COMPAT_TEXTURE(Source, xyp_21_22_23.zw).rgb;
 	
-	vec3 P5  = texture(Source, xyp_5_10_15.xy ).rgb;
-	vec3 P10 = texture(Source, xyp_5_10_15.xz ).rgb;
-	vec3 P15 = texture(Source, xyp_5_10_15.xw ).rgb;
+	vec3 P5  = COMPAT_TEXTURE(Source, xyp_5_10_15.xy ).rgb;
+	vec3 P10 = COMPAT_TEXTURE(Source, xyp_5_10_15.xz ).rgb;
+	vec3 P15 = COMPAT_TEXTURE(Source, xyp_5_10_15.xw ).rgb;
 	
-	vec3 P9  = texture(Source, xyp_9_14_9.xy  ).rgb;
-	vec3 P14 = texture(Source, xyp_9_14_9.xz  ).rgb;
-	vec3 P19 = texture(Source, xyp_9_14_9.xw  ).rgb;
+	vec3 P9  = COMPAT_TEXTURE(Source, xyp_9_14_9.xy  ).rgb;
+	vec3 P14 = COMPAT_TEXTURE(Source, xyp_9_14_9.xz  ).rgb;
+	vec3 P19 = COMPAT_TEXTURE(Source, xyp_9_14_9.xw  ).rgb;
 	
 	// Store luminance values of each point in groups of 4
 	// so that we may operate on all four corners at once
@@ -444,7 +444,7 @@ vec4 Smooth(sampler2D tex, vec2 tc){
 		{
 			for (int j=-kSize; j <= kSize; ++j)
 			{
-				final_colour += kernel[kSize+j]*kernel[kSize+i]*texture(Source, ((tc.xy * OutputSize.xy).xy+vec2(float(i),float(j))) / OutputSize.xy).rgb;
+				final_colour += kernel[kSize+j]*kernel[kSize+i]*COMPAT_TEXTURE(Source, ((tc.xy * OutputSize.xy).xy+vec2(float(i),float(j))) / OutputSize.xy).rgb;
 			}
 		}
 				

@@ -2981,7 +2981,7 @@ COMPAT_VARYING vec2 input_tiles_per_texture;
 // compatibility #defines
 #define Source Texture
 #define tex_uv TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 

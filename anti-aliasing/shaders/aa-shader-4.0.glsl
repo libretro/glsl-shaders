@@ -10,7 +10,7 @@
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 
 #if defined(VERTEX)
 

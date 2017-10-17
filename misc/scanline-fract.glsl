@@ -85,7 +85,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -120,7 +120,7 @@ void main()
 {
 	float lines = fract(vTexCoord.y * SourceSize.y);
 	float scale_factor = floor((OutputSize.y / InputSize.y) + 0.4999);
-	vec4 screen = texture(Source, vTexCoord);
+	vec4 screen = COMPAT_TEXTURE(Source, vTexCoord);
 	screen.rgb = RGBtoYIQ(screen.rgb);
 	screen.r *= BRIGHTBOOST;
 	screen.rgb = YIQtoRGB(screen.rgb);

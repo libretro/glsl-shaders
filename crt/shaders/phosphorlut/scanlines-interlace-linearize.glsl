@@ -90,7 +90,7 @@ COMPAT_VARYING vec4 TEX0;
 // fragment compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -108,7 +108,7 @@ uniform COMPAT_PRECISION float top_field_first;
 
 void main()
 {
-   vec4 res = texture(Source, vTexCoord).rgba;
+   vec4 res = COMPAT_TEXTURE(Source, vTexCoord).rgba;
    float y = 0.0;
    float tick = vec2(FrameCount, 1.0).x;
 

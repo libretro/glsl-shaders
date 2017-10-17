@@ -155,7 +155,7 @@ COMPAT_VARYING vec4 t7;
 // fragment compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -219,27 +219,27 @@ vec2 f = fract(vTexCoord.xy * SourceSize.xy);
   
 	vec3 src[25];
   
-	src[21] = texture(Source, t1.xw).rgb;
-	src[22] = texture(Source, t1.yw).rgb;
-	src[23] = texture(Source, t1.zw).rgb;
-	src[ 6] = texture(Source, t2.xw).rgb;
-	src[ 7] = texture(Source, t2.yw).rgb;
-	src[ 8] = texture(Source, t2.zw).rgb;
-	src[ 5] = texture(Source, t3.xw).rgb;
-	src[ 0] = texture(Source, t3.yw).rgb;
-	src[ 1] = texture(Source, t3.zw).rgb;
-	src[ 4] = texture(Source, t4.xw).rgb;
-	src[ 3] = texture(Source, t4.yw).rgb;
-	src[ 2] = texture(Source, t4.zw).rgb;
-	src[15] = texture(Source, t5.xw).rgb;
-	src[14] = texture(Source, t5.yw).rgb;
-	src[13] = texture(Source, t5.zw).rgb;
-	src[19] = texture(Source, t6.xy).rgb;
-	src[18] = texture(Source, t6.xz).rgb;
-	src[17] = texture(Source, t6.xw).rgb;
-	src[ 9] = texture(Source, t7.xy).rgb;
-	src[10] = texture(Source, t7.xz).rgb;
-	src[11] = texture(Source, t7.xw).rgb;
+	src[21] = COMPAT_TEXTURE(Source, t1.xw).rgb;
+	src[22] = COMPAT_TEXTURE(Source, t1.yw).rgb;
+	src[23] = COMPAT_TEXTURE(Source, t1.zw).rgb;
+	src[ 6] = COMPAT_TEXTURE(Source, t2.xw).rgb;
+	src[ 7] = COMPAT_TEXTURE(Source, t2.yw).rgb;
+	src[ 8] = COMPAT_TEXTURE(Source, t2.zw).rgb;
+	src[ 5] = COMPAT_TEXTURE(Source, t3.xw).rgb;
+	src[ 0] = COMPAT_TEXTURE(Source, t3.yw).rgb;
+	src[ 1] = COMPAT_TEXTURE(Source, t3.zw).rgb;
+	src[ 4] = COMPAT_TEXTURE(Source, t4.xw).rgb;
+	src[ 3] = COMPAT_TEXTURE(Source, t4.yw).rgb;
+	src[ 2] = COMPAT_TEXTURE(Source, t4.zw).rgb;
+	src[15] = COMPAT_TEXTURE(Source, t5.xw).rgb;
+	src[14] = COMPAT_TEXTURE(Source, t5.yw).rgb;
+	src[13] = COMPAT_TEXTURE(Source, t5.zw).rgb;
+	src[19] = COMPAT_TEXTURE(Source, t6.xy).rgb;
+	src[18] = COMPAT_TEXTURE(Source, t6.xz).rgb;
+	src[17] = COMPAT_TEXTURE(Source, t6.xw).rgb;
+	src[ 9] = COMPAT_TEXTURE(Source, t7.xy).rgb;
+	src[10] = COMPAT_TEXTURE(Source, t7.xz).rgb;
+	src[11] = COMPAT_TEXTURE(Source, t7.xw).rgb;
 	
 		float v[9];
 		v[0] = reduce(src[0]);

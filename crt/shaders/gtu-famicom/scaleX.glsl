@@ -97,7 +97,7 @@ COMPAT_VARYING vec4 TEX0;
 // fragment compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -139,7 +139,7 @@ void main()
     for (i = 1.0 - range; i < range + 1.0; i++)
     {
         X = offset - i;
-        c = texture(Source, vec2(vTexCoord.x - X * SourceSize.z, vTexCoord.y)).rgb;
+        c = COMPAT_TEXTURE(Source, vec2(vTexCoord.x - X * SourceSize.z, vTexCoord.y)).rgb;
         c.x *= ((d(X, Y) + sin(d(X, Y)) - e(X, Y) - sin(e(X, Y))) / (2.0 * pi));
         c.y *= ((d(X, I) + sin(d(X, I)) - e(X, I) - sin(e(X, I))) / (2.0 * pi));
         c.z *= ((d(X, Q) + sin(d(X, Q)) - e(X, Q) - sin(e(X, Q))) / (2.0 * pi));

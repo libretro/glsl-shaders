@@ -121,7 +121,7 @@ COMPAT_VARYING vec4 t6;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -134,19 +134,19 @@ vec3 dt = vec3(1.0);
 
 void main()
 {
-   vec3 c  = texture(Source, vTexCoord).xyz;
-   vec3 i1 = texture(Source, t1.xy).xyz; 
-   vec3 i2 = texture(Source, t2.xy).xyz; 
-   vec3 i3 = texture(Source, t3.xy).xyz; 
-   vec3 i4 = texture(Source, t4.xy).xyz; 
-   vec3 o1 = texture(Source, t5.xy).xyz; 
-   vec3 o3 = texture(Source, t6.xy).xyz; 
-   vec3 o2 = texture(Source, t5.zw).xyz;
-   vec3 o4 = texture(Source, t6.zw).xyz;
-   vec3 s1 = texture(Source, t1.zw).xyz; 
-   vec3 s2 = texture(Source, t2.zw).xyz; 
-   vec3 s3 = texture(Source, t3.zw).xyz; 
-   vec3 s4 = texture(Source, t4.zw).xyz; 
+   vec3 c  = COMPAT_TEXTURE(Source, vTexCoord).xyz;
+   vec3 i1 = COMPAT_TEXTURE(Source, t1.xy).xyz; 
+   vec3 i2 = COMPAT_TEXTURE(Source, t2.xy).xyz; 
+   vec3 i3 = COMPAT_TEXTURE(Source, t3.xy).xyz; 
+   vec3 i4 = COMPAT_TEXTURE(Source, t4.xy).xyz; 
+   vec3 o1 = COMPAT_TEXTURE(Source, t5.xy).xyz; 
+   vec3 o3 = COMPAT_TEXTURE(Source, t6.xy).xyz; 
+   vec3 o2 = COMPAT_TEXTURE(Source, t5.zw).xyz;
+   vec3 o4 = COMPAT_TEXTURE(Source, t6.zw).xyz;
+   vec3 s1 = COMPAT_TEXTURE(Source, t1.zw).xyz; 
+   vec3 s2 = COMPAT_TEXTURE(Source, t2.zw).xyz; 
+   vec3 s3 = COMPAT_TEXTURE(Source, t3.zw).xyz; 
+   vec3 s4 = COMPAT_TEXTURE(Source, t4.zw).xyz; 
 
    float ko1=dot(abs(o1-c),dt);
    float ko2=dot(abs(o2-c),dt);

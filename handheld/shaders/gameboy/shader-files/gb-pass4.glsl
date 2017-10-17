@@ -146,7 +146,7 @@ COMPAT_VARYING vec2 texel;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -193,7 +193,7 @@ void main()
     // Sample all the relevant textures
     vec4 foreground = texture(Pass2Texture, tex - screen_offset);
     vec4 background = texture(BACKGROUND, vTexCoord);
-    vec4 shadows    = texture(Source, vTexCoord - (shadow_offset + screen_offset));
+    vec4 shadows    = COMPAT_TEXTURE(Source, vTexCoord - (shadow_offset + screen_offset));
     vec4 background_color = bg_color;
 
     // Foreground and background are blended with the background color

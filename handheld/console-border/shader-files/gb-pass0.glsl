@@ -160,7 +160,7 @@ COMPAT_VARYING vec2 one_texel;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -181,7 +181,7 @@ uniform COMPAT_PRECISION float video_scale;
 
 
 // Frame sampling definitions
-#define curr_rgb  abs(1.0 - texture(Source,       vTexCoord).rgb)
+#define curr_rgb  abs(1.0 - COMPAT_TEXTURE(Source,       vTexCoord).rgb)
 #define prev0_rgb abs(1.0 - texture(PrevTexture,  vTexCoord).rgb)
 #define prev1_rgb abs(1.0 - texture(Prev1Texture, vTexCoord).rgb)
 #define prev2_rgb abs(1.0 - texture(Prev2Texture, vTexCoord).rgb)

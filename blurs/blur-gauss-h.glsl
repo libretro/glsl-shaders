@@ -81,7 +81,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -102,29 +102,29 @@ void main()
 	float sampleWeights4 = 0.024067905;
 	float sampleWeights5 = 0.0021112196;
 
-	vec4 color = texture(Source, texcoord) * sampleWeights1;
+	vec4 color = COMPAT_TEXTURE(Source, texcoord) * sampleWeights1;
 
 // unroll the loop
-		color += texture(Source, texcoord + vec2(sampleOffsets2* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights2;
-		color += texture(Source, texcoord - vec2(sampleOffsets2* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights2;
+		color += COMPAT_TEXTURE(Source, texcoord + vec2(sampleOffsets2* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights2;
+		color += COMPAT_TEXTURE(Source, texcoord - vec2(sampleOffsets2* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights2;
 
-		color += texture(Source, texcoord + vec2(sampleOffsets3* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights3;
-		color += texture(Source, texcoord - vec2(sampleOffsets3* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights3;
+		color += COMPAT_TEXTURE(Source, texcoord + vec2(sampleOffsets3* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights3;
+		color += COMPAT_TEXTURE(Source, texcoord - vec2(sampleOffsets3* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights3;
 
-		color += texture(Source, texcoord + vec2(sampleOffsets4* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights4;
-		color += texture(Source, texcoord - vec2(sampleOffsets4* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights4;
+		color += COMPAT_TEXTURE(Source, texcoord + vec2(sampleOffsets4* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights4;
+		color += COMPAT_TEXTURE(Source, texcoord - vec2(sampleOffsets4* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights4;
 
-		color += texture(Source, texcoord + vec2(sampleOffsets5* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights5;
-		color += texture(Source, texcoord - vec2(sampleOffsets5* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights5;
+		color += COMPAT_TEXTURE(Source, texcoord + vec2(sampleOffsets5* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights5;
+		color += COMPAT_TEXTURE(Source, texcoord - vec2(sampleOffsets5* HW * PIXEL_SIZE.x, 0.0)) * sampleWeights5;
 #else
 
 	float sampleOffsets[5] = { 0.0, 1.4347826, 3.3478260, 5.2608695, 7.1739130 };
 	float sampleWeights[5] = { 0.16818994, 0.27276957, 0.11690125, 0.024067905, 0.0021112196 };
 
-	vec4 color = texture(Source, texcoord) * sampleWeights[0];
+	vec4 color = COMPAT_TEXTURE(Source, texcoord) * sampleWeights[0];
 	for(int i = 1; i < 5; ++i) {
-		color += texture(Source, texcoord + vec2(sampleOffsets[i]*HW * PIXEL_SIZE.x, 0.0)) * sampleWeights[i];
-		color += texture(Source, texcoord - vec2(sampleOffsets[i]*HW * PIXEL_SIZE.x, 0.0)) * sampleWeights[i];
+		color += COMPAT_TEXTURE(Source, texcoord + vec2(sampleOffsets[i]*HW * PIXEL_SIZE.x, 0.0)) * sampleWeights[i];
+		color += COMPAT_TEXTURE(Source, texcoord - vec2(sampleOffsets[i]*HW * PIXEL_SIZE.x, 0.0)) * sampleWeights[i];
 	}
 #endif
 

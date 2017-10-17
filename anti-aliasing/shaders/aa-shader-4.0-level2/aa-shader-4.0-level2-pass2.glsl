@@ -95,7 +95,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -117,10 +117,10 @@ void main()
    vec2 DL = vTexCoord.xy + vec2(-dx, dy);
    vec2 DR = vTexCoord.xy + vec2(dx, dy);
 
-   vec3 c00 = texture(Source, UL).xyz;
-   vec3 c20 = texture(Source, UR).xyz;
-   vec3 c02 = texture(Source, DL).xyz;
-   vec3 c22 = texture(Source, DR).xyz;
+   vec3 c00 = COMPAT_TEXTURE(Source, UL).xyz;
+   vec3 c20 = COMPAT_TEXTURE(Source, UR).xyz;
+   vec3 c02 = COMPAT_TEXTURE(Source, DL).xyz;
+   vec3 c22 = COMPAT_TEXTURE(Source, DR).xyz;
 
    float m1=dot(abs(c00-c22),dt)+0.001;
    float m2=dot(abs(c02-c20),dt)+0.001;

@@ -40,7 +40,7 @@
 //-------------------------------------------------------------------------------------------------
 
 // Get destination pixel values
-#define get(x,y)    ( saturate(texture(Source, coord + vec2(x*(px), y*(py))).rgb) )
+#define get(x,y)    ( saturate(COMPAT_TEXTURE(Source, coord + vec2(x*(px), y*(py))).rgb) )
 
 // Component-wise distance
 #define b_diff(pix) ( abs(blur - c##pix) )
@@ -122,7 +122,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -170,7 +170,7 @@ vec4 frag_op(sampler2D Source, vec2 coord, float px, float py)
 	                   + 0.92*(b_diff(1) + b_diff(3)  + b_diff(6)  + b_diff(8))
 	                   + 0.23*(b_diff(9) + b_diff(10) + b_diff(11) + b_diff(12)) );
 
-	return vec4( (texture(Source, coord).rgb), (edge*c_comp + w_offset) );
+	return vec4( (COMPAT_TEXTURE(Source, coord).rgb), (edge*c_comp + w_offset) );
 }
 
 void main()

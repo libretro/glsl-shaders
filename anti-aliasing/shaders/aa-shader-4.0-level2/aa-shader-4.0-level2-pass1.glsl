@@ -95,7 +95,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -117,19 +117,19 @@ void main()
    vec4 xh = yx*vec4(4.0,1.5,4.0,1.5);
    vec4 yv = yx*vec4(1.5,4.0,1.5,4.0);
 
-   vec3 c11 = texture(Source, tex        ).xyz; 	
-   vec3 s00 = texture(Source, tex + yx.zw).xyz; 
-   vec3 s20 = texture(Source, tex + yx.xw).xyz; 
-   vec3 s22 = texture(Source, tex + yx.xy).xyz; 
-   vec3 s02 = texture(Source, tex + yx.zy).xyz;
-   vec3 h00 = texture(Source, tex + xh.zw).xyz; 
-   vec3 h20 = texture(Source, tex + xh.xw).xyz; 
-   vec3 h22 = texture(Source, tex + xh.xy).xyz; 
-   vec3 h02 = texture(Source, tex + xh.zy).xyz;
-   vec3 v00 = texture(Source, tex + yv.zw).xyz; 
-   vec3 v20 = texture(Source, tex + yv.xw).xyz; 
-   vec3 v22 = texture(Source, tex + yv.xy).xyz; 
-   vec3 v02 = texture(Source, tex + yv.zy).xyz;	 
+   vec3 c11 = COMPAT_TEXTURE(Source, tex        ).xyz; 	
+   vec3 s00 = COMPAT_TEXTURE(Source, tex + yx.zw).xyz; 
+   vec3 s20 = COMPAT_TEXTURE(Source, tex + yx.xw).xyz; 
+   vec3 s22 = COMPAT_TEXTURE(Source, tex + yx.xy).xyz; 
+   vec3 s02 = COMPAT_TEXTURE(Source, tex + yx.zy).xyz;
+   vec3 h00 = COMPAT_TEXTURE(Source, tex + xh.zw).xyz; 
+   vec3 h20 = COMPAT_TEXTURE(Source, tex + xh.xw).xyz; 
+   vec3 h22 = COMPAT_TEXTURE(Source, tex + xh.xy).xyz; 
+   vec3 h02 = COMPAT_TEXTURE(Source, tex + xh.zy).xyz;
+   vec3 v00 = COMPAT_TEXTURE(Source, tex + yv.zw).xyz; 
+   vec3 v20 = COMPAT_TEXTURE(Source, tex + yv.xw).xyz; 
+   vec3 v22 = COMPAT_TEXTURE(Source, tex + yv.xy).xyz; 
+   vec3 v02 = COMPAT_TEXTURE(Source, tex + yv.zy).xyz;	 
    
    float m1=1.0/(dot(abs(s00-s22),dt)+0.00001);
    float m2=1.0/(dot(abs(s02-s20),dt)+0.00001);

@@ -40,9 +40,9 @@
 // -- Input processing --
 //Current high res value
 #define Get(x,y)    (texture(refTex,ddxddy*(pos+vec2(x,y)+0.5)).xyz)
-#define GetY(x,y)    (texture(Source,ddxddy*(pos+vec2(x,y)+0.5)).a)
+#define GetY(x,y)    (COMPAT_TEXTURE(Source,ddxddy*(pos+vec2(x,y)+0.5)).a)
 //Downsampled result
-#define Diff(x,y)     (texture(Source,ddxddy*(pos+vec2(x,y)+0.5)).xyz)
+#define Diff(x,y)     (COMPAT_TEXTURE(Source,ddxddy*(pos+vec2(x,y)+0.5)).xyz)
 
 #if defined(VERTEX)
 
@@ -125,7 +125,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 

@@ -213,24 +213,24 @@ COMPAT_VARYING vec4 t7;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 #define OriginalSize vec4(OrigTextureSize.xy, 1.0 / OrigTextureSize.xy)
 
 void main()
 {
-	vec4 PA  = texture(Source, t2.xw);
-	vec4 PB  = texture(Source, t2.yw);
-	vec4 PC  = texture(Source, t2.zw);
+	vec4 PA  = COMPAT_TEXTURE(Source, t2.xw);
+	vec4 PB  = COMPAT_TEXTURE(Source, t2.yw);
+	vec4 PC  = COMPAT_TEXTURE(Source, t2.zw);
 
-	vec4 PD  = texture(Source, t3.xw);
-	vec4 PE  = texture(Source, t3.yw);
-	vec4 PF  = texture(Source, t3.zw);
+	vec4 PD  = COMPAT_TEXTURE(Source, t3.xw);
+	vec4 PE  = COMPAT_TEXTURE(Source, t3.yw);
+	vec4 PF  = COMPAT_TEXTURE(Source, t3.zw);
 
-	vec4 PG  = texture(Source, t4.xw);
-	vec4 PH  = texture(Source, t4.yw);
-	vec4 PI  = texture(Source, t4.zw);
+	vec4 PG  = COMPAT_TEXTURE(Source, t4.xw);
+	vec4 PH  = COMPAT_TEXTURE(Source, t4.yw);
+	vec4 PI  = COMPAT_TEXTURE(Source, t4.zw);
 	
 	vec3 A1 = texture(Original, t1.xw).rgb;
 	vec3 B1 = texture(Original, t1.yw).rgb;

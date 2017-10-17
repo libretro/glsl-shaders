@@ -89,7 +89,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -122,7 +122,7 @@ const vec3 YIQ_hi = vec3(1,  0.595716,  0.522591);
 
 void main()
 {
-	vec3 c = texture(Source, vTexCoord).xyz;
+	vec3 c = COMPAT_TEXTURE(Source, vTexCoord).xyz;
 
 	c = pow(c, vec3(GIN, GIN, GIN));
 	c = mul(RGBtoYIQ, c);

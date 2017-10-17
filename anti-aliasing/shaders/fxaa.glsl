@@ -89,7 +89,7 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 
 /*
 FXAA_PRESET - Choose compile-in knob preset 0-5.

@@ -116,7 +116,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -185,22 +185,22 @@ void main()
      
      // reading the texels
      
-      vec3 c00 = texture(Source, tc    -dx    -dy).xyz;
-      vec3 c10 = texture(Source, tc           -dy).xyz;
-      vec3 c20 = texture(Source, tc    +dx    -dy).xyz;
-      vec3 c30 = texture(Source, tc+2.0*dx    -dy).xyz;
-      vec3 c01 = texture(Source, tc    -dx       ).xyz;
-      vec3 c11 = texture(Source, tc              ).xyz;
-      vec3 c21 = texture(Source, tc    +dx       ).xyz;
-      vec3 c31 = texture(Source, tc+2.0*dx       ).xyz;
-      vec3 c02 = texture(Source, tc    -dx    +dy).xyz;
-      vec3 c12 = texture(Source, tc           +dy).xyz;
-      vec3 c22 = texture(Source, tc    +dx    +dy).xyz;
-      vec3 c32 = texture(Source, tc+2.0*dx    +dy).xyz;
-      vec3 c03 = texture(Source, tc    -dx+2.0*dy).xyz;
-      vec3 c13 = texture(Source, tc       +2.0*dy).xyz;
-      vec3 c23 = texture(Source, tc    +dx+2.0*dy).xyz;
-      vec3 c33 = texture(Source, tc+2.0*dx+2.0*dy).xyz;
+      vec3 c00 = COMPAT_TEXTURE(Source, tc    -dx    -dy).xyz;
+      vec3 c10 = COMPAT_TEXTURE(Source, tc           -dy).xyz;
+      vec3 c20 = COMPAT_TEXTURE(Source, tc    +dx    -dy).xyz;
+      vec3 c30 = COMPAT_TEXTURE(Source, tc+2.0*dx    -dy).xyz;
+      vec3 c01 = COMPAT_TEXTURE(Source, tc    -dx       ).xyz;
+      vec3 c11 = COMPAT_TEXTURE(Source, tc              ).xyz;
+      vec3 c21 = COMPAT_TEXTURE(Source, tc    +dx       ).xyz;
+      vec3 c31 = COMPAT_TEXTURE(Source, tc+2.0*dx       ).xyz;
+      vec3 c02 = COMPAT_TEXTURE(Source, tc    -dx    +dy).xyz;
+      vec3 c12 = COMPAT_TEXTURE(Source, tc           +dy).xyz;
+      vec3 c22 = COMPAT_TEXTURE(Source, tc    +dx    +dy).xyz;
+      vec3 c32 = COMPAT_TEXTURE(Source, tc+2.0*dx    +dy).xyz;
+      vec3 c03 = COMPAT_TEXTURE(Source, tc    -dx+2.0*dy).xyz;
+      vec3 c13 = COMPAT_TEXTURE(Source, tc       +2.0*dy).xyz;
+      vec3 c23 = COMPAT_TEXTURE(Source, tc    +dx+2.0*dy).xyz;
+      vec3 c33 = COMPAT_TEXTURE(Source, tc+2.0*dx+2.0*dy).xyz;
 
 
 
@@ -215,11 +215,11 @@ void main()
       // Anti-ringing
       //  Get min/max samples
       pc = vTexCoord;
-      c00 = texture(Source, pc              ).xyz;
-      c11 = texture(Source, pc    +dx       ).xyz;
-      c21 = texture(Source, pc    -dx       ).xyz;
-      c12 = texture(Source, pc           +dy).xyz;
-      c22 = texture(Source, pc           -dy).xyz;
+      c00 = COMPAT_TEXTURE(Source, pc              ).xyz;
+      c11 = COMPAT_TEXTURE(Source, pc    +dx       ).xyz;
+      c21 = COMPAT_TEXTURE(Source, pc    -dx       ).xyz;
+      c12 = COMPAT_TEXTURE(Source, pc           +dy).xyz;
+      c22 = COMPAT_TEXTURE(Source, pc           -dy).xyz;
 
 
       vec3 min_sample = min4(c11, c21, c12, c22);

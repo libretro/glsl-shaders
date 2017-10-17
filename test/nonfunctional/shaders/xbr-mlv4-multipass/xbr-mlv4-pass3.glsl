@@ -187,7 +187,7 @@ COMPAT_VARYING vec4 t1;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 #define OriginalSize vec4(OrigTextureSize.xy, 1.0 / OrigTextureSize.xy)
@@ -218,9 +218,9 @@ void main()
 	
 	vec4	icomp	= round(saturate(mul(dir, sym_vectors))); // choose info component
 
-	float	infoE	= remapFrom01(dot(texture(Source, vTexCoord   ), icomp), 255.0); // retrieve 1st pass info
-	float	infoF	= remapFrom01(dot(texture(Source, vTexCoord+g1), icomp), 255.0); // 1st pass info from neighbor r
-	float	infoH	= remapFrom01(dot(texture(Source, vTexCoord+g2), icomp), 255.0); // 1st pass info from neighbor d
+	float	infoE	= remapFrom01(dot(COMPAT_TEXTURE(Source, vTexCoord   ), icomp), 255.0); // retrieve 1st pass info
+	float	infoF	= remapFrom01(dot(COMPAT_TEXTURE(Source, vTexCoord+g1), icomp), 255.0); // 1st pass info from neighbor r
+	float	infoH	= remapFrom01(dot(COMPAT_TEXTURE(Source, vTexCoord+g2), icomp), 255.0); // 1st pass info from neighbor d
 
 	vec4 lparam;
 	vec2 addr;

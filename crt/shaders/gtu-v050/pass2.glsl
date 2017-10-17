@@ -82,7 +82,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -106,7 +106,7 @@ uniform COMPAT_PRECISION float signalResolutionQ;
 #define e(x,b) (pi*b*min(max(a(x)-0.5,-1.0/b),1.0/b))
 #define STU(x,b) ((d(x,b)+sin(d(x,b))-e(x,b)-sin(e(x,b)))/(2.0*pi))
 //#define X(i) (offset-(i))
-#define GETC (texture(Source, vec2(vTexCoord.x - X * SourceSize.z, vTexCoord.y)).rgb)
+#define GETC (COMPAT_TEXTURE(Source, vec2(vTexCoord.x - X * SourceSize.z, vTexCoord.y)).rgb)
 
 #define VAL_composite vec3((c.x*STU(X,(signalResolution  / InputSize.x))),(c.y*STU(X,(signalResolutionI / InputSize.x))),(c.z*STU(X,(signalResolutionQ / InputSize.x))))
 #define VAL (c*STU(X,(signalResolution / InputSize.x)))

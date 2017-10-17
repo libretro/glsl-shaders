@@ -84,7 +84,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -97,7 +97,7 @@ void main()
     float luminance     = 1.0;
 
     vec3 gamma  = vec3(CRT_gamma / Display_gamma);
-    vec3 res    = texture(Source, vTexCoord).xyz;
+    vec3 res    = COMPAT_TEXTURE(Source, vTexCoord).xyz;
     res         = mix(grayscale(res), res, saturation); // Apply saturation
     res         = pow(res, gamma.rgb); // Apply gamma
     vec4 c      = vec4(clamp(res * luminance, 0.0, 1.0), 1.0);

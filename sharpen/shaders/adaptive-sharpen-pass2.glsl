@@ -85,7 +85,7 @@
 #define wpmean(a,b,w)  ( pow((w*pow(abs(a), pm_p) + abs(1.-w)*pow(abs(b), pm_p)), (1.0/pm_p)) )
 
 // Get destination pixel values
-#define get(x,y)       ( texture(Source, coord + vec2(x*(px), y*(py))) )
+#define get(x,y)       ( COMPAT_TEXTURE(Source, coord + vec2(x*(px), y*(py))) )
 #define sat(inp)       ( vec4(saturate((inp).xyz), (inp).w) )
 
 // Maximum of four values
@@ -176,7 +176,7 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -346,7 +346,7 @@ void main()
 	float px = 1.0 / SourceSize.x;
 	float py = 1.0 / SourceSize.y;
 
-	vec4 orig  = texture(Source, tex);
+	vec4 orig  = COMPAT_TEXTURE(Source, tex);
 	float c_edge = orig.w - w_offset;
 
 	FragColor = vec4(frag_op(orig, tex, c_edge, px, py));

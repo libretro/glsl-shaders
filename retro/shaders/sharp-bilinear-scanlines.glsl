@@ -104,7 +104,7 @@ COMPAT_VARYING vec2 omega;
 // fragment compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
@@ -139,7 +139,7 @@ void main()
 
    vec2 mod_texel = texel_floored + f;
 
-   vec3 res = texture(Source, mod_texel / SourceSize.xy).xyz;
+   vec3 res = COMPAT_TEXTURE(Source, mod_texel / SourceSize.xy).xyz;
 
    // thick scanlines (thickness pre-calculated in vertex shader based on source resolution)
    vec2 sine_comp = vec2(SCANLINE_HORIZONTAL_MODULATION, SCANLINE_VERTICAL_MODULATION);
