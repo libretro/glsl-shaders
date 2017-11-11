@@ -75,7 +75,7 @@ void main()
 	vec2 scaled_video_out = (InputSize.xy * vec2(video_scale));
     // Remaps position to integer scaled output
     gl_Position = MVPMatrix * VertexCoord;// / vec4( vec2(outsize.xy / scaled_video_out), 1.0, 1.0 );
-    TEX0.xy = TexCoord.xy + vec2(0.0, half_pixel);
+    TEX0.xy = TexCoord.xy;// + vec2(0.0, half_pixel);
     dot_size = SourceSize.zw;
     one_texel = 1.0 / (SourceSize.xy * video_scale);
 }
@@ -125,7 +125,7 @@ COMPAT_VARYING vec2 one_texel;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
-#define maskSize vec2(2.0, floor(outsize.y / InputSize.y + 0.000001))
+#define maskSize vec2(1., floor(outsize.y / InputSize.y + 0.000001))
 
 ////////////////////////////////////////////////////////////////////////////////
 //fragment definitions                                                        //
