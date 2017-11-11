@@ -125,7 +125,7 @@ COMPAT_VARYING vec2 one_texel;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
-#define maskSize vec2(1., floor(outsize.y / InputSize.y + 0.000001))
+#define maskSize vec2(2., floor(outsize.y / InputSize.y + 0.000001))
 
 ////////////////////////////////////////////////////////////////////////////////
 //fragment definitions                                                        //
