@@ -1,0 +1,38 @@
+shaders = 4
+
+#cbod
+shader0 = "../../dithering/shaders/cbod-v1/cbod-v1-pass1.glsl"
+shader1 = "../../dithering/shaders/cbod-v1/cbod-v1-pass2.glsl
+
+filter_linear0 = false
+scale_type0 = source
+scale0 = 1.0
+
+filter_linear1 = false
+scale_type1 = source
+scale1 = 1.0
+
+#tvout
+shader2 = "../../crt/shaders/tvout-tweaks.glsl"
+shader3 = "../../misc/image-adjustment.glsl"
+
+scale_type_x2 = "viewport"
+scale_x2 = "1.000000"
+scale_type_y2 = "source"
+scale_y2 = "1.000000"
+
+parameters = "TVOUT_RESOLUTION;TVOUT_COMPOSITE_CONNECTION;TVOUT_TV_COLOR_LEVELS;target_gamma;monitor_gamma;overscan_percent_x;overscan_percent_y;saturation;contrast;luminance;bright_boost;R;G;B"
+TVOUT_RESOLUTION = "320.000000"
+TVOUT_COMPOSITE_CONNECTION = "0.000000"
+TVOUT_TV_COLOR_LEVELS = "1.000000"
+target_gamma = "2.400000"
+monitor_gamma = "2.200000"
+overscan_percent_x = "0.000000"
+overscan_percent_y = "0.000000"
+saturation = "1.000000"
+contrast = "1.000000"
+luminance = "1.000000"
+bright_boost = "0.000000"
+R = "1.000000"
+G = "1.000000"
+B = "1.000000"
