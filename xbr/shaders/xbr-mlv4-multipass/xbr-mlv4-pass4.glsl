@@ -83,14 +83,14 @@ float df(float A, float B)
 
 #define GET_PIXEL(PARAM, PIXEL)\
 	info = PARAM;\
-	ay.z = round(  modf( info/2.0, info )  );\
-	ay.y = round(  modf( info/2.0, info )  );\
-	ay.x = round(  modf( info/2.0, info )  );\
-	ax.z = round(  modf( info/2.0, info )  );\
-	ax.y = round(  modf( info/2.0, info )  );\
+	ay.z = round(  modf( info/1.9999, info )  );\
+	ay.y = round(  modf( info/1.9999, info )  );\
+	ay.x = round(  modf( info/1.9999, info )  );\
+	ax.z = round(  modf( info/1.9999, info )  );\
+	ax.y = round(  modf( info/1.9999, info )  );\
 	ax.x = round(  info  );\
-	iq.x = dot( ax, bin ) - 2.0;\
-	iq.y = dot( ay, bin ) - 2.0;\
+	iq.x = dot( ax, bin ) - 1.9999;\
+	iq.y = dot( ay, bin ) - 1.9999;\
 	PIXEL = COMPAT_TEXTURE( PassPrev4Texture, vTexCoord + iq.x*t1.xy + iq.y*t1.zw ).xyz;\
 
 #if defined(VERTEX)
@@ -139,7 +139,7 @@ uniform COMPAT_PRECISION vec2 OrigInputSize;
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    TEX0.xy = TexCoord.xy;
+    TEX0.xy = TexCoord.xy * vec2(1.0004, 0.9995);
 	float2 ps = float2(1.0/PassPrev4TextureSize.x, 1.0/PassPrev4TextureSize.y);
 	float dx = ps.x;
 	float dy = ps.y;
