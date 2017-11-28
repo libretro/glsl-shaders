@@ -43,55 +43,6 @@
 #define round(X) floor((X)+0.5)
 #define TEX(dx,dy) COMPAT_TEXTURE(Source, vTexCoord+float2((dx),(dy))*t1).rgb
 
-const float cf2             = 2.0;
-const float cf3             = 4.0;
-const float cf4             = 4.0;
-const float4 eq_thresholdold= float4(15.0, 15.0, 15.0, 15.0);
-const float4 eq_threshold   = float4( 2.0,  2.0,  2.0,  2.0);
-const float4 eq_threshold3  = float4(25.0, 25.0, 25.0, 25.0);
-const float3 Yuv_weight     = float3(4.0, 1.0, 2.0);
-const float3x3 yuv          = float3x3(0.299, 0.587, 0.114, -0.169, -0.331, 0.499, 0.499, -0.418, -0.0813);
-const float3x3 yuvT         = float3x3(0.299, -0.169,  0.499,
-                                              0.587, -0.331, -0.418,
-                                              0.114,  0.499, -0.0813); 
-const float3x3 yuv_weighted = float3x3(Yuv_weight.x*yuv[0], Yuv_weight.y*yuv[1], Yuv_weight.z*yuv[2]);
-const float4 maximo         = float4(255.0, 255.0, 255.0, 255.0);
-
-float4 df(float4 A, float4 B)
-{
-	return float4(abs(A-B));
-}
-
-bool4 rd(float4 A, float4 B, float4 C, float4 D)
-{
-    return greaterThan((df(C,D)/(df(A,B)+0.000000001)) , vec4(2.,2.,2.,2.));
-}
-
-bool4 id(float4 A, float4 B, float4 C, float4 D)
-{
-    return greaterThan(df(C,D) , df(A,B));
-}
-
-float4 remapTo01(float4 v, float4 high)
-{
-	return (v/high);
-}
-
-bool4 eq(float4 A, float4 B)
-{
-	return lessThan(df(A, B) , eq_threshold);
-}
-
-bool4 eq3(float4 A, float4 B)
-{
-	return lessThan(df(A, B) , eq_threshold3);
-}
-
-float4 weighted_distance(float4 a, float4 b, float4 c, float4 d, float4 e, float4 f, float4 g, float4 h)
-{
-	return (df(a,b) + df(a,c) + df(d,e) + df(d,f) + 4.0*df(g,h));
-}
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -151,16 +102,6 @@ void main()
 
 #elif defined(FRAGMENT)
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
-
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
@@ -170,6 +111,16 @@ precision mediump float;
 #define COMPAT_PRECISION mediump
 #else
 #define COMPAT_PRECISION
+#endif
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out COMPAT_PRECISION vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
 #endif
 
 uniform COMPAT_PRECISION int FrameDirection;
@@ -187,6 +138,55 @@ COMPAT_VARYING vec2 t1;
 
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
+
+const float cf2             = 2.0;
+const float cf3             = 4.0;
+const float cf4             = 4.0;
+const float4 eq_thresholdold= float4(15.0, 15.0, 15.0, 15.0);
+const float4 eq_threshold   = float4( 2.0,  2.0,  2.0,  2.0);
+const float4 eq_threshold3  = float4(25.0, 25.0, 25.0, 25.0);
+const float3 Yuv_weight     = float3(4.0, 1.0, 2.0);
+const float3x3 yuv          = float3x3(0.299, 0.587, 0.114, -0.169, -0.331, 0.499, 0.499, -0.418, -0.0813);
+const float3x3 yuvT         = float3x3(0.299, -0.169,  0.499,
+                                              0.587, -0.331, -0.418,
+                                              0.114,  0.499, -0.0813); 
+const float3x3 yuv_weighted = float3x3(Yuv_weight.x*yuv[0], Yuv_weight.y*yuv[1], Yuv_weight.z*yuv[2]);
+const float4 maximo         = float4(255.0, 255.0, 255.0, 255.0);
+
+float4 df(float4 A, float4 B)
+{
+	return float4(abs(A-B));
+}
+
+bool4 rd(float4 A, float4 B, float4 C, float4 D)
+{
+    return greaterThan((df(C,D)/(df(A,B)+0.000000001)) , vec4(2.,2.,2.,2.));
+}
+
+bool4 id(float4 A, float4 B, float4 C, float4 D)
+{
+    return greaterThan(df(C,D) , df(A,B));
+}
+
+float4 remapTo01(float4 v, float4 high)
+{
+	return (v/high);
+}
+
+bool4 eq(float4 A, float4 B)
+{
+	return lessThan(df(A, B) , eq_threshold);
+}
+
+bool4 eq3(float4 A, float4 B)
+{
+	return lessThan(df(A, B) , eq_threshold3);
+}
+
+float4 weighted_distance(float4 a, float4 b, float4 c, float4 d, float4 e, float4 f, float4 g, float4 h)
+{
+	return (df(a,b) + df(a,c) + df(d,e) + df(d,f) + 4.0*df(g,h));
+}
 
 void main()
 {

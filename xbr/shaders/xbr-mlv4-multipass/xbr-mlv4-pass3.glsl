@@ -45,64 +45,6 @@
 
 #define round(X) floor((X)+0.5)
 
-const float coef            = 2.0;
-const float cf              = 4.0;
-const float eq_threshold    = 15.0;
-const float y_weight        = 48.0;
-const float u_weight        = 7.0;
-const float v_weight        = 6.0;
-const float3x3 yuv          = float3x3(0.299, 0.587, 0.114, -0.169, -0.331, 0.499, 0.499, -0.418, -0.0813);
-const float3x3 yuv_weighted = float3x3(y_weight*yuv[0], u_weight*yuv[1], v_weight*yuv[2]);
-const float4 maximo         = float4(255.0, 255.0, 255.0, 255.0);
-const float4 low            = float4(-64.0, -64.0, -64.0, -64.0);
-const float4 high           = float4( 64.0,  64.0,  64.0,  64.0);
-
-
-const float2x4 sym_vectors  = float2x4(1.,  1.,   -1., -1.,    1., -1.,   -1.,  1.);
-
-// Bx, Ay, C
-const float3 lines[13] = float3[](
-   float3(4.0, 4.0, 4.0),  //  0  NL
-   float3(4.0, 4.0, 3.0),  //  1  LV0
-   float3(4.0, 4.0, 2.0),  //  2  LV1
-   float3(8.0, 4.0, 2.0),  //  3  LV2u
-   float3(4.0, 8.0, 2.0),  //  4  LV2l
-  float3(12.0, 4.0, 2.0),  //  5  LV3u
-   float3(4.0,12.0, 2.0),  //  6  LV3l
-  float3(16.0, 4.0, 2.0),  //  7  LV4u
-   float3(4.0,16.0, 2.0),  //  8  LV4l
-
-  float3(12.0, 4.0, 6.0),  //  9  LV3u
-   float3(4.0,12.0, 6.0),  // 10  LV3l
-  float3(16.0, 4.0, 6.0),  // 11  LV4u
-   float3(4.0,16.0, 6.0)  // 12  LV4l
-);
-
-float4 remapTo01(float4 v, float4 low, float4 high)
-{
-	return saturate((v - low)/(high-low));
-}
-
-float remapFrom01(float v, float high)
-{
-	return round(high*v);
-}
-
-float df(float A, float B)
-{
-	return abs(A-B);
-}
-
-bool eq(float A, float B)
-{
-	return (df(A, B) < eq_threshold);
-}
-
-float weighted_distance(float a, float b, float c, float d, float e, float f, float g, float h)
-{
-	return (df(a,b) + df(a,c) + df(d,e) + df(d,f) + 4.0*df(g,h));
-}
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -164,16 +106,6 @@ void main()
 
 #elif defined(FRAGMENT)
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
-
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
@@ -183,6 +115,16 @@ precision mediump float;
 #define COMPAT_PRECISION mediump
 #else
 #define COMPAT_PRECISION
+#endif
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out COMPAT_PRECISION vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
 #endif
 
 uniform COMPAT_PRECISION int FrameDirection;
@@ -203,6 +145,64 @@ COMPAT_VARYING vec4 t1;
 
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
+
+const float coef            = 2.0;
+const float cf              = 4.0;
+const float eq_threshold    = 15.0;
+const float y_weight        = 48.0;
+const float u_weight        = 7.0;
+const float v_weight        = 6.0;
+const float3x3 yuv          = float3x3(0.299, 0.587, 0.114, -0.169, -0.331, 0.499, 0.499, -0.418, -0.0813);
+const float3x3 yuv_weighted = float3x3(y_weight*yuv[0], u_weight*yuv[1], v_weight*yuv[2]);
+const float4 maximo         = float4(255.0, 255.0, 255.0, 255.0);
+const float4 low            = float4(-64.0, -64.0, -64.0, -64.0);
+const float4 high           = float4( 64.0,  64.0,  64.0,  64.0);
+
+
+const float2x4 sym_vectors  = float2x4(1.,  1.,   -1., -1.,    1., -1.,   -1.,  1.);
+
+// Bx, Ay, C
+const float3 lines[13] = float3[](
+   float3(4.0, 4.0, 4.0),  //  0  NL
+   float3(4.0, 4.0, 3.0),  //  1  LV0
+   float3(4.0, 4.0, 2.0),  //  2  LV1
+   float3(8.0, 4.0, 2.0),  //  3  LV2u
+   float3(4.0, 8.0, 2.0),  //  4  LV2l
+  float3(12.0, 4.0, 2.0),  //  5  LV3u
+   float3(4.0,12.0, 2.0),  //  6  LV3l
+  float3(16.0, 4.0, 2.0),  //  7  LV4u
+   float3(4.0,16.0, 2.0),  //  8  LV4l
+
+  float3(12.0, 4.0, 6.0),  //  9  LV3u
+   float3(4.0,12.0, 6.0),  // 10  LV3l
+  float3(16.0, 4.0, 6.0),  // 11  LV4u
+   float3(4.0,16.0, 6.0)  // 12  LV4l
+);
+
+float4 remapTo01(float4 v, float4 low, float4 high)
+{
+	return saturate((v - low)/(high-low));
+}
+
+float remapFrom01(float v, float high)
+{
+	return round(high*v);
+}
+
+float df(float A, float B)
+{
+	return abs(A-B);
+}
+
+bool eq(float A, float B)
+{
+	return (df(A, B) < eq_threshold);
+}
+
+float weighted_distance(float a, float b, float c, float d, float e, float f, float g, float h)
+{
+	return (df(a,b) + df(a,c) + df(d,e) + df(d,f) + 4.0*df(g,h));
+}
 
 void main()
 {

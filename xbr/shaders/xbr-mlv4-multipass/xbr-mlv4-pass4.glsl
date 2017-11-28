@@ -46,53 +46,6 @@
 
 #define round(X) floor((X)+0.5)
 
-const float3 bin            = float3( 4.0,  2.0,  1.0);
-const float4 low            = float4(-64.0, -64.0, -64.0, -64.0);
-const float4 high           = float4( 64.0,  64.0,  64.0,  64.0);
-
-const float2x4 sym_vectors  = float2x4(1.,  1.,   -1., -1.,    1., -1.,   -1.,  1.);
-
-float4 remapFrom01(float4 v, float4 low, float4 high)
-{
-	return round(lerp(low, high, v));
-}
-
-float c_df(float3 c1, float3 c2)
-{
-	float3 df = abs(c1 - c2);
-	return df.r + df.g + df.b;
-}
-
-
-float4 unpack_info(float i)
-{
-	float4 info;
-	info.x = round(modf(i/2.0, i));
-	info.y = round(modf(i/2.0, i));
-	info.z = round(modf(i/2.0, i));
-	info.w = i;
-
-	return info;
-}
-
-
-float df(float A, float B)
-{
-	return abs(A-B);
-}
-
-#define GET_PIXEL(PARAM, PIXEL)\
-	info = PARAM;\
-	ay.z = round(  modf( info/1.9999, info )  );\
-	ay.y = round(  modf( info/1.9999, info )  );\
-	ay.x = round(  modf( info/1.9999, info )  );\
-	ax.z = round(  modf( info/1.9999, info )  );\
-	ax.y = round(  modf( info/1.9999, info )  );\
-	ax.x = round(  info  );\
-	iq.x = dot( ax, bin ) - 1.9999;\
-	iq.y = dot( ay, bin ) - 1.9999;\
-	PIXEL = COMPAT_TEXTURE( PassPrev4Texture, vTexCoord + iq.x*t1.xy + iq.y*t1.zw ).xyz;\
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -158,16 +111,6 @@ void main()
 
 #elif defined(FRAGMENT)
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
-
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
@@ -177,6 +120,16 @@ precision mediump float;
 #define COMPAT_PRECISION mediump
 #else
 #define COMPAT_PRECISION
+#endif
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out COMPAT_PRECISION vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
 #endif
 
 uniform COMPAT_PRECISION int FrameDirection;
@@ -200,6 +153,53 @@ COMPAT_VARYING float scale_factor;
 
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
+
+const float3 bin            = float3( 4.0,  2.0,  1.0);
+const float4 low            = float4(-64.0, -64.0, -64.0, -64.0);
+const float4 high           = float4( 64.0,  64.0,  64.0,  64.0);
+
+const float2x4 sym_vectors  = float2x4(1.,  1.,   -1., -1.,    1., -1.,   -1.,  1.);
+
+float4 remapFrom01(float4 v, float4 low, float4 high)
+{
+	return round(lerp(low, high, v));
+}
+
+float c_df(float3 c1, float3 c2)
+{
+	float3 df = abs(c1 - c2);
+	return df.r + df.g + df.b;
+}
+
+
+float4 unpack_info(float i)
+{
+	float4 info;
+	info.x = round(modf(i/2.0, i));
+	info.y = round(modf(i/2.0, i));
+	info.z = round(modf(i/2.0, i));
+	info.w = i;
+
+	return info;
+}
+
+
+float df(float A, float B)
+{
+	return abs(A-B);
+}
+
+#define GET_PIXEL(PARAM, PIXEL)\
+	info = PARAM;\
+	ay.z = round(  modf( info/1.9999, info )  );\
+	ay.y = round(  modf( info/1.9999, info )  );\
+	ay.x = round(  modf( info/1.9999, info )  );\
+	ax.z = round(  modf( info/1.9999, info )  );\
+	ax.y = round(  modf( info/1.9999, info )  );\
+	ax.x = round(  info  );\
+	iq.x = dot( ax, bin ) - 1.9999;\
+	iq.y = dot( ay, bin ) - 1.9999;\
+	PIXEL = COMPAT_TEXTURE( PassPrev4Texture, vTexCoord + iq.x*t1.xy + iq.y*t1.zw ).xyz;\
 
 void main()
 {
