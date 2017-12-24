@@ -1,0 +1,8 @@
+shaders = 1
+
+shader0 = shaders/technicolor.glsl
+frame_count_mod0 = 123
+
+textures = "noise1"
+
+noise1 = resources/film_noise1.png
