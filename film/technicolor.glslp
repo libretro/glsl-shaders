@@ -1,8 +1,12 @@
-shaders = 1
+shaders = 2
 
-shader0 = shaders/technicolor.glsl
-frame_count_mod0 = 123
+shader0 = ../reshade/shaders/LUT/LUT.glsl
+shader1 = shaders/film_noise.glsl
+frame_count_mod1 = 137
 
-textures = "noise1"
+textures = "SamplerLUT;noise1;
 
+SamplerLUT = ../reshade/shaders/LUT/cmyk-16.png
 noise1 = resources/film_noise1.png
+SamplerLUT_linear = true
+noise1_linear = true
