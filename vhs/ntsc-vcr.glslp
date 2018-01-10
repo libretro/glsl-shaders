@@ -1,9 +1,9 @@
 shaders = 6
-shader0 = shaders/ntsc-pass1-composite-3phase.glsl
-shader1 = shaders/ntsc-pass2-3phase.glsl
-shader2 = shaders/ntsc-stock.glsl
-shader3 = shaders/ntsc-stock.glsl
-shader4 = shaders/ntsc-vcr/loose-connection.glsl
+shader0 = ../ntsc/shaders/ntsc-pass1-composite-3phase.glsl
+shader1 = ../ntsc/shaders/ntsc-pass2-3phase.glsl
+shader2 = ../ntsc/shaders/ntsc-stock.glsl
+shader3 = ../ntsc/shaders/ntsc-stock.glsl
+shader4 = shaders/static.glsl
 shader5 = ../misc/image-adjustment.glsl
 
 filter_linear0 = false
@@ -35,5 +35,5 @@ bright_boost = 0.10
 target_gamma = 3.50
 saturation = 0.70
 
-textures = "overlay"
-overlay = shaders/ntsc-vcr/vcr-overlay.png
+textures = "play"
+play = resources/play.png

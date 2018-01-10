@@ -1,0 +1,12 @@
+shaders = 2
+
+shader0 = shaders/vhs.glsl
+scale_type0 = source
+scale0 = 1.0
+
+shader1 = shaders/rewind.glsl
+filter_linear1 = true
+
+textures = "rew;play"
+play = resources/play.png
+rew = resources/rew.png

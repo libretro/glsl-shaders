@@ -84,7 +84,7 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
-uniform sampler2D overlay;
+uniform sampler2D play;
 COMPAT_VARYING vec4 TEX0;
 
 // fragment compatibility #defines
@@ -165,7 +165,7 @@ vec3 distort(sampler2D tex, vec2 uv, float magnitude, float framecount){
 	offset_x.y += rand(vec2(mod(framecount, 5583.0) * 0.004, uv.y * 0.002)) * 0.004 + sin(mod(framecount, 9847.0) * 9.0) * mag;
 	
 	return vec3(COMPAT_TEXTURE(tex, vec2(offset_x.x, uv.y)).r,
-				COMPAT_TEXTURE(tex, vec2(offset_x.y, uv.y)).g,
+				COMPAT_TEXTURE(tex, vec2(offset_x.x, uv.y)).g,
 				COMPAT_TEXTURE(tex, uv).b);
 }
 
@@ -190,11 +190,11 @@ void main()
 	float timer = vec2(FrameCount, FrameCount).x;
 	vec3 res = distort(Source, jumpy(vTexCoord, timer), magnitude, timer);
 	float col = nn(-vTexCoord * SourceSize.y * 4.0, timer);
-	vec3 play = distort(overlay, jumpy(vTexCoord * TextureSize / InputSize, timer), magnitude, timer);
-	float overlay_alpha = COMPAT_TEXTURE(overlay, jumpy(vTexCoord * TextureSize / InputSize, timer)).a;
-	float show_overlay = (mod(timer, 100.0) < 50.0) && (timer < 500.0) ? COMPAT_TEXTURE(overlay, jumpy(vTexCoord * TextureSize / InputSize, timer)).a : 0.0;
+	vec3 play_osd = distort(play, jumpy(vTexCoord * TextureSize / InputSize, timer), magnitude, timer);
+	float overlay_alpha = COMPAT_TEXTURE(play, jumpy(vTexCoord * TextureSize / InputSize, timer)).a;
+	float show_overlay = (mod(timer, 100.0) < 50.0) && (timer < 500.0) ? COMPAT_TEXTURE(play, jumpy(vTexCoord * TextureSize / InputSize, timer)).a : 0.0;
 	show_overlay = clamp(show_overlay + always_on * overlay_alpha, 0.0, 1.0);
-	res = mix(res, play, show_overlay);
+	res = mix(res, play_osd, show_overlay);
 
 	FragColor = vec4(res + clamp(vec3(col), 0.0, 0.5), 1.0);
 } 
