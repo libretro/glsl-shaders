@@ -111,27 +111,29 @@ void main()
     vec4 texColor = COMPAT_TEXTURE(Source, vTexCoord);
 	if (float(FrameDirection) < 0.0)
 	{
-		texColor = COMPAT_TEXTURE(Source, jumpy(vTexCoord, iTime));
+		vec2 uv = vTexCoord.xy;
+		uv.x -= sin(0.0006 * mod(iTime, 11.0)) * cos(mod(iTime, 17.0) * -uv.y);
+		texColor = COMPAT_TEXTURE(Source, jumpy(uv, iTime));
 		// get position to sample
-		vec2 samplePosition = vTexCoord.xy * TextureSize.xy / InputSize.xy - vec2(0.0, 0.45);
+		vec2 samplePosition = uv.xy * TextureSize.xy / InputSize.xy - vec2(0.0, 0.45);
 		float whiteNoise;
 		
 	 	// Jitter each line left and right
-		samplePosition.x = samplePosition.x+(rand(vec2(iTime,vTexCoord.y))-0.5)/64.0;
+		samplePosition.x += (rand(vec2(iTime,vTexCoord.y))+0.5);
 		// Jitter the whole picture up and down
 		samplePosition.y = samplePosition.y+(rand(vec2(iTime))-0.5)/32.0;
 		// Slightly add color noise to each line
 		texColor = texColor + (vec4(-0.5)+vec4(rand(vec2(vTexCoord.y,iTime)),rand(vec2(vTexCoord.y,iTime+1.0)),rand(vec2(vTexCoord.y,iTime+2.0)),0))*0.1;
 	   
 		// Either sample the texture, or just make the pixel white (to get the staticy-bit at the bottom)
-		whiteNoise = rand(vec2(floor(samplePosition.y*160.0),floor(samplePosition.x*190.0))+vec2(iTime,0));
+		whiteNoise = rand(vec2(floor(samplePosition.y*160.0),floor(samplePosition.x*cos(iTime)))+vec2(iTime,0.));
 		if ((whiteNoise > 11.5-30.0*samplePosition.y || whiteNoise < 1.5-5.0*samplePosition.y) &&
 			(whiteNoise > 11.5-30.0*(samplePosition.y + 0.5) || whiteNoise < 1.5-5.0*(samplePosition.y + 0.4))) {
 		    // Sample the texture.
 			samplePosition.y = 1.0-samplePosition.y; //Fix for upside-down texture
 		} else {
 		    // Use white. (I'm adding here so the color noise still applies)
-		    texColor = vec4(1.0,1.0,1.0,1.0);
+		    texColor += vec4(0.5 + rand(samplePosition));
 		}
 		vec4 rew_osd = COMPAT_TEXTURE(rew, jumpy(vTexCoord * TextureSize / InputSize, iTime));
 		rew_osd.a = ((mod(iTime, 100.0) < 50.0)) ? rew_osd.a : 0.0;
