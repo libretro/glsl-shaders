@@ -1,5 +1,3 @@
-// version directive if necessary
-
 //_____________________________/\_______________________________
 //==============================================================
 //
@@ -319,57 +317,8 @@ vec3 CrtsFetch(vec2 uv){
 // uv+=vec2(0.5,0.5);
  // Non-shadertoy case would not have the color conversion
  return FromSrgb(COMPAT_TEXTURE(Texture,uv.xy,-16.0).rgb);}
- 
-//==============================================================
-//                         PORTABILITY
-//==============================================================
- #ifndef CrtsPow
-  #define CrtsPow powf
- #endif
-//--------------------------------------------------------------
- #ifndef CRTS_RESTRICT
-  #define CRTS_RESTRICT _restrict
- #endif
-//--------------------------------------------------------------
- #ifndef CRTS_STATIC
-  #define CRTS_STATIC static
- #endif
-//_____________________________/\_______________________________
-//==============================================================
-//              TONAL CONTROL CONSTANT GENERATION
-//--------------------------------------------------------------
-// Make sure to use same CRTS_MASK_* defines on CPU and GPU!!!!!
-//==============================================================
- CRTS_STATIC void CrtsTone(
- // Output 4 float array.
- float CRTS_RESTRICT dst[4],
- // Increase contrast, ranges from,
- //  1.0 = no change
- //  2.0 = very strong contrast (over 2.0 for even more)
- float contrast,
- // Increase saturation, ranges from,
- //  0.0 = no change
- //  1.0 = increased contrast (over 1.0 for even more)
- float saturation,
- // Inputs shared between CrtsTone() and CrtsFilter()
- float thin,
- float mask){
-//--------------------------------------------------------------
-  if(MASK == 0.0) mask=1.0;
-//--------------------------------------------------------------
-  if(MASK == 1.0){
-   // Normal R mask is {1.0,mask,mask}
-   // LITE   R mask is {mask,1.0,1.0}
-   mask=0.5+mask*0.5;
-  }
-//--------------------------------------------------------------
-  float midOut=0.18/((1.5-thin)*(0.5*mask+0.5));
-   float pMidIn=CrtsPow(0.18,contrast);
-   dst[0]= contrast;
-   dst[1]=((-pMidIn)+midOut)/((1.0-pMidIn)*midOut);
-   dst[2]=((-pMidIn)*midOut+pMidIn)/(midOut*(-pMidIn)+midOut);
-   dst[3]=contrast+saturation;}
 #endif
+ 
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -735,7 +684,7 @@ void main()
 	warp_factor.x *= (1.0 - TRINITRON_CURVE);
 	FragColor.rgb = CrtsFilter(vTexCoord.xy * OutputSize.xy*(TextureSize.xy / InputSize.xy),
 	InputSize.xy / OutputSize.xy,
-	InputSize.xy*vec2(0.5,0.5),
+	InputSize.xy * vec2(0.5,0.5),
 	1.0/InputSize.xy,
 	1.0/OutputSize.xy,
 	2.0/OutputSize.xy,
