@@ -1,0 +1,13 @@
+shaders = "2"
+
+shader0 = "../handheld/shaders/color/gbc-color.glsl"
+shader1 = "../retro/shaders/retro-v2.glsl"
+
+filter_linear0 = "false"
+scale_type0 = "source"
+scale0 = "1.000000"
+
+filter_linear1 = "false"
+
+parameters = "RETRO_PIXEL_SIZE"
+RETRO_PIXEL_SIZE = "0.840000"
