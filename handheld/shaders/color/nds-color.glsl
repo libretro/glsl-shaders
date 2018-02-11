@@ -21,15 +21,15 @@
 #define blr 0.0
 #define blg 0.0
 #define blb 0.0
-#define r 0.82
-#define g 0.66
-#define b 0.81
-#define rg 0.085
-#define rb 0.085
-#define gr 0.25
-#define gb 0.105
-#define br -0.07
-#define bg 0.255
+#define r 0.83
+#define g 0.65
+#define b 0.765
+#define rg 0.105
+#define rb 0.105
+#define gr 0.20
+#define gb 0.13
+#define br -0.03
+#define bg 0.245
 #define overscan_percent_x 0.0
 #define overscan_percent_y 0.0
 

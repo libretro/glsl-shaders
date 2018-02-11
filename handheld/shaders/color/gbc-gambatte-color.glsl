@@ -1,12 +1,25 @@
 /*
-   GBC Color Correction Shader
-   A shader that replicates the LCD dynamics from a Game Boy Color
-   Color values are derived from Gambatte's color correction implementation, with some tweaks.
-
-   Based on Color Mangler
-   Author: hunterk
+   Gambatte Color
+   A GLSL port of the color correction option on Gambatte emulator
+   Ported by: RiskyJumps
    License: Public domain
 */
+
+/*
+OPTIONS:
+
+INT_OPS (default: Disabled)
+It's supposed to be more "accurate" but it's a waste. Not recommended
+*/
+//#define INT_OPS
+
+/*
+SIMULATE_INT (default: Disabled)
+Only meaningful if INT_OPS is disabled. It truncates floats. Then
+again, it's supposed to be more "accurate" but it looks just
+too similar. It's still a waste. Not recommended.
+*/
+//#define SIMULATE_INT
 
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
@@ -14,29 +27,6 @@
 #else
 #define COMPAT_PRECISION
 #endif
-
-#pragma parameter darken_screen "Darken Screen" 0.0 -0.25 2.0 0.05
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float darken_screen;
-#else
-#define darken_screen 0.0
-#endif
-
-#define target_gamma 2.2
-#define display_gamma 2.2
-#define blr 0.0
-#define blg 0.0
-#define blb 0.0
-#define r 0.78824
-#define g 0.72941
-#define b 0.82
-#define rg 0.025
-#define rb 0.12039
-#define gr 0.12157
-#define gb 0.12157
-#define br 0.0
-#define bg 0.275000
 
 #if defined(VERTEX)
 
@@ -71,9 +61,9 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 void main()
 {
-    gl_Position = MVPMatrix * VertexCoord;
-    COL0 = COLOR;
-    TEX0.xy = TexCoord.xy;
+     gl_Position = MVPMatrix * VertexCoord;
+     COL0 = COLOR;
+     TEX0.xy = TexCoord.xy;
 }
 
 #elif defined(FRAGMENT)
@@ -116,15 +106,56 @@ COMPAT_VARYING vec4 TEX0;
 
 void main()
 {
-   vec4 screen = pow(COMPAT_TEXTURE(Source, vTexCoord), vec4(target_gamma + darken_screen)).rgba;
+     vec4 color = COMPAT_TEXTURE(Texture, TEX0.xy);
 
-   //                red   green  blue  alpha ; alpha does nothing for our purposes
-   mat4 color = mat4(r,    rg,    rb,   0.0,    //red
-                     gr,   g,     gb,   0.0,    //green
-                     br,   bg,    b,    0.0,    //blue
-                     blr,  blg,   blb,  0.0);   //black
+#ifdef INT_OPS
+     color.rgb *= 255.0;
 
-   screen = color * screen;
-   FragColor = pow(screen, vec4(1.0 / display_gamma));
-} 
+     int r = (int)color.r;
+     int g = (int)color.g;
+     int b = (int)color.b;
+
+     int R = (r * 13 + g * 2 + b) >> 4;
+     int G = (g *  3 + b) >> 2;
+     int B = (r *  3 + g * 2 + b * 11) >> 4;
+
+     color.rgb = vec3((float)R, (float)G, (float)B);
+     color.rgb /= 255.0;
+
+     FragColor = color;
+     return;
+
+#else
+     mat3 color_correction = mat3(
+         13.0,  2.0,   1.0,
+          0.0,  3.0,   1.0,
+          3.0,  2.0,  11.0
+     );
+
+     mat3 scale = mat3(
+         1.0/16.0,      0.0,       0.0,
+              0.0,  1.0/4.0,       0.0,
+              0.0,      0.0,  1.0/16.0
+     );
+
+     color_correction *= scale;
+
+#ifdef SIMULATE_INT
+     color.rgb *= 255.0;
+     color.rgb = floor(color.rgb);
+     color.rgb *= color_correction;
+     color.rgb = floor(color.rgb);
+     color.rgb /= 255.0;
+     FragColor = color;
+     return;
+
+#else
+     color.rgb *= color_correction;
+     FragColor = color;
+     return;
+
+#endif
+
+#endif
+}
 #endif
