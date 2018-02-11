@@ -1,7 +1,7 @@
 /*
    GBC Color Correction Shader
    A shader that replicates the LCD dynamics from a Game Boy Color
-   Color values are derived from Gambatte's color correction implementation.
+   Color values are derived from Gambatte's color correction implementation, with some tweaks.
 
    Based on Color Mangler
    Author: hunterk
@@ -15,19 +15,28 @@
 #define COMPAT_PRECISION
 #endif
 
+#pragma parameter darken_screen "Darken Screen" 0.0 -0.25 2.0 0.05
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float darken_screen;
+#else
+#define darken_screen 0.0
+#endif
 
+#define target_gamma 2.2
+#define display_gamma 2.2
 #define blr 0.0
 #define blg 0.0
 #define blb 0.0
 #define r 0.78824
 #define g 0.72941
-#define b 0.66667
-#define rg 0.00
-#define rb 0.18039
+#define b 0.82
+#define rg 0.025
+#define rb 0.12039
 #define gr 0.12157
 #define gb 0.12157
-#define br 0.05882
-#define bg 0.24314
+#define br 0.0
+#define bg 0.275000
 
 #if defined(VERTEX)
 
@@ -107,15 +116,15 @@ COMPAT_VARYING vec4 TEX0;
 
 void main()
 {
-   vec4 screen = COMPAT_TEXTURE(Source, vTexCoord);
-   
-   //                r   g    b   black
-   mat4 color = mat4(r,  rg,  rb, 0.0,       //red channel
-                     gr,  g,   gb, 0.0,      //green channel
-                     br,  bg,  b,  0.0,      //blue channel
-                     blr, blg, blb,    0.0); //alpha channel; these numbers do nothing for our purposes.
-                 
+   vec4 screen = pow(COMPAT_TEXTURE(Source, vTexCoord), vec4(target_gamma + darken_screen)).rgba;
+
+   //                red   green  blue  alpha ; alpha does nothing for our purposes
+   mat4 color = mat4(r,    rg,    rb,   0.0,    //red
+                     gr,   g,     gb,   0.0,    //green
+                     br,   bg,    b,    0.0,    //blue
+                     blr,  blg,   blb,  0.0);   //black
+
    screen = color * screen;
-   FragColor = screen;
+   FragColor = pow(screen, vec4(1.0 / display_gamma));
 } 
 #endif
