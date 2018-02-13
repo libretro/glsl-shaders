@@ -90,7 +90,7 @@ void main()
      //0.000 black - 0.333 medium gray - 0.667 light gray - 1.000 white
      //multiply grayscale value by 3 to obtain int value in range [0, 3], acts as index for arrays storing custom palette UV coordinates and alpha value
 
-     vec2 palette_coordinate = vec2(0.5, (abs(1 - out_color.r) * 0.75) + 0.125);	//directly map input grayscale value to color palette y coordinate
+     vec2 palette_coordinate = vec2(0.5, (abs(1.0 - out_color.r) * 0.75) + 0.125);	//directly map input grayscale value to color palette y coordinate
      out_color = vec4(COMPAT_TEXTURE(COLOR_PALETTE, palette_coordinate).rgb, ceil(abs(1.0 - out_color.r)));	//sample color from palette, alpha = 1 if color is not transparent
 
      FragColor = out_color;
