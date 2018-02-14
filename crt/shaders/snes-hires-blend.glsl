@@ -1,6 +1,6 @@
 /*
     SNES Hires Blend Fix
-    by Sp00kyFox, 2015
+    by OV2, Sp00kyFox, hunterk
 
 Filter:    Nearest
 Scale:    1x
@@ -54,7 +54,7 @@ void main()
 	vec2 ps = vec2(1.0 / TextureSize.x, 1.0 / TextureSize.y);
     float dx = ps.x;
     float dy = ps.y;
-	t1 = TEX0.xxxy + vec4( -dx, 0, dx, 0); // L, C, R
+	t1 = TEX0.xxxy + vec4( -dx, 0., dx, 0.); // L, C, R
 }
 
 #elif defined(FRAGMENT)
@@ -107,6 +107,12 @@ void main()
 	vec3 r = COMPAT_TEXTURE(Source, t1.zw).xyz;
 
 	// output
-	FragColor = vec4((InputSize.x > 500) ? (fp == 0 ? mix(c,r,0.5) : mix(c,l,0.5)) : c, 1.0);
-} 
+	vec3 final;
+	if (InputSize.x < 500.0) final = c;
+	else
+	{
+		final = (((l.x == c.x)||(r.x == c.x))&&((l.y == c.y)||(r.y == c.y))&&((l.z == c.z)||(r.z == c.z))) ? c : (fp > 0.5 ? mix(c,r,0.5) : mix(c,l,0.5));
+	}
+	FragColor = vec4(final, 1.0);
+}
 #endif
