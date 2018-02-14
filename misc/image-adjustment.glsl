@@ -1,20 +1,20 @@
-#pragma parameter target_gamma "Target Gamma" 2.2 0.1 5.0 0.1
-#pragma parameter monitor_gamma "Monitor Gamma" 2.2 0.1 5.0 0.1
-#pragma parameter overscan_percent_x "Horizontal Overscan %" 0.0 -25.0 25.0 1.0
-#pragma parameter overscan_percent_y "Vertical Overscan %" 0.0 -25.0 25.0 1.0
-#pragma parameter saturation "Saturation" 1.0 0.0 2.0 0.01
-#pragma parameter contrast "Contrast" 1.0 0.0 10.0 0.05
-#pragma parameter luminance "Luminance" 1.0 0.0 2.0 0.01
-#pragma parameter black_level "Black Level" 0.00 -0.30 0.30 0.01
-#pragma parameter bright_boost "Brightness Boost" 0.0 -1.0 1.0 0.05
-#pragma parameter R "Red Channel" 1.0 0.0 2.0 0.05
-#pragma parameter G "Green Channel" 1.0 0.0 2.0 0.05
-#pragma parameter B "Blue Channel" 1.0 0.0 2.0 0.05
-#pragma parameter ZOOM "Zoom Factor" 1.0 0.0 4.0 0.01
-#pragma parameter XPOS "X Modifier" 0.0 -2.0 2.0 0.005
-#pragma parameter YPOS "Y Modifier" 0.0 -2.0 2.0 0.005
-#pragma parameter V_OSMASK "Overscan Mask Y" 0.0 0.0 1.0 0.005
-#pragma parameter H_OSMASK "Overscan Mask X" 0.0 0.0 1.0 0.005
+#pragma parameter ia_target_gamma "Target Gamma" 2.2 0.1 5.0 0.1
+#pragma parameter ia_monitor_gamma "Monitor Gamma" 2.2 0.1 5.0 0.1
+#pragma parameter ia_overscan_percent_x "Horizontal Overscan %" 0.0 -25.0 25.0 1.0
+#pragma parameter ia_overscan_percent_y "Vertical Overscan %" 0.0 -25.0 25.0 1.0
+#pragma parameter ia_saturation "Saturation" 1.0 0.0 2.0 0.01
+#pragma parameter ia_contrast "Contrast" 1.0 0.0 10.0 0.05
+#pragma parameter ia_luminance "Luminance" 1.0 0.0 2.0 0.01
+#pragma parameter ia_black_level "Black Level" 0.00 -0.30 0.30 0.01
+#pragma parameter ia_bright_boost "Brightness Boost" 0.0 -1.0 1.0 0.05
+#pragma parameter ia_R "Red Channel" 1.0 0.0 2.0 0.05
+#pragma parameter ia_G "Green Channel" 1.0 0.0 2.0 0.05
+#pragma parameter ia_B "Blue Channel" 1.0 0.0 2.0 0.05
+#pragma parameter ia_ZOOM "Zoom Factor" 1.0 0.0 4.0 0.01
+#pragma parameter ia_XPOS "X Modifier" 0.0 -2.0 2.0 0.005
+#pragma parameter ia_YPOS "Y Modifier" 0.0 -2.0 2.0 0.005
+#pragma parameter ia_V_OSMASK "Overscan Mask Y" 0.0 0.0 1.0 0.005
+#pragma parameter ia_H_OSMASK "Overscan Mask X" 0.0 0.0 1.0 0.005
 
 #if defined(VERTEX)
 
@@ -63,41 +63,41 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float target_gamma;
-uniform COMPAT_PRECISION float monitor_gamma;
-uniform COMPAT_PRECISION float overscan_percent_x;
-uniform COMPAT_PRECISION float overscan_percent_y;
-uniform COMPAT_PRECISION float saturation;
-uniform COMPAT_PRECISION float contrast;
-uniform COMPAT_PRECISION float luminance;
-uniform COMPAT_PRECISION float black_level;
-uniform COMPAT_PRECISION float bright_boost;
-uniform COMPAT_PRECISION float R;
-uniform COMPAT_PRECISION float G;
-uniform COMPAT_PRECISION float B;
-uniform COMPAT_PRECISION float ZOOM;
-uniform COMPAT_PRECISION float XPOS;
-uniform COMPAT_PRECISION float YPOS;
-uniform COMPAT_PRECISION float V_OSMASK;
-uniform COMPAT_PRECISION float H_OSMASK;
+uniform COMPAT_PRECISION float ia_target_gamma;
+uniform COMPAT_PRECISION float ia_monitor_gamma;
+uniform COMPAT_PRECISION float ia_overscan_percent_x;
+uniform COMPAT_PRECISION float ia_overscan_percent_y;
+uniform COMPAT_PRECISION float ia_saturation;
+uniform COMPAT_PRECISION float ia_contrast;
+uniform COMPAT_PRECISION float ia_luminance;
+uniform COMPAT_PRECISION float ia_black_level;
+uniform COMPAT_PRECISION float ia_bright_boost;
+uniform COMPAT_PRECISION float ia_R;
+uniform COMPAT_PRECISION float ia_G;
+uniform COMPAT_PRECISION float ia_B;
+uniform COMPAT_PRECISION float ia_ZOOM;
+uniform COMPAT_PRECISION float ia_XPOS;
+uniform COMPAT_PRECISION float ia_YPOS;
+uniform COMPAT_PRECISION float ia_V_OSMASK;
+uniform COMPAT_PRECISION float ia_H_OSMASK;
 #else
-#define overscan_percent_x 0.0         // crop width of image by X%; default is 0.0
-#define overscan_percent_y 0.0         // crop height of image by X%; default is 0.0
-#define saturation 1.0                 // color saturation; default 1.0
-#define monitor_gamma 2.2              // gamma setting of your current display; LCD monitors typically have a gamma of 2.2
-#define target_gamma 2.2               // the gamma you want the image to have; CRT TVs typically have a gamma of 2.4
-#define contrast 1.0                   // image contrast; default 1.0
-#define luminance 1.0                  // image luminance; default 1.0
-#define black_level 0.0
-#define bright_boost 0.0               // adds to the total brightness. Negative values decrease it; Use values between 1.0 (totally white) and -1.0 (totally black); default is 0.0
-#define R 1.0
-#define G 1.0
-#define B 1.0
-#define ZOOM 1.0
-#define XPOS 0.0
-#define YPOS 0.0
-#define V_OSMASK 0.0
-#define H_OSMASK 0.0
+#define ia_overscan_percent_x 0.0         // crop width of image by X%; default is 0.0
+#define ia_overscan_percent_y 0.0         // crop height of image by X%; default is 0.0
+#define ia_saturation 1.0                 // color saturation; default 1.0
+#define ia_monitor_gamma 2.2              // gamma setting of your current display; LCD monitors typically have a gamma of 2.2
+#define ia_target_gamma 2.2               // the gamma you want the image to have; CRT TVs typically have a gamma of 2.4
+#define ia_contrast 1.0                   // image contrast; default 1.0
+#define ia_luminance 1.0                  // image luminance; default 1.0
+#define ia_black_level 0.0
+#define ia_bright_boost 0.0               // adds to the total brightness. Negative values decrease it; Use values between 1.0 (totally white) and -1.0 (totally black); default is 0.0
+#define ia_R 1.0
+#define ia_G 1.0
+#define ia_B 1.0
+#define ia_ZOOM 1.0
+#define ia_XPOS 0.0
+#define ia_YPOS 0.0
+#define ia_V_OSMASK 0.0
+#define ia_H_OSMASK 0.0
 #endif
 
 void main()
@@ -113,11 +113,11 @@ void main()
     _oPosition1 = _r0006;
     _oColor = COLOR;
     _shift = (5.00000000E-01*InputSize)/TextureSize;
-    _overscan_coord = ((TexCoord.xy - _shift) / ZOOM) * (1.0 - vec2(overscan_percent_x / 100.0, overscan_percent_y / 100.0)) + _shift;
+    _overscan_coord = ((TexCoord.xy - _shift) / ia_ZOOM) * (1.0 - vec2(ia_overscan_percent_x / 100.0, ia_overscan_percent_y / 100.0)) + _shift;
     _otexCoord = _overscan_coord;
     gl_Position = _r0006;
     COL0 = COLOR;
-    TEX0.xy = _overscan_coord + vec2(XPOS, YPOS);
+    TEX0.xy = _overscan_coord + vec2(ia_XPOS, ia_YPOS);
 } 
 #elif defined(FRAGMENT)
 
@@ -167,23 +167,23 @@ vec3 _TMP29;
 COMPAT_VARYING vec4 TEX0;
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float target_gamma;
-uniform COMPAT_PRECISION float monitor_gamma;
-uniform COMPAT_PRECISION float overscan_percent_x;
-uniform COMPAT_PRECISION float overscan_percent_y;
-uniform COMPAT_PRECISION float saturation;
-uniform COMPAT_PRECISION float contrast;
-uniform COMPAT_PRECISION float luminance;
-uniform COMPAT_PRECISION float black_level;
-uniform COMPAT_PRECISION float bright_boost;
-uniform COMPAT_PRECISION float R;
-uniform COMPAT_PRECISION float G;
-uniform COMPAT_PRECISION float B;
-uniform COMPAT_PRECISION float ZOOM;
-uniform COMPAT_PRECISION float XPOS;
-uniform COMPAT_PRECISION float YPOS;
-uniform COMPAT_PRECISION float V_OSMASK;
-uniform COMPAT_PRECISION float H_OSMASK;
+uniform COMPAT_PRECISION float ia_target_gamma;
+uniform COMPAT_PRECISION float ia_monitor_gamma;
+uniform COMPAT_PRECISION float ia_overscan_percent_x;
+uniform COMPAT_PRECISION float ia_overscan_percent_y;
+uniform COMPAT_PRECISION float ia_saturation;
+uniform COMPAT_PRECISION float ia_contrast;
+uniform COMPAT_PRECISION float ia_luminance;
+uniform COMPAT_PRECISION float ia_black_level;
+uniform COMPAT_PRECISION float ia_bright_boost;
+uniform COMPAT_PRECISION float ia_R;
+uniform COMPAT_PRECISION float ia_G;
+uniform COMPAT_PRECISION float ia_B;
+uniform COMPAT_PRECISION float ia_ZOOM;
+uniform COMPAT_PRECISION float ia_XPOS;
+uniform COMPAT_PRECISION float ia_YPOS;
+uniform COMPAT_PRECISION float ia_V_OSMASK;
+uniform COMPAT_PRECISION float ia_H_OSMASK;
 #endif
 
 vec3 grayscale(vec3 col)
@@ -225,24 +225,24 @@ void main()
 
     fragcoord = TEX0.xy*(TextureSize.xy/InputSize.xy);
     res = COMPAT_TEXTURE(Texture, TEX0.xy).rgb;
-	gamma = vec3(monitor_gamma / target_gamma); // setup ratio of display's gamma vs desired gamma
+	gamma = vec3(ia_monitor_gamma / ia_target_gamma); // setup ratio of display's gamma vs desired gamma
 	
 //saturation and luminance
-   satColor = clamp(hsv2rgb(rgb2hsv(res) * vec3(1.0, saturation, luminance)), 0.0, 1.0);
+   satColor = clamp(hsv2rgb(rgb2hsv(res) * vec3(1.0, ia_saturation, ia_luminance)), 0.0, 1.0);
 
 //contrast and brightness
-   conColor = clamp((satColor - 0.5) * contrast + 0.5 + bright_boost, 0.0, 1.0);
+   conColor = clamp((satColor - 0.5) * ia_contrast + 0.5 + ia_bright_boost, 0.0, 1.0);
    
-   conColor -= vec3(black_level); // apply black level
-   conColor *= (vec3(1.0) / vec3(1.0-black_level));
+   conColor -= vec3(ia_black_level); // apply black level
+   conColor *= (vec3(1.0, 1.0, 1.0) / vec3(1.0 - ia_black_level));
    conColor = pow(conColor, vec3(1.0) / vec3(gamma)); // Apply gamma correction
-	conColor *= vec3(R, G, B); // apply color channel adjustment
+	conColor *= vec3(ia_R, ia_G, ia_B); // apply color channel adjustment
 
-    if (fragcoord.y > V_OSMASK && fragcoord.y < (1.00000000E+00 - V_OSMASK)) { 
+    if (fragcoord.y > ia_V_OSMASK && fragcoord.y < (1.00000000E+00 - ia_V_OSMASK)) { 
     } else {
         conColor = vec3( 0.00000000E+00, 0.00000000E+00, 0.00000000E+00);
     } 
-    if (fragcoord.x > H_OSMASK && fragcoord.x < (1.00000000E+00 - H_OSMASK)) { 
+    if (fragcoord.x > ia_H_OSMASK && fragcoord.x < (1.00000000E+00 - ia_H_OSMASK)) { 
     } else {
         conColor = vec3( 0.00000000E+00, 0.00000000E+00, 0.00000000E+00);
     } 
