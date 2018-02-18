@@ -8,9 +8,17 @@
     any later version.
 */
 
+// Compatibility #ifdefs needed for parameters
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
 #pragma parameter response_time "LCD Response Time" 0.333 0.0 0.777 0.111
 #ifdef PARAMETER_UNIFORM
-uniform float response_time;
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float response_time;
 #else
 #define response_time 0.333   //simulate response time, higher values result in longer color transition periods - [0, 1]
 #endif
