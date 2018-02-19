@@ -9,11 +9,6 @@
 */
 
 #pragma parameter response_time "LCD Response Time" 0.333 0.0 0.777 0.111
-#ifdef PARAMETER_UNIFORM
-uniform float response_time;
-#else
-#define response_time 0.333   //simulate response time, higher values result in longer color transition periods - [0, 1]
-#endif
 
 #if defined(VERTEX)
 
@@ -104,6 +99,13 @@ COMPAT_VARYING vec4 TEX0;
 
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+// All parameter floats need to have COMPAT_PRECISION in front of them
+uniform COMPAT_PRECISION float response_time;
+#else
+#define response_time 0.333   //simulate response time, higher values result in longer color transition periods - [0, 1]
+#endif
 
 // Frame sampling definitions
 #define curr_rgb  COMPAT_TEXTURE(Source,       vTexCoord).rgb
