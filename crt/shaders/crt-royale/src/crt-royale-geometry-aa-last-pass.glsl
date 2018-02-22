@@ -5282,7 +5282,7 @@ float2x2 mul_scale(float2 scale, float2x2 matrix)
 {
     //float2x2 scale_matrix = float2x2(scale.x, 0.0, 0.0, scale.y);
     //return mul(scale_matrix, matrix);
-    return float2x2(float4(matrix[0][0],matrix[0][1],matrix[1][0],matrix[1][1]) * scale.xxyy);
+    return float2x2(matrix[0][0],matrix[0][1],matrix[1][0],matrix[1][1]) * scale.xxyy;
 }
 
 #undef COMPAT_PRECISION
