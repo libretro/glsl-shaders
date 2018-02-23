@@ -1,0 +1,43 @@
+shaders = 4
+shader0 = ../../motionblur/shaders/response-time.glsl
+shader1 = ../shaders/lcd-cgwg/lcd-grid-v2.glsl
+shader2 = ../shaders/color/gbc-color.glsl
+shader3 = shader-files/gb-pass-5.glsl
+
+scale_type0 = source
+scale0 = 1
+
+scale_type1 = source
+scale1 = 6
+
+scale_type2 = source
+scale2 = 1
+
+filter_linear0 = false
+filter_linear1 = false
+filter_linear2 = false
+filter_linear3 = true
+
+textures = BORDER
+
+BORDER = resources/color-border-square-4x.png
+BORDER_linear = true
+
+parameters = "SCALE;OUT_X;OUT_Y;RSUBPIX_R;RSUBPIX_G;RSUBPIX_B;GSUBPIX_R;GSUBPIX_G;GSUBPIX_B;BSUBPIX_R;BSUBPIX_G;BSUBPIX_B;gain;gamma;blacklevel;ambient;BGR"
+SCALE = "1.0"
+OUT_X = "4800.0"
+OUT_Y = "2400.0"
+RSUBPIX_R = "0.750000"
+RSUBPIX_G = "0.000000"
+RSUBPIX_B = "0.000000"
+GSUBPIX_R = "0.000000"
+GSUBPIX_G = "0.750000"
+GSUBPIX_B = "0.000000"
+BSUBPIX_R = "0.000000"
+BSUBPIX_G = "0.000000"
+BSUBPIX_B = "0.750000"
+gain = "1.500000"
+gamma = "2.200000"
+blacklevel = "0.000000"
+ambient = "0.000000"
+BGR = "0.000000"

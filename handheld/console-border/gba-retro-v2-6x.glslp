@@ -1,0 +1,30 @@
+shaders = 4
+shader0 = ../../motionblur/shaders/response-time.glsl
+shader1 = ../shaders/color/gba-color.glsl
+shader2 = ../../retro/shaders/retro-v2.glsl
+shader3 = shader-files/gb-pass-5.glsl
+
+scale_type0 = source
+scale0 = 1
+
+scale_type1 = source
+scale1 = 1
+
+scale_type2 = source
+scale2 = 6
+
+filter_linear0 = false
+filter_linear1 = false
+filter_linear2 = false
+filter_linear3 = true
+
+textures = BORDER
+
+BORDER = resources/gba-border-square-4x.png
+BORDER_linear = true
+
+parameters = "SCALE;OUT_X;OUT_Y;RETRO_PIXEL_SIZE"
+SCALE = "1.0"
+OUT_X = "4800.0"
+OUT_Y = "2400.0"
+RETRO_PIXEL_SIZE = "0.84"
