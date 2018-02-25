@@ -399,11 +399,11 @@ vec3 PostEffects(vec3 rgb, vec2 xy)
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
 #ifdef MOUSE
-	float m = (iMouse.x/iResolution.x)*300.0;
-##else
-	float m = (0.0/iResolution.x)*300.0;
+	float mouse = (iMouse.x/iResolution.x)*300.0;
+#else
+	float mouse = (0.0/iResolution.x)*300.0;
 #endif
-	float gTime = (iGlobalTime*5.0+m+2352.0)*.006;
+	float gTime = (iGlobalTime*5.0+mouse+2352.0)*.006;
     vec2 xy = fragCoord.xy / iResolution.xy;
 	vec2 uv = (-1.0 + 2.0 * xy) * vec2(iResolution.x/iResolution.y,1.0);
 	vec3 camTar;
