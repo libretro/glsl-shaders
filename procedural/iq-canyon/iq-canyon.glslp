@@ -1,0 +1,13 @@
+shaders = 1
+
+shader0 = iq-canyon.glsl
+
+textures = "iChannel0;iChannel1;iChannel2;iChannel3"
+iChannel0 = iChannel0.jpg
+iChannel0_wrap_mode = repeat
+iChannel1 = iChannel1.jpg
+iChannel1_wrap_mode = repeat
+iChannel2 = iChannel2.png
+iChannel2_wrap_mode = repeat
+iChannel3 = iChannel3.jpg
+iChannel3_wrap_mode = repeat

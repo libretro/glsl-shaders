@@ -1,0 +1,9 @@
+shaders = 1
+
+shader0 = pmalin-waterfalls.glsl
+
+textures = "iChannel0;iChannel1"
+iChannel0 = iChannel0.jpg
+iChannel0_wrap_mode = repeat
+iChannel1 = iChannel1.jpg
+iChannel1_wrap_mode = repeat
