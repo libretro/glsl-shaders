@@ -1,0 +1,7 @@
+shaders = 1
+
+shader0 = iq-repelling.glsl
+
+textures = "iChannel0"
+iChannel0 = iChannel0.jpg
+iChannel0_wrap_mode = repeat
