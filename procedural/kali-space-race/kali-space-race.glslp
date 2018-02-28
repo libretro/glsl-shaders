@@ -1,0 +1,7 @@
+shaders = 1
+
+shader0 = kali-space-race.glsl
+
+textures = "iChannel1"
+iChannel1 = iChannel1.png
+iChannel1_wrap_mode = repeat
