@@ -115,7 +115,7 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
-uniform sampler2D OrigTexture;
+uniform sampler2D PassPrev5Texture;
 COMPAT_VARYING vec4 TEX0;
 
 // fragment compatibility #defines
@@ -124,7 +124,7 @@ COMPAT_VARYING vec4 TEX0;
 
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
-#define Original OrigTexture
+#define Original PassPrev5Texture
 
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them

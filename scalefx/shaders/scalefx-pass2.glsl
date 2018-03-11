@@ -84,13 +84,11 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
+	float dx = SourceSize.z, dy = SourceSize.w;
 	
-	vec2 ps = 1.0/TextureSize;
-	float dx = ps.x, dy = ps.y;
-	
-	t1 = TEX0.xxxy + vec4(  -dx,   0, dx,  -dy);	// A, B, C
-	t2 = TEX0.xxxy + vec4(  -dx,   0, dx,    0);	// D, E, F
-	t3 = TEX0.xxxy + vec4(  -dx,   0, dx,   dy);	// G, H, I
+	t1 = TEX0.xxxy + vec4(  -dx,   0., dx,  -dy);	// A, B, C
+	t2 = TEX0.xxxy + vec4(  -dx,   0., dx,    0.);	// D, E, F
+	t3 = TEX0.xxxy + vec4(  -dx,   0., dx,   dy);	// G, H, I
 }
 
 #elif defined(FRAGMENT)
@@ -122,7 +120,7 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
-uniform sampler2D Pass1Texture;
+uniform sampler2D PassPrev2Texture;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec4 t1;
 COMPAT_VARYING vec4 t2;
@@ -135,7 +133,7 @@ COMPAT_VARYING vec4 t3;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
-#define PassOutput0 Pass1Texture
+#define PassOutput0 PassPrev2Texture
 
 #define LE(x, y) (1. - step(y, x))
 #define GE(x, y) (1. - step(x, y))
@@ -163,7 +161,7 @@ void main()
 	*/
 
 #ifdef GL_ES
-	#define TEXm(x) COMPAT_TEXTURE(Pass1Texture, x)
+	#define TEXm(x) COMPAT_TEXTURE(PassOutput0, x)
 	#define TEXs(x) COMPAT_TEXTURE(Source, x)
 
 	// metric data

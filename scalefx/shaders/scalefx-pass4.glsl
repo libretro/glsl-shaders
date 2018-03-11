@@ -69,8 +69,8 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
-uniform COMPAT_PRECISION vec2 OrigTextureSize;
-uniform COMPAT_PRECISION vec2 OrigInputSize;
+uniform COMPAT_PRECISION vec2 PassPrev5TextureSize;
+uniform COMPAT_PRECISION vec2 PassPrev5InputSize;
 COMPAT_VARYING vec4 t1;
 COMPAT_VARYING vec4 t2;
 COMPAT_VARYING vec4 t3;
@@ -87,7 +87,7 @@ void main()
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
 	
-	vec2 ps = 1.0/OrigTextureSize;
+	vec2 ps = 1.0/PassPrev5TextureSize;
 	float dx = ps.x, dy = ps.y;
 
 	t1 = TEX0.xxxy + vec4( 0., -dx, -2.*dx,     0.);	// E, D, D0
@@ -125,7 +125,7 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
-uniform sampler2D OrigTexture;
+uniform sampler2D PassPrev5Texture;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec4 t1;
 COMPAT_VARYING vec4 t2;
@@ -174,6 +174,6 @@ void main()
 	vec2 res = sp == 0. ? vec2(0.,0.) : sp == 1. ? vec2(-1.,0.) : sp == 2. ? vec2(-2.,0.) : sp == 3. ? vec2(1.,0.) : sp == 4. ? vec2(2.,0.) : sp == 5. ? vec2(0,-1) : sp == 6. ? vec2(0.,-2.) : sp == 7. ? vec2(0.,1.) : vec2(0.,2.);
 
 	// ouput
-	FragColor = COMPAT_TEXTURE(OrigTexture, vTexCoord + res / SourceSize.xy);
+	FragColor = COMPAT_TEXTURE(PassPrev5Texture, vTexCoord + res / SourceSize.xy);
 } 
 #endif

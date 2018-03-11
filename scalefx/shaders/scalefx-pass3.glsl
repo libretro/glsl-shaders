@@ -89,9 +89,7 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
-	
-	vec2 ps = 1.0/TextureSize;
-	float dx = ps.x, dy = ps.y;
+	float dx = SourceSize.z, dy = SourceSize.w;
     
     t1 = TEX0.xxxy + vec4(-dx, -2.*dx, -3.*dx,     0.);	// D, D0, D1
 	t2 = TEX0.xxxy + vec4( dx,  2.*dx,  3.*dx,     0.);	// F, F0, F1

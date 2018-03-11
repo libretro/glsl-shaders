@@ -85,15 +85,14 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 void main()
 {
-    gl_Position = MVPMatrix * VertexCoord;
-    COL0 = COLOR;
-    TEX0.xy = TexCoord.xy;
-    vec2 ps = 1.0/TextureSize.xy;
-	float dx = ps.x, dy = ps.y;
+	gl_Position = MVPMatrix * VertexCoord;
+	COL0 = COLOR;
+	TEX0.xy = TexCoord.xy;
+	float dx = SourceSize.z, dy = SourceSize.w;
     
-    t1 = TEX0.xxxy + vec4(  -dx,   0, dx,  -dy);	// A, B, C
-	t2 = TEX0.xxxy + vec4(  -dx,   0, dx,    0);	// D, E, F
-	t3 = TEX0.xxxy + vec4(  -dx,   0, dx,   dy);	// G, H, I
+	t1 = TEX0.xxxy + vec4(  -dx,   0., dx,  -dy);	// A, B, C
+	t2 = TEX0.xxxy + vec4(  -dx,   0., dx,    0.);	// D, E, F
+	t3 = TEX0.xxxy + vec4(  -dx,   0., dx,   dy);	// G, H, I
 }
 
 #elif defined(FRAGMENT)
