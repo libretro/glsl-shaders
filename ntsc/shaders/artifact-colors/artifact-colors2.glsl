@@ -150,7 +150,11 @@ mat2 rotate(float a)
 
 vec4 remap(vec4 c)
 {
+#ifdef GL_ES
 	return c - vec4(0.07);
+#else
+	return c;
+#endif
 }
 
 //Non-normalized texture sampling.

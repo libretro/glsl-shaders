@@ -182,7 +182,11 @@ vec2 Oscillator(float Fo, float Fs, float N)
 // use this to avoid needing float framebuffers
 vec4 remap(vec4 c)
 {
+#ifdef GL_ES
 	return (c + vec4(0.07));
+#else
+	return c;
+#endif
 }
 
 void main()
