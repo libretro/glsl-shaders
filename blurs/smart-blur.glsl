@@ -1,5 +1,3 @@
-// version directive if necessary
-
 /*
    Hyllian Smart-Blur Shader
   
@@ -178,6 +176,6 @@ void main()
         E = sum;
     }
 
-    FragColor = vec4(E, 1.0);;
+    FragColor = vec4(E, 1.0);
 } 
 #endif
