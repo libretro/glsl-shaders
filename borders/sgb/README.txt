@@ -1,0 +1,5 @@
+These shader presets will allow you to apply a 256x224 Super Game Boy border around a 160x144 input image from a Game Boy core.
+
+Please note that RetroArch's integer scaling function will not automatically set a correct integer scale for the output image, as it will only take the Game Boy core's reported resolution of 160x144 into account, and not the output image's 256x224 resolution. You will need to set a custom viewport size, either with the Custom Ratio menu option or defining custom_viewport_width and custom_viewport_height in the config file, setting Aspect Ratio Index to "Custom", and enabling Integer Scaling to center the image automatically.
+
+An example border is included, you can swap it out with another 256x224 Super Game Boy border in png format with the center 160x144 transparent. Borders derived from an emulator screenshot may be shifted up one pixel and off center, so you would need to shift it down one pixel to center it. The "Super Game Boy Color" borders were created by BLUEamnesiac.
