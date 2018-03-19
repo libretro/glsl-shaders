@@ -7,13 +7,12 @@ scale_x0 = "256"
 scale_type_y0 = "absolute"
 scale_y0 = "224"
 
-parameters = "box_scale;location;in_res_x;in_res_y;out_res_x;out_res_y"
+parameters = "box_scale;location;in_res_x;in_res_y;border_on_top"
 box_scale = "1.000000"
 location = "0.500000"
 in_res_x = "160.000000"
 in_res_y = "144.000000"
-out_res_x = "256.000000"
-out_res_y = "224.000000"
+border_on_top = 0.0
 
-textures = "bg"
-bg = "sgb.png"
+textures = "BORDER"
+BORDER = "sgb.png"

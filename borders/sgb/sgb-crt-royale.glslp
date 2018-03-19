@@ -24,7 +24,7 @@ shaders = "13"
 # Load an aperture grille, slot mask, and an EDP shadow mask, and load a small
 # non-mipmapped version and a large mipmapped version.
 # TODO: Test masks in other directories.
-textures = "mask_grille_texture_small;mask_grille_texture_large;mask_slot_texture_small;mask_slot_texture_large;mask_shadow_texture_small;mask_shadow_texture_large;bg"
+textures = "mask_grille_texture_small;mask_grille_texture_large;mask_slot_texture_small;mask_slot_texture_large;mask_shadow_texture_small;mask_shadow_texture_large;BORDER"
 mask_grille_texture_small = "../../crt/shaders/crt-royale/TileableLinearApertureGrille15Wide8And5d5SpacingResizeTo64.png"
 mask_grille_texture_large = "../../crt/shaders/crt-royale/TileableLinearApertureGrille15Wide8And5d5Spacing.png"
 mask_slot_texture_small = "../../crt/shaders/crt-royale/TileableLinearSlotMaskTall15Wide9And4d5Horizontal9d14VerticalSpacingResizeTo64.png"
@@ -49,7 +49,7 @@ mask_slot_texture_small_mipmap = "false"    # Mipmapping causes artifacts with m
 mask_slot_texture_large_mipmap = "true"     # Essential for hardware-resized masks
 mask_shadow_texture_small_mipmap = "false"  # Mipmapping causes artifacts with manually resized masks without tex2Dlod
 mask_shadow_texture_large_mipmap = "true"   # Essential for hardware-resized masks
-bg = "sgb.png"
+BORDER = "sgb.png"
 
 # Pass0: Apply SGB border
 shader0 = "../resources/imgborder-sgb.glsl"
