@@ -14,5 +14,5 @@ in_res_y = "144.000000"
 out_res_x = "256.000000"
 out_res_y = "224.000000"
 
-textures = "bg"
-bg = "sgb.png"
+textures = "BORDER"
+BORDER = "sgb.png"
