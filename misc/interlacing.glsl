@@ -28,22 +28,11 @@
 #else
 #define COMPAT_PRECISION
 #endif
-COMPAT_VARYING     float _frame_rotation;
-struct input_dummy {
-    vec2 _video_size;
-    vec2 _texture_size;
-    vec2 _output_dummy_size;
-    float _frame_count;
-    float _frame_direction;
-    float _frame_rotation;
-float _placeholder26;
-};
-vec4 _oPosition1;
-vec4 _r0006;
+
 COMPAT_ATTRIBUTE vec4 VertexCoord;
 COMPAT_ATTRIBUTE vec4 COLOR;
-COMPAT_VARYING vec4 COL0;
 COMPAT_ATTRIBUTE vec4 TexCoord;
+COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
  
 uniform mat4 MVPMatrix;
@@ -52,32 +41,19 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+
+// compatibility #defines
+#define vTexCoord TEX0.xy
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
+#define OutSize vec4(OutputSize, 1.0 / OutputSize)
+
 void main()
 {
-    vec4 _oColor;
-    vec2 _oTexCoord;
-    _r0006 = VertexCoord.x*MVPMatrix[0];
-    _r0006 = _r0006 + VertexCoord.y*MVPMatrix[1];
-    _r0006 = _r0006 + VertexCoord.z*MVPMatrix[2];
-    _r0006 = _r0006 + VertexCoord.w*MVPMatrix[3];
-    _oPosition1 = _r0006;
-    _oColor = COLOR;
-    _oTexCoord = TexCoord.xy;
-    gl_Position = _r0006;
-    COL0 = COLOR;
-    TEX0.xy = TexCoord.xy;
-} 
-#elif defined(FRAGMENT)
+   gl_Position = MVPMatrix * VertexCoord;
+   TEX0.xy = TexCoord.xy;
+}
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
+#elif defined(FRAGMENT)
 
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
@@ -89,32 +65,31 @@ precision mediump float;
 #else
 #define COMPAT_PRECISION
 #endif
-COMPAT_VARYING     float _frame_rotation;
-struct input_dummy {
-    vec2 _video_size;
-    vec2 _texture_size;
-    vec2 _output_dummy_size;
-    float _frame_count;
-    float _frame_direction;
-    float _frame_rotation;
-float _placeholder27;
-};
-vec4 _ret_0;
-float _TMP4;
-float _TMP3;
-float _TMP2;
-float _TMP1;
-input_dummy _IN1;
-float mod_y;
-float _a0011;
-COMPAT_VARYING vec4 TEX0;
- 
-uniform sampler2D Texture;
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out COMPAT_PRECISION vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
+#endif
+
 uniform COMPAT_PRECISION int FrameDirection;
 uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+uniform sampler2D Texture;
+COMPAT_VARYING vec4 TEX0;
+
+// compatibility #defines
+#define Source Texture
+#define vTexCoord TEX0.xy
+
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
+#define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float percent;
@@ -128,24 +103,20 @@ uniform COMPAT_PRECISION float top_field_first;
 
 void main()
 {
-    vec4 _res;
-    float _y;
-    vec2 timer = vec2(FrameCount, FrameCount); //<-this is dumb, but whatever
-    _res = COMPAT_TEXTURE(Texture, TEX0.xy);
-    if (InputSize.y > 400.0000001) { 
-        _y = TextureSize.y*TEX0.y + (timer.y * enable_480i) + top_field_first;
-    } else {
-        _y = 2.0000001*TextureSize.y*TEX0.y + top_field_first;
-    } 
-    mod_y = abs(2.00001) * fract(abs(_y/2.0000001));
+   vec4 res = COMPAT_TEXTURE(Source, vTexCoord).rgba;
+   float y = 0.0;
+   float tick = float(FrameCount);
 
-    if (mod_y > 0.99999) { 
-        FragColor = _res;
-        return;
-    } else {
-        FragColor = vec4(0.0);
-        return;
-    } 
-    FragColor = _ret_0;
-} 
+   // assume anything with a vertical resolution greater than 400 lines is interlaced
+   if (InputSize.y > 400.0)
+   {y = TextureSize.y * vTexCoord.y + (tick * enable_480i) + top_field_first;}
+   else
+   {y = 2.000001 * TextureSize.y * vTexCoord.y + top_field_first;}
+
+   if (mod(y, 1.99999) > 0.99999)
+   {res = res;}
+   else
+   {res = vec4(percent) * res;}
+   FragColor = res;
+}
 #endif
