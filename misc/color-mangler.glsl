@@ -1,3 +1,9 @@
+/*
+   Color Mangler
+   Author: hunterk
+   License: Public domain
+*/
+
 #pragma parameter display_gamma "Display Gamma" 2.2 0.0 10.0 0.1
 #pragma parameter target_gamma "Target Gamma" 2.2 0.0 10.0 0.1
 #pragma parameter sat "Saturation" 1.0 0.0 3.0 0.01
@@ -40,7 +46,6 @@ COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 
-vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
 uniform COMPAT_PRECISION int FrameDirection;
 uniform COMPAT_PRECISION int FrameCount;
@@ -48,29 +53,18 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 
+// compatibility #defines
+#define vTexCoord TEX0.xy
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
+#define OutSize vec4(OutputSize, 1.0 / OutputSize)
+
 void main()
 {
-    vec4 _oColor;
-    vec2 _otexCoord;
-    gl_Position = VertexCoord.x * MVPMatrix[0] + VertexCoord.y * MVPMatrix[1] + VertexCoord.z * MVPMatrix[2] + VertexCoord.w * MVPMatrix[3];
-    _oPosition1 = gl_Position;
-    _oColor = COLOR;
-    _otexCoord = TexCoord.xy;
-    COL0 = COLOR;
-    TEX0.xy = TexCoord.xy;
+   gl_Position = MVPMatrix * VertexCoord;
+   TEX0.xy = TexCoord.xy;
 }
 
 #elif defined(FRAGMENT)
-
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
 
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
@@ -83,9 +77,15 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
-struct output_dummy {
-    vec4 _color;
-};
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out COMPAT_PRECISION vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
+#endif
 
 uniform COMPAT_PRECISION int FrameDirection;
 uniform COMPAT_PRECISION int FrameCount;
@@ -94,6 +94,13 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
+
+// compatibility #defines
+#define Source Texture
+#define vTexCoord TEX0.xy
+
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
+#define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float display_gamma;
@@ -135,31 +142,23 @@ uniform COMPAT_PRECISION float bg;
 
 void main()
 {
-    output_dummy _OUT;
+   vec4 screen = pow(COMPAT_TEXTURE(Source, vTexCoord), vec4(target_gamma)).rgba;
+   vec4 avglum = vec4(0.5);
+   screen = mix(screen, avglum, (1.0 - cntrst));
 
-vec4 screen = pow(COMPAT_TEXTURE(Texture, TEX0.xy), vec4(target_gamma)).rgba; //sample image in linear colorspace
-vec4 avglum = vec4(0.5);
-screen = mix(screen, avglum, (1.0 - cntrst));
+                   //  r    g    b  alpha ; alpha does nothing for our purposes
+   mat4 color = mat4(  r,  rg,  rb, 0.0,  //red tint
+                      gr,   g,  gb, 0.0,  //green tint
+                      br,  bg,   b, 0.0,  //blue tint
+                     blr, blg, blb, 0.0); //black tint
 
-mat4 color = mat4(
-r,  gr,  br, blr,
-rg,   g,  bg, blg,
-rb,  gb,   b, blb,
-0.0, 0.0, 0.0, 1.0);
-			  
-mat4 adjust = mat4(
-(1.0 - sat) * 0.3086 + sat, (1.0 - sat) * 0.6094, (1.0 - sat) * 0.0820, 0.0,
-(1.0 - sat) * 0.3086, (1.0 - sat) * 0.6094 + sat, (1.0 - sat) * 0.0820, 0.0,
-(1.0 - sat) * 0.3086, (1.0 - sat) * 0.6094, (1.0 - sat) * 0.0820 + sat, 0.0,
-1.0, 1.0, 1.0, 1.0);
-
-color *= adjust;
-screen = clamp(screen * lum, 0.0, 1.0);
-screen = screen * color;
-screen = pow(screen, vec4(1.0 / display_gamma));
-
-    _OUT._color = screen;
-    FragColor = _OUT._color;
-    return;
-} 
+   mat4 adjust = mat4((1.0 - sat) * 0.3086 + sat, (1.0 - sat) * 0.3086, (1.0 - sat) * 0.3086, 1.0,
+                      (1.0 - sat) * 0.6094, (1.0 - sat) * 0.6094 + sat, (1.0 - sat) * 0.6094, 1.0,
+                      (1.0 - sat) * 0.0820, (1.0 - sat) * 0.0820, (1.0 - sat) * 0.0820 + sat, 1.0,
+                      0.0, 0.0, 0.0, 1.0);
+   color *= adjust;
+   screen = clamp(screen * lum, 0.0, 1.0);
+   screen = color * screen;
+   FragColor = pow(screen, vec4(1.0 / display_gamma));
+}
 #endif
