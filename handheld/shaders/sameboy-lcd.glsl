@@ -24,6 +24,10 @@
    SOFTWARE.
 */
 
+#pragma parameter COLOR_LOW "Color Low" 0.8 0.0 1.5 0.05
+#pragma parameter COLOR_HIGH "Color High" 1.0 0.0 1.5 0.05
+#pragma parameter SCANLINE_DEPTH "Scanline Depth" 0.1 0.0 2.0 0.05
+
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -104,9 +108,15 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float COLOR_LOW;
+uniform COMPAT_PRECISION float COLOR_HIGH;
+uniform COMPAT_PRECISION float SCANLINE_DEPTH;
+#else
 #define COLOR_LOW 0.8
 #define COLOR_HIGH 1.0
 #define SCANLINE_DEPTH 0.1
+#endif
 
 void main()
 {
