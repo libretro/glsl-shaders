@@ -22,7 +22,7 @@
 
 #pragma parameter CRTgamma "CRTGeom Target Gamma" 2.4 0.1 5.0 0.1
 #pragma parameter monitorgamma "CRTGeom Monitor Gamma" 2.2 0.1 5.0 0.1
-#pragma parameter d "CRTGeom Distance" 1.5 0.1 3.0 0.1
+#pragma parameter d "CRTGeom Distance" 1.6 0.1 3.0 0.1
 #pragma parameter CURVATURE "CRTGeom Curvature Toggle" 1.0 0.0 1.0 1.0
 #pragma parameter R "CRTGeom Curvature Radius" 2.0 0.1 10.0 0.1
 #pragma parameter cornersize "CRTGeom Corner Size" 0.03 0.001 1.0 0.005
@@ -38,7 +38,7 @@
 #ifndef PARAMETER_UNIFORM
 #define CRTgamma 2.4
 #define monitorgamma 2.2
-#define d 1.5
+#define d 1.6
 #define CURVATURE 1.0
 #define R 2.0
 #define cornersize 0.03
