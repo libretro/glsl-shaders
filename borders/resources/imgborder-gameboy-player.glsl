@@ -144,7 +144,7 @@ void main()
 {
 
    vec4 screen = COMPAT_TEXTURE(Source, screen_coord); //the main video screen
-   vec4 background = vec4(texture(BORDER, vTexCoord)); //put your background function's output here
+   vec4 background = vec4(COMPAT_TEXTURE(BORDER, vTexCoord)); //put your background function's output here
    if ( screen_coord.x < 0.9999 - OS_MASK_RIGHT && screen_coord.x > 0.0001 + OS_MASK_LEFT && screen_coord.y < 0.9999 - OS_MASK_BOTTOM && screen_coord.y > 0.0001 + OS_MASK_TOP && border_on_top > 0.5 )
       background.a *= 0.0;
    FragColor = vec4(mix(screen, background, background.a));
