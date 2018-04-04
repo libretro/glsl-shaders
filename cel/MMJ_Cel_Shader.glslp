@@ -1,0 +1,4 @@
+shaders = 1
+
+shader0 = shaders\MMJ_Cel_Shader.glsl
+srgb_framebuffer0 = true
