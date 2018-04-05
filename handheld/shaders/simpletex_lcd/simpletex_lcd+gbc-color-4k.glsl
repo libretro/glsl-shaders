@@ -68,19 +68,6 @@
 #pragma parameter GRID_BIAS "Grid Bias" 0.0 0.0 1.0 0.05
 #pragma parameter DARKEN_GRID "Darken Grid" 0.0 0.0 1.0 0.05
 #pragma parameter DARKEN_COLOUR "Darken Colours" 0.0 0.0 2.0 0.05
-#ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float GRID_INTENSITY;
-uniform COMPAT_PRECISION float GRID_WIDTH;
-uniform COMPAT_PRECISION float GRID_BIAS;
-uniform COMPAT_PRECISION float DARKEN_GRID;
-uniform COMPAT_PRECISION float DARKEN_COLOUR;
-#else
-#define GRID_INTENSITY 1.0
-#define GRID_WIDTH 1.0
-#define GRID_BIAS 0.0
-#define DARKEN_GRID 0.0
-#define DARKEN_COLOUR 0.0
-#endif
 
 #if defined(VERTEX)
 
@@ -126,7 +113,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 void main()
 {
-	TEX0 = TexCoord;
+	TEX0 = TexCoord * 1.0001;
 	gl_Position = MVPMatrix * VertexCoord;
 	// Cache divisions here for efficiency...
 	// (Assuming it is more efficient...?)
@@ -168,6 +155,20 @@ uniform sampler2D BACKGROUND;
 COMPAT_VARYING COMPAT_PRECISION vec4 TEX0;
 COMPAT_VARYING COMPAT_PRECISION vec2 InvInputSize;
 COMPAT_VARYING COMPAT_PRECISION vec2 InvTextureSize;
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float GRID_INTENSITY;
+uniform COMPAT_PRECISION float GRID_WIDTH;
+uniform COMPAT_PRECISION float GRID_BIAS;
+uniform COMPAT_PRECISION float DARKEN_GRID;
+uniform COMPAT_PRECISION float DARKEN_COLOUR;
+#else
+#define GRID_INTENSITY 1.0
+#define GRID_WIDTH 1.0
+#define GRID_BIAS 0.0
+#define DARKEN_GRID 0.0
+#define DARKEN_COLOUR 0.0
+#endif
 
 // ### Magic Numbers...
 
