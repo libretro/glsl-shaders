@@ -44,18 +44,39 @@
 // Background texture size
 // > 2048 x 2048 textures are suitable for screen resolutions up to
 //   1200p (or 1440p if running 'square' aspect ratio systems)
-//#define BG_TEXTURE_SIZE 2048.0
+#define BG_TEXTURE_SIZE 2048.0
 // > 4096 x 4096 textures are suitable for screen resolutions up to 4k
 //#define BG_TEXTURE_SIZE 4096.0
-// We're using a smaller res in the repo to minimize donwload burdens
-#define BG_TEXTURE_SIZE BG_SCALE
+
+// Compatibility #ifdefs needed for parameters
+#ifdef GL_ES
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+#define COMPAT_PRECISION highp
+#else
+#define COMPAT_PRECISION mediump
+#endif
+#else
+#define COMPAT_PRECISION
+#endif
 
 #pragma parameter GRID_INTENSITY "Grid Intensity" 1.0 0.0 1.0 0.05
 #pragma parameter GRID_WIDTH "Grid Width" 1.0 0.0 1.0 0.05
 #pragma parameter GRID_BIAS "Grid Bias" 0.0 0.0 1.0 0.05
 #pragma parameter DARKEN_GRID "Darken Grid" 0.0 0.0 1.0 0.05
 #pragma parameter DARKEN_COLOUR "Darken Colours" 0.0 0.0 2.0 0.05
-#pragma parameter BG_SCALE "Background Scale" 2.0 0.0 10.0 0.1
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float GRID_INTENSITY;
+uniform COMPAT_PRECISION float GRID_WIDTH;
+uniform COMPAT_PRECISION float GRID_BIAS;
+uniform COMPAT_PRECISION float DARKEN_GRID;
+uniform COMPAT_PRECISION float DARKEN_COLOUR;
+#else
+#define GRID_INTENSITY 1.0
+#define GRID_WIDTH 1.0
+#define GRID_BIAS 0.0
+#define DARKEN_GRID 0.0
+#define DARKEN_COLOUR 0.0
+#endif
 
 #if defined(VERTEX)
 
@@ -101,7 +122,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 void main()
 {
-	TEX0 = TexCoord * 1.0001;
+	TEX0 = TexCoord;
 	gl_Position = MVPMatrix * VertexCoord;
 	// Cache divisions here for efficiency...
 	// (Assuming it is more efficient...?)
@@ -144,22 +165,6 @@ COMPAT_VARYING COMPAT_PRECISION vec4 TEX0;
 COMPAT_VARYING COMPAT_PRECISION vec2 InvInputSize;
 COMPAT_VARYING COMPAT_PRECISION vec2 InvTextureSize;
 
-#ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float GRID_INTENSITY;
-uniform COMPAT_PRECISION float GRID_WIDTH;
-uniform COMPAT_PRECISION float GRID_BIAS;
-uniform COMPAT_PRECISION float DARKEN_GRID;
-uniform COMPAT_PRECISION float DARKEN_COLOUR;
-uniform COMPAT_PRECISION float BG_SCALE;
-#else
-#define GRID_INTENSITY 1.0
-#define GRID_WIDTH 1.0
-#define GRID_BIAS 0.0
-#define DARKEN_GRID 0.0
-#define DARKEN_COLOUR 0.0
-#define BG_SCALE 2.0
-#endif
-
 // ### Magic Numbers...
 
 // Grid pattern
@@ -178,11 +183,11 @@ const COMPAT_PRECISION float LINE_WEIGHT_B = 8.0 / 3.0;
 //#define LUMA_G 0.587
 //#define LUMA_B 0.114
 
+// Background texture size
+const COMPAT_PRECISION float INV_BG_TEXTURE_SIZE = 1.0 / BG_TEXTURE_SIZE;
+
 void main()
 {
-	// Background texture size
-	COMPAT_PRECISION float INV_BG_TEXTURE_SIZE = 1.0 / (BG_TEXTURE_SIZE * InputSize.y);
-
 	// Get current texture coordinate
 	COMPAT_PRECISION vec2 imgPixelCoord = TEX0.xy * TextureSize.xy;
 	COMPAT_PRECISION vec2 imgCenterCoord = floor(imgPixelCoord.xy) + vec2(0.5, 0.5);
@@ -236,7 +241,7 @@ void main()
 	
 	// Sample background texture and 'colourise' according to current pixel colour
 	// (NB: the 'colourisation' here is lame, but the proper method is slow...)
-	COMPAT_PRECISION vec3 bgTexture = COMPAT_TEXTURE(BACKGROUND, fract(bgPixelCoord.xy * INV_BG_TEXTURE_SIZE)).rgb * colour.rgb;
+	COMPAT_PRECISION vec3 bgTexture = COMPAT_TEXTURE(BACKGROUND, bgPixelCoord.xy * INV_BG_TEXTURE_SIZE).rgb * colour.rgb;
 	
 	// Blend current pixel with background according to luminosity
 	// (lighter colour == more transparent, more visible background)

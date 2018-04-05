@@ -48,9 +48,9 @@
 // Background texture size
 // > 2048 x 2048 textures are suitable for screen resolutions up to
 //   1200p (or 1440p if running 'square' aspect ratio systems)
-#define BG_TEXTURE_SIZE 2048.0
+//#define BG_TEXTURE_SIZE 2048.0
 // > 4096 x 4096 textures are suitable for screen resolutions up to 4k
-//#define BG_TEXTURE_SIZE 4096.0
+#define BG_TEXTURE_SIZE 4096.0
 
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES

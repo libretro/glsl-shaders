@@ -1,12 +1,8 @@
 /*
-	simpletex_lcd+gba-color - a simple, textured LCD shader intended for non-backlit
-	systems - includes GBA colour correction
+	simpletex_lcd - a simple, textured LCD shader intended for non-backlit systems
 	
 	- Makes use of the 'line weighting' equation from zfast_lcd_standard
 	  [original zfast_lcd_standard code copyright (C) 2017 Greg Hogan (SoltanGris42)]
-	
-	- Colour correction code taken from 'gba-color', written by hunterk, modified by Pokefan531
-	  and realeased into the public domain
 	
 	Other code by jdgleaver
 	
@@ -48,9 +44,9 @@
 // Background texture size
 // > 2048 x 2048 textures are suitable for screen resolutions up to
 //   1200p (or 1440p if running 'square' aspect ratio systems)
-#define BG_TEXTURE_SIZE 2048.0
+//#define BG_TEXTURE_SIZE 2048.0
 // > 4096 x 4096 textures are suitable for screen resolutions up to 4k
-//#define BG_TEXTURE_SIZE 4096.0
+#define BG_TEXTURE_SIZE 4096.0
 
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
@@ -190,17 +186,6 @@ const COMPAT_PRECISION float LINE_WEIGHT_B = 8.0 / 3.0;
 // Background texture size
 const COMPAT_PRECISION float INV_BG_TEXTURE_SIZE = 1.0 / BG_TEXTURE_SIZE;
 
-// Colour correction
-#define CC_R 0.845
-#define CC_G 0.68
-#define CC_B 0.755
-#define CC_RG 0.09
-#define CC_RB 0.16
-#define CC_GR 0.17
-#define CC_GB 0.085
-#define CC_BR -0.015
-#define CC_BG 0.23
-
 void main()
 {
 	// Get current texture coordinate
@@ -248,12 +233,6 @@ void main()
 	// Apply grid pattern
 	// (lineWeight == 1 -> set colour to value specified by DARKEN_GRID)
 	colour.rgb = mix(colour.rgb, vec3(1.0 - DARKEN_GRID), lineWeight);
-	
-	// Apply colour correction
-	colour.rgb = mat3(CC_R,  CC_RG, CC_RB,
-							CC_GR, CC_G,  CC_GB,
-							CC_BR, CC_BG, CC_B) * colour.rgb;
-	colour.rgb = clamp(colour.rgb, 0.0, 1.0);
 	
 	// Get background sample point
 	// > For some unknown reason, have to scale TEX0 by (OutputSize / InputSize) * 256

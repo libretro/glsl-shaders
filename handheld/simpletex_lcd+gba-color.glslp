@@ -10,9 +10,8 @@ float_framebuffer0 = "false"
 srgb_framebuffer0 = "false"
 
 textures = "BACKGROUND"
-BACKGROUND = "shaders/simpletex_lcd/png/textured_paper.png"
+BACKGROUND = "shaders/simpletex_lcd/png/2k/textured_paper.png"
 BACKGROUND_linear = false
-BACKGROUND_wrap_mode = repeat
 
 parameters = "GRID_INTENSITY;GRID_WIDTH;GRID_BIAS;DARKEN_GRID;DARKEN_COLOUR"
 GRID_INTENSITY = "0.9"

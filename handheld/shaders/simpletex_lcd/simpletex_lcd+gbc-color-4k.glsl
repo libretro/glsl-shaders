@@ -1,12 +1,12 @@
 /*
-	simpletex_lcd+gba-color - a simple, textured LCD shader intended for non-backlit
-	systems - includes GBA colour correction
+	simpletex_lcd+gbc-color - a simple, textured LCD shader intended for non-backlit
+	systems - includes GBC colour correction
 	
 	- Makes use of the 'line weighting' equation from zfast_lcd_standard
 	  [original zfast_lcd_standard code copyright (C) 2017 Greg Hogan (SoltanGris42)]
 	
-	- Colour correction code taken from 'gba-color', written by hunterk, modified by Pokefan531
-	  and realeased into the public domain
+	- Colour correction code taken from 'gbc-color', written by hunterk and realeased
+	  into the public domain
 	
 	Other code by jdgleaver
 	
@@ -48,9 +48,9 @@
 // Background texture size
 // > 2048 x 2048 textures are suitable for screen resolutions up to
 //   1200p (or 1440p if running 'square' aspect ratio systems)
-#define BG_TEXTURE_SIZE 2048.0
+//#define BG_TEXTURE_SIZE 2048.0
 // > 4096 x 4096 textures are suitable for screen resolutions up to 4k
-//#define BG_TEXTURE_SIZE 4096.0
+#define BG_TEXTURE_SIZE 4096.0
 
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
@@ -191,15 +191,15 @@ const COMPAT_PRECISION float LINE_WEIGHT_B = 8.0 / 3.0;
 const COMPAT_PRECISION float INV_BG_TEXTURE_SIZE = 1.0 / BG_TEXTURE_SIZE;
 
 // Colour correction
-#define CC_R 0.845
-#define CC_G 0.68
-#define CC_B 0.755
-#define CC_RG 0.09
-#define CC_RB 0.16
-#define CC_GR 0.17
-#define CC_GB 0.085
-#define CC_BR -0.015
-#define CC_BG 0.23
+#define CC_R 0.78824
+#define CC_G 0.72941
+#define CC_B 0.82
+#define CC_RG 0.025
+#define CC_RB 0.12039
+#define CC_GR 0.12157
+#define CC_GB 0.12157
+#define CC_BR 0.0
+#define CC_BG 0.275000
 
 void main()
 {
