@@ -1,0 +1,13 @@
+shaders = 4
+
+shader0 = shaders/MMJ_Cel_Shader_MP_Blur_H.glsl
+alias0 = MMJ_BlurPass_H
+
+shader1 = shaders/MMJ_Cel_Shader_MP_Blur_V.glsl
+alias1 = MMJ_BlurPass_V
+
+shader2 = shaders/MMJ_Cel_Shader_MP_Outline.glsl
+alias2 = MMJ_OutlinePass
+
+shader3 = shaders/MMJ_Cel_Shader_MP_Color.glsl
+alias3 = MMJ_ColorPass
