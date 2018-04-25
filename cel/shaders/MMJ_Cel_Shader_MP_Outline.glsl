@@ -1,8 +1,6 @@
-#pragma name MMJ_OutlinePass
-
 /*
 ----------------------------------------------------------------
-MMJ's Cel Shader v2.0 - Multi-Pass 
+MMJ's Cel Shader v2.01 - Multi-Pass 
 ----------------------------------------------------------------
 Parameters:
 -----------
@@ -38,7 +36,6 @@ together to thicken the appearance of the lines.
 #endif
 
 COMPAT_ATTRIBUTE vec4 VertexCoord;
-COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec4 TEX1;
@@ -47,13 +44,9 @@ COMPAT_VARYING vec4 TEX3;
 COMPAT_VARYING vec4 TEX4;
 COMPAT_VARYING vec4 TEX5;
 
-vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
-uniform COMPAT_PRECISION int FrameDirection;
-uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
-uniform COMPAT_PRECISION vec2 InputSize;
 
 // compatibility #defines
 #define vTexCoord TEX0.xy
@@ -63,9 +56,8 @@ uniform COMPAT_PRECISION vec2 InputSize;
 void main()
 {
 	gl_Position = MVPMatrix * VertexCoord;
-	vTexCoord = TexCoord;
-
-  TEX0 = vTexCoord.xyxy;
+	
+  TEX0 = TexCoord.xyxy;
 	
   vec4 offset;
 
@@ -85,7 +77,7 @@ void main()
 #if __VERSION__ >= 130
 #define COMPAT_VARYING in
 #define COMPAT_TEXTURE texture
-out COMPAT_PRECISION vec4 FragColor;
+out vec4 FragColor;
 #else
 #define COMPAT_VARYING varying
 #define FragColor gl_FragColor
@@ -103,11 +95,8 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
-uniform COMPAT_PRECISION int FrameDirection;
-uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
-uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec4 TEX1;
