@@ -50,15 +50,15 @@
 #define atan2(x,y) atan(y,x)
 #define rsqrt(c) inversesqrt(c)
 
-#define VERTICAL_SCANLINEStexture Pass2Texture
-#define VERTICAL_SCANLINEStexture_size Pass2TextureSize
-#define VERTICAL_SCANLINESvideo_size Pass2InputSize
-#define BLOOM_APPROXtexture Pass3Texture
-#define BLOOM_APPROXtexture_size Pass3TextureSize
-#define BLOOM_APPROXvideo_size Pass3InputSize
-#define HALATION_BLURtexture Pass5Texture
-#define HALATION_BLURtexture_size Pass5TextureSize
-#define HALATION_BLURvideo_size Pass5InputSize
+#define VERTICAL_SCANLINEStexture PassPrev6Texture
+#define VERTICAL_SCANLINEStexture_size PassPrev6TextureSize
+#define VERTICAL_SCANLINESvideo_size PassPrev6InputSize
+#define BLOOM_APPROXtexture PassPrev5Texture
+#define BLOOM_APPROXtexture_size PassPrev5TextureSize
+#define BLOOM_APPROXvideo_size PassPrev5InputSize
+#define HALATION_BLURtexture PassPrev3Texture
+#define HALATION_BLURtexture_size PassPrev3TextureSize
+#define HALATION_BLURvideo_size PassPrev3InputSize
 #ifdef INTEGRATED_GRAPHICS_COMPATIBILITY_MODE
 	#define MASK_RESIZEtexture Texture
 #else
@@ -6087,12 +6087,12 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
-uniform COMPAT_PRECISION vec2 Pass2TextureSize;
-uniform COMPAT_PRECISION vec2 Pass2InputSize;
-uniform COMPAT_PRECISION vec2 Pass3TextureSize;
-uniform COMPAT_PRECISION vec2 Pass3InputSize;
-uniform COMPAT_PRECISION vec2 Pass5TextureSize;
-uniform COMPAT_PRECISION vec2 Pass5InputSize;
+uniform COMPAT_PRECISION vec2 PassPrev6TextureSize;
+uniform COMPAT_PRECISION vec2 PassPrev6InputSize;
+uniform COMPAT_PRECISION vec2 PassPrev5TextureSize;
+uniform COMPAT_PRECISION vec2 PassPrev5InputSize;
+uniform COMPAT_PRECISION vec2 PassPrev3TextureSize;
+uniform COMPAT_PRECISION vec2 PassPrev3InputSize;
 
 // compatibility #defines
 #define vTexCoord TEX0.xy
@@ -6168,16 +6168,16 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
-uniform COMPAT_PRECISION vec2 Pass2TextureSize;
-uniform COMPAT_PRECISION vec2 Pass2InputSize;
-uniform COMPAT_PRECISION vec2 Pass3TextureSize;
-uniform COMPAT_PRECISION vec2 Pass3InputSize;
-uniform COMPAT_PRECISION vec2 Pass5TextureSize;
-uniform COMPAT_PRECISION vec2 Pass5InputSize;
+uniform COMPAT_PRECISION vec2 PassPrev6TextureSize;
+uniform COMPAT_PRECISION vec2 PassPrev6InputSize;
+uniform COMPAT_PRECISION vec2 PassPrev5TextureSize;
+uniform COMPAT_PRECISION vec2 PassPrev5InputSize;
+uniform COMPAT_PRECISION vec2 PassPrev3TextureSize;
+uniform COMPAT_PRECISION vec2 PassPrev3InputSize;
 uniform sampler2D Texture;
-uniform sampler2D Pass2Texture;
-uniform sampler2D Pass3Texture;
-uniform sampler2D Pass5Texture;
+uniform sampler2D PassPrev6Texture;
+uniform sampler2D PassPrev5Texture;
+uniform sampler2D PassPrev3Texture;
 uniform sampler2D mask_grille_texture_large;
 uniform sampler2D mask_slot_texture_large;
 uniform sampler2D mask_shadow_texture_large;

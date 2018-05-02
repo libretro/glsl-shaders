@@ -48,15 +48,15 @@
 #define atan2(x,y) atan(y,x)
 #define rsqrt(c) inversesqrt(c)
 
-#define MASKED_SCANLINEStexture Pass8Texture
-#define MASKED_SCANLINEStexture_size Pass8TextureSize
-#define MASKED_SCANLINESvideo_size Pass8InputSize
-#define HALATION_BLURtexture Pass5Texture
-#define HALATION_BLURtexture_size Pass5TextureSize
-#define HALATION_BLURvideo_size Pass5InputSize
-#define BRIGHTPASStexture Pass9Texture
-#define BRIGHTPASStexture_size Pass9TextureSize
-#define BRIGHTPASSvideo_size Pass9InputSize
+#define MASKED_SCANLINEStexture PassPrev3Texture
+#define MASKED_SCANLINEStexture_size PassPrev3TextureSize
+#define MASKED_SCANLINESvideo_size PassPrev3InputSize
+#define HALATION_BLURtexture PassPrev6Texture
+#define HALATION_BLURtexture_size PassPrev6TextureSize
+#define HALATION_BLURvideo_size PassPrev6InputSize
+#define BRIGHTPASStexture PassPrev2Texture
+#define BRIGHTPASStexture_size PassPrev2TextureSize
+#define BRIGHTPASSvideo_size PassPrev2InputSize
 
 #if defined(GL_ES)
 	#define COMPAT_PRECISION mediump
@@ -6605,12 +6605,12 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
-uniform COMPAT_PRECISION vec2 Pass9TextureSize;
-uniform COMPAT_PRECISION vec2 Pass9InputSize;
-uniform COMPAT_PRECISION vec2 Pass8TextureSize;
-uniform COMPAT_PRECISION vec2 Pass8InputSize;
-uniform COMPAT_PRECISION vec2 Pass5TextureSize;
-uniform COMPAT_PRECISION vec2 Pass5InputSize;
+uniform COMPAT_PRECISION vec2 PassPrev2TextureSize;
+uniform COMPAT_PRECISION vec2 PassPrev2InputSize;
+uniform COMPAT_PRECISION vec2 PassPrev3TextureSize;
+uniform COMPAT_PRECISION vec2 PassPrev3InputSize;
+uniform COMPAT_PRECISION vec2 PassPrev6TextureSize;
+uniform COMPAT_PRECISION vec2 PassPrev6InputSize;
 
 // compatibility #defines
 #define vTexCoord TEX0.xy
@@ -6695,17 +6695,17 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
-uniform COMPAT_PRECISION vec2 Pass9TextureSize;
-uniform COMPAT_PRECISION vec2 Pass9InputSize;
-uniform COMPAT_PRECISION vec2 Pass8TextureSize;
-uniform COMPAT_PRECISION vec2 Pass8InputSize;
-uniform COMPAT_PRECISION vec2 Pass5TextureSize;
-uniform COMPAT_PRECISION vec2 Pass5InputSize;
+uniform COMPAT_PRECISION vec2 PassPrev2TextureSize;
+uniform COMPAT_PRECISION vec2 PassPrev2InputSize;
+uniform COMPAT_PRECISION vec2 PassPrev3TextureSize;
+uniform COMPAT_PRECISION vec2 PassPrev3InputSize;
+uniform COMPAT_PRECISION vec2 PassPrev6TextureSize;
+uniform COMPAT_PRECISION vec2 PassPrev6InputSize;
 uniform sampler2D Texture;
 #define bloom_texture Texture
-uniform sampler2D Pass8Texture;
-uniform sampler2D Pass9Texture;
-uniform sampler2D Pass5Texture;
+uniform sampler2D PassPrev3Texture;
+uniform sampler2D PassPrev2Texture;
+uniform sampler2D PassPrev6Texture;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 video_uv;
 COMPAT_VARYING vec2 scanline_tex_uv;

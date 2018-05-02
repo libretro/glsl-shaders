@@ -17,6 +17,7 @@
 //  You should have received a copy of the GNU General Public License along with
 //  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
 //  Place, Suite 330, Boston, MA 02111-1307 USA
+//  Place, Suite 330, Boston, MA 02111-1307 USA
 
 // compatibility macros for transparently converting HLSLisms into GLSLisms
 #define mul(a,b) (b*a)
@@ -51,9 +52,9 @@
 #define MASKED_SCANLINEStexture Texture
 #define MASKED_SCANLINEStexture_size TextureSize
 #define MASKED_SCANLINESvideo_size InputSize
-#define BLOOM_APPROXtexture Pass2Texture
-#define BLOOM_APPROXtexture_size Pass2TextureSize
-#define BLOOM_APPROXvideo_size Pass2InputSize
+#define BLOOM_APPROXtexture PassPrev4Texture
+#define BLOOM_APPROXtexture_size PassPrev4TextureSize
+#define BLOOM_APPROXvideo_size PassPrev4InputSize
 
 #if defined(GL_ES)
 	#define COMPAT_PRECISION mediump
@@ -6598,8 +6599,8 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
-uniform COMPAT_PRECISION vec2 Pass2TextureSize;
-uniform COMPAT_PRECISION vec2 Pass2InputSize;
+uniform COMPAT_PRECISION vec2 PassPrev4TextureSize;
+uniform COMPAT_PRECISION vec2 PassPrev4InputSize;
 
 
 // compatibility #defines
@@ -6675,10 +6676,10 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
-uniform COMPAT_PRECISION vec2 Pass2TextureSize;
-uniform COMPAT_PRECISION vec2 Pass2InputSize;
+uniform COMPAT_PRECISION vec2 PassPrev4TextureSize;
+uniform COMPAT_PRECISION vec2 PassPrev4InputSize;
 uniform sampler2D Texture;
-uniform sampler2D Pass2Texture;
+uniform sampler2D PassPrev4Texture;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 scanline_tex_uv;
 COMPAT_VARYING vec2 blur3x3_tex_uv;
