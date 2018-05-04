@@ -1,5 +1,3 @@
-// version directive if necessary
-
 // NES PAL composite signal simulation for RetroArch
 // shader by r57shell
 // thanks to feos & HardWareMan & NewRisingSun
@@ -150,7 +148,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -165,17 +162,10 @@ uniform COMPAT_PRECISION vec2 InputSize;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
-#ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float WHATEVER;
-#else
-#define WHATEVER 0.0
-#endif
-
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy;
-// Paste vertex contents here:
 }
 
 #elif defined(FRAGMENT)
@@ -208,7 +198,6 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-// in variables go here as COMPAT_VARYING whatever
 
 // compatibility #defines
 #define Source Texture
@@ -216,9 +205,6 @@ COMPAT_VARYING vec4 TEX0;
 
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
-
-// delete all 'params.' or 'registers.' or whatever in the fragment and replace
-// texture(a, b) with COMPAT_TEXTURE(a, b) <-can't macro unfortunately
 
 #ifdef PARAMETER_UNIFORM
 
@@ -256,7 +242,7 @@ uniform COMPAT_PRECISION float Phase_Y;
 uniform COMPAT_PRECISION float Phase_One;
 uniform COMPAT_PRECISION float Phase_Two;
 
-static const float Mwidth = 24;
+static const float Mwidth = 24.;
 
 static const int Ywidth_static = 1;
 static const int Uwidth_static = 1;
@@ -371,16 +357,9 @@ static const float comb_line = 1.;
 static const float comb_line = 2.;
 #endif
 
-static float RGB_y = Contrast_static/Ywidth_static/DeltaV;
-static float RGB_u = comb_line*Contrast_static*Saturation_static/YUV_u/Uwidth_static/DeltaV;
-static float RGB_v = comb_line*Contrast_static*Saturation_static/YUV_v/Vwidth_static/DeltaV;
-
-static mat3 YUV_to_RGB =
-mat3(
-	float3(1., 1., 1.)*RGB_y,
-	float3(0., -0.114/0.587, 1.)*RGB_u,
-	float3(1., -0.299/0.587, 0.)*RGB_v
-);
+static float RGB_y = Contrast_static/float(Ywidth_static)/DeltaV;
+static float RGB_u = comb_line*Contrast_static*Saturation_static/YUV_u/float(Uwidth_static)/DeltaV;
+static float RGB_v = comb_line*Contrast_static*Saturation_static/YUV_v/float(Vwidth_static)/DeltaV;
 
 static const float pi = 3.1415926535897932384626433832795;
 
@@ -388,41 +367,50 @@ static const float pi = 3.1415926535897932384626433832795;
 
 bool InColorPhase(int color, float phase)
 {
-	return fmod((color*2. + phase),24.) < 12.;
+	return fmod((float(color)*2. + phase),24.) < 12.;
 }
+
+// signal low
+const float levels_0 = 0.350;
+const float levels_1 = 0.518;
+const float levels_2 = 0.962;
+const float levels_3 = 1.550;
+// signal high
+const float levels_4 = 1.094;
+const float levels_5 = 1.506;
+const float levels_6 = 1.962;
+const float levels_7 = 1.962;
 
 #ifndef USE_LUT
 // from nesdev wiki page NTSC_video
 float NTSCsignal(float3 pixel, float phase)
 {
 	// Voltage levels, relative to synch voltage
-	static const float black=.518f, white=1.962f, attenuation=.746f,
-		levels[8] = {.350f, .518f, .962f,1.550f,  // Signal low
-				1.094f,1.506f,1.962f,1.962f}; // Signal high
+	static const float black=.518, white=1.962, attenuation=.746;
 
 	// Decode the NES color.
-	int color = int(pixel.r*15);	// 0..15 "cccc"
-	int level = int(pixel.g*3);	// 0..3  "ll"
-	int emphasis = int(pixel.b*7+0.1);	// 0..7  "eee"
+	int color = int(pixel.r*15.);	// 0..15 "cccc"
+	int level = int(pixel.g*3.);	// 0..3  "ll"
+	int emphasis = int(pixel.b*7.+0.1);	// 0..7  "eee"
 	if (color > 13) { level = 1; }	// For colors 14..15, level 1 is forced.
 
 	// The square wave for this color alternates between these two voltages:
-	float low = levels[0], high = levels[4];
-	if (level == 1) { low = levels[1], high = levels[5]; }
-	if (level == 2) { low = levels[2], high = levels[6]; }
-	if (level == 3) { low = levels[3], high = levels[7]; }
+	float low = levels_0, high = levels_4;
+	if (level == 1) { low = levels_1, high = levels_5; }
+	if (level == 2) { low = levels_2, high = levels_6; }
+	if (level == 3) { low = levels_3, high = levels_7; }
 	if(color == 0) { low = high; } // For color 0, only high level is emitted
 	if(color > 12) { high = low; } // For colors 13..15, only low level is emitted
 
 
 	// Generate the square wave
 	// When de-emphasis bits are set, some parts of the signal are attenuated:
-	float2 e = fmod(float2(emphasis), float2(2.,4.));
+	float2 e = fmod(float2(emphasis,emphasis), float2(2.,4.));
 	float signal = InColorPhase(color,phase) ? high : low;
 
-	if( ((e.x != 0) && InColorPhase(0,phase))
-	||  ((e.y-e.x != 0) && InColorPhase(4,phase))
-	||  ((emphasis-e.y != 0) && InColorPhase(8,phase)) )
+	if( ((int(e.x) != 0) && InColorPhase(0,phase))
+	||  ((int(e.y-e.x) != 0) && InColorPhase(4,phase))
+	||  ((emphasis-int(e.y) != 0) && InColorPhase(8,phase)) )
 		return signal * attenuation;
 	else
 		return signal;
@@ -456,6 +444,11 @@ float coss(float x)
 
 float3 monitor(sampler2D tex, float2 p)
 {
+mat3 YUV_to_RGB = mat3(
+	float3(1., 1., 1.)*RGB_y,
+	float3(0., -0.114/0.587, 1.)*RGB_u,
+	float3(1., -0.299/0.587, 0.)*RGB_v
+);
 #ifdef PARAMETER_UNIFORM
 	float2 size = float2(SizeX,SizeY);
 #endif
@@ -499,19 +492,19 @@ float3 monitor(sampler2D tex, float2 p)
 	}
 
 	float ysum = 0., usum = 0., vsum = 0.;
-	for (int i=0; i<Mwidth; ++i)
+	for (int i=0; i<int(Mwidth); ++i)
 	{
 		float4 res = COMPAT_TEXTURE(tex, uv);
 #ifdef USE_RAW
 		float sig = NTSCsignal(res.xyz,HueShift*2.+alpha-res.g*ss*HueRotation)-Voltage_0;
 		// outside of texture is 0,0,0 which is white instead of black
 		if (uv.x <= 0.0 || uv.x >= border)
-			sig = 0;
+			sig = 0.;
 #ifdef USE_DELAY_LINE
 		float4 res1 = COMPAT_TEXTURE(tex, uv+sh);
 		float sig1 = NTSCsignal(res1.xyz,HueShift*2.+12012.0-alpha+res.g*ss*HueRotation)-Voltage_0;
 		if (uv.x + sh.x <= 0.0 || uv.x + sh.x >= border)
-			sig1 = 0;
+			sig1 = 0.;
 #endif
 
 #else
@@ -526,18 +519,18 @@ float3 monitor(sampler2D tex, float2 p)
 #endif
 
 #endif
-		if (i < Ywidth)
+		if (i < int(Ywidth))
 			ysum += sig;
 
 #ifdef USE_DELAY_LINE
-		if (i < Uwidth)
+		if (i < int(Uwidth))
 			usum += (sig+sig1)*sinn(alpha);
-		if (i < Vwidth)
+		if (i < int(Vwidth))
 			vsum += (sig-sig1)*coss(alpha);
 #else
-		if (i < Uwidth)
+		if (i < int(Uwidth))
 			usum += sig*sinn(alpha);
-		if (i < Vwidth)
+		if (i < int(Vwidth))
 			vsum += sig*coss(alpha);
 #endif
 		alpha -= ss;
@@ -550,7 +543,7 @@ float3 monitor(sampler2D tex, float2 p)
 	vsum *= Contrast*Saturation/Vwidth;
 #endif
 
-	float3 rgb = mul(float3(ysum+Brightness*Ywidth_static,usum,vsum), YUV_to_RGB);
+	float3 rgb = mul(float3(ysum+Brightness*float(Ywidth_static),usum,vsum), YUV_to_RGB);
 #if defined(USE_GAMMA) && !defined(USE_COLORIMETRY)
 	float3 rgb1 = saturate(rgb);
 	rgb = pow(rgb1, float3(Gamma/2.2,Gamma/2.2,Gamma/2.2));
@@ -605,12 +598,12 @@ float3 monitor(sampler2D tex, float2 p)
 
 #ifdef USE_SUBPIXELS
 	float pixels = TV_Pixels/OutputSize.x;
-	float left = fmod(q.x-0.5*pixels*3,3);
+	float left = fmod(q.x-0.5*pixels*3.,3.);
 	float right = left+frac(pixels)*3.;
-	float3 w = saturate(min(float3(1.,2.,3.),float3(right))
-		-max(float3(0.,1.,2.),float3(left)))
-		+saturate(min(float3(4.,5.,6.),float3(right))
-		-max(float3(3.,4.,5.),float3(left)))
+	float3 w = saturate(min(float3(1.,2.,3.),float3(right,right,right))
+		-max(float3(0.,1.,2.),float3(left,left,left)))
+		+saturate(min(float3(4.,5.,6.),float3(right,right,right))
+		-max(float3(3.,4.,5.),float3(left,left,left)))
 		+floor(pixels);
 	rgb = rgb*3.*w/(w.x+w.y+w.z);
 #endif
@@ -631,7 +624,7 @@ float3 monitor(sampler2D tex, float2 p)
 }
 
 // pos (left corner, sample size)
-float4 monitor_sample(sampler2D tex, float2 p, float2 sample)
+float4 monitor_sample(sampler2D tex, float2 p, float2 sample_)
 {
 	// linear interpolation was...
 	// now other thing.
@@ -641,28 +634,28 @@ float4 monitor_sample(sampler2D tex, float2 p, float2 sample)
 	float2 size = TextureSize;
 	float2 next = float2(.25,1.)/size;
 	float2 f = frac(float2(4.,1.)*size*p);
-	sample *= float2(4.,1.)*size;
+	sample_ *= float2(4.,1.)*size;
 	float2 l;
 	float2 r;
-	if (f.x+sample.x < 1.)
+	if (f.x+sample_.x < 1.)
 	{
-		l.x = f.x+sample.x;
+		l.x = f.x+sample_.x;
 		r.x = 0.;
 	}
 	else
 	{
 		l.x = 1.-f.x;
-		r.x = min(1.,f.x+sample.x-1.);
+		r.x = min(1.,f.x+sample_.x-1.);
 	}
-	if (f.y+sample.y < 1.)
+	if (f.y+sample_.y < 1.)
 	{
-		l.y = f.y+sample.y;
+		l.y = f.y+sample_.y;
 		r.y = 0.;
 	}
 	else
 	{
 		l.y = 1.-f.y;
-		r.y = min(1.,f.y+sample.y-1.);
+		r.y = min(1.,f.y+sample_.y-1.);
 	}
 	float3 top = mix(monitor(tex, p), monitor(tex, p+float2(next.x,0.)), r.x/(l.x+r.x));
 	float3 bottom = mix(monitor(tex, p+float2(0.,next.y)), monitor(tex, p+next), r.x/(l.x+r.x));
