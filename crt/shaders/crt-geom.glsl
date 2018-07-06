@@ -34,6 +34,7 @@
 #pragma parameter DOTMASK "CRTGeom Dot Mask Toggle" 0.3 0.0 0.3 0.3
 #pragma parameter SHARPER "CRTGeom Sharpness" 1.0 1.0 3.0 1.0
 #pragma parameter scanline_weight "CRTGeom Scanline Weight" 0.3 0.1 0.5 0.05
+#pragma parameter lum "CRTGeom Luminance" 0.0 0.0 1.0 0.01
 
 #ifndef PARAMETER_UNIFORM
 #define CRTgamma 2.4
@@ -50,6 +51,7 @@
 #define DOTMASK 0.3
 #define SHARPER 1.0
 #define scanline_weight 0.3
+#define lum 0.0
 #endif
 
 #if defined(VERTEX)
@@ -108,6 +110,7 @@ uniform COMPAT_PRECISION float overscan_y;
 uniform COMPAT_PRECISION float DOTMASK;
 uniform COMPAT_PRECISION float SHARPER;
 uniform COMPAT_PRECISION float scanline_weight;
+uniform COMPAT_PRECISION float lum;
 #endif
 
 #define FIX(c) max(abs(c), 1e-5);
@@ -292,6 +295,7 @@ uniform COMPAT_PRECISION float overscan_y;
 uniform COMPAT_PRECISION float DOTMASK;
 uniform COMPAT_PRECISION float SHARPER;
 uniform COMPAT_PRECISION float scanline_weight;
+uniform COMPAT_PRECISION float lum;
 #endif
 
 float intersect(vec2 xy)
@@ -358,11 +362,11 @@ vec4 scanlineWeights(float distance, vec4 color)
 #ifdef USEGAUSSIAN
 	vec4 wid = 0.3 + 0.1 * pow(color, vec4(3.0));
 	vec4 weights = vec4(distance / wid);
-	return 0.4 * exp(-weights * weights) / wid;
+	return (lum + 0.4) * exp(-weights * weights) / wid;
 #else
 	vec4 wid = 2.0 + 2.0 * pow(color, vec4(4.0));
 	vec4 weights = vec4(distance / scanline_weight);
-	return 1.4 * exp(-pow(weights * inversesqrt(0.5 * wid), wid)) / (0.6 + 0.2 * wid);
+	return (lum + 1.4) * exp(-pow(weights * inversesqrt(0.5 * wid), wid)) / (0.6 + 0.2 * wid);
 #endif
         }
 
