@@ -52,35 +52,11 @@
 // > 4096 x 4096 textures are suitable for screen resolutions up to 4k
 //#define BG_TEXTURE_SIZE 4096.0
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-#define COMPAT_PRECISION highp
-#else
-#define COMPAT_PRECISION mediump
-#endif
-#else
-#define COMPAT_PRECISION
-#endif
-
 #pragma parameter GRID_INTENSITY "Grid Intensity" 1.0 0.0 1.0 0.05
 #pragma parameter GRID_WIDTH "Grid Width" 1.0 0.0 1.0 0.05
 #pragma parameter GRID_BIAS "Grid Bias" 0.0 0.0 1.0 0.05
 #pragma parameter DARKEN_GRID "Darken Grid" 0.0 0.0 1.0 0.05
 #pragma parameter DARKEN_COLOUR "Darken Colours" 0.0 0.0 2.0 0.05
-#ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float GRID_INTENSITY;
-uniform COMPAT_PRECISION float GRID_WIDTH;
-uniform COMPAT_PRECISION float GRID_BIAS;
-uniform COMPAT_PRECISION float DARKEN_GRID;
-uniform COMPAT_PRECISION float DARKEN_COLOUR;
-#else
-#define GRID_INTENSITY 1.0
-#define GRID_WIDTH 1.0
-#define GRID_BIAS 0.0
-#define DARKEN_GRID 0.0
-#define DARKEN_COLOUR 0.0
-#endif
 
 #if defined(VERTEX)
 
@@ -126,7 +102,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 void main()
 {
-	TEX0 = TexCoord;
+	TEX0 = TexCoord * 1.0001;
 	gl_Position = MVPMatrix * VertexCoord;
 	// Cache divisions here for efficiency...
 	// (Assuming it is more efficient...?)
@@ -169,6 +145,20 @@ COMPAT_VARYING COMPAT_PRECISION vec4 TEX0;
 COMPAT_VARYING COMPAT_PRECISION vec2 InvInputSize;
 COMPAT_VARYING COMPAT_PRECISION vec2 InvTextureSize;
 
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float GRID_INTENSITY;
+uniform COMPAT_PRECISION float GRID_WIDTH;
+uniform COMPAT_PRECISION float GRID_BIAS;
+uniform COMPAT_PRECISION float DARKEN_GRID;
+uniform COMPAT_PRECISION float DARKEN_COLOUR;
+#else
+#define GRID_INTENSITY 1.0
+#define GRID_WIDTH 1.0
+#define GRID_BIAS 0.0
+#define DARKEN_GRID 0.0
+#define DARKEN_COLOUR 0.0
+#endif
+
 // ### Magic Numbers...
 
 // Grid pattern
@@ -191,14 +181,14 @@ const COMPAT_PRECISION float LINE_WEIGHT_B = 8.0 / 3.0;
 const COMPAT_PRECISION float INV_BG_TEXTURE_SIZE = 1.0 / BG_TEXTURE_SIZE;
 
 // Colour correction
-#define CC_R 0.845
-#define CC_G 0.68
-#define CC_B 0.755
-#define CC_RG 0.09
-#define CC_RB 0.16
-#define CC_GR 0.17
-#define CC_GB 0.085
-#define CC_BR -0.015
+#define CC_R 0.84
+#define CC_G 0.66
+#define CC_B 0.81
+#define CC_RG 0.11
+#define CC_RB 0.13
+#define CC_GR 0.19
+#define CC_GB 0.06
+#define CC_BR -0.03
 #define CC_BG 0.23
 
 void main()
