@@ -52,17 +52,6 @@
 // > 4096 x 4096 textures are suitable for screen resolutions up to 4k
 //#define BG_TEXTURE_SIZE 4096.0
 
-// Compatibility #ifdefs needed for parameters
-#ifdef GL_ES
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-#define COMPAT_PRECISION highp
-#else
-#define COMPAT_PRECISION mediump
-#endif
-#else
-#define COMPAT_PRECISION
-#endif
-
 #pragma parameter GRID_INTENSITY "Grid Intensity" 1.0 0.0 1.0 0.05
 #pragma parameter GRID_WIDTH "Grid Width" 1.0 0.0 1.0 0.05
 #pragma parameter GRID_BIAS "Grid Bias" 0.0 0.0 1.0 0.05
