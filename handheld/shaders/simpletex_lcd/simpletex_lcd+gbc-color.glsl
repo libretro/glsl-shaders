@@ -6,7 +6,7 @@
 	  [original zfast_lcd_standard code copyright (C) 2017 Greg Hogan (SoltanGris42)]
 	
 	- Colour correction code taken from 'gbc-color', written by hunterk and realeased
-	  into the public domain
+	  into the public domain, with further tweaks by Pokefan531
 	
 	Other code by jdgleaver
 	
@@ -181,15 +181,15 @@ const COMPAT_PRECISION float LINE_WEIGHT_B = 8.0 / 3.0;
 const COMPAT_PRECISION float INV_BG_TEXTURE_SIZE = 1.0 / BG_TEXTURE_SIZE;
 
 // Colour correction
-#define CC_R 0.78824
-#define CC_G 0.72941
-#define CC_B 0.82
-#define CC_RG 0.025
-#define CC_RB 0.12039
-#define CC_GR 0.12157
-#define CC_GB 0.12157
+#define CC_R 0.86629
+#define CC_G 0.70857
+#define CC_B 0.77215
+#define CC_RG 0.02429
+#define CC_RB 0.11337
+#define CC_GR 0.13361
+#define CC_GB 0.11448
 #define CC_BR 0.0
-#define CC_BG 0.275000
+#define CC_BG 0.26714
 
 void main()
 {
