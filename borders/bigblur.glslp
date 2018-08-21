@@ -1,12 +1,39 @@
-shaders = 3
+shaders = 9
 
-shader0 = ../blurs/blur-gauss-h.glsl
-filter_linear0 = true
-scale_type0 = source
+shader0 = ../stock.glsl
+alias0 = Reference
 
-shader1 = ../blurs/blur-gauss-v.glsl
-filter_linear1 = true
+shader1 = ../blurs/kawase/linearize.glsl
+srgb_framebuffer1 = true
 scale_type1 = source
 
-shader2 = resources/bigblur.glsl
+shader2 = ../blurs/kawase/kawase0.glsl
 filter_linear2 = true
+srgb_framebuffer2 = true
+scale_type2 = source
+
+shader3 = ../blurs/kawase/kawase1.glsl
+filter_linear3 = true
+srgb_framebuffer3 = true
+scale_type3 = source
+
+shader4 = ../blurs/kawase/kawase1.glsl
+filter_linear4 = true
+srgb_framebuffer4 = true
+scale_type4 = source
+
+shader5 = ../blurs/kawase/kawase2.glsl
+filter_linear5 = true
+srgb_framebuffer5 = true
+scale_type5 = source
+
+shader6 = ../blurs/kawase/kawase3.glsl
+filter_linear6 = true
+srgb_framebuffer6 = true
+scale_type6 = source
+
+shader7 = ../blurs/kawase/delinearize.glsl
+filter_linear7 = true
+
+shader8 = resources/bigblur.glsl
+filter_linear8 = true
