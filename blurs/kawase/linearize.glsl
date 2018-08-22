@@ -81,6 +81,6 @@ COMPAT_VARYING vec4 TEX0;
 
 void main()
 {
-   FragColor = pow(vec4(texture(Source, vTexCoord).rgb, 1.0), vec4(2.2));
+   FragColor = pow(vec4(COMPAT_TEXTURE(Source, vTexCoord).rgb, 1.0), vec4(2.2));
 } 
 #endif

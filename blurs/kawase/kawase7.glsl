@@ -88,25 +88,21 @@ vec4 reSample(float d, vec2 uv, sampler2D decal)
  
     vec2 step1 = (vec2(d) + 0.5) * SourceSize.zw;
     vec4 color = vec4(0.);
-    color += texture(decal, uv + step1) / 4.;
-    color += texture(decal,  uv - step1) / 4.;
+    color += COMPAT_TEXTURE(decal, uv + step1) / 4.;
+    color += COMPAT_TEXTURE(decal,  uv - step1) / 4.;
   	vec2 step2 = step1;
     step2.x = -step2.x;
-    color += texture(decal, uv + step2) / 4.;
-    color += texture(decal,  uv - step2) / 4.;
+    color += COMPAT_TEXTURE(decal, uv + step2) / 4.;
+    color += COMPAT_TEXTURE(decal,  uv - step2) / 4.;
     return color;
 }
 
 void main()
 {
    vec2 texcoord;
-#ifdef GL_ES
-   texcoord = vTexCoord.xy;
-#else
    // avoid sampling outside of the image (causes dark border)
    vec2 offset = InputSize.xy / TextureSize.xy;
    texcoord.xy = clamp(vTexCoord, vec2(0.07 * offset), vec2(0.93 * offset));
-#endif
    FragColor = reSample(7., texcoord, Source);
 } 
 #endif
