@@ -102,6 +102,13 @@ COMPAT_VARYING vec4 TEX0;
 
 void main()
 {
-   FragColor = COMPAT_TEXTURE(Source, vTexCoord);
+   vec3 outColor = COMPAT_TEXTURE(Source, vTexCoord);
+    /* TODO/FIXME - hacky clamp fix */
+    vec2 bordertest = gl_FragCoord.xy;
+    if ( bordertest.x > 0.0001 && bordertest.x < 0.9999 && bordertest.y > 0.0001 && bordertest.y < 0.9999)
+        outColor.rgb = outColor.rgb;
+    else
+        outColor.rgb = vec3(0.0);
+   FragColor = vec4(outColor, 1.0);
 } 
 #endif
