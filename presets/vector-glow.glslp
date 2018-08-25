@@ -1,0 +1,38 @@
+shaders = 9
+
+shader0 = ../blurs/kawase/linearize.glsl
+srgb_framebuffer0 = true
+scale_type0 = source
+
+shader1 = ../blurs/kawase/kawase0.glsl
+filter_linear1 = true
+srgb_framebuffer1 = true
+scale_type1 = source
+
+shader2 = ../blurs/kawase/kawase1.glsl
+filter_linear2 = true
+srgb_framebuffer2 = true
+scale_type2 = source
+
+shader3 = ../blurs/kawase/kawase1.glsl
+filter_linear3 = true
+srgb_framebuffer3 = true
+scale_type3 = source
+
+shader4 = ../blurs/kawase/kawase2.glsl
+filter_linear4 = true
+srgb_framebuffer4 = true
+scale_type4 = source
+
+shader5 = ../blurs/kawase/kawase3.glsl
+filter_linear5 = true
+srgb_framebuffer5 = true
+scale_type5 = source
+
+shader6 = ../blurs/kawase/delinearize.glsl
+filter_linear6 = true
+
+shader7 = ../blurs/kawase/screen_combine.glsl
+
+shader8 = ../anti-aliasing/shaders/fxaa.glsl
+filter_linear8 = true

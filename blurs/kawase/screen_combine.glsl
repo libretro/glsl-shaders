@@ -70,6 +70,8 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
+uniform sampler2D PassPrev8Texture;
+#define Reference PassPrev8Texture
 COMPAT_VARYING vec4 TEX0;
 
 // compatibility #defines

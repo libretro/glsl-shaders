@@ -1,4 +1,3 @@
-// Parameter lines go here:
 #pragma parameter minimum "Edge Thresh Min" 0.05 0.0 1.0 0.01
 #pragma parameter maximum "Edge Thresh Max" 0.35 0.0 1.0 0.01
 
@@ -75,9 +74,9 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
-uniform sampler2D PassPrev;
-uniform sampler2D PassPrev1;
-uniform sampler2D Original;
+uniform sampler2D PassPrevTexture;
+uniform sampler2D PassPrev1Texture;
+uniform sampler2D OrigTexture;
 COMPAT_VARYING vec4 TEX0;
 
 // fragment compatibility #defines
@@ -86,8 +85,8 @@ COMPAT_VARYING vec4 TEX0;
 
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
-#define Smooth PassPrev1
-#define Sharp PassPrev
+#define Smooth PassPrev1Texture
+#define Sharp PassPrevTexture
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float minimum;
@@ -141,7 +140,7 @@ float IsEdge(sampler2D tex, vec2 coords){
 
 void main()
 {
-   float test = IsEdge(Original, vTexCoord);
+   float test = IsEdge(Source, vTexCoord);
 //   vec4 hybrid = vec4(0.0);
 //   hybrid = (test > 0.01) ? COMPAT_TEXTURE(Sharp, vTexCoord) : COMPAT_TEXTURE(Smooth, vTexCoord);
    FragColor = vec4(test);
