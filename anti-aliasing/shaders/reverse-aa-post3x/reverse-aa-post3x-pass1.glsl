@@ -1,4 +1,4 @@
-#version 120
+#version 130
 
 /*
 	rAA post-3x - Pass 1
@@ -142,7 +142,7 @@ vec3 avg(vec3 px[array_size], int a, int b, int off)
 	for(int i=a; i<=b; i++){
 		res = res + px[i+off];
 	}
-	return res/(b-a+1);
+	return res/float(b-a+1);
 }
 
 // original core function of rAA - tilt of a pixel
@@ -221,10 +221,10 @@ void main()
 	vec3 t = res2x(TX(-i2.x), TX(-i1.x), avg(tx, -i1.x+1, i1.y-1, rad), TX(i1.y), TX(i2.y));
 	
 	// distance weight
-	float dw = ((i1.x == 1) && (i1.y == 1)) ? 0.0 : 2.0 * smoothstep(-i1.x+1.0, i1.y-1.0, 0.0) - 1.0;
+	float dw = ((i1.x == 1) && (i1.y == 1)) ? 0.0 : 2.0 * smoothstep(float(-i1.x)+1.0, float(i1.y)-1.0, 0.0) - 1.0;
 	
 	// result
-	vec3 res = TX(0) + ((scl-1.0)/scl) * (sw*dw*t);
+	vec3 res = TX(0) + ((float(scl)-1.0)/float(scl)) * (sw*dw*t);
 	
 	
 	// prevent ringing	
