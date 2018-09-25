@@ -1,0 +1,11 @@
+// This shader requires 16:9 aspect ratio
+// and integer scaling OFF
+
+shaders = 2
+
+shader0 = ../sabr/shaders/sabr-v3.0.glsl
+filter_linear0 = false
+scale_type0 = source
+scale0 = 2.0
+
+shader1 = shaders/ds-hybrid-view.glsl
