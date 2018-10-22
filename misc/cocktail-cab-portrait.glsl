@@ -115,6 +115,14 @@ uniform COMPAT_PRECISION float zoom;
 
 void main()
 {
-    FragColor = COMPAT_TEXTURE(Source, vTexCoord + vec2(0.0, location)) + COMPAT_TEXTURE(Source, t1 + vec2(0.0, location));
+   //fix for clamping issues on GLES
+   vec2 fragCoord1 = vTexCoord.xy * InputSize / TextureSize;
+   vec2 fragCoord2 = t1.xy* InputSize / TextureSize;
+   
+   vec4 screen1 = ( fragCoord1.x < 1.0 && fragCoord1.x > 0.0 && fragCoord1.y < 1.0 && fragCoord1.y > 0.0 ) ? COMPAT_TEXTURE(Source, vTexCoord + vec2(0.0, location))
+      : vec4(0.);
+   vec4 screen2 = ( fragCoord2.x < 1.0 && fragCoord2.x > 0.0 && fragCoord2.y < 1.0 && fragCoord2.y > 0.0 ) ? COMPAT_TEXTURE(Source, t1 + vec2(0.0, location))
+      : vec4(0.);
+   FragColor = screen1 + screen2;
 } 
 #endif
