@@ -1,9 +1,11 @@
-#pragma parameter height "CocktailTable Image Height" 1.99 -3.0 3.0 0.01
-#pragma parameter width "CocktailTable Image Width" 0.8 -5.0 5.0 0.05
-#pragma parameter location "CocktailTable Image Location" -0.235 -2.0 2.0 0.005
-#pragma parameter zoom "CocktailTable Zoom" 0.51 -2.0 5.0 0.01
+// Cocktail Table Portrait
+// by hunterk
+// license: public domain
 
-#define mul(a,b) (b*a)
+#pragma parameter width "Cocktail Width" 1.0 0.0 2.0 0.01
+#pragma parameter height "Cocktail Height" 0.49 0.0 2.0 0.01
+#pragma parameter x_loc "Cocktail X Mod" 0.0 -2.0 2.0 0.01
+#pragma parameter y_loc "Cocktail Y Mod" 0.51 -2.0 2.0 0.01
 
 #if defined(VERTEX)
 
@@ -44,40 +46,27 @@ uniform COMPAT_PRECISION vec2 InputSize;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float height;
-uniform COMPAT_PRECISION float width;
-uniform COMPAT_PRECISION float location;
-uniform COMPAT_PRECISION float zoom;
+uniform COMPAT_PRECISION float width, height, x_loc, y_loc;
 #else
-#define height 1.99
-#define width 0.8
-#define location -0.235
-#define zoom 0.51
+#define width 1.0
+#define height 0.49
+#define x_loc 0.0
+#define y_loc 0.51
 #endif
 
 void main()
 {
-	mat4 RotationMatrix = mat4( height, 0.0, 0.0, 0.0,
-         0.0, width, 0.0, 0.0,
-         0.0, 0.0, 1.0, 0.0,
-         0.0, 0.0, 0.0, 1.0 );
-	gl_Position = mul((MVPMatrix * VertexCoord), RotationMatrix);
-	vec2 shift = 0.5 * InputSize.xy / TextureSize.xy;
-	TEX0.xy = ((TexCoord.xy-shift) / zoom) + shift;
-	t1 = ((mat2(-1.0, 0.0, 0.0, -1.0) * (TexCoord.xy - shift)) / zoom) + shift;
+    gl_Position = MVPMatrix * VertexCoord;
+    TEX0.xy = TexCoord.xy;
+	TEX0.xy = TEX0.xy - 0.5 * InputSize / TextureSize;
+	TEX0.xy = TEX0.xy * vec2(1. / width, 1. / height);
+	TEX0.xy = TEX0.xy + 0.5 * InputSize / TextureSize;
+	t1.xy = 1.* InputSize / TextureSize - TEX0.xy;
+	TEX0.xy -= vec2(x_loc, y_loc) * InputSize / TextureSize;
+	t1.xy -= vec2(x_loc, y_loc) * InputSize / TextureSize;
 }
 
 #elif defined(FRAGMENT)
-
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
 
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
@@ -88,6 +77,16 @@ precision mediump float;
 #define COMPAT_PRECISION mediump
 #else
 #define COMPAT_PRECISION
+#endif
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out COMPAT_PRECISION vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
 #endif
 
 uniform COMPAT_PRECISION int FrameDirection;
@@ -106,23 +105,12 @@ COMPAT_VARYING vec2 t1;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
-#ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float height;
-uniform COMPAT_PRECISION float width;
-uniform COMPAT_PRECISION float location;
-uniform COMPAT_PRECISION float zoom;
-#endif
-
 void main()
 {
-   //fix for clamping issues on GLES
-   vec2 fragCoord1 = vTexCoord.xy * InputSize / TextureSize;
-   vec2 fragCoord2 = t1.xy* InputSize / TextureSize;
-   
-   vec4 screen1 = ( fragCoord1.x < 1.0 && fragCoord1.x > 0.0 && fragCoord1.y < 1.0 && fragCoord1.y > 0.0 ) ? COMPAT_TEXTURE(Source, vTexCoord + vec2(0.0, location))
-      : vec4(0.);
-   vec4 screen2 = ( fragCoord2.x < 1.0 && fragCoord2.x > 0.0 && fragCoord2.y < 1.0 && fragCoord2.y > 0.0 ) ? COMPAT_TEXTURE(Source, t1 + vec2(0.0, location))
-      : vec4(0.);
-   FragColor = screen1 + screen2;
+	vec4 screen1 = COMPAT_TEXTURE(Source, vTexCoord);
+	screen1 *= float(vTexCoord.x > 0.0001) * float(vTexCoord.y > 0.0001) * float(vTexCoord.x < 0.9999) * float(vTexCoord.y < 0.9999);
+	vec4 screen2 = COMPAT_TEXTURE(Source, t1);
+	screen2 *= float(t1.x > 0.0001) * float(t1.y > 0.0001) * float(t1.x < 0.9999) * float(t1.y < 0.9999);
+	FragColor = screen1 + screen2;
 } 
 #endif
