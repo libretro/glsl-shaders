@@ -1,4 +1,4 @@
-shaders = 7
+shaders = 8
 
 shader0 = shaders/scalefx-pass0.glsl
 filter_linear0 = false
@@ -36,3 +36,6 @@ shader6 = ../anti-aliasing/shaders/reverse-aa-post3x/reverse-aa-post3x-pass1.gls
 filter_linear6 = false
 scale_type6 = source
 scale6 = 1.0
+
+shader7 = ../stock.glsl
+filter_linear7 = true

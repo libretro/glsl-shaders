@@ -2,7 +2,7 @@
 
 /*
 	rAA post-3x - Pass 1
-	by Sp00kyFox, 2018-09-12
+	by Sp00kyFox, 2018-10-20
 
 Filter:	Nearest
 Scale:	1x
@@ -38,8 +38,9 @@ THE SOFTWARE.
 
 */ 
 
-#pragma parameter RAA_SHR1 "rAA-3x 1 Sharpness" 2.0 0.0 10.0 0.05
-#pragma parameter RAA_PRT1 "rAA-3x 1 Gradient Protection" 0.5 0.0 2.0 0.010
+#pragma parameter RAA_SHR1 "rAA-3x 1 Sharpness"  2.0 0.00 10.0 0.05
+#pragma parameter RAA_SMT1 "rAA-3x 1 Smoothness" 0.5 0.05 10.0 0.05
+#pragma parameter RAA_DVT1 "rAA-3x 1 Deviation"  1.0 0.05 10.0 0.05
 
 #if defined(VERTEX)
 
@@ -64,7 +65,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -82,7 +82,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    TEX0.xy = TexCoord.xy * 1.0001;
+    TEX0.xy = TexCoord.xy;
 }
 
 #elif defined(FRAGMENT)
@@ -124,31 +124,21 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float RAA_SHR1, RAA_PRT1;
+uniform COMPAT_PRECISION float RAA_SHR1, RAA_SMT1, RAA_DVT1;
 #else
 #define RAA_SHR1 2.0
-#define RAA_PRT1 0.5
+#define RAA_SMT1 0.5
+#define RAA_DVT1 1.0
 #endif
 
-const COMPAT_PRECISION int scl = 3; // scale factor
-const COMPAT_PRECISION int rad = 7; // search radius
-const COMPAT_PRECISION int array_size = 15; // should be [2*rad+1] but GL hates nonconstant array sizes in declarations
+const int scl = 3; // scale factor
+const int rad = 7; // search radius
 
-// arithmetic mean of the interval [a,b] in array px with index offset off
-// had to hardcode px[] as GLSL isn't as lenient with non-constant arrays
-vec3 avg(vec3 px[array_size], int a, int b, int off)
-{
-	vec3 res = vec3(0.0);
-	for(int i=a; i<=b; i++){
-		res = res + px[i+off];
-	}
-	return res/float(b-a+1);
-}
-
-// original core function of rAA - tilt of a pixel
+// core function of rAA - tilt of a pixel
 vec3 res2x(vec3 pre2, vec3 pre1, vec3 px, vec3 pos1, vec3 pos2)
 {
-    vec3 t, m;
+    float d1, d2, w;
+	vec3 a, m, t, t1, t2;
     mat4x3 pre = mat4x3(pre2, pre1,   px, pos1);
     mat4x3 pos = mat4x3(pre1,   px, pos1, pos2);
     mat4x3  df = pos - pre;
@@ -156,29 +146,39 @@ vec3 res2x(vec3 pre2, vec3 pre1, vec3 px, vec3 pos1, vec3 pos2)
     m.x = (px.x < 0.5) ? px.x : (1.0-px.x);
     m.y = (px.y < 0.5) ? px.y : (1.0-px.y);
     m.z = (px.z < 0.5) ? px.z : (1.0-px.z);
-	m = RAA_SHR1 * min(m, min(abs(df[1]), abs(df[2])));
-	t = (7. * (df[1] + df[2]) - 3. * (df[0] + df[3])) / 16.;
-    t.x = dot(df[1], df[2]) > 0. ? clamp(t.x, -m.x, m.x) : 0.; // don't touch outstanding pixels
-    t.y = dot(df[1], df[2]) > 0. ? clamp(t.y, -m.y, m.y) : 0.;
-    t.z = dot(df[1], df[2]) > 0. ? clamp(t.z, -m.z, m.z) : 0.;
+	m = RAA_SHR1 * min(m, min(abs(df[1]), abs(df[2])));   // magnitude
+	t = (7 * (df[1] + df[2]) - 3 * (df[0] + df[3])) / 16; // tilt
 	
-	return t;
+	a.x = t.x == 0.0 ? 1.0 : m.x/abs(t.x);
+   a.y = t.y == 0.0 ? 1.0 : m.y/abs(t.y);
+   a.z = t.z == 0.0 ? 1.0 : m.z/abs(t.z);
+	t1 = clamp(t, -m, m);                       // limit channels
+	t2 = min(1.0, min(min(a.x, a.y), a.z)) * t; // limit length
+	
+	d1 = length(df[1]); d2 = length(df[2]);
+	d1 = d1 == 0.0 ? 0.0 : length(cross(df[1], t1))/d1; // distance between line (px, pre1) and point px-t1
+	d2 = d2 == 0.0 ? 0.0 : length(cross(df[2], t1))/d2; // distance between line (px, pos1) and point px+t1
+
+	w = min(1.0, max(d1,d2)/0.8125); // color deviation from optimal value
+	
+	return mix(t1, t2, pow(w, RAA_DVT1));
 }
 
 void main()
 {
 	// read texels
 
-	vec3 tx[array_size]; // had to hardcode this as GLSL isn't as lenient with non-constant arrays
+	vec3 tx[2*rad+1];
 
 	#define TX(n) tx[(n)+rad]
 	
 	TX(0) = COMPAT_TEXTURE(Source, vTexCoord).rgb;
 	
 	for(int i=1; i<=rad; i++){
-		TX(-i) = COMPAT_TEXTURE(Source, vTexCoord + vec2(0.,-i)*SourceSize.zw).rgb;
-		TX( i) = COMPAT_TEXTURE(Source, vTexCoord + vec2(0., i)*SourceSize.zw).rgb;
+		TX(-i) = COMPAT_TEXTURE(Source, vTexCoord + vec2(0,-i)*SourceSize.zw).rgb;
+		TX( i) = COMPAT_TEXTURE(Source, vTexCoord + vec2(0, i)*SourceSize.zw).rgb;
 	}
+	
 	
 	// prepare variables for candidate search
 	
@@ -193,10 +193,9 @@ void main()
 	d3 = d2.yx;
 	
 	
-	// smoothness weight, protects pixels that are already part of a smooth gradient
-   bool test1 = d2.x == 0.0;
-   bool test2 = d2.y == 0.0;
-	float sw = (test1 && test2) ? 0.0 : pow(length(df1-df2) / (d2.x + d2.y), RAA_PRT1);
+	// smoothness weight, protects smooth gradients
+	float sw = d2.x + d2.y;
+	sw = sw == 0.0 ? 1.0 : pow(length(df1-df2)/sw, RAA_SMT1);
 	
 	
 	// look for proper candidates
@@ -204,33 +203,32 @@ void main()
 		d1 = d2;
 		d2 = d3;
 		d3 = vec2(distance(TX(-i-1), TX(-i)), distance(TX(i), TX(i+1)));
-		cn = lessThan(max(d1,d3),d2);
+		cn.x = max(d1.x,d3.x)<d2.x;
+      cn.y = max(d1.y,d3.y)<d2.y;
 		i2.x = cn.x && i2.x==0 && i1.x!=0 ? i : i2.x;
       i2.y = cn.y && i2.y==0 && i1.y!=0 ? i : i2.y;
 		i1.x = cn.x && i1.x==0 ? i : i1.x;
       i1.y = cn.y && i1.y==0 ? i : i1.y;
 	}
-	
-	i1.x = i1.x == 0 ? 1 : i1.x;
-   i1.y = i1.y == 0 ? 1 : i1.y;
+
 	i2.x = i2.x == 0 ? i1.x+1 : i2.x;
    i2.y = i2.y == 0 ? i1.y+1 : i2.y;
 
-
+	
 	// rAA core with the candidates found above
-	vec3 t = res2x(TX(-i2.x), TX(-i1.x), avg(tx, -i1.x+1, i1.y-1, rad), TX(i1.y), TX(i2.y));
+	vec3 t = res2x(TX(-i2.x), TX(-i1.x), TX(0), TX(i1.y), TX(i2.y));
 	
 	// distance weight
-	float dw = ((i1.x == 1) && (i1.y == 1)) ? 0.0 : 2.0 * smoothstep(float(-i1.x)+1.0, float(i1.y)-1.0, 0.0) - 1.0;
+	float dw = (i1.x == 0 || i1.y == 0) ? 0.0 : 2.0 * ((i1.x-1.0)/(i1.x+i1.y-2.0)) - 1.0;	
 	
 	// result
-	vec3 res = TX(0) + ((float(scl)-1.0)/float(scl)) * (sw*dw*t);
+	vec3 res = TX(0) + (scl-1.0)/scl * sw*dw * t;
 	
 	
 	// prevent ringing	
 	vec3 lo  = min(min(TX(-1),TX(0)),TX(1));
     vec3 hi  = max(max(TX(-1),TX(0)),TX(1));
 	
-   FragColor = vec4(clamp(res, lo, hi), 1.0);
+    FragColor = vec4(clamp(res, lo, hi), 1.0);
 } 
 #endif
