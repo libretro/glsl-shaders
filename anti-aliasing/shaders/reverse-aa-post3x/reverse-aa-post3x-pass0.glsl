@@ -182,7 +182,7 @@ void main()
 	
 	// prepare variables for candidate search
 	
-	ivec2 i1, i2;
+	ivec2 i1 = ivec2(0), i2 = ivec2(0);
 	vec3 df1, df2;
 	vec2 d1, d2, d3;
 	bvec2 cn;
