@@ -157,7 +157,7 @@ void main()
 #endif
 
 // Don't let it exceed 1.0
-	luminance = clamp(luminance, 0.0, 1.0);
+	luminance = clamp(luminance, 0.0001, 0.9999);
 
 // Scanline Mapping, based on the Phosphor LUT shader's method of tiling a texture over the screen
 	vec2 LUTeffectiveCoord = vec2(luminance,fract(vTexCoord.y*SourceSize.y));
