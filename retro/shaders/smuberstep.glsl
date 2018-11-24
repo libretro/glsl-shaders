@@ -1,7 +1,5 @@
-/*
-	Fragment shader based on "Improved texture interpolation" by Iñigo Quílez
-	Original description: http://www.iquilezles.org/www/articles/texture/texture.htm
-*/
+//SmuberStep - Like SmoothestStep but even Smoothester
+//by torridgristle
 
 #if defined(VERTEX)
 
