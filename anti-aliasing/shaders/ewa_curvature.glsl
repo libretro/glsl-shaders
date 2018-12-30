@@ -279,7 +279,7 @@ vec2 textureQueryLODEWA(sampler2D tex, vec2 du, vec2 dv, int psize){
     }
    
     float lod = log2(minorLength / TEXELS_PER_PIXEL);  
-    lod = clamp (lod, 0.0, log2(psize));
+    lod = clamp (lod, 0.0, log2(float(psize)));
  
     return vec2(lod, e);
 }
