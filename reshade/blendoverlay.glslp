@@ -1,0 +1,11 @@
+shaders = 1
+shader0 = shaders/blendoverlay/blendoverlay.glsl
+
+textures = "overlay"
+// change this path to point to your overlay image
+overlay = shaders/blendoverlay/grayscale_slotmask.png
+
+parameters = "LUTWidth;LUTHeight"
+// set these to the width/height of your overlay image
+LUTWidth = 6.0
+LUTHeight = 4.0
