@@ -1,5 +1,3 @@
-#version 130
-
 /*
    Average Luminance Shader
    
@@ -65,16 +63,6 @@ void main()
 
 #elif defined(FRAGMENT)
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
-
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
@@ -86,6 +74,16 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out COMPAT_PRECISION vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
+#endif
+
 uniform COMPAT_PRECISION int FrameDirection;
 uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
@@ -93,7 +91,6 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-// in variables go here as COMPAT_VARYING whatever
 
 // compatibility #defines
 #define Source Texture
@@ -106,15 +103,18 @@ COMPAT_VARYING vec4 TEX0;
 // All parameter floats need to have COMPAT_PRECISION in front of them
 uniform COMPAT_PRECISION float grade;
 #else
-	#define grade 0.70  // blooming grade
+#define grade 0.70  // blooming grade
 #endif 
-
 
 void main()
 {
-	float mip_level = max(log2(TextureSize.x), log2(TextureSize.y));
 	float black_compensation = (TextureSize.x*TextureSize.y)/(InputSize.x*InputSize.y);
+#if __VERSION__ >= 130
+	float mip_level = max(log2(TextureSize.x), log2(TextureSize.y));
 	float lum = length(textureLod(Source, TEX0.xy, mip_level).rgb * black_compensation);
+#else
+	float lum = length(COMPAT_TEXTURE(Source, TEX0.xy).rgb * black_compensation);
+#endif
 	lum = lum * inversesqrt(3.0);
 	FragColor = vec4(pow(lum, grade));
 } 

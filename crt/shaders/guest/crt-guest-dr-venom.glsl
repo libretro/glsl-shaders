@@ -241,8 +241,8 @@ vec3 Mask(vec2 pos)
 
 // Distortion of scanlines, and end of screen alpha (PD Lottes Curvature)
 vec2 Warp(vec2 pos)
-{
-    pos  = pos*2.0-1.0;    
+{  
+	pos  = pos*2.0-1.0;    
     pos *= vec2(1.0 + (pos.y*pos.y)*warpX, 1.0 + (pos.x*pos.x)*warpY);
     return pos*0.5 + 0.5;
 } 
@@ -284,6 +284,11 @@ void main()
 	vec2 texcoord  = Overscan(TEX0.xy*(SourceSize.xy/InputSize.xy), factor, factor)*(InputSize.xy/SourceSize.xy);
 	vec2 pos  = Warp(texcoord*(TextureSize.xy/InputSize.xy))*(InputSize.xy/TextureSize.xy);
 	vec2 pos0 = Warp(TEX0.xy*(TextureSize.xy/InputSize.xy))*(InputSize.xy/TextureSize.xy);
+
+// GLES fails at clamping
+#ifdef GL_ES
+	if(pos.x > 0.9999 || pos.x < 0.0001 || pos.y > 0.9999 || pos.y < 0.0001) discard;
+#endif
 	
 	vec2 ps = SourceSize.zw;
 	vec2 OGL2Pos = pos * SourceSize.xy - vec2(0.0,0.5);
