@@ -5,7 +5,7 @@ scale_type0 = source
 scale0 = 1.0
 filter_linear0 = false
 
-shader1 = "../shaders/color/gba-color.glsl
+shader1 = "../shaders/color/gba-color.glsl"
 filter_linear1 = false
 
 shader2 = "../shaders/lcd-cgwg/lcd-grid.glsl"
