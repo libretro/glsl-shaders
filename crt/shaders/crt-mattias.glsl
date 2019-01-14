@@ -210,7 +210,7 @@ void main()
     col *= 1.0+0.0015*sin(300.0*iTime);
 	
 	col*=1.0-0.15*vec3(clamp((mod(fragCoord.x+o, 2.0)-1.0)*2.0,0.0,1.0));
-	col *= vec3( 1.0 ) - 0.25*vec3( rand( uv+iTime),  rand( uv+iTime + 0.3 ),  rand( uv+iTime+ 0.5 )  );
+	col *= vec3( 1.0 ) - 0.25*vec3( rand( uv+0.0001*iTime),  rand( uv+0.0001*iTime + 0.3 ),  rand( uv+0.0001*iTime+ 0.5 )  );
 	col = pow(col, vec3(0.45));
 
 	if (uv.x < 0.0 || uv.x > 1.0)
