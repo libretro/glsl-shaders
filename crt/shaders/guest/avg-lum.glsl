@@ -109,12 +109,8 @@ uniform COMPAT_PRECISION float grade;
 void main()
 {
 	float black_compensation = (TextureSize.x*TextureSize.y)/(InputSize.x*InputSize.y);
-#if __VERSION__ >= 130
 	float mip_level = max(log2(TextureSize.x), log2(TextureSize.y));
 	float lum = length(textureLod(Source, TEX0.xy, mip_level).rgb * black_compensation);
-#else
-	float lum = length(COMPAT_TEXTURE(Source, TEX0.xy).rgb * black_compensation);
-#endif
 	lum = lum * inversesqrt(3.0);
 	FragColor = vec4(pow(lum, grade));
 } 
