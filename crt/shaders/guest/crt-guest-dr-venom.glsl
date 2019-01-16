@@ -21,7 +21,7 @@
 
 // Parameter lines go here:
 #pragma parameter OS "Do Overscan" 1.0 0.0 2.0 1.0
-#pragma parameter BLOOM "Bloom percentage" 5.0 0.0 20.0 1.0
+#pragma parameter BLOOM "Bloom percentage" 0.0 0.0 20.0 1.0
 #pragma parameter brightboost "Bright boost" 1.10 0.50 2.00 0.01
 #pragma parameter saturation "Saturation adjustment" 1.0 0.1 2.0 0.05
 #pragma parameter scanline "Scanline adjust" 8.0 1.0 12.0 1.0
@@ -140,7 +140,7 @@ uniform COMPAT_PRECISION float CGWG;
 uniform COMPAT_PRECISION float GTW;
 #else
 #define OS           1.00     // Do overscan
-#define BLOOM        5.00     // Bloom overscan percentage
+#define BLOOM        0.00     // Bloom overscan percentage
 #define brightboost  1.10     // adjust brightness
 #define saturation   1.00     // 1.0 is normal saturation
 #define scanline     8.0      // scanline param, vertical sharpness
@@ -241,8 +241,8 @@ vec3 Mask(vec2 pos)
 
 // Distortion of scanlines, and end of screen alpha (PD Lottes Curvature)
 vec2 Warp(vec2 pos)
-{  
-	pos  = pos*2.0-1.0;    
+{
+    pos  = pos*2.0-1.0;    
     pos *= vec2(1.0 + (pos.y*pos.y)*warpX, 1.0 + (pos.x*pos.x)*warpY);
     return pos*0.5 + 0.5;
 } 
@@ -278,17 +278,12 @@ vec3 gamma_correct(vec3 color, vec3 tmp)
 
 void main()
 {
-	vec3 lum = COMPAT_TEXTURE(PassPrev5Texture, vec2(0.1,0.1)).xyz;
+	vec3 lum = COMPAT_TEXTURE(PassPrev5Texture, vec2(0.2,0.2)).xyz;
 
 	float factor  = 1.00 + (1.0-0.5*OS)*BLOOM/100.0 - lum.x*BLOOM/100.0;
 	vec2 texcoord  = Overscan(TEX0.xy*(SourceSize.xy/InputSize.xy), factor, factor)*(InputSize.xy/SourceSize.xy);
 	vec2 pos  = Warp(texcoord*(TextureSize.xy/InputSize.xy))*(InputSize.xy/TextureSize.xy);
 	vec2 pos0 = Warp(TEX0.xy*(TextureSize.xy/InputSize.xy))*(InputSize.xy/TextureSize.xy);
-
-// GLES fails at clamping
-#ifdef GL_ES
-	if(pos.x > 0.9999 || pos.x < 0.0001 || pos.y > 0.9999 || pos.y < 0.0001) discard;
-#endif
 	
 	vec2 ps = SourceSize.zw;
 	vec2 OGL2Pos = pos * SourceSize.xy - vec2(0.0,0.5);
