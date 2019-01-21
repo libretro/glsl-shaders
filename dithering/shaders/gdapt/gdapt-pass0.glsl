@@ -103,7 +103,7 @@ uniform COMPAT_PRECISION float PWR;
 #define PWR 2.0
 #endif
 
-#define dot(x,y) clamp(dot(x,y), 0.0, 1.0)	// NVIDIA Fix
+#define dotfix(x,y) clamp(dot(x,y), 0.0, 1.0)	// NVIDIA Fix
 #define TEX(dx,dy) COMPAT_TEXTURE(Source, vTexCoord+vec2((dx),(dy))*t1).xyz
 
 // Reference: http://www.compuphase.com/cmetric.htm
@@ -129,7 +129,7 @@ void main()
 		tag = ((L == R) && (C != L)) ? 1.0 : 0.0;
 	}
 	else{
-		tag = dot(normalize(C-L), normalize(C-R)) * eq(L,R);
+		tag = dotfix(normalize(C-L), normalize(C-R)) * eq(L,R);
 	}
 
    FragColor = vec4(C, tag);
