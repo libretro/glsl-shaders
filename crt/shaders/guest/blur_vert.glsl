@@ -1,8 +1,8 @@
 // Higher value, more centered glow.
 // Lower values might need more taps.
 // Parameter lines go here:
-#pragma parameter TAPSV "V. Glow Radius" 4.0 1.0 6.0 1.0 
-#pragma parameter GLOW_FALLOFF_V "GLOW_FALLOFF_V" 0.30 0.10 1.0 0.01 
+#pragma parameter TAPSV "V. Glow Radius" 4.0 1.0 10.0 1.0 
+#pragma parameter GLOW_FALLOFF_V "Vertical Glow Grade" 0.30 0.00 1.0 0.01 
 
 
 #if defined(VERTEX)

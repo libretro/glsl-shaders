@@ -2,8 +2,8 @@
 // Lower values might need more taps.
 
 // Parameter lines go here:
-#pragma parameter TAPSH "H. Glow Radius" 4.0 1.0 6.0 1.0 
-#pragma parameter GLOW_FALLOFF_H "GLOW_FALLOFF H" 0.30 0.10 1.0 0.01 
+#pragma parameter TAPSH "H. Glow Radius" 4.0 1.0 10.0 1.0 
+#pragma parameter GLOW_FALLOFF_H "Horizontal Glow Grade" 0.30 0.00 1.0 0.01 
 
 
 #if defined(VERTEX)

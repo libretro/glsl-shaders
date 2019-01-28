@@ -1,3 +1,4 @@
+#version 130
 /*
    Average Luminance Shader
    
@@ -17,11 +18,11 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
    
-   Thanks to HunterK for the mipmap hint. :D
+   Thanks to HunterK for the mipmap hint. :D  
 */
 
 // Parameter lines go here:
-#pragma parameter grade "Blooming grade" 0.70 0.10 1.0 0.05 
+#pragma parameter grade "Raster Bloom Grade" 0.65 0.10 1.0 0.05
 
 #if defined(VERTEX)
 
@@ -104,16 +105,28 @@ COMPAT_VARYING vec4 TEX0;
 // All parameter floats need to have COMPAT_PRECISION in front of them
 uniform COMPAT_PRECISION float grade;
 #else
-	#define grade 0.70  // blooming grade
+	#define grade 0.65
 #endif 
-
 
 void main()
 {
-	float mip_level = max(log2(TextureSize.x), log2(TextureSize.y));
-	float black_compensation = (TextureSize.x*TextureSize.y)/(InputSize.x*InputSize.y);
-	float lum = length(textureLod(Source, TEX0.xy, mip_level).rgb * black_compensation);
-	lum = lum * inversesqrt(3.0);
-	FragColor = vec4(pow(lum, grade));
+	float xtotal = floor(InputSize.x/32.0);
+	float ytotal = floor(InputSize.y/32.0);
+	
+	float ltotal = 0.0;
+	vec2 dx  = vec2(SourceSize.z, 0.0)*32.0;
+	vec2 dy  = vec2(0.0, SourceSize.w)*32.0;
+	
+	for (float i = 0.0; i <= xtotal; i++)
+	{
+		for (float j = 0.0; j <= ytotal; j++)
+			{
+				ltotal += length(textureLod(Source, i*dx + j*dy, 5.0).rgb);
+			}
+   }
+   
+   ltotal = inversesqrt(3.0)*ltotal / ((xtotal+1.0)*(ytotal+1.0));
+   
+   FragColor = vec4(pow(ltotal, grade));
 } 
 #endif
