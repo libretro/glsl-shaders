@@ -1,5 +1,5 @@
 shaders = 1
-shader0 = shaders/gb-palette/gb-palette.glsl	//colorize image
+shader0 = shaders/gb-palette/gb-palette.glsl
 
 scale_type0 = source
 filter_linear0 = false

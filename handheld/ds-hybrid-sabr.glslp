@@ -1,5 +1,5 @@
-// This shader requires 16:9 aspect ratio
-// and integer scaling OFF
+# This shader requires 16:9 aspect ratio
+# and integer scaling OFF
 
 shaders = 2
 
