@@ -17,6 +17,9 @@
 // instead of PC full range (0-255)
 #pragma parameter TVOUT_TV_COLOR_LEVELS "TVOut TV Color Levels Enable" 0.0 0.0 1.0 1.0
 
+// gamma correction
+#pragma parameter CRT_GAMMA "Gamma Adjustment" 2.2 0.1 5.0 0.1
+
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -92,12 +95,12 @@ uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 
 #ifdef PARAMETER_UNIFORM // If the shader implementation understands #pragma parameters, this is defined.
-uniform COMPAT_PRECISION float TVOUT_COMPOSITE_CONNECTION;
-uniform COMPAT_PRECISION float TVOUT_TV_COLOR_LEVELS;
+uniform COMPAT_PRECISION float TVOUT_COMPOSITE_CONNECTION, TVOUT_TV_COLOR_LEVELS, CRT_GAMMA;
 #else
 // Fallbacks if parameters are not supported.
 #define TVOUT_COMPOSITE_CONNECTION 0
 #define TVOUT_TV_COLOR_LEVELS 0
+#define CRT_GAMMA 2.2
 #endif
 
 // compatibility #defines
@@ -125,6 +128,6 @@ vec3 LEVELS(vec3 c0)
 
 void main()
 {
-   FragColor = vec4(pow(LEVELS(COMPAT_TEXTURE(Source, vTexCoord).rgb), vec3(2.2)), 1.0);
+   FragColor = vec4(pow(LEVELS(COMPAT_TEXTURE(Source, vTexCoord).rgb), vec3(CRT_GAMMA)), 1.0);
 }
 #endif
