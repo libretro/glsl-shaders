@@ -1,0 +1,26 @@
+shaders = "2"
+
+shader0 = "shaders/tvout-tweaks-multipass/tvout-tweaks-pass-0.glsl"
+float_framebuffer0 = "true"
+srgb_framebuffer0 = "true"
+scale_type_x0 = "source"
+scale_x0 = "1.000000"
+scale_type_y0 = "source"
+scale_y0 = "1.000000"
+
+shader1 = "shaders/tvout-tweaks-multipass/tvout-tweaks-pass-1.glsl"
+float_framebuffer1 = "false"
+srgb_framebuffer1 = "false"
+scale_type_x1 = "viewport"
+scale_x1 = "1.000000"
+scale_type_y1 = "source"
+scale_y1 = "1.000000"
+
+parameters = "TVOUT_COMPOSITE_CONNECTION;TVOUT_TV_COLOR_LEVELS;TVOUT_RESOLUTION;TVOUT_RESOLUTION_Y;TVOUT_RESOLUTION_I;TVOUT_RESOLUTION_Q"
+
+TVOUT_COMPOSITE_CONNECTION = "0.000000"
+TVOUT_RESOLUTION = "256.000000"
+TVOUT_RESOLUTION_I = "83.199997"
+TVOUT_RESOLUTION_Q = "25.600000"
+TVOUT_RESOLUTION_Y = "256.000000"
+TVOUT_TV_COLOR_LEVELS = "0.000000"
