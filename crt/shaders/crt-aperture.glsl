@@ -14,6 +14,8 @@
 #pragma parameter MASK_SIZE "Mask Size" 1.0 1.0 9.0 1.0
 #pragma parameter SCANLINE_SIZE_MIN "Scanline Size Min." 0.5 0.5 1.5 0.05
 #pragma parameter SCANLINE_SIZE_MAX "Scanline Size Max." 1.5 0.5 1.5 0.05
+#pragma parameter SCANLINE_SHAPE "Scanline Shape" 2.5 1.0 100.0 0.1
+#pragma parameter SCANLINE_OFFSET "Scanline Offset" 1.0 0.0 1.0 1.0
 #pragma parameter GAMMA_INPUT "Gamma Input" 2.4 1.0 5.0 0.1
 #pragma parameter GAMMA_OUTPUT "Gamma Output" 2.4 1.0 5.0 0.1
 #pragma parameter BRIGHTNESS "Brightness" 1.5 0.0 2.0 0.05
@@ -55,7 +57,7 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     color = Color;
-    Coord = TexCoord;
+    Coord = TexCoord * 1.0001;
 }
 
 #elif defined(FRAGMENT)
@@ -101,6 +103,8 @@ uniform PRECISION float MASK_STRENGTH;
 uniform PRECISION float MASK_SIZE;
 uniform PRECISION float SCANLINE_SIZE_MIN;
 uniform PRECISION float SCANLINE_SIZE_MAX;
+uniform PRECISION float SCANLINE_SHAPE;
+uniform PRECISION float SCANLINE_OFFSET;
 uniform PRECISION float GAMMA_INPUT;
 uniform PRECISION float GAMMA_OUTPUT;
 uniform PRECISION float BRIGHTNESS;
@@ -116,6 +120,8 @@ uniform PRECISION float BRIGHTNESS;
 #define MASK_SIZE 1.0
 #define SCANLINE_SIZE_MIN 0.5
 #define SCANLINE_SIZE_MAX 1.5
+#define SCANLINE_SHAPE 1.5
+#define SCANLINE_OFFSET 1.0
 #define GAMMA_INPUT 2.4
 #define GAMMA_OUTPUT 2.4
 #define BRIGHTNESS 1.5
@@ -179,7 +185,7 @@ vec3 filter_lanczos(sampler2D tex, vec2 co, vec2 tex_size, float sharp)
 
 vec3 get_scanline_weight(float x, vec3 col)
 {
-    vec3 beam = mix(vec3(SCANLINE_SIZE_MIN), vec3(SCANLINE_SIZE_MAX), col);
+    vec3 beam = mix(vec3(SCANLINE_SIZE_MIN), vec3(SCANLINE_SIZE_MAX), pow(col, vec3(1.0 / SCANLINE_SHAPE)));
     vec3 x_mul = 2.0 / beam;
     vec3 x_offset = x_mul * 0.5;
 
@@ -197,15 +203,22 @@ vec3 get_mask_weight(float x)
 
 void main()
 {
-    vec3 col_glow = filter_gaussian(Texture, Coord, TextureSize);
-    vec3 col_soft = filter_lanczos(Texture, Coord, TextureSize, SHARPNESS_IMAGE);
-    vec3 col_sharp = filter_lanczos(Texture, Coord, TextureSize, SHARPNESS_EDGES);
+    float scale = floor((OutputSize.y / InputSize.y) + 0.001);
+    float offset = 1.0 / scale * 0.5;
+    
+    if (mod(scale, 2.0)) offset = 0.0;
+    
+    vec2 co = (Coord * TextureSize - vec2(0.0, offset * SCANLINE_OFFSET)) / TextureSize;
+
+    vec3 col_glow = filter_gaussian(Texture, co, TextureSize);
+    vec3 col_soft = filter_lanczos(Texture, co, TextureSize, SHARPNESS_IMAGE);
+    vec3 col_sharp = filter_lanczos(Texture, co, TextureSize, SHARPNESS_EDGES);
     vec3 col = sqrt(col_sharp * col_soft);
 
-    col *= get_scanline_weight(fract(Coord.y * TextureSize.y), col_soft);
+    col *= get_scanline_weight(fract(co.y * TextureSize.y), col_soft);
     col_glow = saturate(col_glow - col);
     col += col_glow * col_glow * GLOW_HALATION;
-    col = mix(col, col * get_mask_weight(Coord.x) * MASK_COLORS, MASK_STRENGTH);
+    col = mix(col, col * get_mask_weight(co.x) * MASK_COLORS, MASK_STRENGTH);
     col += col_glow * GLOW_DIFFUSION;
     col = pow(col * BRIGHTNESS, vec3(1.0 / GAMMA_OUTPUT));
 
