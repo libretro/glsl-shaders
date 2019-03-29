@@ -206,7 +206,7 @@ void main()
     float scale = floor((OutputSize.y / InputSize.y) + 0.001);
     float offset = 1.0 / scale * 0.5;
     
-    if (mod(scale, 2.0)) offset = 0.0;
+    if (bool(mod(scale, 2.0))) offset = 0.0;
     
     vec2 co = (Coord * TextureSize - vec2(0.0, offset * SCANLINE_OFFSET)) / TextureSize;
 
