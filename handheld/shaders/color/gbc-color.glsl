@@ -2,7 +2,8 @@
    GBC Color Correction Shader
    A shader that replicates the LCD dynamics from a Game Boy Color
    Color values are derived from Gambatte's color correction implementation, with some tweaks.
-
+   Further tweaks by Pokefan531.
+   
    Based on Color Mangler
    Author: hunterk
    License: Public domain
@@ -15,12 +16,13 @@
 #define COMPAT_PRECISION
 #endif
 
-#pragma parameter darken_screen "Darken Screen" 0.0 -0.25 2.0 0.05
+// GBC-Color option has brightness values from 0 to 1.2. light position relative to screen - Top: 1.2 Mid: 0.5 Bottom: 0.0
+#pragma parameter brighten_screen "Brighten Screen" 0.5 -0.25 1.2 0.05
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float darken_screen;
+uniform COMPAT_PRECISION float brighten_screen;
 #else
-#define darken_screen 0.0
+#define brighten_screen 0.0
 #endif
 
 #define target_gamma 2.2
@@ -28,15 +30,15 @@ uniform COMPAT_PRECISION float darken_screen;
 #define blr 0.0
 #define blg 0.0
 #define blb 0.0
-#define r 0.78824
-#define g 0.72941
-#define b 0.82
-#define rg 0.025
-#define rb 0.12039
-#define gr 0.12157
-#define gb 0.12157
-#define br 0.0
-#define bg 0.275000
+#define r 0.87
+#define g 0.66
+#define b 0.79
+#define rg 0.115
+#define rb 0.14
+#define gr 0.18
+#define gb 0.07
+#define br -0.05
+#define bg 0.225
 
 #if defined(VERTEX)
 
@@ -116,7 +118,7 @@ COMPAT_VARYING vec4 TEX0;
 
 void main()
 {
-   vec4 screen = pow(COMPAT_TEXTURE(Source, vTexCoord), vec4(target_gamma + darken_screen)).rgba;
+   vec4 screen = pow(COMPAT_TEXTURE(Source, vTexCoord), vec4(target_gamma - brighten_screen)).rgba;
 
    //                red   green  blue  alpha ; alpha does nothing for our purposes
    mat4 color = mat4(r,    rg,    rb,   0.0,    //red
