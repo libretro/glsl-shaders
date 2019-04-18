@@ -21,15 +21,15 @@
 #define blr 0.0
 #define blg 0.0
 #define blb 0.0
-#define r 0.83
-#define g 0.65
-#define b 0.765
-#define rg 0.105
-#define rb 0.105
+#define r 0.85
+#define g 0.655
+#define b 0.865
+#define rg 0.095
+#define rb 0.06
 #define gr 0.20
-#define gb 0.13
-#define br -0.03
-#define bg 0.245
+#define gb 0.075
+#define br -0.05
+#define bg 0.25
 #define overscan_percent_x 0.0
 #define overscan_percent_y 0.0
 
@@ -105,13 +105,13 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-
+#define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 void main()
 {
-   vec4 screen = pow(COMPAT_TEXTURE(Source, vTexCoord), vec4(target_gamma)).rgba;
+   vec4 screen = pow(texture(Source, vTexCoord), vec4(target_gamma)).rgba;
    vec4 avglum = vec4(0.5);
    screen = mix(screen, avglum, (1.0 - contrast));
    

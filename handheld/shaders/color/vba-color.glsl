@@ -14,7 +14,7 @@
 #endif
 
 // Parameter lines go here:
-#pragma parameter darken_screen "Darken Intensity" 1.0 0.0 1.0 0.05
+#pragma parameter darken_screen "Darken Intensity" 1.0 -1.0 1.0 0.05
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
 uniform COMPAT_PRECISION float darken_screen;
@@ -30,12 +30,12 @@ uniform COMPAT_PRECISION float darken_screen;
 #define blr 0.0
 #define blg 0.0
 #define blb 0.0
-#define r 0.74
-#define g 0.68
-#define b 0.68
-#define rg 0.08
-#define rb 0.08
-#define gr 0.26
+#define r 0.73
+#define g 0.675
+#define b 0.675
+#define rg 0.085
+#define rb 0.085
+#define gr 0.27
 #define gb 0.24
 #define br 0.0
 #define bg 0.24
@@ -114,13 +114,13 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-
+#define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 void main()
 {
-   vec4 screen = pow(COMPAT_TEXTURE(Source, vTexCoord), vec4(target_gamma + (darken_screen * 1.7))).rgba;
+   vec4 screen = pow(texture(Source, vTexCoord), vec4(target_gamma + (darken_screen * 1.7))).rgba;
    vec4 avglum = vec4(0.5);
    screen = mix(screen, avglum, (1.0 - contrast));
    
