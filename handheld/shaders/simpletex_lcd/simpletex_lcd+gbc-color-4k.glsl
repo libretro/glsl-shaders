@@ -183,15 +183,15 @@ const COMPAT_PRECISION float INV_BG_TEXTURE_SIZE = 1.0 / BG_TEXTURE_SIZE;
 // Colour correction
 #define TARGET_GAMMA 2.2
 const COMPAT_PRECISION float INV_DISPLAY_GAMMA = 1.0 / 2.2;
-#define CC_R 0.86629
-#define CC_G 0.70857
-#define CC_B 0.77215
-#define CC_RG 0.02429
-#define CC_RB 0.11337
-#define CC_GR 0.13361
-#define CC_GB 0.11448
-#define CC_BR 0.0
-#define CC_BG 0.26714
+#define CC_R 0.87
+#define CC_G 0.66
+#define CC_B 0.79
+#define CC_RG 0.115
+#define CC_RB 0.14
+#define CC_GR 0.18
+#define CC_GB 0.07
+#define CC_BR -0.05
+#define CC_BG 0.225
 
 void main()
 {
