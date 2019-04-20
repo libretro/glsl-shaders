@@ -15,8 +15,6 @@
 #define freq             1.000000
 #define PI               3.141592654
 
-const float omega = 2.0 * PI * freq;        // Angular frequency
-
 #ifndef PARAMETER_UNIFORM
 #define amp              1.250000
 #define phase            0.500000
@@ -64,6 +62,8 @@ uniform COMPAT_PRECISION vec2 InputSize;
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float PHASE;
 #endif
+
+const float omega = 2.0 * PI * freq;        // Angular frequency
 
 void main()
 {
@@ -218,16 +218,16 @@ void main()
 
     SStep = ((924.*pow(SStepFra,vec2(13)) - 6006.*pow(SStepFra,vec2(12)) + 16380.*pow(SStepFra,vec2(11)) - 24024.*pow(SStepFra,vec2(10)) + 20020.*pow(SStepFra,vec2(9)) - 9009.*pow(SStepFra,vec2(8)) + 1716.*pow(SStepFra,vec2(7))) + SStepInt - 0.5) * SourceSize.zw;
 
-        vec3 Picture = texture(Source,SStep).xyz;
+        vec3 Picture = COMPAT_TEXTURE(Source,SStep).xyz;
    
     float Lum = ((0.299*Picture.x) + (0.587*Picture.y) + (0.114*Picture.z));
-          Lum = 1-Lum;
+          Lum = 1.-Lum;
           Lum = Lum * 0.5;
    
-    vec3 PictureBlur = pow(texture(Source,SStep+SourceSize.zw*vec2( Lum, Lum)).xyz, vec3(2.2));
-        PictureBlur += pow(texture(Source,SStep+SourceSize.zw*vec2(-Lum, Lum)).xyz, vec3(2.2));
-        PictureBlur += pow(texture(Source,SStep+SourceSize.zw*vec2( Lum,-Lum)).xyz, vec3(2.2));
-        PictureBlur += pow(texture(Source,SStep+SourceSize.zw*vec2(-Lum,-Lum)).xyz, vec3(2.2));
+    vec3 PictureBlur = pow(COMPAT_TEXTURE(Source,SStep+SourceSize.zw*vec2( Lum, Lum)).xyz, vec3(2.2));
+        PictureBlur += pow(COMPAT_TEXTURE(Source,SStep+SourceSize.zw*vec2(-Lum, Lum)).xyz, vec3(2.2));
+        PictureBlur += pow(COMPAT_TEXTURE(Source,SStep+SourceSize.zw*vec2( Lum,-Lum)).xyz, vec3(2.2));
+        PictureBlur += pow(COMPAT_TEXTURE(Source,SStep+SourceSize.zw*vec2(-Lum,-Lum)).xyz, vec3(2.2));
         PictureBlur *= 0.25;
         float grid;
  
