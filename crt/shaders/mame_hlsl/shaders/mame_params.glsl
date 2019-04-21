@@ -1,3 +1,5 @@
+#version 130
+
 // Parameters-setup and stock passthru pass for MAME HLSL
 
 // Effect Toggles and Settings Used In Multiple Passes

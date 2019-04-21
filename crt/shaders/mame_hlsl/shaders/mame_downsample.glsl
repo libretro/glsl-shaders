@@ -1,3 +1,5 @@
+#version 130
+
 // license:BSD-3-Clause
 // copyright-holders:Ryan Holtz,ImJezze
 //-----------------------------------------------------------------------------
@@ -54,10 +56,10 @@ void main()
     TEX0.xy = TexCoord.xy;
 	vec2 HalfTargetTexelDims = 0.5 * SourceSize.zw;
 
-	TexCoord01.xy = TexCoord + Coord0Offset * HalfTargetTexelDims;
-	TexCoord01.zw = TexCoord + Coord1Offset * HalfTargetTexelDims;
-	TexCoord23.xy = TexCoord + Coord2Offset * HalfTargetTexelDims;
-	TexCoord23.zw = TexCoord + Coord3Offset * HalfTargetTexelDims;
+	TexCoord01.xy = TexCoord.xy + Coord0Offset * HalfTargetTexelDims;
+	TexCoord01.zw = TexCoord.xy + Coord1Offset * HalfTargetTexelDims;
+	TexCoord23.xy = TexCoord.xy + Coord2Offset * HalfTargetTexelDims;
+	TexCoord23.zw = TexCoord.xy + Coord3Offset * HalfTargetTexelDims;
 }
 
 #elif defined(FRAGMENT)

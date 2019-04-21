@@ -1,3 +1,5 @@
+#version 130
+
 // license:BSD-3-Clause
 // copyright-holders:Ryan Holtz,ImJezze
 //-----------------------------------------------------------------------------
@@ -94,19 +96,19 @@ void main()
 	TexCoordY = TexCoord.yyy;
 
 	// center coordinates
-	TexCoordX -= 0.5;
-	TexCoordY -= 0.5;
+	TexCoordX -= vec3(0.5,0.5,0.5);
+	TexCoordY -= vec3(0.5,0.5,0.5);
 
 	// radial converge offset to "translate" the most outer pixel as thay would be translated by the linar converge with the same amount
-	vec2 radialConvergeOffset = vec2(2.0);
+	vec2 radialConvergeOffset = vec2(2.0,2.0);
 
 	// radial converge
-	TexCoordX *= 1.0 + RadialConvergeX * TexelDims.xxx * radialConvergeOffset.xxx;
-	TexCoordY *= 1.0 + RadialConvergeY * TexelDims.yyy * radialConvergeOffset.yyy;
+	TexCoordX *= vec3(1.,1.,1.) + RadialConvergeX * TexelDims.xxx * radialConvergeOffset.xxx;
+	TexCoordY *= vec3(1.,1.,1.) + RadialConvergeY * TexelDims.yyy * radialConvergeOffset.yyy;
 
 	// un-center coordinates
-	TexCoordX += 0.5;
-	TexCoordY += 0.5;
+	TexCoordX += vec3(0.5,0.5,0.5);
+	TexCoordY += vec3(0.5,0.5,0.5);
 
 	// linear converge
 	TexCoordX += ConvergeX * TexelDims.xxx;
