@@ -70,7 +70,7 @@
 #pragma parameter floor_g "Color Floor G" 0.0 0.0 1.0 0.01
 #pragma parameter floor_b "Color Floor B" 0.0 0.0 1.0 0.01
 #pragma parameter preparebloom "Prepare Bloom" 0.0 0.0 1.0 1.0
-
+/*
 // NTSC Pass
 #pragma parameter avalue "A Value" 0.5 -1.0 1.0 0.01
 #pragma parameter bvalue "B Value" 0.5 -1.0 1.0 0.01
@@ -83,7 +83,7 @@
 #pragma parameter ifreqresponse "I Freq Response" 1.2 0.0 6.0 0.05
 #pragma parameter qfreqresponse "Q Freq Response" 0.6 0.0 6.0 0.05
 #pragma parameter signaloffset "Signal Offset" 1.0 0.0 1.0 0.01
-
+*/
 // Color Pass
 #pragma parameter col_red "Red Shift" 1.0 0.0 2.0 0.01
 #pragma parameter col_grn "Green Shift" 1.0 0.0 2.0 0.01

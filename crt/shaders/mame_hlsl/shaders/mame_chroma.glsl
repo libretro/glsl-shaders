@@ -148,7 +148,7 @@ void main()
    {
       vec4 cin = COMPAT_TEXTURE(DiffuseSampler, vTexCoord);
       vec4 cout = vec4(0.0, 0.0, 0.0, cin.a);
-      mat3x2 xy = { ChromaA, ChromaB, ChromaC };
+      mat3x2 xy = mat3x2( ChromaA, ChromaB, ChromaC );
 
       for (int i = 0; i < 3; ++i) {
          float Y = YGain[i] * cin[i];
