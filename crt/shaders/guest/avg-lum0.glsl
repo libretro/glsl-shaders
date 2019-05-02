@@ -1,3 +1,7 @@
+// Avg. Luminance Smoothing 
+
+// Parameter lines go here:
+
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -65,8 +69,17 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
-uniform sampler2D PassPrev3Texture;
+uniform sampler2D PrevTexture;
+uniform sampler2D Prev1Texture;
+uniform sampler2D Prev2Texture;
+uniform sampler2D Prev3Texture;
+uniform sampler2D Prev4Texture;
+uniform sampler2D Prev5Texture;
+uniform sampler2D Prev6Texture;
+
+
 COMPAT_VARYING vec4 TEX0;
+// in variables go here as COMPAT_VARYING whatever
 
 // compatibility #defines
 #define Source Texture
@@ -75,17 +88,23 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
-// Parameter lines go here:
-#pragma parameter GAMMA_INPUT "Gamma Input" 2.4 0.1 5.0 0.05
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float GAMMA_INPUT;
+
 #else
-#define GAMMA_INPUT 2.4
-#endif
+
+#endif 
 
 void main()
 {
-   FragColor = pow(vec4(COMPAT_TEXTURE(PassPrev3Texture, vTexCoord)), vec4(GAMMA_INPUT));
+	vec3 color  = COMPAT_TEXTURE(PrevTexture,  TEX0.xy).rgb;
+	color+= COMPAT_TEXTURE(Prev6Texture, TEX0.xy).rgb;
+	color+= COMPAT_TEXTURE(Prev5Texture, TEX0.xy).rgb;
+	color+= COMPAT_TEXTURE(Prev4Texture, TEX0.xy).rgb;
+	color+= COMPAT_TEXTURE(Prev3Texture, TEX0.xy).rgb;
+	color+= COMPAT_TEXTURE(Prev2Texture, TEX0.xy).rgb;
+	color+= COMPAT_TEXTURE(Prev1Texture, TEX0.xy).rgb;
+	
+	FragColor = vec4(color/7.0,1.0);
 } 
 #endif

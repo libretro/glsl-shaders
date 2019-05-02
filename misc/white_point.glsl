@@ -5,6 +5,9 @@
 
 #pragma parameter temperature "White Point" 6500.0 0.0 12000.0 100.0
 #pragma parameter luma_preserve "Preserve Luminance" 1.0 0.0 1.0 1.0
+#pragma parameter red "Red Shift" 0.0 -1.0 1.0 0.01
+#pragma parameter green "Green Shift" 0.0 -1.0 1.0 0.01
+#pragma parameter blue "Blue Shift" 0.0 -1.0 1.0 0.01
 
 #if defined(VERTEX)
 
@@ -79,7 +82,6 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-// in variables go here as COMPAT_VARYING whatever
 
 // compatibility #defines
 #define Source Texture
@@ -89,10 +91,13 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float temperature, luma_preserve;
+uniform COMPAT_PRECISION float temperature, luma_preserve, red, green, blue;
 #else
 #define temperature 6500.0
 #define luma_preserve 1.0
+#define red 0.0
+#define green 0.0
+#define blue 0.0
 #endif
 
 // white point adjustment
@@ -115,6 +120,9 @@ vec3 wp_adjust(vec3 color){
    
    // clamp and normalize
    wp.rgb = clamp(wp.rgb, vec3(0.), vec3(255.)) / vec3(255.);
+   
+   // this is dumb, but various cores don't always show white as white. Use this to make white white...
+   wp.rgb += vec3(red, green, blue);
    
    return (color * wp);
 }

@@ -1,6 +1,6 @@
 
 // Parameter lines go here:
-#pragma parameter WP "D65 to D50 strength %" 0.0 -100.0 100.0 5.0 
+#pragma parameter WP "Color Temperature %" 0.0 -100.0 100.0 5.0 
 
 #if defined(VERTEX)
 
@@ -85,28 +85,48 @@ uniform COMPAT_PRECISION float WP;
 #else
 #define WP  0.0
 #endif 
+ 
+const mat3 D65_to_XYZ = mat3 (
+           0.4306190,  0.2220379,  0.0201853,
+           0.3415419,  0.7066384,  0.1295504,
+           0.1783091,  0.0713236,  0.9390944);
 
-const mat3 D65 = mat3 (
-           0.5767309,  0.2973769,  0.0270343,
-           0.1855540,  0.6273491,  0.0706872,
-           0.1881852,  0.0752741,  0.9911085);
-
-const mat3 D50 = mat3 (
-           1.7552599, -0.5441336,  0.0063467,
-          -0.4836786,  1.5068789, -0.0175761,
-           -0.2530000, 0.0215528, 1.2256959);		   
+const mat3 XYZ_to_D65 = mat3 (
+           3.0628971, -0.9692660,  0.0678775,
+          -1.3931791,  1.8760108, -0.2288548,
+          -0.4757517,  0.0415560,  1.0693490);
+		   
+const mat3 D50_to_XYZ = mat3 (
+           0.4552773,  0.2323025,  0.0145457,
+           0.3675500,  0.7077956,  0.1049154,
+           0.1413926,  0.0599019,  0.7057489);
+		   
+const mat3 XYZ_to_D50 = mat3 (
+           2.9603944, -0.9787684,  0.0844874,
+          -1.4678519,  1.9161415, -0.2545973,
+          -0.4685105,  0.0334540,  1.4216174);		   
 
 void main()
 {
 	
 	vec3 color = COMPAT_TEXTURE(Source, TEX0.xy).rgb;
+	float p = 2.4;
 	
-	vec3 c65 = D65*color;
-	vec3 c50 = D50*c65;
+	color = pow(color, vec3(p));
 	
-	float m = WP/100.0;
+	vec3 warmer = D50_to_XYZ*color;
+	warmer = XYZ_to_D65*warmer;
 	
-	color = (1.0-m)*color + m*c50;
+	vec3 cooler = D65_to_XYZ*color;
+	cooler = XYZ_to_D50*cooler;
+	
+	float m = abs(WP)/100.0;
+	
+	vec3 comp = (WP < 0.0) ? cooler : warmer;
+	
+	color = mix(color, comp, m);
+
+	color = pow(color, vec3(1.0/p));	
 	
 	FragColor = vec4(color,1.0);
 } 

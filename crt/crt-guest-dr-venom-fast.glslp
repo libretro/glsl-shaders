@@ -1,0 +1,39 @@
+shaders = 5
+
+shader0 = shaders/guest/lut/lut.glsl
+filter_linear0 = false
+scale_type0 = source
+scale0 = 1.0
+
+textures = "SamplerLUT1;SamplerLUT2;SamplerLUT3"
+SamplerLUT1 = shaders/guest/lut/sony_trinitron1.png
+SamplerLUT1_linear = true 
+SamplerLUT2 = shaders/guest/lut/sony_trinitron2.png
+SamplerLUT2_linear = true 
+SamplerLUT3 = shaders/guest/lut/other1.png
+SamplerLUT3_linear = true
+
+shader1 = shaders/guest/fast/smoothing.glsl
+filter_linear1 = false
+scale_type1 = source
+scale1 = 1.0
+
+shader2 = shaders/guest/fast/linearize-multipass.glsl
+filter_linear2 = false
+scale_type2 = source
+scale2 = 1.0
+float_framebuffer2 = true
+
+shader3 = shaders/guest/fast/crt-guest-dr-venom-pass1.glsl
+filter_linear3 = false
+scale_type_x3 = viewport
+scale_x3 = 1.0
+scale_type_y3 = source
+scale_y3 = 1.0
+float_framebuffer3 = true
+
+shader4 = shaders/guest/fast/crt-guest-dr-venom-pass2.glsl
+filter_linear4 = false
+scale_type4 = viewport
+scale_x4 = 1.0
+scale_y4 = 1.0

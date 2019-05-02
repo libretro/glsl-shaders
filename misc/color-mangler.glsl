@@ -4,8 +4,9 @@
    License: Public domain
 */
 
-#pragma parameter display_gamma "Display Gamma" 2.2 0.0 10.0 0.1
-#pragma parameter target_gamma "Target Gamma" 2.2 0.0 10.0 0.1
+#pragma parameter gamma_boost_r "Gamma Mod Red Channel" 0.0 -5.0 5.0 0.1
+#pragma parameter gamma_boost_g "Gamma Mod Green Channel" 0.0 -5.0 5.0 0.1
+#pragma parameter gamma_boost_b "Gamma Mod Blue Channel" 0.0 -5.0 5.0 0.1
 #pragma parameter sat "Saturation" 1.0 0.0 3.0 0.01
 #pragma parameter lum "Luminance" 1.0 0.0 5.0 0.01
 #pragma parameter cntrst "Contrast" 1.0 0.0 2.0 0.01
@@ -103,26 +104,11 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float display_gamma;
-uniform COMPAT_PRECISION float target_gamma;
-uniform COMPAT_PRECISION float sat;
-uniform COMPAT_PRECISION float lum;
-uniform COMPAT_PRECISION float cntrst;
-uniform COMPAT_PRECISION float blr;
-uniform COMPAT_PRECISION float blg;
-uniform COMPAT_PRECISION float blb;
-uniform COMPAT_PRECISION float r;
-uniform COMPAT_PRECISION float g;
-uniform COMPAT_PRECISION float b;
-uniform COMPAT_PRECISION float rg;
-uniform COMPAT_PRECISION float rb;
-uniform COMPAT_PRECISION float gr;
-uniform COMPAT_PRECISION float gb;
-uniform COMPAT_PRECISION float br;
-uniform COMPAT_PRECISION float bg;
+uniform COMPAT_PRECISION float gamma_boost_r, gamma_boost_g, gamma_boost_b, sat, lum, cntrst, blr, blg, blb, r, g, b, rg, rb, gr, gb, br, bg;
 #else
-#define display_gamma 2.2
-#define target_gamma 2.2
+#define gamma_boost_r 0.0
+#define gamma_boost_g 0.0
+#define gamma_boost_b 0.0
 #define sat 1.0
 #define lum 1.0
 #define cntrst 1.0
@@ -142,7 +128,7 @@ uniform COMPAT_PRECISION float bg;
 
 void main()
 {
-   vec4 screen = pow(COMPAT_TEXTURE(Source, vTexCoord), vec4(target_gamma)).rgba;
+   vec4 screen = pow(COMPAT_TEXTURE(Source, vTexCoord), vec4(2.2)).rgba;
    vec4 avglum = vec4(0.5);
    screen = mix(screen, avglum, (1.0 - cntrst));
 
@@ -152,13 +138,14 @@ void main()
                       br,  bg,   b, 0.0,  //blue tint
                      blr, blg, blb, 0.0); //black tint
 
-   mat4 adjust = mat4((1.0 - sat) * 0.3086 + sat, (1.0 - sat) * 0.3086, (1.0 - sat) * 0.3086, 1.0,
-                      (1.0 - sat) * 0.6094, (1.0 - sat) * 0.6094 + sat, (1.0 - sat) * 0.6094, 1.0,
-                      (1.0 - sat) * 0.0820, (1.0 - sat) * 0.0820, (1.0 - sat) * 0.0820 + sat, 1.0,
+   mat4 adjust = mat4((1.0 - sat) * 0.2126 + sat, (1.0 - sat) * 0.2126, (1.0 - sat) * 0.2126, 1.0,
+                      (1.0 - sat) * 0.7152, (1.0 - sat) * 0.7152 + sat, (1.0 - sat) * 0.7152, 1.0,
+                      (1.0 - sat) * 0.0722, (1.0 - sat) * 0.0722, (1.0 - sat) * 0.0722 + sat, 1.0,
                       0.0, 0.0, 0.0, 1.0);
    color *= adjust;
    screen = clamp(screen * lum, 0.0, 1.0);
    screen = color * screen;
-   FragColor = pow(screen, vec4(1.0 / display_gamma));
+	vec3 out_gamma = vec3(1.) / (vec3(2.2) - vec3(gamma_boost_r, gamma_boost_g, gamma_boost_b));
+	FragColor = pow(screen, vec4(out_gamma, 1.0));
 }
 #endif

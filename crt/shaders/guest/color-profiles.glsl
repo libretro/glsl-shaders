@@ -1,9 +1,8 @@
-#version 130
 /*
-   Average Luminance Shader, Smart Smoothing Difference Shader
+   CRT Color Profiles
    
-   Copyright (C) 2018-2019 guest(r) - guest.r@gmail.com
-
+   Copyright (C) 2019 guest(r) and Dr. Venom
+   
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
    as published by the Free Software Foundation; either version 2
@@ -18,12 +17,11 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
    
-   Thanks to HunterK for the mipmap hint. :D  
-*/
+*/ 
 
 // Parameter lines go here:
-
-#pragma parameter STH "Smart Smoothing Threshold" 0.7 0.4 1.2 0.05
+#pragma parameter CP "CRT Color Profile" 0.0 -1.0 5.0 1.0 
+#pragma parameter CS "Color Space: sRGB, DCI, Adobe, Rec.2020" 0.0 0.0 3.0 1.0 
 
 #if defined(VERTEX)
 
@@ -92,8 +90,6 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
-uniform sampler2D PassPrev2Texture;
-
 COMPAT_VARYING vec4 TEX0;
 // in variables go here as COMPAT_VARYING whatever
 
@@ -106,56 +102,121 @@ COMPAT_VARYING vec4 TEX0;
 
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float STH;
+uniform COMPAT_PRECISION float CP;
+uniform COMPAT_PRECISION float CS;
 #else
-	#define STH 0.7
+#define CP  0.0
+#define CS  0.0
 #endif 
+ 
 
-float df (vec3 A, vec3 B)
-{
-	float diff = length(A-B);
-	float luma = clamp(length(0.5*min(A,B) + 0.25*(A+B) + 1e-8), 0.0001, 1.0);
-	float diff1 = diff/luma;
-	return 1.0 - clamp(7.0*(max(1.5*diff,diff1)-STH), 0.0, 1.0);
-}
+mat3 Profile0 = 
+transpose(mat3(
+ 0.412391,  0.357584,  0.180481,
+ 0.212639,  0.715169,  0.072192,
+ 0.019331,  0.119195,  0.950532
+));
+
+ 
+mat3 Profile1 = 
+transpose(mat3(
+ 0.430554,  0.341550,  0.178352,
+ 0.222004,  0.706655,  0.071341,
+ 0.020182,  0.129553,  0.939322
+));
+
+
+mat3 Profile2 = 
+transpose(mat3(
+ 0.396686,  0.372504,  0.181266,
+ 0.210299,  0.713766,  0.075936,
+ 0.006131,  0.115356,  0.967571
+));
+
+
+mat3 Profile3 = 
+transpose(mat3(
+ 0.393521,  0.365258,  0.191677,
+ 0.212376,  0.701060,  0.086564,
+ 0.018739,  0.111934,  0.958385
+));
+
+
+mat3 Profile4 = 
+transpose(mat3(
+ 0.392258,  0.351135,  0.166603,
+ 0.209410,  0.725680,  0.064910,
+ 0.016061,  0.093636,  0.850324
+));
+
+
+mat3 Profile5 = 
+transpose(mat3(
+ 0.377923,  0.317366,  0.207738,
+ 0.195679,  0.722319,  0.082002,
+ 0.010514,  0.097826,  1.076960
+));
+
+
+mat3 ToSRGB = 
+transpose(mat3(
+ 3.240970, -1.537383, -0.498611,
+-0.969244,  1.875968,  0.041555,
+ 0.055630, -0.203977,  1.056972
+));
+ 
+mat3 ToDCI = 
+transpose(mat3(
+ 2.725394,  -1.018003,  -0.440163,
+-0.795168,   1.689732,   0.022647,
+ 0.041242,  -0.087639,   1.100929
+));
+
+mat3 ToAdobe = 
+transpose(mat3(
+ 2.041588, -0.565007, -0.344731,
+-0.969244,  1.875968,  0.041555,
+ 0.013444, -0.118362,  1.015175
+));
+
+mat3 ToREC = 
+transpose(mat3(
+ 1.716651, -0.355671, -0.253366,
+-0.666684,  1.616481,  0.015769,
+ 0.017640, -0.042771,  0.942103
+));
+
 
 void main()
 {
-	float xtotal = floor(InputSize.x/64.0);
-	float ytotal = floor(InputSize.y/64.0);
+	vec3 c = COMPAT_TEXTURE(Source, TEX0.xy).rgb;
 	
-	float ltotal = 0.0;
+	float p;
+	mat3 m_out;
 	
-	vec2 dx  = vec2(SourceSize.z, 0.0)*64.0;
-	vec2 dy  = vec2(0.0, SourceSize.w)*64.0;
-	vec2 offset = 0.25*(dx+dy);
+	if (CS == 0.0) { p = 2.4; m_out =  ToSRGB; } else
+	if (CS == 1.0) { p = 2.6; m_out =  ToDCI;  } else
+	if (CS == 2.0) { p = 2.2; m_out =  ToAdobe;} else
+	if (CS == 3.0) { p = 2.4; m_out =  ToREC;  }
 	
-	for (float i = 0.0; i <= xtotal; i++)
-	{
-		for (float j = 0.0; j <= ytotal; j++)
-			{
-				ltotal+= max(0.25, length(textureLod(Source, i*dx + j*dy + offset, 6.0).rgb));
-			}
-	}
-   
-	ltotal = 0.577350269 * ltotal / ((xtotal+1.0)*(ytotal+1.0));
+	vec3 color = pow(c, vec3(p));
+	
+	mat3 m_in = Profile0;
 
-	dx  = vec2(SourceSize.z, 0.0);	
-	dy  = vec2(0.0, SourceSize.w);	
+	if (CP == 0.0) { m_in = Profile0; } else	
+	if (CP == 1.0) { m_in = Profile1; } else
+	if (CP == 2.0) { m_in = Profile2; } else
+	if (CP == 3.0) { m_in = Profile3; } else
+	if (CP == 4.0) { m_in = Profile4; } else
+	if (CP == 5.0) { m_in = Profile5; }
+	
+	color = m_in*color;
+	color = m_out*color;
 
-	vec3 l1 = COMPAT_TEXTURE(PassPrev2Texture, TEX0.xy -dx).xyz;
-	vec3 ct = COMPAT_TEXTURE(PassPrev2Texture, TEX0.xy    ).xyz;
-	vec3 r1 = COMPAT_TEXTURE(PassPrev2Texture, TEX0.xy +dx).xyz;
-	vec3 t1 = COMPAT_TEXTURE(PassPrev2Texture, TEX0.xy -dy).xyz;
-	vec3 b1 = COMPAT_TEXTURE(PassPrev2Texture, TEX0.xy +dy).xyz;	
+	color = pow(color, vec3(1.0/p));	
 	
-	float dl = df(ct, l1);
-	float dr = df(ct, r1);
-	float dt = df(ct, t1);
-	float db = df(ct, b1);
+	if (CP == -1.0) color = c;
 	
-	float resx = dl; float resy = dr; float resz = floor(9.0*dt)/10.0 + floor(9.0*db)/100.0;
-	
-	FragColor = vec4(resx,resy,resz,pow(ltotal, 0.65));
+	FragColor = vec4(color,1.0);
 } 
 #endif

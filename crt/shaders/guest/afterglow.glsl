@@ -28,7 +28,6 @@
 #pragma parameter AB "Afterglow Blue" 0.07 0.0 1.0 0.01
 #pragma parameter PB "Persistence Blue"  0.05 0.0 1.0 0.01
 #pragma parameter sat "Afterglow saturation" 0.10 0.0 1.0 0.01
-#pragma parameter GTH "Afterglow threshold" 5.0 0.0 255.0 1.0
 
 #if defined(VERTEX)
 
@@ -126,7 +125,6 @@ uniform COMPAT_PRECISION float PG;
 uniform COMPAT_PRECISION float AB;
 uniform COMPAT_PRECISION float PB;
 uniform COMPAT_PRECISION float sat;
-uniform COMPAT_PRECISION float GTH;
 #else
 	#define SW 1.00
 	#define AR 0.07
@@ -136,10 +134,9 @@ uniform COMPAT_PRECISION float GTH;
 	#define AB 0.07
 	#define PB 0.05
 	#define sat 0.10
-	#define GTH 5.0
 #endif 
 
-#define eps 1e-4
+#define eps 1e-3
 
 vec3 afterglow(float number)
 {
@@ -149,7 +146,6 @@ vec3 afterglow(float number)
 void main()
 {
 	vec3 color = COMPAT_TEXTURE(Source, TEX0.xy).rgb;
-	// vec3 color0 = COMPAT_TEXTURE(PrevTexture, TEX0.xy).rgb  * afterglow(1.0);
 	vec3 color1 = COMPAT_TEXTURE(Prev1Texture, TEX0.xy).rgb * afterglow(1.0);
 	vec3 color2 = COMPAT_TEXTURE(Prev2Texture, TEX0.xy).rgb * afterglow(2.0);
 	vec3 color3 = COMPAT_TEXTURE(Prev3Texture, TEX0.xy).rgb * afterglow(3.0);
@@ -163,7 +159,7 @@ void main()
 	glow = normalize(pow(glow + vec3(eps), vec3(sat)))*l;		
 	
 	float w = 1.0;
-	if ((color.r + color.g + color.b) > GTH/255.0) w = 0.0;
+	if ((color.r + color.g + color.b) > 7.0/255.0) w = 0.0;
 	
 	FragColor = vec4(color + SW*w*glow,1.0);
 } 

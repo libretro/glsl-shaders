@@ -65,7 +65,7 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
-uniform sampler2D PassPrev3Texture;
+uniform sampler2D PassPrev2Texture;
 COMPAT_VARYING vec4 TEX0;
 
 // compatibility #defines
@@ -86,6 +86,6 @@ uniform COMPAT_PRECISION float GAMMA_INPUT;
 
 void main()
 {
-   FragColor = pow(vec4(COMPAT_TEXTURE(PassPrev3Texture, vTexCoord)), vec4(GAMMA_INPUT));
+   FragColor = pow(vec4(COMPAT_TEXTURE(PassPrev2Texture, vTexCoord)), vec4(GAMMA_INPUT));
 } 
 #endif
