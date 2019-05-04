@@ -35,6 +35,7 @@
 #pragma parameter SHARPER "CRTGeom Sharpness" 1.0 1.0 3.0 1.0
 #pragma parameter scanline_weight "CRTGeom Scanline Weight" 0.3 0.1 0.5 0.05
 #pragma parameter lum "CRTGeom Luminance" 0.0 0.0 1.0 0.01
+#pragma parameter interlace_detect "CRTGeom Interlacing Simulation" 1.0 0.0 1.0 1.0
 
 #ifndef PARAMETER_UNIFORM
 #define CRTgamma 2.4
@@ -52,6 +53,7 @@
 #define SHARPER 1.0
 #define scanline_weight 0.3
 #define lum 0.0
+#define interlace_detect 1.0
 #endif
 
 #if defined(VERTEX)
@@ -111,6 +113,7 @@ uniform COMPAT_PRECISION float DOTMASK;
 uniform COMPAT_PRECISION float SHARPER;
 uniform COMPAT_PRECISION float scanline_weight;
 uniform COMPAT_PRECISION float lum;
+uniform COMPAT_PRECISION float interlace_detect;
 #endif
 
 #define FIX(c) max(abs(c), 1e-5);
@@ -296,6 +299,7 @@ uniform COMPAT_PRECISION float DOTMASK;
 uniform COMPAT_PRECISION float SHARPER;
 uniform COMPAT_PRECISION float scanline_weight;
 uniform COMPAT_PRECISION float lum;
+uniform COMPAT_PRECISION float interlace_detect;
 #endif
 
 float intersect(vec2 xy)
@@ -400,7 +404,7 @@ void main()
 
 // Of all the pixels that are mapped onto the texel we are
 // currently rendering, which pixel are we currently rendering?
-	vec2 ilvec = vec2(0.0,ilfac.y > 1.5 ? mod(float(FrameCount),2.0) : 0.0);
+	vec2 ilvec = vec2(0.0,ilfac.y * interlace_detect > 1.5 ? mod(float(FrameCount),2.0) : 0.0);
 	vec2 ratio_scale = (xy * TextureSize - vec2(0.5) + ilvec)/ilfac;
 #ifdef OVERSAMPLE
 	float filter_ = InputSize.y/OutputSize.y;//fwidth(ratio_scale.y);
