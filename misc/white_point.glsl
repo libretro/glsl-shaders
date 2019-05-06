@@ -1,9 +1,10 @@
 // white point adjustment
-// by hunterk
-// based on blog post by Tanner Helland
-// http://www.tannerhelland.com/4435/convert-temperature-rgb-algorithm-code/
+// adapted by Dogway (based on hunterk's original shader as template)
+//
+// based on blog post by Neil Bartlett (inspired on Tanner Helland's work)
+// http://www.zombieprototypes.com/?p=210
 
-#pragma parameter temperature "White Point" 6500.0 0.0 12000.0 100.0
+#pragma parameter temperature "White Point" 6500.0 1000.0 12000.0 100.0
 #pragma parameter luma_preserve "Preserve Luminance" 1.0 0.0 1.0 1.0
 #pragma parameter red "Red Shift" 0.0 -1.0 1.0 0.01
 #pragma parameter green "Green Shift" 0.0 -1.0 1.0 0.01
@@ -101,8 +102,8 @@ uniform COMPAT_PRECISION float temperature, luma_preserve, red, green, blue;
 #endif
 
 // white point adjustment
-// based on blog post by Tanner Helland
-// http://www.tannerhelland.com/4435/convert-temperature-rgb-algorithm-code/
+// based on blog post by Neil Bartlett (inspired by Tanner Helland's work)
+// http://www.zombieprototypes.com/?p=210
 vec3 wp_adjust(vec3 color){
    float temp = temperature / 100.0;
    
@@ -110,13 +111,15 @@ vec3 wp_adjust(vec3 color){
    vec3 wp = vec3(255.);
    
    // calculate RED
-   wp.r = (temp <= 66.) ? 255. : 329.698727446 * pow((temp - 60.), -0.1332047592);
+   wp.r = (temp <= 66.) ? 255. : 351.97690566805693 + 0.114206453784165 * (temp - 55.) - 40.25366309332127 * log(temp - 55.);
    
    // calculate GREEN
-   wp.g = (temp <= 66.) ? 99.4708025861 * log(temp) - 161.1195681661 : 288.1221695283 * pow((temp - 60.), -0.0755148492);
+   float mg = - 155.25485562709179 - 0.44596950469579133 * (temp - 2.)  + 104.49216199393888 * log(temp - 2.);
+   float pg =   325.4494125711974  + 0.07943456536662342 * (temp - 50.) - 28.0852963507957   * log(temp - 50.);
+   wp.g = (temp <= 66.) ? mg : pg;
    
    // calculate BLUE
-   wp.b = (temp >= 66.) ? 255. : (temp <= 19.) ? 0. : 138.5177312231 * log(temp - 10.) - 305.0447927307;
+   wp.b = (temp >= 66.) ? 255. : (temp <= 19.) ? 0. : - 254.76935184120902 + 0.8274096064007395 * (temp - 10.) + 115.67994401066147 * log(temp - 10.) ;
    
    // clamp and normalize
    wp.rgb = clamp(wp.rgb, vec3(0.), vec3(255.)) / vec3(255.);
@@ -127,29 +130,51 @@ vec3 wp_adjust(vec3 color){
    return (color * wp);
 }
 
-vec3 RGBtoYIQ(vec3 RGB){
-   const mat3x3 m = mat3x3(
-   0.2989, 0.5870, 0.1140,
-   0.5959, -0.2744, -0.3216,
-   0.2115, -0.5229, 0.3114);
-   return RGB * m;
+vec3 sRGB_to_XYZ(vec3 RGB){
+
+    const mat3x3 m = mat3x3(
+    0.4124564,  0.3575761,  0.1804375,
+    0.2126729,  0.7151522,  0.0721750,
+    0.0193339,  0.1191920,  0.9503041);
+    return RGB * m;
 }
 
-vec3 YIQtoRGB(vec3 YIQ){
-   const mat3x3 m = mat3x3(
-   1.0, 0.956, 0.6210,
-   1.0, -0.2720, -0.6474,
-   1.0, -1.1060, 1.7046);
-   return YIQ * m;
+
+vec3 XYZtoYxy(vec3 XYZ){
+
+    float XYZrgb = XYZ.r+XYZ.g+XYZ.b;
+    float Yxyr = XYZ.g;
+    float Yxyg = (XYZrgb <= 0.0) ? 0.3805 : XYZ.r / XYZrgb;
+    float Yxyb = (XYZrgb <= 0.0) ? 0.3769 : XYZ.g / XYZrgb;
+    return vec3(Yxyr,Yxyg,Yxyb);
 }
+
+vec3 XYZ_to_sRGB(vec3 XYZ){
+
+    const mat3x3 m = mat3x3(
+    3.2404542, -1.5371385, -0.4985314,
+   -0.9692660,  1.8760108,  0.0415560,
+    0.0556434, -0.2040259,  1.0572252);
+    return XYZ * m;
+}
+
+
+vec3 YxytoXYZ(vec3 Yxy){
+
+    float Xs = Yxy.r * (Yxy.g/Yxy.b);
+    float Xsz = (Yxy.r <= 0.0) ? 0 : 1;
+    vec3 XYZ = vec3(Xsz,Xsz,Xsz) * vec3(Xs, Yxy.r, (Xs/Yxy.g)-Xs-Yxy.r);
+    return XYZ;
+}
+
 
 void main()
 {
    vec3 original = COMPAT_TEXTURE(Source, vTexCoord).rgb;
    vec3 adjusted = wp_adjust(original);
-   vec3 base_luma = RGBtoYIQ(original);
-   vec3 adjusted_luma = RGBtoYIQ(adjusted);
+   vec3 base_luma = XYZtoYxy(sRGB_to_XYZ(original));
+   vec3 adjusted_luma = XYZtoYxy(sRGB_to_XYZ(adjusted));
    adjusted = (luma_preserve > 0.5) ? adjusted_luma + (vec3(base_luma.r,0.,0.) - vec3(adjusted_luma.r,0.,0.)) : adjusted_luma;
-   FragColor = vec4(YIQtoRGB(adjusted), 1.0);
+   FragColor = vec4(XYZ_to_sRGB(YxytoXYZ(adjusted)), 1.0);
 } 
 #endif
