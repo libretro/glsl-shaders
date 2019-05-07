@@ -1,6 +1,7 @@
 
 // Parameter lines go here:
 #pragma parameter WP "Color Temperature %" 0.0 -100.0 100.0 5.0 
+#pragma parameter wp_saturation "Saturation Adjustment" 1.0 0.0 2.0 0.05 
 
 #if defined(VERTEX)
 
@@ -70,7 +71,6 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-// in variables go here as COMPAT_VARYING whatever
 
 // compatibility #defines
 #define Source Texture
@@ -81,9 +81,10 @@ COMPAT_VARYING vec4 TEX0;
 
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float WP;
+uniform COMPAT_PRECISION float WP, wp_saturation;
 #else
 #define WP  0.0
+#define wp_saturation 1.0
 #endif 
  
 const mat3 D65_to_XYZ = mat3 (
@@ -110,6 +111,9 @@ void main()
 {
 	
 	vec3 color = COMPAT_TEXTURE(Source, TEX0.xy).rgb;
+   
+   color = normalize(pow(color + 1e-4, vec3(wp_saturation)))*length(color);
+   
 	float p = 2.4;
 	
 	color = pow(color, vec3(p));
