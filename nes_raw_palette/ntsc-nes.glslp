@@ -1,7 +1,7 @@
 shaders = 3
-shader0 = ../misc/nes-color-decoder.glsl
-shader1 = shaders/ntsc-pass1-composite-3phase.glsl
-shader2 = shaders/ntsc-pass2-3phase.glsl
+shader0 = shaders/nes-color-decoder.glsl
+shader1 = ../ntsc/shaders/ntsc-pass1-composite-3phase.glsl
+shader2 = ../ntsc/shaders/ntsc-pass2-3phase.glsl
 
 filter_linear0 = false
 filter_linear1 = false
