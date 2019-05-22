@@ -1,7 +1,7 @@
 #tvout preset for 480p CRTs
 
 shaders = "4"
-shader0 = "../../misc/nes-color-decoder.glsl"
+shader0 = "../../nes_raw_palette/shaders/nes-color-decoder.glsl"
 shader1 = "../../crt/shaders/tvout-tweaks.glsl"
 shader2 = "../../misc/image-adjustment.glsl"
 shader3 = "../../misc/interlacing.glsl"

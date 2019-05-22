@@ -1,5 +1,5 @@
 shaders = "2"
-shader0 = ../misc/nes-color-decoder.glsl
+shader0 = ../nes_raw_palette/shaders/nes-color-decoder.glsl
 shader1 = ../retro/shaders/pixellate.glsl
 
 filter_linear0 = "false"
