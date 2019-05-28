@@ -6,8 +6,9 @@
 #pragma parameter vert_pos "Vertical Modifier" 0.0 -2.0 2.0 0.01
 #pragma parameter horz_pos "Horizontal Modifier" 0.0 -2.0 2.0 0.01
 #pragma parameter separation "Eye Separation" 0.0 -2.0 2.0 0.01
-#pragma parameter flicker "Hold Last Frame (reduce flicker)" 0.0 0.0 1.0 1.0
+#pragma parameter flicker "Hold Last Frame (reduce flicker)" 0.0 0.0 1.0 0.25
 #pragma parameter height_mod "Image Height" 1.0 0.0 2.0 0.01
+#pragma parameter swap_eye "Swap Eye Sequence" 0.0 0.0 1.0 1.0
 
 #if defined(VERTEX)
 
@@ -49,7 +50,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float ZOOM, vert_pos, separation, flicker, height_mod, horz_pos;
+uniform COMPAT_PRECISION float ZOOM, vert_pos, separation, flicker, height_mod, horz_pos, swap_eye;
 #else
 #define ZOOM 1.0
 #define vert_pos 0.0
@@ -57,19 +58,20 @@ uniform COMPAT_PRECISION float ZOOM, vert_pos, separation, flicker, height_mod, 
 #define separation 0.0
 #define flicker 0.0
 #define height_mod 1.0
+#define swap_eye 0.0
 #endif
 
 void main()
 {
-    gl_Position = MVPMatrix * VertexCoord;
+   gl_Position = MVPMatrix * VertexCoord;
 	vec2 temp_coord = TexCoord.xy - 0.5 * InputSize / TextureSize;
 	temp_coord *= ZOOM;
 	temp_coord *= vec2(2.,1. / height_mod);
 	temp_coord += vec2(horz_pos, vert_pos);
 	temp_coord += 0.5 * InputSize / TextureSize;
-    left_coord = temp_coord.xy - vec2(0.5 + separation,0.) * InputSize / TextureSize;
+   left_coord  = temp_coord.xy - vec2(0.5 + separation,0.) * InputSize / TextureSize;
 	right_coord = temp_coord.xy + vec2(0.5 + separation,0.) * InputSize / TextureSize;
-	timer = mod(float(FrameCount), 2.);
+	timer = abs(swap_eye - mod(float(FrameCount), 2.));
 }
 
 #elif defined(FRAGMENT)
@@ -114,7 +116,7 @@ COMPAT_VARYING float timer;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float ZOOM, vert_pos, separation, flicker, height_mod, horz_pos;
+uniform COMPAT_PRECISION float ZOOM, vert_pos, separation, flicker, height_mod, horz_pos, swap_eye;
 #else
 #define ZOOM 1.0
 #define vert_pos 0.0
@@ -122,6 +124,7 @@ uniform COMPAT_PRECISION float ZOOM, vert_pos, separation, flicker, height_mod, 
 #define separation 0.0
 #define flicker 0.0
 #define height_mod 1.0
+#define swap_eye 0.0
 #endif
 
 void main()
@@ -138,6 +141,6 @@ void main()
 	vec2 right_fragcoord = right_coord * InputSize / TextureSize;
 	bool right_check = right_fragcoord.x > 0.0001 && right_fragcoord.y > 0.0001 && right_fragcoord.x < 0.9999 && right_fragcoord.y < 0.9999;
 	right_screen *= (right_check) ? 1.0 : 0.0;
-    FragColor = left_screen + right_screen;
+   FragColor = left_screen + right_screen;
 } 
 #endif
