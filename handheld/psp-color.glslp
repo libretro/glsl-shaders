@@ -2,5 +2,5 @@ shaders = 1
 
 shader0 = shaders/color/psp-color.glsl
 filter_linear0 = false
-scale_type_0 = source
+scale_type0 = source
 scale0 = 1.0
