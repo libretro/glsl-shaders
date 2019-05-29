@@ -14,4 +14,4 @@ scale_y1 = 2.0
 
 shader2 = ../stock.glsl
 filter_linear2 = true
-scale_type_2 = source
+scale_type2 = source

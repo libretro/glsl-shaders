@@ -2,7 +2,7 @@ shaders = 1
 
 shader0 = shaders/lcd-cgwg/lcd-grid-v2.glsl
 filter_linear0 = false
-scale_type_0 = viewport
+scale_type0 = viewport
 scale0 = 1.0
 
 parameters = "RSUBPIX_R;RSUBPIX_G;RSUBPIX_B;GSUBPIX_R;GSUBPIX_G;GSUBPIX_B;BSUBPIX_R;BSUBPIX_G;BSUBPIX_B;gain;gamma;blacklevel;ambient;BGR"
