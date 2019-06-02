@@ -146,5 +146,12 @@ void main()
   averageColor += ((top - bordert.y)    / totalArea) * topRightColor;
   
    FragColor = pow(averageColor,vec4(1.0/gamma));
+#ifdef GL_ES
+   // fix broken clamp behavior used in console-border shaders
+   if (vTexCoord.x > 0.0007 && vTexCoord.x < 0.9999 && vTexCoord.y > 0.0007 && vTexCoord.y < 0.9999)
+      FragColor = FragColor;
+   else
+      FragColor = vec4(0.0);
+#endif
 } 
 #endif
