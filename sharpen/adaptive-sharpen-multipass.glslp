@@ -5,4 +5,3 @@ filter_linear0 = false
 scale_type0 = source
 shader1 = shaders/adaptive-sharpen-pass2.glsl
 filter_linear1 = false
-scale_type1 = source

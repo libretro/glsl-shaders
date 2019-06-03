@@ -6,4 +6,3 @@ scale_type0 = source
 
 shader1 = "shaders/2xBR-multipass/2xbr-lv1-c-pass1.glsl"
 filter_linear1 = false
-scale_type1 = source

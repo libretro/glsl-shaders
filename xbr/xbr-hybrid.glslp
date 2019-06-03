@@ -8,6 +8,5 @@ filter_linear1 = false
 filter_linear2 = true
 scale_type0 = source
 scale_type1 = source
-scale_type2 = source
 scale0 = 2.0
 scale1 = 2.0

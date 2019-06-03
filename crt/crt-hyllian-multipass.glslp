@@ -11,4 +11,3 @@ scale_y0 = 1.0
 shader1 = shaders/crt-hyllian-multipass/crt-hyllian-pass1.glsl
 filter_linear1 = false
 srgb_framebuffer1 = false
-scale_type1 = source

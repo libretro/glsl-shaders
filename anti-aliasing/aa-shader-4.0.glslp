@@ -7,4 +7,3 @@ scale0 = 1.0
 
 shader1 = ../sharpen/shaders/adaptive-sharpen.glsl
 filter_linear1 = false
-scale_type1 = source

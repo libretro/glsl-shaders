@@ -2,4 +2,3 @@ shaders = 1
 
 shader0 = shaders/adaptive-sharpen.glsl
 filter_linear0 = false
-scale_type0 = source
