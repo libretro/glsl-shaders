@@ -114,6 +114,9 @@ void main()
 		vec2 uv = vTexCoord.xy;
 		uv.x -= sin(0.0006 * mod(iTime, 11.0)) * cos(mod(iTime, 17.0) * -uv.y);
 		texColor = COMPAT_TEXTURE(Source, jumpy(uv, iTime));
+		vec4 rew_osd = COMPAT_TEXTURE(rew, jumpy(vTexCoord * TextureSize / InputSize, iTime));
+		rew_osd.a = ((mod(iTime, 100.0) < 50.0)) ? rew_osd.a : 0.0;
+		texColor = mix(texColor, rew_osd, rew_osd.a);
 		// get position to sample
 		vec2 samplePosition = uv.xy * TextureSize.xy / InputSize.xy - vec2(0.0, 0.45);
 		float whiteNoise;
@@ -135,9 +138,7 @@ void main()
 		    // Use white. (I'm adding here so the color noise still applies)
 		    texColor += vec4(0.5 + rand(samplePosition));
 		}
-		vec4 rew_osd = COMPAT_TEXTURE(rew, jumpy(vTexCoord * TextureSize / InputSize, iTime));
-		rew_osd.a = ((mod(iTime, 100.0) < 50.0)) ? rew_osd.a : 0.0;
-		texColor = mix(texColor, rew_osd, rew_osd.a);
+
 	}
 	FragColor = texColor;
 } 
