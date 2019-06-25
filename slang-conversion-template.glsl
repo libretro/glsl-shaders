@@ -28,7 +28,6 @@ COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 TEX0;
 // out variables go here as COMPAT_VARYING whatever
 
-vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
 uniform COMPAT_PRECISION int FrameDirection;
 uniform COMPAT_PRECISION int FrameCount;
