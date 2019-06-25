@@ -24,9 +24,7 @@
 #endif
 
 COMPAT_ATTRIBUTE vec4 VertexCoord;
-COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
-COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 // out variables go here as COMPAT_VARYING whatever
 
@@ -51,8 +49,8 @@ uniform COMPAT_PRECISION float WHATEVER;
 
 void main()
 {
-    gl_Position = MVPMatrix * VertexCoord;
-    TEX0.xy = TexCoord.xy;
+   gl_Position = MVPMatrix * VertexCoord;
+   TEX0.xy = TexCoord.xy;
 // Paste vertex contents here:
 }
 
