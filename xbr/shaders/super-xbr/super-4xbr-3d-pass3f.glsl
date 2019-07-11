@@ -32,10 +32,10 @@
 
 #define wp1  1.0
 #define wp2  0.0
-#define wp3  0.0
-#define wp4  0.0
-#define wp5 -1.0
-#define wp6  0.0
+#define wp3  2.0
+#define wp4  3.0
+#define wp5 -2.0
+#define wp6  1.0
 
 #define weight1 (XBR_WEIGHT*1.29633/10.0)
 #define weight2 (XBR_WEIGHT*1.75068/10.0/2.0)
@@ -59,9 +59,7 @@
 #endif
 
 COMPAT_ATTRIBUTE vec4 VertexCoord;
-COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
-COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec4 t1;
 COMPAT_VARYING vec4 t2;
@@ -82,8 +80,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    COL0 = COLOR;
-    TEX0.xy = TexCoord.xy;
+    TEX0.xy = TexCoord.xy * 1.0001;
    float dx = SourceSize.z;
    float dy = SourceSize.w;
    t1 = vTexCoord.xyxy + vec4(-2.0*dx, -2.0*dy, dx, dy);
@@ -220,7 +217,7 @@ void main()
 	vec3  H = COMPAT_TEXTURE(Source, t4.xw).xyz;
 	vec3  I = COMPAT_TEXTURE(Source, t4.zw).xyz;
 
-	vec3 A = COMPAT_TEXTURE(Source, vTexCoord).xyz;
+	vec3  A = COMPAT_TEXTURE(Source, vTexCoord).xyz;
 
 	vec3 F6 = COMPAT_TEXTURE(Original, tex +g1+0.25*g1+0.25*g2).xyz;
 	vec3 F7 = COMPAT_TEXTURE(Original, tex +g1+0.25*g1-0.25*g2).xyz;
@@ -235,7 +232,7 @@ void main()
 	vec4 f0 = reduce4(F6, F7, F8, F9);
 	vec4 h0 = reduce4(H6, H7, H8, H9);
 
-    bool block_3d = ((f0.xyz==f0.yzw) && (h0.xyz==h0.yzw));
+   bool block_3d = ((f0.xyz==f0.yzw) && (h0.xyz==h0.yzw));
 
 	float b = RGBtoYUV( B );
 	float c = RGBtoYUV( C );
@@ -280,7 +277,7 @@ void main()
 	vec3 c3 = mul(w2, mat4x3(D+G, E+H, F+I, F4+I4));
 	vec3 c4 = mul(w2, mat4x3(C+B, F+E, I+H, I5+H5));
 
-	bool ir_lv1 = (((e!=f) && (e!=h))  && ( !eq(f,b) && !eq(f,c) || !eq(h,d) && !eq(h,g) || eq(e,i) && (!eq(f,f4) && !eq(f,i4) || !eq(h,h5) && !eq(h,i5)) || eq(e,g) || eq(e,c)) );
+	//bool ir_lv1 = (((e!=f) && (e!=h))  && ( !eq(f,b) && !eq(f,c) || !eq(h,d) && !eq(h,g) || eq(e,i) && (!eq(f,f4) && !eq(f,i4) || !eq(h,h5) && !eq(h,i5)) || eq(e,g) || eq(e,c)) );
 
 
 	/* Smoothly blends the two strongest directions (one in diagonal and the other in vert/horiz direction). */
@@ -292,7 +289,7 @@ void main()
 
 	color = clamp(color, min_sample, max_sample);
 
-	color = block_3d ? color : A;
+	color = (block_3d) ? color : A;
 
    FragColor = vec4(color, 1.0);
 } 

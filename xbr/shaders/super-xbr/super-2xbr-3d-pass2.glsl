@@ -30,10 +30,12 @@
 
 #define wp1  1.0
 #define wp2  0.0
-#define wp3  0.0
-#define wp4  0.0
-#define wp5 -1.0
-#define wp6  0.0
+#define wp3  2.0
+#define wp4  3.0
+#define wp5 -2.0
+#define wp6  1.0
+
+#define XBR_RES 2.0
 
 #define weight1 (XBR_WEIGHT*1.29633/10.0)
 #define weight2 (XBR_WEIGHT*1.75068/10.0/2.0)
@@ -57,9 +59,7 @@
 #endif
 
 COMPAT_ATTRIBUTE vec4 VertexCoord;
-COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
-COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec4 t1;
 COMPAT_VARYING vec4 t2;
@@ -79,7 +79,6 @@ uniform COMPAT_PRECISION vec2 InputSize;
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
    float dx = SourceSize.z;
    float dy = SourceSize.w;
@@ -118,6 +117,7 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
+uniform sampler2D PassPrev3Texture;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec4 t1;
 COMPAT_VARYING vec4 t2;
@@ -136,6 +136,7 @@ const float XBR_WEIGHT = 1.0;
 const float XBR_ANTI_RINGING = 1.0;
 
 const vec3 Y = vec3(.2126, .7152, .0722);
+const vec3 dtt = vec3(65536.,255.,1.);
 
 float RGBtoYUV(vec3 color)
 {
@@ -176,8 +177,18 @@ vec3 max4(vec3 a, vec3 b, vec3 c, vec3 d)
     return max(a, max(b, max(c, d)));
 }
 
+vec4 reduce4(vec3 A, vec3 B, vec3 C, vec3 D)
+{
+  return mul(mat4x3(A, B, C, D), dtt);
+}
+
 void main()
 {
+	vec2 tex = (floor(vTexCoord*TextureSize/XBR_RES) + vec2(0.5, 0.5))*XBR_RES/TextureSize;
+
+	vec2 g1 = vec2(XBR_RES/TextureSize.x, 0.0);
+	vec2 g2 = vec2(0.0, XBR_RES/TextureSize.y);
+
 	vec3 P0 = COMPAT_TEXTURE(Source, t1.xy).xyz;
 	vec3 P1 = COMPAT_TEXTURE(Source, t1.zy).xyz;
 	vec3 P2 = COMPAT_TEXTURE(Source, t1.xw).xyz;
@@ -197,6 +208,23 @@ void main()
 	vec3  F = COMPAT_TEXTURE(Source, t4.zy).xyz;
 	vec3  H = COMPAT_TEXTURE(Source, t4.xw).xyz;
 	vec3  I = COMPAT_TEXTURE(Source, t4.zw).xyz;
+   
+   vec3 A = COMPAT_TEXTURE(Source, vTexCoord).xyz;
+
+	vec3 F6 = COMPAT_TEXTURE(PassPrev3Texture, tex +g1+0.25*g1+0.25*g2).xyz;
+	vec3 F7 = COMPAT_TEXTURE(PassPrev3Texture, tex +g1+0.25*g1-0.25*g2).xyz;
+	vec3 F8 = COMPAT_TEXTURE(PassPrev3Texture, tex +g1-0.25*g1-0.25*g2).xyz;
+	vec3 F9 = COMPAT_TEXTURE(PassPrev3Texture, tex +g1-0.25*g1+0.25*g2).xyz;
+
+	vec3 H6 = COMPAT_TEXTURE(PassPrev3Texture, tex +0.25*g1+0.25*g2+g2).xyz;
+	vec3 H7 = COMPAT_TEXTURE(PassPrev3Texture, tex +0.25*g1-0.25*g2+g2).xyz;
+	vec3 H8 = COMPAT_TEXTURE(PassPrev3Texture, tex -0.25*g1-0.25*g2+g2).xyz;
+	vec3 H9 = COMPAT_TEXTURE(PassPrev3Texture, tex -0.25*g1+0.25*g2+g2).xyz;
+
+	vec4 f0 = reduce4(F6, F7, F8, F9);
+	vec4 h0 = reduce4(H6, H7, H8, H9);
+
+   bool block_3d = ((f0.xyz==f0.yzw) && (h0.xyz==h0.yzw));
 
 	float b = RGBtoYUV( B );
 	float c = RGBtoYUV( C );
@@ -248,6 +276,8 @@ void main()
 	vec3 min_sample = min4( E, F, H, I ) + (1.-XBR_ANTI_RINGING)*mix((P2-H)*(F-P1), (P0-E)*(I-P3), step(0.0, d_edge));
 	vec3 max_sample = max4( E, F, H, I ) - (1.-XBR_ANTI_RINGING)*mix((P2-H)*(F-P1), (P0-E)*(I-P3), step(0.0, d_edge));
 	color = clamp(color, min_sample, max_sample);
+   
+   color = (block_3d) ? color : A;
 	
    FragColor = vec4(color, 1.0);
 } 

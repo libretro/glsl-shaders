@@ -26,21 +26,20 @@
 
 */
 
-// Parameter lines go here:
-#pragma parameter XBR_EDGE_STR "Xbr - Edge Strength p0" 0.6 0.0 5.0 0.5
+#pragma parameter XBR_EDGE_STR "Xbr - Edge Strength p0" 2.0 0.0 5.0 0.2
 #pragma parameter XBR_WEIGHT "Xbr - Filter Weight" 1.0 0.00 1.50 0.05
 #pragma parameter XBR_ANTI_RINGING "Xbr - Anti-Ringing Level" 1.0 0.0 1.0 1.0
 
 #define mul(a,b) (b*a)
 
-#define XBR_RES 4.0
-
-#define wp1  1.0
-#define wp2  0.0
-#define wp3  0.0
-#define wp4  2.0
+#define wp1  2.0
+#define wp2  1.0
+#define wp3 -1.0
+#define wp4  4.0
 #define wp5 -1.0
-#define wp6  0.0
+#define wp6  1.0
+
+#define XBR_RES 4.0
 
 #define weight1 (XBR_WEIGHT*1.29633/10.0)
 #define weight2 (XBR_WEIGHT*1.75068/10.0/2.0)
@@ -64,9 +63,7 @@
 #endif
 
 COMPAT_ATTRIBUTE vec4 VertexCoord;
-COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
-COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 
 vec4 _oPosition1; 
@@ -80,8 +77,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    COL0 = COLOR;
-    TEX0.xy = TexCoord.xy;
+    TEX0.xy = TexCoord.xy * 1.0001;
 }
 
 #elif defined(FRAGMENT)
@@ -123,7 +119,6 @@ COMPAT_VARYING vec4 TEX0;
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
 uniform COMPAT_PRECISION float XBR_EDGE_STR;
 uniform COMPAT_PRECISION float XBR_WEIGHT;
 uniform COMPAT_PRECISION float XBR_ANTI_RINGING;
@@ -194,6 +189,7 @@ void main()
  	if (any(lessThan(fract(vTexCoord*SourceSize.xy/XBR_RES) , vec2(0.5,0.5))))
 		{
 			FragColor = COMPAT_TEXTURE(Source, vTexCoord);
+         return;
 		}
 	else
 		{
@@ -279,7 +275,7 @@ void main()
 			vec3 c3 = mul(w2, mat4x3(D+G, E+H, F+I, F4+I4));
 			vec3 c4 = mul(w2, mat4x3(C+B, F+E, I+H, I5+H5));
 
-			bool ir_lv1 = (((e!=f) && (e!=h))  && ( !eq(f,b) && !eq(f,c) || !eq(h,d) && !eq(h,g) || eq(e,i) && (!eq(f,f4) && !eq(f,i4) || !eq(h,h5) && !eq(h,i5)) || eq(e,g) || eq(e,c)) );
+			//bool ir_lv1 = (((e!=f) && (e!=h))  && ( !eq(f,b) && !eq(f,c) || !eq(h,d) && !eq(h,g) || eq(e,i) && (!eq(f,f4) && !eq(f,i4) || !eq(h,h5) && !eq(h,i5)) || eq(e,g) || eq(e,c)) );
 
 
 			/* Smoothly blends the two strongest directions (one in diagonal and the other in vert/horiz direction). */
@@ -301,7 +297,7 @@ void main()
 
 			color = clamp(color, min_sample, max_sample);
 
-			color = block_3d ? color : E;
+			color = (block_3d) ? color : E;
 
 			FragColor = vec4(color, 1.0);
 		}

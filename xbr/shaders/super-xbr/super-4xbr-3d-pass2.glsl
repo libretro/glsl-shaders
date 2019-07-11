@@ -28,14 +28,14 @@
 
 #define mul(a,b) (b*a)
 
-#define XBR_RES 2.0
-
-#define wp1  1.0
-#define wp2  0.0
-#define wp3  0.0
-#define wp4  2.0
+#define wp1  2.0
+#define wp2  1.0
+#define wp3 -1.0
+#define wp4  4.0
 #define wp5 -1.0
-#define wp6  0.0
+#define wp6  1.0
+
+#define XBR_RES2  2.0
 
 #define weight1 (XBR_WEIGHT*1.29633/10.0)
 #define weight2 (XBR_WEIGHT*1.75068/10.0/2.0)
@@ -59,9 +59,7 @@
 #endif
 
 COMPAT_ATTRIBUTE vec4 VertexCoord;
-COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
-COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 
 vec4 _oPosition1; 
@@ -75,8 +73,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    COL0 = COLOR;
-    TEX0.xy = TexCoord.xy;
+    TEX0.xy = TexCoord.xy * 1.0001;
 }
 
 #elif defined(FRAGMENT)
@@ -119,9 +116,15 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
 
-const float XBR_EDGE_STR = 0.0;
-const float XBR_WEIGHT = 0.0;
-const float XBR_ANTI_RINGING = 0.0;
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float XBR_EDGE_STR;
+uniform COMPAT_PRECISION float XBR_WEIGHT;
+uniform COMPAT_PRECISION float XBR_ANTI_RINGING;
+#else
+#define XBR_EDGE_STR 0.0
+#define XBR_WEIGHT 0.0
+#define XBR_ANTI_RINGING 0.0
+#endif
 
 const vec3 Y = vec3(.2126, .7152, .0722);
 
@@ -179,64 +182,61 @@ vec3 max4(vec3 a, vec3 b, vec3 c, vec3 d)
 void main()
 {
 	//Skip pixels on wrong grid
- 	if (any(lessThan(fract(vTexCoord*SourceSize.xy/XBR_RES) , vec2(0.5,0.5))))
-		{
-			FragColor = COMPAT_TEXTURE(Source, vTexCoord);
-		}
-	else
-		{
-			vec2 tex = (floor(vTexCoord*SourceSize.xy/XBR_RES) + vec2(0.5, 0.5))*XBR_RES/SourceSize.xy;
+ 	if (any(lessThan(fract(vTexCoord*TextureSize/XBR_RES2),vec2(0.5,0.5)))){ FragColor = COMPAT_TEXTURE(Source, vTexCoord); return;}
 
-			vec2 g1 = vec2(XBR_RES/SourceSize.x, 0.0);
-			vec2 g2 = vec2(0.0, XBR_RES/SourceSize.y);
+	vec2 tex = (floor(vTexCoord*TextureSize/XBR_RES2) + vec2(0.5, 0.5))*XBR_RES2/TextureSize;
 
-			vec3 P0 = COMPAT_TEXTURE(Source, vTexCoord     -g1    -g2).xyz;
-			vec3 P1 = COMPAT_TEXTURE(Source, vTexCoord +2.0*g1    -g2).xyz;
-			vec3 P2 = COMPAT_TEXTURE(Source, vTexCoord     -g1+2.0*g2).xyz;
-			vec3 P3 = COMPAT_TEXTURE(Source, vTexCoord +2.0*g1+2.0*g2).xyz;
+	vec2 g1 = vec2(XBR_RES2/TextureSize.x, 0.0);
+	vec2 g2 = vec2(0.0, XBR_RES2/TextureSize.y);
 
-			vec3  B = COMPAT_TEXTURE(Source, vTexCoord    -g2).xyz;
-			vec3  C = COMPAT_TEXTURE(Source, vTexCoord +g1-g2).xyz;
-			vec3  D = COMPAT_TEXTURE(Source, vTexCoord -g1   ).xyz;
-			vec3  E = COMPAT_TEXTURE(Source, vTexCoord       ).xyz;
-			vec3  F = COMPAT_TEXTURE(Source, vTexCoord +g1   ).xyz;
-			vec3  G = COMPAT_TEXTURE(Source, vTexCoord -g1+g2).xyz;
-			vec3  H = COMPAT_TEXTURE(Source, vTexCoord    +g2).xyz;
-			vec3  I = COMPAT_TEXTURE(Source, vTexCoord +g1+g2).xyz;
+	vec3 P0 = COMPAT_TEXTURE(Source, vTexCoord     -g1    -g2).xyz;
+	vec3 P1 = COMPAT_TEXTURE(Source, vTexCoord +2.0*g1    -g2).xyz;
+	vec3 P2 = COMPAT_TEXTURE(Source, vTexCoord     -g1+2.0*g2).xyz;
+	vec3 P3 = COMPAT_TEXTURE(Source, vTexCoord +2.0*g1+2.0*g2).xyz;
 
-			vec3 F4 = COMPAT_TEXTURE(Source, vTexCoord    +2.0*g1   ).xyz;
-			vec3 I4 = COMPAT_TEXTURE(Source, vTexCoord +g2+2.0*g1   ).xyz;
-			vec3 H5 = COMPAT_TEXTURE(Source, vTexCoord +2.0*g2      ).xyz;
-			vec3 I5 = COMPAT_TEXTURE(Source, vTexCoord +2.0*g2+g1   ).xyz;
+	vec3  B = COMPAT_TEXTURE(Source, vTexCoord    -g2).xyz;
+	vec3  C = COMPAT_TEXTURE(Source, vTexCoord +g1-g2).xyz;
+	vec3  D = COMPAT_TEXTURE(Source, vTexCoord -g1   ).xyz;
+	vec3  E = COMPAT_TEXTURE(Source, vTexCoord       ).xyz;
+	vec3  F = COMPAT_TEXTURE(Source, vTexCoord +g1   ).xyz;
+	vec3  G = COMPAT_TEXTURE(Source, vTexCoord -g1+g2).xyz;
+	vec3  H = COMPAT_TEXTURE(Source, vTexCoord    +g2).xyz;
+	vec3  I = COMPAT_TEXTURE(Source, vTexCoord +g1+g2).xyz;
 
-			vec3 F6 = COMPAT_TEXTURE(Source, tex +g1+0.25*g1+0.25*g2).xyz;
-			vec3 F7 = COMPAT_TEXTURE(Source, tex +g1+0.25*g1-0.25*g2).xyz;
-			vec3 F8 = COMPAT_TEXTURE(Source, tex +g1-0.25*g1-0.25*g2).xyz;
-			vec3 F9 = COMPAT_TEXTURE(Source, tex +g1-0.25*g1+0.25*g2).xyz;
+	vec3 F4 = COMPAT_TEXTURE(Source,vTexCoord    +2.0*g1   ).xyz;
+	vec3 I4 = COMPAT_TEXTURE(Source,vTexCoord +g2+2.0*g1   ).xyz;
+	vec3 H5 = COMPAT_TEXTURE(Source,vTexCoord +2.0*g2      ).xyz;
+	vec3 I5 = COMPAT_TEXTURE(Source,vTexCoord +2.0*g2+g1   ).xyz;
 
-			vec3 H6 = COMPAT_TEXTURE(Source, tex +0.25*g1+0.25*g2+g2).xyz;
-			vec3 H7 = COMPAT_TEXTURE(Source, tex +0.25*g1-0.25*g2+g2).xyz;
-			vec3 H8 = COMPAT_TEXTURE(Source, tex -0.25*g1-0.25*g2+g2).xyz;
-			vec3 H9 = COMPAT_TEXTURE(Source, tex -0.25*g1+0.25*g2+g2).xyz;
+	vec3 F6 = COMPAT_TEXTURE(Source, tex +g1+0.25*g1+0.25*g2).xyz;
+	vec3 F7 = COMPAT_TEXTURE(Source, tex +g1+0.25*g1-0.25*g2).xyz;
+	vec3 F8 = COMPAT_TEXTURE(Source, tex +g1-0.25*g1-0.25*g2).xyz;
+	vec3 F9 = COMPAT_TEXTURE(Source, tex +g1-0.25*g1+0.25*g2).xyz;
 
-			vec4 f0 = reduce4(F6, F7, F8, F9);
-			vec4 h0 = reduce4(H6, H7, H8, H9);
+	vec3 H6 = COMPAT_TEXTURE(Source, tex +0.25*g1+0.25*g2+g2).xyz;
+	vec3 H7 = COMPAT_TEXTURE(Source, tex +0.25*g1-0.25*g2+g2).xyz;
+	vec3 H8 = COMPAT_TEXTURE(Source, tex -0.25*g1-0.25*g2+g2).xyz;
+	vec3 H9 = COMPAT_TEXTURE(Source, tex -0.25*g1+0.25*g2+g2).xyz;
 
-			bool block_3d = ((f0.xyz == f0.yzw) && (h0.xyz == h0.yzw));
+	vec4 f0 = reduce4(F6, F7, F8, F9);
+	vec4 h0 = reduce4(H6, H7, H8, H9);
 
-			float b = RGBtoYUV( B );
-			float c = RGBtoYUV( C );
-			float d = RGBtoYUV( D );
-			float e = RGBtoYUV( E );
-			float f = RGBtoYUV( F );
-			float g = RGBtoYUV( G );
-			float h = RGBtoYUV( H );
-			float i = RGBtoYUV( I );
+   bool block_3d = ((f0.xyz==f0.yzw) && (h0.xyz==h0.yzw));
 
-			float i4 = RGBtoYUV( I4 ); float p0 = RGBtoYUV( P0 );
-			float i5 = RGBtoYUV( I5 ); float p1 = RGBtoYUV( P1 );
-			float h5 = RGBtoYUV( H5 ); float p2 = RGBtoYUV( P2 );
-			float f4 = RGBtoYUV( F4 ); float p3 = RGBtoYUV( P3 );
+
+	float b = RGBtoYUV( B );
+	float c = RGBtoYUV( C );
+	float d = RGBtoYUV( D );
+	float e = RGBtoYUV( E );
+	float f = RGBtoYUV( F );
+	float g = RGBtoYUV( G );
+	float h = RGBtoYUV( H );
+	float i = RGBtoYUV( I );
+
+	float i4 = RGBtoYUV( I4 ); float p0 = RGBtoYUV( P0 );
+	float i5 = RGBtoYUV( I5 ); float p1 = RGBtoYUV( P1 );
+	float h5 = RGBtoYUV( H5 ); float p2 = RGBtoYUV( P2 );
+	float f4 = RGBtoYUV( F4 ); float p3 = RGBtoYUV( P3 );
 
 /*
                               P1
@@ -248,29 +248,31 @@ void main()
                               P2
 */
 
-			/* Calc edgeness in diagonal directions. */
-			float d_edge  = (d_wd( d, b, g, e, c, p2, h, f, p1, h5, i, f4, i5, i4 ) - d_wd( c, f4, b, f, i4, p0, e, i, p3, d, h, i5, g, h5 ));
 
-			/* Calc edgeness in horizontal/vertical directions. */
-			float hv_edge = (hv_wd(f, i, e, h, c, i5, b, h5) - hv_wd(e, f, h, i, d, f4, g, i4));
+	/* Calc edgeness in diagonal directions. */
+	float d_edge  = (d_wd( d, b, g, e, c, p2, h, f, p1, h5, i, f4, i5, i4 ) - d_wd( c, f4, b, f, i4, p0, e, i, p3, d, h, i5, g, h5 ));
 
-			float limits = XBR_EDGE_STR + 0.000001;
-			float edge_strength = smoothstep(0.0, limits, abs(d_edge));
+	/* Calc edgeness in horizontal/vertical directions. */
+	float hv_edge = (hv_wd(f, i, e, h, c, i5, b, h5) - hv_wd(e, f, h, i, d, f4, g, i4));
 
-			/* Filter weights. Two taps only. */
-			vec4 w1 = vec4(-weight1, weight1+0.5, weight1+0.5, -weight1);
-			vec4 w2 = vec4(-weight2, weight2+0.25, weight2+0.25, -weight2);
+	float limits = XBR_EDGE_STR + 0.000001;
+	float edge_strength = smoothstep(0.0, limits, abs(d_edge));
 
-			/* Filtering and normalization in four direction generating four colors. */
-			vec3 c1 = mul(w1, mat4x3( P2,   H,   F,   P1 ));
-			vec3 c2 = mul(w1, mat4x3( P0,   E,   I,   P3 ));
-			vec3 c3 = mul(w2, mat4x3(D+G, E+H, F+I, F4+I4));
-			vec3 c4 = mul(w2, mat4x3(C+B, F+E, I+H, I5+H5));
+	/* Filter weights. Two taps only. */
+	vec4 w1 = vec4(-weight1, weight1+0.5, weight1+0.5, -weight1);
+	vec4 w2 = vec4(-weight2, weight2+0.25, weight2+0.25, -weight2);
 
-			bool ir_lv1 = (((e!=f) && (e!=h))  && ( !eq(f,b) && !eq(f,c) || !eq(h,d) && !eq(h,g) || eq(e,i) && (!eq(f,f4) && !eq(f,i4) || !eq(h,h5) && !eq(h,i5)) || eq(e,g) || eq(e,c)) );
+	/* Filtering and normalization in four direction generating four colors. */
+   vec3 c1 = mul(w1, mat4x3( P2,   H,   F,   P1 ));
+   vec3 c2 = mul(w1, mat4x3( P0,   E,   I,   P3 ));
+	vec3 c3 = mul(w2, mat4x3(D+G, E+H, F+I, F4+I4));
+   vec3 c4 = mul(w2, mat4x3(C+B, F+E, I+H, I5+H5));
 
-			/* Smoothly blends the two strongest directions (one in diagonal and the other in vert/horiz direction). */
-			vec3 color =  mix(mix(c1, c2, step(0.0, d_edge)), mix(c3, c4, step(0.0, hv_edge)), 1. - edge_strength);
+	//bool ir_lv1 = (((e!=f) && (e!=h))  && ( !eq(f,b) && !eq(f,c) || !eq(h,d) && !eq(h,g) || eq(e,i) && (!eq(f,f4) && !eq(f,i4) || !eq(h,h5) && !eq(h,i5)) || eq(e,g) || eq(e,c)) );
+
+
+	/* Smoothly blends the two strongest directions (one in diagonal and the other in vert/horiz direction). */
+	vec3 color =  mix(mix(c1, c2, step(0.0, d_edge)), mix(c3, c4, step(0.0, hv_edge)), 1. - edge_strength);
 
 /*
                               P1
@@ -281,16 +283,17 @@ void main()
                            G     H5
                               P2
 */
-			
-			/* Anti-ringing code. */
-			vec3 min_sample = min4( E, F, H, I ) + (1.-XBR_ANTI_RINGING)*mix((P2-H)*(F-P1), (P0-E)*(I-P3), step(0.0, d_edge));
-			vec3 max_sample = max4( E, F, H, I ) - (1.-XBR_ANTI_RINGING)*mix((P2-H)*(F-P1), (P0-E)*(I-P3), step(0.0, d_edge));
 
-			color = clamp(color, min_sample, max_sample);
 
-			color = block_3d ? color : E;
 
-			FragColor = vec4(color, 1.0);
-		}
+	/* Anti-ringing code. */
+	vec3 min_sample = min4( E, F, H, I ) + (1-XBR_ANTI_RINGING)*mix((P2-H)*(F-P1), (P0-E)*(I-P3), step(0.0, d_edge));
+	vec3 max_sample = max4( E, F, H, I ) - (1-XBR_ANTI_RINGING)*mix((P2-H)*(F-P1), (P0-E)*(I-P3), step(0.0, d_edge));
+
+	color = clamp(color, min_sample, max_sample);
+
+	color = (block_3d) ? color : E;
+
+	FragColor = vec4(color, 1.0);	
 } 
 #endif

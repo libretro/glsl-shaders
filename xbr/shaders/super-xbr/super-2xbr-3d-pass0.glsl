@@ -35,12 +35,12 @@
 
 #define XBR_RES 2.0
 
-#define wp1  1.0
-#define wp2  0.0
-#define wp3  0.0
-#define wp4  2.0
+#define wp1  2.0
+#define wp2  1.0
+#define wp3 -1.0
+#define wp4  4.0
 #define wp5 -1.0
-#define wp6  0.0
+#define wp6  1.0
 
 #define weight1 (XBR_WEIGHT*1.29633/10.0)
 #define weight2 (XBR_WEIGHT*1.75068/10.0/2.0)
@@ -64,12 +64,9 @@
 #endif
 
 COMPAT_ATTRIBUTE vec4 VertexCoord;
-COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
-COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 
-vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
 uniform COMPAT_PRECISION int FrameDirection;
 uniform COMPAT_PRECISION int FrameCount;
@@ -80,7 +77,6 @@ uniform COMPAT_PRECISION vec2 InputSize;
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
 }
 
@@ -156,7 +152,6 @@ bool eq(float A, float B)
 	return (df(A, B) < 15.0);
 }
 
-
 /*
                               P1
      |P0|B |C |P1|         C     F4          |a0|b1|c2|d3|
@@ -193,6 +188,7 @@ void main()
  	if (any(lessThan(fract(vTexCoord.xy*SourceSize.xy/XBR_RES) , vec2(0.5,0.5))))
 		{
 			FragColor = COMPAT_TEXTURE(Source, vTexCoord);
+         return;
 		}
 	else
 		{
@@ -277,8 +273,9 @@ void main()
 			vec3 c2 = mul(w1, mat4x3( P0,   E,   I,   P3 ));
 			vec3 c3 = mul(w2, mat4x3(D+G, E+H, F+I, F4+I4));
 			vec3 c4 = mul(w2, mat4x3(C+B, F+E, I+H, I5+H5));
-
-			bool ir_lv1 = (((e!=f) && (e!=h))  && ( !eq(f,b) && !eq(f,c) || !eq(h,d) && !eq(h,g) || eq(e,i) && (!eq(f,f4) && !eq(f,i4) || !eq(h,h5) && !eq(h,i5)) || eq(e,g) || eq(e,c)) );
+         
+         // doesn't seem to be used anywhere, so commenting for performance
+//			bool ir_lv1 = (((e!=f) && (e!=h))  && ( !eq(f,b) && !eq(f,c) || !eq(h,d) && !eq(h,g) || eq(e,i) && (!eq(f,f4) && !eq(f,i4) || !eq(h,h5) && !eq(h,i5)) || eq(e,g) || eq(e,c)) );
 
 
 			/* Smoothly blends the two strongest directions (one in diagonal and the other in vert/horiz direction). */
@@ -300,7 +297,7 @@ void main()
 
 			color = clamp(color, min_sample, max_sample);
 
-			color = block_3d ? color : E;
+			color = (block_3d) ? color : E;
 
 			FragColor = vec4(color, 1.0);
 		}
