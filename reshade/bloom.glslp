@@ -1,0 +1,60 @@
+shaders = 9
+
+shader0 = shaders/bloom/BloomPass0.glsl
+alias0 = SamplerBloom1
+float_framebuffer0 = true
+
+shader1 = shaders/bloom/BloomPass1.glsl
+alias1 = SamplerBloom2
+float_framebuffer1 = true
+filter_linear1 = true
+
+shader2 = shaders/bloom/BloomPass2.glsl
+alias2 = SamplerBloom3
+float_framebuffer2 = true
+scale2 = 0.5
+scale_type2 = viewport
+filter_linear2 = true
+
+shader3 = shaders/bloom/BloomPass3.glsl
+alias3 = SamplerBloom4
+float_framebuffer3 = true
+scale3 = 0.25
+scale_type3 = viewport
+filter_linear3 = true
+
+shader4 = shaders/bloom/BloomPass4.glsl
+alias4 = SamplerBloom5
+float_framebuffer4 = true
+scale4 = 0.125
+scale_type4 = viewport
+filter_linear4 = true
+
+shader5 = shaders/bloom/LensFlarePass0.glsl
+alias5 = LensFlare1
+float_framebuffer5 = true
+#scale_type5 = source
+filter_linear5 = true
+
+shader6 = shaders/bloom/LensFlarePass1.glsl
+alias6 = LensFlare2
+float_framebuffer6 = true
+#scale6 = 0.5
+scale_type6 = viewport
+filter_linear6 = true
+
+shader7 = shaders/bloom/LensFlarePass2.glsl
+alias7 = LensFlare3
+float_framebuffer7 = true
+#scale7 = 0.5
+scale_type7 = viewport
+filter_linear7 = true
+
+shader8 = shaders/bloom/LightingCombine.glsl
+scale8 = 2.0
+scale_type8 = viewport
+filter_linear8 = true
+
+textures = "Dirt;Sprite"
+Dirt = shaders/bloom/LensDB.png
+Sprite = shaders/bloom/LensSprite.png
