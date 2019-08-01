@@ -1,7 +1,7 @@
 shaders = 4
 shader0 = ../../motionblur/shaders/response-time.glsl
 shader1 = ../shaders/color/gbc-color.glsl
-shader2 = ../../retro/shaders/retro-v2.glsl
+shader2 = ../shaders/retro-v2.glsl
 shader3 = shader-files/gb-pass-5.glsl
 
 scale_type0 = source

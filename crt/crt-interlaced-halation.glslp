@@ -21,7 +21,7 @@ scale_type_x2 = "source"
 scale_x2 = "3.000000"
 scale_type_y2 = "source"
 scale_y2 = "3.000000"
-shader3 = ../retro/shaders/quilez.glsl
+shader3 = ../interpolation/shaders/quilez.glsl
 filter_linear3 = "true"
 float_framebuffer3 = "false"
 
