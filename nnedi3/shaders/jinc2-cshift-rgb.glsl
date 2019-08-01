@@ -153,7 +153,10 @@ vec3 max4(vec3 a, vec3 b, vec3 c, vec3 d)
 vec4 resampler(vec4 x)
 {
 	vec4 res;
-	res = (x==vec4(0.0, 0.0, 0.0, 0.0)) ?  vec4(wa*wb)  :  sin(x*wa)*sin(x*wb)/(x*x);
+	res.x = (x==0.0) ?  wa*wb  :  sin(x.x*wa)*sin(x.x*wb)/(x.x*x.x);
+	res.y = (x==0.0) ?  wa*wb  :  sin(x.y*wa)*sin(x.y*wb)/(x.y*x.y);
+	res.z = (x==0.0) ?  wa*wb  :  sin(x.z*wa)*sin(x.z*wb)/(x.z*x.z);
+	res.w = (x==0.0) ?  wa*wb  :  sin(x.w*wa)*sin(x.w*wb)/(x.w*x.w);
 	return res;
 }
 
