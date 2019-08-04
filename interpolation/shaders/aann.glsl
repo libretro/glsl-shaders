@@ -54,7 +54,7 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
-    TEX0.xy = TexCoord.xy;
+    TEX0.xy = TexCoord.xy * TextureSize.xy / InputSize.xy;
 }
 
 #elif defined(FRAGMENT)
@@ -138,7 +138,7 @@ vec3 rgb2vry(vec3 rgb) {
     vec3 vry = vec3(
         pow(linear.x*RS + linear.y*GS + linear.z*BS, 0.333333333333333),
         linear.x - linear.y,
-        (linear.x + linear.y) * 0.5 - linear.z
+        (linear.x + linear.y) * 0.49999 - linear.z
     );
 
     return vry;
@@ -151,9 +151,9 @@ vec3 vry2rgb(vec3 vry) {
     float t = pow(vry.x, 3.);
     
     vec3 rgb = vec3(
-        t + vry.y*(GS       + BS * 0.5) + vry.z*BS,
-        t - vry.y*(RS       + BS * 0.5) + vry.z*BS,
-        t + vry.y*(GS * 0.5 - RS * 0.5) - vry.z*(RS+GS)
+        t + vry.y*(GS       + BS * 0.49999) + vry.z*BS,
+        t - vry.y*(RS       + BS * 0.49999) + vry.z*BS,
+        t + vry.y*(GS * 0.49999 - RS * 0.49999) - vry.z*(RS+GS)
     );
     
     return linear2srgb(rgb);
@@ -180,23 +180,23 @@ vec3 vry_interp(vec3 first, vec3 second, float frac) {
             );
 }
 
-vec3 percent(float ssize, float tsize, float coord) {
+vec3 percent(float ssize, float tsize, float coord, float mod) {
     if (BILINEAR == 1.0)
         tsize = ssize;
     
-    float minfull = (coord*tsize - 0.5)/tsize*ssize;
-    float maxfull = (coord*tsize + 0.5)/tsize*ssize;
+    float minfull = (coord*tsize - 0.49999)/tsize*ssize * mod;
+    float maxfull = (coord*tsize + 0.49999)/tsize*ssize * mod;
 
-    float realfull = floor(maxfull);
+    float realfull = floor(maxfull) + 0.00001;
 
     if (minfull > realfull) {
-        return vec3(1, (realfull + 0.5)/ssize, (realfull + 0.5)/ssize);
+        return vec3(1.00001, (realfull + 0.49999)/ssize, (realfull + 0.49999)/ssize);
     }
 
     return  vec3(
                 (maxfull - realfull) / (maxfull - minfull),
-                (realfull - 0.5) / ssize,
-                (realfull + 0.5) / ssize
+                (realfull - 0.49999) / ssize,
+                (realfull + 0.49999) / ssize
             );
 }
 
@@ -205,8 +205,8 @@ void main()
     vec2 viewportSize = outsize.xy;
     vec2 gameCoord = vTexCoord;
 
-    vec3 xstuff = percent(SourceSize.x, viewportSize.x, gameCoord.x);
-    vec3 ystuff = percent(SourceSize.y, viewportSize.y, gameCoord.y);
+    vec3 xstuff = percent(SourceSize.x, viewportSize.x, gameCoord.x,  InputSize.x / TextureSize.x);
+    vec3 ystuff = percent(SourceSize.y, viewportSize.y, gameCoord.y,  InputSize.y / TextureSize.y);
 
     float xkeep = xstuff.x;
     float ykeep = ystuff.x;
