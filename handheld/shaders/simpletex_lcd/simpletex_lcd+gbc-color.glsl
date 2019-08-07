@@ -203,7 +203,7 @@ void main()
 	COMPAT_PRECISION vec3 colour = COMPAT_TEXTURE(Texture, InvTextureSize.xy * imgCenterCoord.xy).rgb;
 	
 	// Darken colours (if required...) and apply colour correction
-	colour.rgb = pow(colour.rgb, vec3(TARGET_GAMMA + DARKEN_COLOUR));
+	colour.rgb = pow(colour.rgb, vec3(TARGET_GAMMA - 0.5 + DARKEN_COLOUR));
 	colour.rgb = mat3(CC_R,  CC_RG, CC_RB,
 							CC_GR, CC_G,  CC_GB,
 							CC_BR, CC_BG, CC_B) * colour.rgb;
@@ -246,8 +246,7 @@ void main()
 	colour.rgb = mix(colour.rgb, vec3(1.0 - DARKEN_GRID), lineWeight);
 	
 	// Get background sample point
-	// > For some unknown reason, have to scale TEX0 by (OutputSize / InputSize) * 256
-	COMPAT_PRECISION vec2 bgPixelCoord = TEX0.xy * (OutputSize.xy * InvInputSize.xy) * 256.0;
+	COMPAT_PRECISION vec2 bgPixelCoord = TEX0.xy * (OutputSize.xy * InvInputSize.xy) * TextureSize.xy;
 	bgPixelCoord = floor(bgPixelCoord.xy) + vec2(0.5, 0.5);
 	
 	// Sample background texture and 'colourise' according to current pixel colour
