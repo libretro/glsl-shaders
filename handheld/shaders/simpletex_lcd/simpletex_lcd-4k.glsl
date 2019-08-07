@@ -225,8 +225,7 @@ void main()
 	colour.rgb = mix(colour.rgb, vec3(1.0 - DARKEN_GRID), lineWeight);
 	
 	// Get background sample point
-	// > For some unknown reason, have to scale TEX0 by (OutputSize / InputSize) * 256
-	COMPAT_PRECISION vec2 bgPixelCoord = TEX0.xy * (OutputSize.xy * InvInputSize.xy) * 256.0;
+	COMPAT_PRECISION vec2 bgPixelCoord = TEX0.xy * (OutputSize.xy * InvInputSize.xy) * TextureSize.xy;
 	bgPixelCoord = floor(bgPixelCoord.xy) + vec2(0.5, 0.5);
 	
 	// Sample background texture and 'colourise' according to current pixel colour

@@ -14,8 +14,8 @@ BACKGROUND = "shaders/simpletex_lcd/png/2k/textured_paper.png"
 BACKGROUND_linear = false
 
 parameters = "GRID_INTENSITY;GRID_WIDTH;GRID_BIAS;DARKEN_GRID;DARKEN_COLOUR"
-GRID_INTENSITY = "0.8"
+GRID_INTENSITY = "0.65"
 GRID_WIDTH = "0.65"
-GRID_BIAS = "0.5"
+GRID_BIAS = "0.6"
 DARKEN_GRID = "0.0"
 DARKEN_COLOUR = "0.05"
