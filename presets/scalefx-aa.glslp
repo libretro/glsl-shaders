@@ -1,0 +1,62 @@
+shaders = 9
+
+shader0 = ../scalefx/shaders/scalefx-pass0.glsl
+filter_linear0 = false
+scale_type0 = source
+scale0 = 1.0
+float_framebuffer0 = true
+
+shader1 = ../scalefx/shaders/scalefx-pass1.glsl
+filter_linear1 = false
+scale_type1 = source
+scale1 = 1.0
+float_framebuffer1 = true
+
+shader2 = ../scalefx/shaders/scalefx-pass2.glsl
+filter_linear2 = false
+scale_type2 = source
+scale2 = 1.0
+
+shader3 = ../scalefx/shaders/scalefx-pass3.glsl
+filter_linear3 = false
+scale_type3 = source
+scale3 = 1.0
+
+shader4 = ../scalefx/shaders/scalefx-pass4.glsl
+filter_linear4 = false
+scale_type4 = source
+scale4 = 3.0
+
+shader5 = ../anti-aliasing/shaders/fxaa.glsl
+filter_linear5 = true
+scale_type5 = source
+scale5 = 1.0
+
+shader6 = ../xsoft/shaders/4xsoft.glsl
+filter_linear6 = true
+scale_type6 = source
+scale6 = 2.0
+
+shader7 = ../sharpen/shaders/fast-sharpen.glsl
+filter_linear7 = true
+scale_type7 = source
+scale7 = 1.0
+
+shader8 = ../deblur/shaders/deblur.glsl
+filter_linear8 = true
+scale_type8 = viewport
+scale8 = 1.0
+
+parameters = "SFX_CLR;SFX_SAA;SFX_SCN;RESOLUTION_X;RESOLUTION_Y;CONTRAST;SHARPEN;CONTR;DETAILS;OFFSET;DEBLUR;SMART"
+SFX_CLR = "0.600000"
+SFX_SAA = "1.000000"
+SFX_SCN = "0.000000"
+RESOLUTION_X = "0.000000"
+RESOLUTION_Y = "0.000000"
+CONTRAST = "3.000000"
+SHARPEN = "1.200000"
+CONTR = "0.100000"
+DETAILS = "1.000000"
+OFFSET = "1.750000"
+DEBLUR = "5.000000"
+SMART = "0.300000" 
