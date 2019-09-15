@@ -90,7 +90,7 @@
 #define fmod(x,y) mod(x,y)
 #define ddx(c) dFdx(c)
 #define ddy(c) dFdy(c)
-#define atan2(x,y) atan(y,x)
+#define atan2(x,y) atan(x,y)
 #define rsqrt(c) inversesqrt(c)
 
 #if defined(GL_ES)
