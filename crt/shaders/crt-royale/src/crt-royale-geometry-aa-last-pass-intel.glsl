@@ -5363,23 +5363,23 @@ void main()
         const float2 sin_tilt = sin(geom_tilt_angle);
         const float2 cos_tilt = cos(geom_tilt_angle);
         //  Conceptual breakdown:
-        //      static const float3x3 rot_x_matrix = float3x3(
-        //          1.0, 0.0, 0.0,
-        //          0.0, cos_tilt.y, -sin_tilt.y,
-        //          0.0, sin_tilt.y, cos_tilt.y);
-        //      static const float3x3 rot_y_matrix = float3x3(
-        //          cos_tilt.x, 0.0, sin_tilt.x,
-        //          0.0, 1.0, 0.0,
-        //          -sin_tilt.x, 0.0, cos_tilt.x);
-        //      static const float3x3 local_to_global =
-        //          mul(rot_y_matrix, rot_x_matrix);
-        //      static const float3x3 global_to_local =
-        //          transpose(local_to_global);
+              static const float3x3 rot_x_matrix = float3x3(
+                  1.0, 0.0, 0.0,
+                  0.0, cos_tilt.y, -sin_tilt.y,
+                  0.0, sin_tilt.y, cos_tilt.y);
+              static const float3x3 rot_y_matrix = float3x3(
+                  cos_tilt.x, 0.0, sin_tilt.x,
+                  0.0, 1.0, 0.0,
+                  -sin_tilt.x, 0.0, cos_tilt.x);
+              static const float3x3 local_to_global =
+                  mul(rot_y_matrix, rot_x_matrix);
+/*              static const float3x3 global_to_local =
+                  transpose(local_to_global);
         const float3x3 local_to_global = float3x3(
             cos_tilt.x, sin_tilt.y*sin_tilt.x, cos_tilt.y*sin_tilt.x,
-            0.0, cos_tilt.y, -sin_tilt.y,
-            -sin_tilt.x, sin_tilt.y*cos_tilt.x, cos_tilt.y*cos_tilt.x);
-        //  This is a pure rotation, so transpose = inverse:
+            0.0, cos_tilt.y, sin_tilt.y,
+            sin_tilt.x, sin_tilt.y*cos_tilt.x, cos_tilt.y*cos_tilt.x);
+*/        //  This is a pure rotation, so transpose = inverse:
         const float3x3 global_to_local = transpose(local_to_global);
         //  Decompose the matrix into 3 float3's for output:
         global_to_local_row0 = float3(global_to_local[0][0], global_to_local[0][1], global_to_local[0][2]);//._m00_m01_m02);
