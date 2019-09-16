@@ -90,6 +90,7 @@ void main()
 #define COMPAT_TEXTURE texture
 out vec4 FragColor;
 #else
+#define round(c) floor(c+0.5)
 #define COMPAT_VARYING varying
 #define FragColor gl_FragColor
 #define COMPAT_TEXTURE texture2D
