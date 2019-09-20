@@ -6605,12 +6605,12 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
-uniform COMPAT_PRECISION vec2 PassPrev2TextureSize;
-uniform COMPAT_PRECISION vec2 PassPrev2InputSize;
-uniform COMPAT_PRECISION vec2 PassPrev3TextureSize;
-uniform COMPAT_PRECISION vec2 PassPrev3InputSize;
-uniform COMPAT_PRECISION vec2 PassPrev6TextureSize;
-uniform COMPAT_PRECISION vec2 PassPrev6InputSize;
+uniform COMPAT_PRECISION vec2 HALATION_BLURtexture_size;
+uniform COMPAT_PRECISION vec2 HALATION_BLURvideo_size;
+uniform COMPAT_PRECISION vec2 MASKED_SCANLINEStexture_size;
+uniform COMPAT_PRECISION vec2 MASKED_SCANLINESvideo_size;
+uniform COMPAT_PRECISION vec2 BRIGHTPASStexture_size;
+uniform COMPAT_PRECISION vec2 BRIGHTPASSvideo_size;
 
 // compatibility #defines
 #define vTexCoord TEX0.xy
@@ -6695,17 +6695,17 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
-uniform COMPAT_PRECISION vec2 PassPrev2TextureSize;
-uniform COMPAT_PRECISION vec2 PassPrev2InputSize;
-uniform COMPAT_PRECISION vec2 PassPrev3TextureSize;
-uniform COMPAT_PRECISION vec2 PassPrev3InputSize;
-uniform COMPAT_PRECISION vec2 PassPrev6TextureSize;
-uniform COMPAT_PRECISION vec2 PassPrev6InputSize;
+uniform COMPAT_PRECISION vec2 HALATION_BLURtexture_size;
+uniform COMPAT_PRECISION vec2 HALATION_BLURvideo_size;
+uniform COMPAT_PRECISION vec2 MASKED_SCANLINEStexture_size;
+uniform COMPAT_PRECISION vec2 MASKED_SCANLINESvideo_size;
+uniform COMPAT_PRECISION vec2 BRIGHTPASStexture_size;
+uniform COMPAT_PRECISION vec2 BRIGHTPASSvideo_size;
 uniform sampler2D Texture;
 #define bloom_texture Texture
-uniform sampler2D PassPrev3Texture;
-uniform sampler2D PassPrev2Texture;
-uniform sampler2D PassPrev6Texture;
+uniform sampler2D MASKED_SCANLINEStexture;
+uniform sampler2D HALATION_BLURtexture;
+uniform sampler2D BRIGHTPASStexture;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 video_uv;
 COMPAT_VARYING vec2 scanline_tex_uv;
