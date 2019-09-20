@@ -4551,7 +4551,7 @@ float3 tex2Daa_debug_dynamic(const sampler2D tex, const float2 tex_uv,
 inline float3 tex2Daa(const sampler2D tex, const float2 tex_uv,
     const float2x2 pixel_to_tex_uv, const float frame)
 {
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 	return tex2Daa_subpixel_weights_only(
             tex, tex_uv, pixel_to_tex_uv);
