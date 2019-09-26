@@ -22,7 +22,7 @@ shaders = "13"
 # Load an aperture grille, slot mask, and an EDP shadow mask, and load a small
 # non-mipmapped version and a large mipmapped version.
 # TODO: Test masks in other directories.
-textures = "mask_grille_texture_small;mask_grille_texture_large;mask_slot_texture_small;mask_slot_texture_large;mask_shadow_texture_small;mask_shadow_texture_large;SamplerLUT"
+textures = "mask_grille_texture_small;mask_grille_texture_large;mask_slot_texture_small;mask_slot_texture_large;mask_shadow_texture_small;mask_shadow_texture_large;SamplerLUT1;SamplerLUT2"
 mask_grille_texture_small = "../crt/shaders/crt-royale/TileableLinearApertureGrille15Wide8And5d5SpacingResizeTo64.png"
 mask_grille_texture_large = "../crt/shaders/crt-royale/TileableLinearApertureGrille15Wide8And5d5Spacing.png"
 mask_slot_texture_small = "../crt/shaders/crt-royale/TileableLinearSlotMaskTall15Wide9And4d5Horizontal9d14VerticalSpacingResizeTo64.png"
@@ -47,12 +47,14 @@ mask_slot_texture_small_mipmap = "false"    # Mipmapping causes artifacts with m
 mask_slot_texture_large_mipmap = "true"     # Essential for hardware-resized masks
 mask_shadow_texture_small_mipmap = "false"  # Mipmapping causes artifacts with manually resized masks without tex2Dlod
 mask_shadow_texture_large_mipmap = "true"   # Essential for hardware-resized masks
-SamplerLUT = "../reshade/shaders/LUT/Kurozumi_64_D65_Rec601.png"
-SamplerLUT_linear = true
+SamplerLUT1 = "../reshade/shaders/LUT/Kurozumi_64_D65_Rec601.png"
+SamplerLUT1_linear = true
+SamplerLUT2 = "../reshade/shaders/LUT/Kurozumi_64_D93_Rec601.png"
+SamplerLUT2_linear = true
 
 # Pass0: LUT to correct screen colors.
 # Digital Displays different color coordinates for primaries than CRTs (Rec709 vs Rec601).
-shader0 = "../reshade/shaders/LUT/LUT.glsl"
+shader0 = "../reshade/shaders/LUT/multiLUT.glsl"
 
 # Pass1: Linearize the input based on CRT gamma and bob interlaced fields.
 # (Bobbing ensures we can immediately blur without getting artifacts.)
@@ -209,7 +211,7 @@ scale_type12 = "viewport"
 mipmap_input12 = "true"
 texture_wrap_mode12 = "clamp_to_edge"
 
-parameters = "crt_gamma;lcd_gamma;levels_contrast;halation_weight;diffusion_weight;bloom_underestimate_levels;bloom_excess;beam_min_sigma;beam_max_sigma;beam_spot_power;beam_min_shape;beam_max_shape;beam_shape_power;beam_horiz_filter;beam_horiz_sigma;beam_horiz_linear_rgb_weight;convergence_offset_x_r;convergence_offset_x_g;convergence_offset_x_b;convergence_offset_y_r;convergence_offset_y_g;convergence_offset_y_b;mask_type;mask_sample_mode_desired;mask_specify_num_triads;mask_triad_size_desired;mask_num_triads_desired;aa_subpixel_r_offset_x_runtime;aa_subpixel_r_offset_y_runtime;aa_cubic_c;aa_gauss_sigma;geom_mode_runtime;geom_radius;geom_view_dist;geom_tilt_angle_x;geom_tilt_angle_y;geom_aspect_ratio_x;geom_aspect_ratio_y;geom_overscan_x;geom_overscan_y;border_size;border_darkness;border_compress;interlace_bff;interlace_1080i;LUT_Size"
+parameters = "crt_gamma;lcd_gamma;levels_contrast;halation_weight;diffusion_weight;bloom_underestimate_levels;bloom_excess;beam_min_sigma;beam_max_sigma;beam_spot_power;beam_min_shape;beam_max_shape;beam_shape_power;beam_horiz_filter;beam_horiz_sigma;beam_horiz_linear_rgb_weight;convergence_offset_x_r;convergence_offset_x_g;convergence_offset_x_b;convergence_offset_y_r;convergence_offset_y_g;convergence_offset_y_b;mask_type;mask_sample_mode_desired;mask_specify_num_triads;mask_triad_size_desired;mask_num_triads_desired;aa_subpixel_r_offset_x_runtime;aa_subpixel_r_offset_y_runtime;aa_cubic_c;aa_gauss_sigma;geom_mode_runtime;geom_radius;geom_view_dist;geom_tilt_angle_x;geom_tilt_angle_y;geom_aspect_ratio_x;geom_aspect_ratio_y;geom_overscan_x;geom_overscan_y;border_size;border_darkness;border_compress;interlace_bff;interlace_1080i"
 crt_gamma = "2.400000"
 lcd_gamma = "2.400000"
 levels_contrast = "0.740000"
@@ -255,4 +257,3 @@ border_darkness = "0.000000"
 border_compress = "2.500000"
 interlace_bff = "0.000000"
 interlace_1080i = "0.000000"
-LUT_Size = "64.0"
