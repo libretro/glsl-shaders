@@ -5503,7 +5503,8 @@ void main()
     //  2.) Overscan == float2(1.0, 1.0)
     //  Skipping AA is sharper, but it's only faster with dynamic branches.
     const float2 abs_aa_r_offset = abs(get_aa_subpixel_r_offset());
-    const bool need_subpixel_aa = abs_aa_r_offset.x + abs_aa_r_offset.y > 0.0;
+    // this next check seems to always return true, even when it shouldn't so disabling it for now
+    const bool need_subpixel_aa = false;//abs_aa_r_offset.x + abs_aa_r_offset.y > 0.0;
     float3 color;
     if(aa_level > 0.5 && (geom_mode > 0.5 || any(bool2((geom_overscan.x != 1.0), (geom_overscan.y != 1.0)))))
     {

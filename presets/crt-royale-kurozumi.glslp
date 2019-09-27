@@ -205,7 +205,7 @@ scale11 = "1.0"
 srgb_framebuffer11 = "true"
 
 # Pass 12: Compute curvature/AA:
-shader12 = "../crt/shaders/crt-royale/src/crt-royale-last-pass-no-geom.glsl"
+shader12 = "../crt/shaders/crt-royale/src/crt-royale-geometry-aa-last-pass.glsl"
 filter_linear12 = "true"
 scale_type12 = "viewport"
 mipmap_input12 = "true"
