@@ -1,6 +1,6 @@
 /*
    Hyllian's jinc windowed-jinc 2-lobe sharper with anti-ringing Shader
-   
+
    Copyright (C) 2011-2016 Hyllian/Jararaca - sergiogdb@gmail.com
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,9 +23,7 @@
 
 */
 
-#define JINC2_WINDOW_SINC 0.44
-#define JINC2_SINC 0.82
-#define JINC2_AR_STRENGTH 0.8
+#pragma parameter JINC_SHARP "Sharpness" 1.0 1.0 3.0 1.0
 
 #define texCoord TEX0
 
@@ -51,8 +49,11 @@
 IN  vec4 VertexCoord;
 IN  vec4 Color;
 IN  vec2 TexCoord;
-OUT vec4 color;
 OUT vec2 texCoord;
+OUT float wa;
+OUT float wb;
+OUT float JINC2_AR_STRENGTH;
+OUT vec2 pc;
 
 uniform mat4 MVPMatrix;
 uniform COMPAT_PRECISION int  FrameDirection;
@@ -61,11 +62,52 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float JINC_SHARP;
+#else
+#define JINC_SHARP 1.0
+#endif
+
+const float pi = 3.1415926535897932384626433832795;
+
+vec4 resampler(vec4 x)
+{
+   vec4 res;
+
+    res.x = (x.x==0.0) ?  wa*wb  :  sin(x.x*wa)*sin(x.x*wb)/(x.x*x.x);
+    res.y = (x.y==0.0) ?  wa*wb  :  sin(x.y*wa)*sin(x.y*wb)/(x.y*x.y);
+    res.z = (x.z==0.0) ?  wa*wb  :  sin(x.z*wa)*sin(x.z*wb)/(x.z*x.z);
+    res.w = (x.w==0.0) ?  wa*wb  :  sin(x.w*wa)*sin(x.w*wb)/(x.w*x.w);
+
+   return res;
+}
+
 void main()
 {
-    gl_Position = MVPMatrix * VertexCoord;
-    color = Color;
-    texCoord = TexCoord * 1.0001;
+   gl_Position = MVPMatrix * VertexCoord;
+   texCoord = TexCoord * 1.0001;
+
+   float JINC2_WINDOW_SINC, JINC2_SINC;
+
+   if(int(floor(JINC_SHARP + 0.5)) == 1)
+   {
+      JINC2_WINDOW_SINC = 0.405;
+      JINC2_SINC = 0.79;
+   }
+   if(int(floor(JINC_SHARP + 0.5)) == 2)
+   {
+      JINC2_WINDOW_SINC = 0.377;
+      JINC2_SINC = 0.82;
+   }
+   if(int(floor(JINC_SHARP + 0.5)) == 3)
+   {
+      JINC2_WINDOW_SINC = 0.329;
+      JINC2_SINC = 0.87;
+   }
+   JINC2_AR_STRENGTH = 0.8;
+   wa = JINC2_WINDOW_SINC*pi;
+   wb = JINC2_SINC*pi;
+   pc = texCoord*TextureSize;
 }
 
 #elif defined(FRAGMENT)
@@ -98,11 +140,11 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D s_p;
 IN vec2 texCoord;
-
-const   float halfpi            = 1.5707963267948966192313216916398;
-const   float pi                = 3.1415926535897932384626433832795;
-const   float wa                = JINC2_WINDOW_SINC*pi;
-const   float wb                = JINC2_SINC*pi;
+IN float wa;
+IN float wb;
+IN float JINC2_AR_STRENGTH;
+IN vec2 pc;
+IN vec2 tc;
 
 // Calculates the distance between two points
 float d(vec2 pt1, vec2 pt2)
@@ -125,27 +167,21 @@ vec4 resampler(vec4 x)
 {
    vec4 res;
 
-   res.x = (x.x==0.0) ?  wa*wb  :  sin(x.x*wa)*sin(x.x*wb)/(x.x*x.x);
-   res.y = (x.y==0.0) ?  wa*wb  :  sin(x.y*wa)*sin(x.y*wb)/(x.y*x.y);
-   res.z = (x.z==0.0) ?  wa*wb  :  sin(x.z*wa)*sin(x.z*wb)/(x.z*x.z);
-   res.w = (x.w==0.0) ?  wa*wb  :  sin(x.w*wa)*sin(x.w*wb)/(x.w*x.w);
+   res = (x==vec4(0.0, 0.0, 0.0, 0.0)) ?  vec4(wa*wb)  :  sin(x*wa)*sin(x*wb)/(x*x);
 
    return res;
 }
 
 void main()
 {
-
     vec3 color;
     vec4 weights[4];
 
     vec2 dx = vec2(1.0, 0.0);
     vec2 dy = vec2(0.0, 1.0);
 
-    vec2 pc = texCoord*TextureSize;
-
     vec2 tc = (floor(pc-vec2(0.5,0.5))+vec2(0.5,0.5));
-     
+
     weights[0] = resampler(vec4(d(pc, tc    -dx    -dy), d(pc, tc           -dy), d(pc, tc    +dx    -dy), d(pc, tc+2.0*dx    -dy)));
     weights[1] = resampler(vec4(d(pc, tc    -dx       ), d(pc, tc              ), d(pc, tc    +dx       ), d(pc, tc+2.0*dx       )));
     weights[2] = resampler(vec4(d(pc, tc    -dx    +dy), d(pc, tc           +dy), d(pc, tc    +dx    +dy), d(pc, tc+2.0*dx    +dy)));
