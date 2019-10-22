@@ -103,7 +103,7 @@ vec4 GaussBlur22(vec2 coord, sampler2D tex, float mult, float lodlevel, bool isB
    vec4 sum = vec4(0.);
    vec2 axis = isBlurVert ? vec2(0., 1.) : vec2(1., 0.);
 
-   const float weight[11] = {
+   const float weight[11] = float[11](
       0.082607,
       0.080977,
       0.076276,
@@ -115,7 +115,7 @@ vec4 GaussBlur22(vec2 coord, sampler2D tex, float mult, float lodlevel, bool isB
       0.023066,
       0.016436,
       0.011254
-   };
+   );
 
    for (int i = -10; i < 11; i++)
    {

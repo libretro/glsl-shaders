@@ -187,12 +187,12 @@ void main()
    vec4 tempbloom = vec4(0.);
    vec2 bloomuv = vec2(0.);
 
-   const vec2 offset[4] = {
+   const vec2 offset[4] = vec2[4](
       vec2(1.0, 1.0),
       vec2(1.0, 1.0),
       vec2(-1.0, 1.0),
       vec2(-1.0, -1.0)
-   };
+   );
 
    for (int i = 0; i < 4; i++)
    {

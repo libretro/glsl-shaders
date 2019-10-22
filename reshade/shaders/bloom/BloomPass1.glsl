@@ -102,7 +102,7 @@ void main()
 {
    vec4 bloom = vec4(0.0);
 
-   const vec2 offset[8] = {
+   const vec2 offset[8] = vec2[8](
       vec2(1.0, 1.0),
       vec2(0.0, -1.0),
       vec2(-1.0, 1.0),
@@ -111,7 +111,7 @@ void main()
       vec2(0.0, -1.0),
       vec2(1.0, 0.0),
       vec2(-1.0, 0.0)
-   };
+   );
 
    for (int i = 0; i < 8; i++)
    {

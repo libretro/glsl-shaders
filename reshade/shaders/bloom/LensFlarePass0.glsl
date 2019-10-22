@@ -155,7 +155,7 @@ vec3 GetDistortedTex(sampler2D tex, vec2 sample_center, vec2 sample_vector, vec3
 vec3 GetBrightPass(vec2 coords)
 {
    vec3 c = COMPAT_TEXTURE(BackBuffer, coords).rgb;
-   vec3 bC = max(c - fFlareLuminance.xxx, 0.0);
+   vec3 bC = max(c - vec3(fFlareLuminance, fFlareLuminance, fFlareLuminance), 0.0);
    float bright = dot(bC, vec3(1.0));
    bright = smoothstep(0.0, 0.5, bright);
    vec3 result = mix(vec3(0.0), c, vec3(bright));
@@ -183,7 +183,7 @@ void main()
    // Lenz
    if (bLenzEnable)
    {
-      const vec3 lfoffset[19] = {
+      const vec3 lfoffset[19] = vec3[19](
          vec3(0.9, 0.01, 4),
          vec3(0.7, 0.25, 25),
          vec3(0.3, 0.25, 15),
@@ -203,8 +203,8 @@ void main()
          vec3(20, 0.5, 0),
          vec3(0.4, 1, 10),
          vec3(0.00001, 10, 20)
-      };
-      const vec3 lffactors[19] = {
+      );
+      const vec3 lffactors[19] = vec3[19](
          vec3(1.5, 1.5, 0),
          vec3(0, 1.5, 0),
          vec3(0, 0, 1.5),
@@ -224,7 +224,7 @@ void main()
          vec3(1, 1, 0),
          vec3(0, 0, 0.2),
          vec3(0.012,0.313,0.588)
-      };
+      );
 
       vec2 lfcoord = vec2(0.);
       vec3 lenstemp = vec3(0.);
@@ -308,7 +308,7 @@ void main()
    if (bAnamFlareEnable)
    {
       vec3 anamFlare = vec3(0.);
-      const float gaussweight[5] = { 0.2270270270, 0.1945945946, 0.1216216216, 0.0540540541, 0.0162162162 };
+      const float gaussweight[5] = float[5](0.2270270270, 0.1945945946, 0.1216216216, 0.0540540541, 0.0162162162);
 
       for (int z = -4; z < 5; z++)
       {
