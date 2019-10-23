@@ -7,11 +7,14 @@
 
 // Parameter lines go here:
 #pragma parameter RETRO_PIXEL_SIZE "Retro Pixel Size" 0.84 0.0 1.0 0.01
+#pragma parameter FPS "Display Refresh Rate (Hz)" 60.0 50.0 240.0 1.0
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
 uniform COMPAT_PRECISION float RETRO_PIXEL_SIZE;
+uniform COMPAT_PRECISION float FPS;
 #else
 #define RETRO_PIXEL_SIZE 0.84
+#define FPS 60.0
 #endif
 
 #if defined(VERTEX)
@@ -99,7 +102,8 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 // delete all 'params.' or 'registers.' or whatever in the fragment
-float iGlobalTime = float(FrameCount)*0.025;
+//float iGlobalTime = float(FrameCount)*0.016666666666666666;
+float iGlobalTime = float(FrameCount)* 1.0 / FPS;
 vec2 iResolution = OutputSize.xy;
 
 // Created by inigo quilez - iq/2013
