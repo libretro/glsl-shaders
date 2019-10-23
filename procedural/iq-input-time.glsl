@@ -102,7 +102,6 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 // delete all 'params.' or 'registers.' or whatever in the fragment
-//float iGlobalTime = float(FrameCount)*0.016666666666666666;
 float iGlobalTime = float(FrameCount)* 1.0 / FPS;
 vec2 iResolution = OutputSize.xy;
 
