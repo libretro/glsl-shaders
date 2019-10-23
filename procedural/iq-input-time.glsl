@@ -7,11 +7,14 @@
 
 // Parameter lines go here:
 #pragma parameter RETRO_PIXEL_SIZE "Retro Pixel Size" 0.84 0.0 1.0 0.01
+#pragma parameter FPS "Display Refresh Rate (Hz)" 60.0 50.0 240.0 1.0
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
 uniform COMPAT_PRECISION float RETRO_PIXEL_SIZE;
+uniform COMPAT_PRECISION float FPS;
 #else
 #define RETRO_PIXEL_SIZE 0.84
+#define FPS 60.0
 #endif
 
 #if defined(VERTEX)
@@ -99,7 +102,7 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 // delete all 'params.' or 'registers.' or whatever in the fragment
-float iGlobalTime = float(FrameCount)*0.025;
+float iGlobalTime = float(FrameCount)* 1.0 / FPS;
 vec2 iResolution = OutputSize.xy;
 
 // Created by inigo quilez - iq/2013
@@ -137,10 +140,10 @@ vec3 hash3( float n ) { return fract(sin(vec3(n,n+1.0,n+2.0))*43758.5453123); }
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
     // get time
-    float mils = fract(iDate.w);
-	float secs = mod( floor(iDate.w),        60.0 );
-	float mins = mod( floor(iDate.w/60.0),   60.0 );
-	float hors = mod( floor(iDate.w/3600.0), 24.0 );
+    float mils = fract(iGlobalTime);
+	float secs = mod( floor(iGlobalTime),        60.0 );
+	float mins = mod( floor(iGlobalTime/60.0),   60.0 );
+	float hors = mod( floor(iGlobalTime/3600.0), 24.0 );
     
     // enable this for subsecond resolution
     //secs += mils;
