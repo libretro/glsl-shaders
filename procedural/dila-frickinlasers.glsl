@@ -225,9 +225,9 @@ float tracel(vec3 o, vec3 r)
 
 vec3 _texture(vec3 p)
 {
-	vec3 ta = texture(iChannel0, vec2(p.y,p.z)).xyz;
-    vec3 tb = texture(iChannel0, vec2(p.x,p.z)).xyz;
-    vec3 tc = texture(iChannel0, vec2(p.x,p.y)).xyz;
+	vec3 ta = texture(Texture, vec2(p.y,p.z)).xyz;
+    vec3 tb = texture(Texture, vec2(p.x,p.z)).xyz;
+    vec3 tc = texture(Texture, vec2(p.x,p.y)).xyz;
     return (ta + tb + tc) / 3.0;
 }
 
