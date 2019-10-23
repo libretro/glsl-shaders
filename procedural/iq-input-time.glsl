@@ -137,10 +137,10 @@ vec3 hash3( float n ) { return fract(sin(vec3(n,n+1.0,n+2.0))*43758.5453123); }
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
     // get time
-    float mils = fract(iDate.w);
-	float secs = mod( floor(iDate.w),        60.0 );
-	float mins = mod( floor(iDate.w/60.0),   60.0 );
-	float hors = mod( floor(iDate.w/3600.0), 24.0 );
+    float mils = fract(iGlobalTime);
+	float secs = mod( floor(iGlobalTime),        60.0 );
+	float mins = mod( floor(iGlobalTime/60.0),   60.0 );
+	float hors = mod( floor(iGlobalTime/3600.0), 24.0 );
     
     // enable this for subsecond resolution
     //secs += mils;
