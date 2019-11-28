@@ -1,14 +1,14 @@
 shaders = 4
 
-shader0 = ../ntsc/shaders/ntsc-pass1-composite-3phase.glsl
-shader1 = ../ntsc/shaders/ntsc-pass2-3phase.glsl
-shader2 = ../ntsc/shaders/ntsc-gauss-pass.glsl
-shader3 = ../reshade/shaders/blendoverlay/blendoverlay.glsl
+shader0 = ../../ntsc/shaders/ntsc-pass1-composite-3phase.glsl
+shader1 = ../../ntsc/shaders/ntsc-pass2-3phase.glsl
+shader2 = ../../ntsc/shaders/ntsc-gauss-pass.glsl
+shader3 = ../../reshade/shaders/blendoverlay/blendoverlay.glsl
 filter_linear3 = false
 scale_type3 = viewport
 
 textures = "overlay"
-overlay = ../reshade/shaders/blendoverlay/shadowmask-4x4.png
+overlay = ../../reshade/shaders/blendoverlay/shadowmask-4x4.png
 filter_overlay = linear
 
 parameters = LUTHeight;LUTWidth;OverlayMix
