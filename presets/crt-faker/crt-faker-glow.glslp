@@ -1,0 +1,94 @@
+shaders = 13
+
+shader0 = ../../blurs/kawase/linearize.glsl
+shader1 = ../../blurs/kawase/kawase0.glsl
+shader2 = ../../blurs/kawase/kawase1.glsl
+shader3 = ../../blurs/kawase/kawase1.glsl
+shader4 = ../../blurs/kawase/kawase2.glsl
+shader5 = ../../blurs/kawase/kawase3.glsl
+shader6 = ../../blurs/kawase/delinearize.glsl
+shader7 = ../../blurs/kawase/screen_combine.glsl
+shader8 = ../../ntsc/shaders/ntsc-pass1-composite-3phase.glsl
+shader9 = ../../ntsc/shaders/ntsc-pass2-3phase.glsl
+shader10 = ../../ntsc/shaders/ntsc-gauss-pass.glsl
+shader11 = ../../film/shaders/film_noise.glsl
+shader12 = ../../reshade/shaders/blendoverlay/blendoverlay.glsl
+filter_linear12 = false
+scale_type12 = viewport
+
+textures = "overlay"
+overlay = ../../reshade/shaders/blendoverlay/shadowmask-4x4.png
+filter_overlay = linear
+
+parameters = LUTHeight;LUTWidth;OverlayMix;x_off_r;y_off_r;x_off_g;y_off_g;x_off_b;y_off_b;grain_str;hotspot;vignette;noise_toggle
+LUTWidth = 2.0
+LUTHeight = 3.0
+OverlayMix = 0.4
+x_off_r = 0.050
+y_off_r = 0.050
+x_off_g = -0.05
+y_off_g = -0.05
+x_off_b = -0.05
+y_off_b = 0.050
+grain_str = 5.0
+hotspot = 0.0
+vignette = 0.0
+noise_toggle = 0.0
+
+
+scale_type_x1 = source
+scale_type_x2 = source
+scale_type_x3 = source
+scale_type_x4 = source
+scale_type_x5 = source
+scale_type_y1 = source
+scale_type_y2 = source
+scale_type_y3 = source
+scale_type_y4 = source
+scale_type_y5 = source
+
+scale_x1 = 1.000000
+scale_x2 = 1.000000
+scale_x3 = 1.000000
+scale_x4 = 1.000000
+scale_x5 = 1.000000
+scale_y1 = 1.000000
+scale_y2 = 1.000000
+scale_y3 = 1.000000
+scale_y4 = 1.000000
+scale_y5 = 1.000000
+
+srgb_framebuffer0 = true
+srgb_framebuffer1 = true
+srgb_framebuffer2 = true
+srgb_framebuffer3 = true
+srgb_framebuffer4 = true
+srgb_framebuffer5 = true
+srgb_framebuffer6 = false
+srgb_framebuffer7 = false
+srgb_framebuffer8 = false
+
+filter_linear0 = false
+filter_linear2 = true
+filter_linear3 = true
+filter_linear4 = true
+filter_linear5 = true
+filter_linear6 = true
+filter_linear8 = false
+filter_linear9 = false
+filter_linear10 = false
+
+scale_type_x8 = absolute 
+scale_type_y8 = source
+scale_x8 = 1024
+scale_y8 = 1.0
+frame_count_mod8 = 2
+float_framebuffer8 = true
+
+scale_type9 = source
+scale_x9 = 0.5
+scale_y9 = 1.0
+
+scale_type_x10 = source
+scale_type_y10 = viewport
+scale10 = 1.0

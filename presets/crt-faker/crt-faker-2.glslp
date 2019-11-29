@@ -1,0 +1,48 @@
+shaders = 5
+
+shader0 = ../../ntsc/shaders/ntsc-pass1-composite-3phase.glsl
+shader1 = ../../ntsc/shaders/ntsc-pass2-3phase.glsl
+shader2 = ../../ntsc/shaders/ntsc-gauss-pass.glsl
+shader3 = ../../film/shaders/film_noise.glsl
+
+shader4 = ../../reshade/shaders/blendoverlay/blendoverlay.glsl
+filter_linear4 = false
+scale_type4 = viewport
+
+textures = "overlay"
+overlay = ../../reshade/shaders/blendoverlay/shadowmask-4x4.png
+filter_overlay = linear
+
+parameters = LUTHeight;LUTWidth;OverlayMix;x_off_r;y_off_r;x_off_g;y_off_g;x_off_b;y_off_b;grain_str;hotspot;vignette;noise_toggle
+LUTWidth = 2.0
+LUTHeight = 3.0
+OverlayMix = 0.4
+x_off_r = 0.070
+y_off_r = 0.070
+x_off_g = -0.07
+y_off_g = -0.07
+x_off_b = -0.07
+y_off_b = 0.070
+grain_str = 4.0
+hotspot = 0.0
+vignette = 0.0
+noise_toggle = 0.0
+
+filter_linear0 = false
+filter_linear1 = false
+filter_linear2 = false
+
+scale_type_x0 = absolute
+scale_type_y0 = source
+scale_x0 = 1024
+scale_y0 = 1.0
+frame_count_mod0 = 2.0
+float_framebuffer0 = true
+
+scale_type1 = source
+scale_x1 = 0.5
+scale_y1 = 1.0
+
+scale_type_x2 = source
+scale_type_y2 = viewport
+scale2 = 1.0

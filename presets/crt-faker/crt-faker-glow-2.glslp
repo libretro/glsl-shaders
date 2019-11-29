@@ -1,0 +1,77 @@
+shaders = 12
+
+shader0 = ../../ntsc/shaders/ntsc-pass1-composite-3phase.glsl
+shader1 = ../../ntsc/shaders/ntsc-pass2-3phase.glsl
+shader2 = ../../ntsc/shaders/ntsc-gauss-pass.glsl
+
+shader3 = ../../blurs/kawase/linearize.glsl
+srgb_framebuffer3 = true
+scale_type3 = source
+scale3 = 1.0
+
+shader4 = ../../blurs/kawase/kawase0.glsl
+filter_linear4 = true
+srgb_framebuffer4 = true
+scale_type4 = source
+scale4 = 1.0
+
+shader5 = ../../blurs/kawase/kawase1.glsl
+filter_linear5 = true
+srgb_framebuffer5 = true
+scale_type5 = source
+scale5 = 1.0
+
+shader6 = ../../blurs/kawase/kawase1.glsl
+filter_linear6 = true
+srgb_framebuffer6 = true
+scale_type6 = source
+scale6 = 1.0
+
+shader7 = ../../blurs/kawase/kawase2.glsl
+filter_linear7 = true
+srgb_framebuffer7 = true
+scale_type7 = source
+scale7 = 1.0
+
+shader8 = ../../blurs/kawase/kawase3.glsl
+filter_linear8 = true
+srgb_framebuffer8 = true
+scale_type8 = source
+scale8 = 1.0
+
+shader9 = ../../blurs/kawase/delinearize.glsl
+filter_linear9 = true
+
+shader10 = ../../blurs/kawase/screen_combine.glsl
+
+shader11 = ../../reshade/shaders/blendoverlay/blendoverlay.glsl
+filter_linear11 = false
+scale_type11 = viewport
+
+textures = "overlay"
+overlay = ../../reshade/shaders/blendoverlay/shadowmask-4x4.png
+filter_overlay = linear
+
+parameters = LUTHeight;LUTWidth;OverlayMix
+LUTWidth = 2.0
+LUTHeight = 3.0
+OverlayMix = 0.4
+
+filter_linear0 = false
+filter_linear1 = false
+filter_linear2 = false
+
+scale_type_x0 = absolute 
+scale_type_y0 = source
+scale_x0 = 1024
+scale_y0 = 1.0
+frame_count_mod0 = 2.0
+float_framebuffer0 = true
+
+scale_type1 = source
+scale_x1 = 0.5
+scale_y1 = 1.0
+
+scale_type_x2 = source
+scale_type_y2 = viewport
+scale2 = 1.0
