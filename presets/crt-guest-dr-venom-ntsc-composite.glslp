@@ -1,4 +1,4 @@
-shaders = 11
+shaders = 12
 
 shader0 = ../ntsc/shaders/ntsc-pass1-composite-2phase.glsl
 shader1 = ../ntsc/shaders/ntsc-pass2-2phase-gamma.glsl
@@ -69,8 +69,14 @@ scale_type9 = source
 scale9 = 1.0
 float_framebuffer9 = true
 
-shader10 = ../crt/shaders/guest/crt-guest-dr-venom.glsl
+shader10 = ../crt/shaders/guest/linearize_scanlines.glsl
 filter_linear10 = true
-scale_type10 = viewport
-scale_x10 = 1.0
-scale_y10 = 1.0
+scale_type10 = source
+scale10 = 1.0
+float_framebuffer10 = true
+
+shader11 = ../crt/shaders/guest/crt-guest-dr-venom.glsl
+filter_linear11 = true
+scale_type11 = viewport
+scale_x11 = 1.0
+scale_y11 = 1.0 

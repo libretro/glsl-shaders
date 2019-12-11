@@ -1,4 +1,4 @@
-shaders = 10
+shaders = 11
 
 shader0 = shaders/guest/lut/lut.glsl
 filter_linear0 = false
@@ -57,8 +57,14 @@ scale_type8 = source
 scale8 = 1.0
 float_framebuffer8 = true
 
-shader9 = shaders/guest/crt-guest-dr-venom.glsl
+shader9 = shaders/guest/linearize_scanlines.glsl
 filter_linear9 = true
-scale_type9 = viewport
-scale_x9 = 1.0
-scale_y9 = 1.0
+scale_type9 = source
+scale9 = 1.0
+float_framebuffer9 = true
+
+shader10 = shaders/guest/crt-guest-dr-venom.glsl
+filter_linear10 = true
+scale_type10 = viewport
+scale_x10 = 1.0
+scale_y10 = 1.0 

@@ -123,9 +123,9 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
-uniform sampler2D PassPrev3Texture;
 uniform sampler2D PassPrev4Texture;
-uniform sampler2D PassPrev6Texture;
+uniform sampler2D PassPrev5Texture;
+uniform sampler2D PassPrev7Texture;
 COMPAT_VARYING vec4 TEX0;
 
 // compatibility #defines
@@ -400,7 +400,7 @@ vec3 gamma_correct(vec3 color, vec3 tmp)
 
 void main()
 {
-	float lum = COMPAT_TEXTURE(PassPrev4Texture, vec2(0.33,0.33)).a;
+	float lum = COMPAT_TEXTURE(PassPrev5Texture, vec2(0.33,0.33)).a;
 
 	// Calculating texel coordinates
    
@@ -485,20 +485,20 @@ void main()
 	float wtt = 1.0/(twl2+twl1+twct+twr1+twr2);
 	float wtb = 1.0/(bwl2+bwl1+bwct+bwr1+bwr2);
 	
-	vec3 l2 = COMPAT_TEXTURE(PassPrev3Texture, pC4 -off2).xyz;
-	vec3 l1 = COMPAT_TEXTURE(PassPrev3Texture, pC4 -offx).xyz;
-	vec3 ct = COMPAT_TEXTURE(PassPrev3Texture, pC4      ).xyz;
-	vec3 r1 = COMPAT_TEXTURE(PassPrev3Texture, pC4 +offx).xyz;
-	vec3 r2 = COMPAT_TEXTURE(PassPrev3Texture, pC4 +off2).xyz;
+	vec3 l2 = COMPAT_TEXTURE(PassPrev4Texture, pC4 -off2).xyz;
+	vec3 l1 = COMPAT_TEXTURE(PassPrev4Texture, pC4 -offx).xyz;
+	vec3 ct = COMPAT_TEXTURE(PassPrev4Texture, pC4      ).xyz;
+	vec3 r1 = COMPAT_TEXTURE(PassPrev4Texture, pC4 +offx).xyz;
+	vec3 r2 = COMPAT_TEXTURE(PassPrev4Texture, pC4 +off2).xyz;
 	
 	vec3 color1 = (l2*twl2 + l1*twl1 + ct*twct + r1*twr1 + r2*twr2)*wtt;
 	if (sharp) color1 = clamp(color1, min(min(l1,r1),ct), max(max(l1,r1),ct)); 
    
-	l2 = COMPAT_TEXTURE(PassPrev3Texture, pC4 -off2 +offy).xyz;
-	l1 = COMPAT_TEXTURE(PassPrev3Texture, pC4 -offx +offy).xyz;
-	ct = COMPAT_TEXTURE(PassPrev3Texture, pC4       +offy).xyz; 
-	r1 = COMPAT_TEXTURE(PassPrev3Texture, pC4 +offx +offy).xyz;
-	r2 = COMPAT_TEXTURE(PassPrev3Texture, pC4 +off2 +offy).xyz;
+	l2 = COMPAT_TEXTURE(PassPrev4Texture, pC4 -off2 +offy).xyz;
+	l1 = COMPAT_TEXTURE(PassPrev4Texture, pC4 -offx +offy).xyz;
+	ct = COMPAT_TEXTURE(PassPrev4Texture, pC4       +offy).xyz; 
+	r1 = COMPAT_TEXTURE(PassPrev4Texture, pC4 +offx +offy).xyz;
+	r2 = COMPAT_TEXTURE(PassPrev4Texture, pC4 +off2 +offy).xyz;
 	
 	vec3 color2 = (l2*bwl2 + l1*bwl1 + ct*bwct + r1*bwr1 + r2*bwr2)*wtb;
 	if (sharp) color2 = clamp(color2, min(min(l1,r1),ct), max(max(l1,r1),ct)); 
