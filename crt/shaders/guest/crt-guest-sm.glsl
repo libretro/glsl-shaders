@@ -45,16 +45,19 @@ Uses a red/magenta/cyan/green pattern for even spacing of the LCD subpixels.
 
 // Parameter lines go here:
 #pragma parameter smart "Smart Y Integer Scaling" 0.0 0.0 1.0 1.0
-#pragma parameter brightboost "Bright boost" 1.15 0.5 2.0 0.05
-#pragma parameter scanline "Scanline adjust" 8.0 1.0 12.0 1.0
-#pragma parameter beam_min "Scanline dark" 1.35 0.5 2.0 0.05
-#pragma parameter beam_max "Scanline bright" 1.05 0.5 2.0 0.05
+#pragma parameter brightboost1 "Bright boost dark colors" 1.40 0.5 2.0 0.05
+#pragma parameter brightboost2 "Bright boost bright colors" 1.10 0.5 2.0 0.05
+#pragma parameter scanline "Scanline shape" 8.0 4.0 14.0 0.5
+#pragma parameter beam_min "Scanline dark" 1.40 0.5 2.0 0.05
+#pragma parameter beam_max "Scanline bright" 1.10 0.5 2.0 0.05
 #pragma parameter s_gamma "Scanline gamma" 2.4 1.5 3.0 0.05
 #pragma parameter h_sharp "Horizontal sharpness" 2.0 1.0 5.0 0.05
 #pragma parameter mask "CRT Mask (3&4 are 4k masks)" 0.0 0.0 4.0 1.0
-#pragma parameter maskstr "Raw CRT Mask Strength" 0.15 0.0 1.0 0.05
+#pragma parameter maskmode "CRT Mask Mode: Classic, Fine, Coarse" 0.0 0.0 2.0 1.0
+#pragma parameter maskdark "CRT Mask Strength Dark Pixels" 1.0 0.0 1.5 0.05
+#pragma parameter maskbright "CRT Mask Strength Bright Pixels" 0.20 -0.5 1.0 0.05
 #pragma parameter masksize "CRT Mask Size" 1.0 1.0 2.0 1.0
-#pragma parameter gamma_out "Gamma Out" 2.40 1.0 3.0 0.05
+#pragma parameter gamma_out "Gamma Out" 2.30 1.0 3.0 0.05
 
 #if defined(VERTEX)
 
@@ -136,41 +139,47 @@ COMPAT_VARYING vec4 TEX0;
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
 uniform COMPAT_PRECISION float smart;
-uniform COMPAT_PRECISION float brightboost;
+uniform COMPAT_PRECISION float brightboost1;
+uniform COMPAT_PRECISION float brightboost2;
 uniform COMPAT_PRECISION float scanline;
 uniform COMPAT_PRECISION float beam_min;
 uniform COMPAT_PRECISION float beam_max;
 uniform COMPAT_PRECISION float s_gamma;
 uniform COMPAT_PRECISION float h_sharp;
 uniform COMPAT_PRECISION float mask;
-uniform COMPAT_PRECISION float maskstr;
+uniform COMPAT_PRECISION float maskmode;
+uniform COMPAT_PRECISION float maskdark;
+uniform COMPAT_PRECISION float maskbright;
 uniform COMPAT_PRECISION float masksize;
 uniform COMPAT_PRECISION float gamma_out;
 #else
-#define brightboost  0.00     // smart Y integer scaling
-#define brightboost  1.15     // adjust brightness
+#define smart        0.00     // smart Y integer scaling
+#define brightboost1 1.40     // adjust brightness - dark pixels
+#define brightboost2 1.10     // adjust brightness - bright pixels
 #define scanline     8.00     // scanline param, vertical sharpness
-#define beam_min     1.35     // dark area beam min - narrow
-#define beam_max     1.05     // bright area beam max - wide
+#define beam_min     1.40     // dark area beam min - narrow
+#define beam_max     1.10     // bright area beam max - wide
 #define s_gamma      2.40     // scanline gamma
-#define h_sharp      1.25     // pixel sharpness
-#define mask         0.00     // crt mask
-#define maskstr      0.15     // raw crt mask strength
+#define h_sharp      2.00     // pixel sharpness
+#define mask         0.00     // crt mask type
+#define maskmode     0.00     // crt mask mode
+#define maskdark     1.00     // crt mask strength dark pixels
+#define maskbright   0.20     // crt mask strength bright pixels
 #define masksize     1.00     // crt mask size
-#define gamma_out    2.40     // gamma out
+#define gamma_out    2.30     // gamma out
 #endif
 
 float st(float x)
 {
-	return exp2(-scanline*x*x);
+	return exp2(-10.0*x*x);
 }  
 
 vec3 sw(float x, vec3 color)
 {
 	vec3 tmp = mix(vec3(2.75*beam_min),vec3(beam_max), color);
-	tmp = mix(vec3(beam_max), tmp, pow(vec3(x), color+0.3));
+	tmp = mix(vec3(beam_max), tmp, pow(vec3(x), color + 0.25));
 	vec3 ex = vec3(x)*tmp;
-	return exp2(-scanline*ex*ex)/(0.65 + 0.35*color);
+	return exp2(-scanline*ex*ex)/(0.60 + 0.40*color);
 }
 
 float Overscan(float pos, float dy){
@@ -239,12 +248,17 @@ void main()
 	vec3 w2 = sw(1.0-f,cref2);
 	
 	color = color1*w1 + color2*w2;
-	color = min(color, 1.0);
+	color = min(color,1.0);
+	
+	color = mix(color, normalize(ctemp + 1e-8)*length(color), 2.0*abs(f-0.5));	
 	
 	vec3 scan3 = vec3(0.0);
 	float spos = floor((gl_FragCoord.x * 1.000001)/masksize); float spos1 = 0.0;
-	vec3 tmp1 = 0.5*(ctemp+sqrt(ctemp));
+	vec3 tmp1 = pow(sctemp, vec3(1.5/s_gamma));
 
+	color*=mix(brightboost1, brightboost2, max(max(sctemp.r,sctemp.g),sctemp.b));
+	color = min(color,1.0);	
+	
 	if (mask == 0.0)
 	{
 		spos1 = fract(spos*0.5);
@@ -284,14 +298,13 @@ void main()
 		else                    scan3.g =  color.g;
 	}
 	
-	color = mix(1.15*scan3, color, (1.0-maskstr)*tmp1)*(1.0 + 0.15*maskstr);
+	vec3 lerpmask = tmp1;
+	if (maskmode == 1.0) lerpmask = vec3(max(max(tmp1.r,tmp1.g),tmp1.b)); else
+	if (maskmode == 2.0) lerpmask = sctemp*(w1+w2);	
 	
-	color*=brightboost;
-	float corr = (max(max(color.r,color.g),color.b) + 0.0001);
-	if (corr < 1.0) corr = 1.0;
-	color = color/corr;
-
-	color = pow(color, vec3(1.0/gamma_out));
+	color = max(mix( mix(color, 1.25*scan3, maskdark), mix(color, scan3, maskbright), lerpmask), 0.0);
+	
+	color = pow(color, vec3(1.0/gamma_out));	
     FragColor = vec4(color, 1.0);
 } 
 #endif
