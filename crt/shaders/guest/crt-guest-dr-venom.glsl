@@ -26,17 +26,17 @@
 #pragma parameter IOS "Smart Integer Scaling: 1.0:Y, 2.0:'X'+Y" 0.0 0.0 2.0 1.0
 #pragma parameter OS "R. Bloom Overscan Mode" 1.0 0.0 2.0 1.0
 #pragma parameter BLOOM "Raster bloom %" 0.0 0.0 20.0 1.0
-#pragma parameter brightboost "Bright boost" 1.35 0.50 2.00 0.01
+#pragma parameter brightboost "Bright Boost Dark Pixels" 1.40 0.50 2.00 0.025
+#pragma parameter brightboost1 "Bright Boost Bright Pixels" 1.15 0.50 2.00 0.025
 #pragma parameter gsl "Scanline Type" 0.0 0.0 2.0 1.0
 #pragma parameter scanline1 "Scanline beam shape low" 8.0 1.0 15.0 1.0
 #pragma parameter scanline2 "Scanline beam shape high" 8.0 5.0 23.0 1.0 
 #pragma parameter beam_min "Scanline dark" 1.35 0.5 2.0 0.05
 #pragma parameter beam_max "Scanline bright" 1.05 0.5 2.0 0.05
-#pragma parameter beam_size "Increased bright scanline beam" 0.65 0.0 1.0 0.05
-#pragma parameter spike "Scanline Spike Removal (0.0 - for speedup)" 1.0 0.0 2.0 0.20
+#pragma parameter beam_size "Increased bright scanline beam" 0.70 0.0 1.0 0.05
+#pragma parameter spike "Scanline Spike Removal (0.0 - for speedup)" 1.25 0.0 2.0 0.25 
 #pragma parameter h_sharp "Horizontal sharpness" 5.25 1.5 20.0 0.25
 #pragma parameter s_sharp "Substractive sharpness" 0.05 0.0 0.20 0.01
-#pragma parameter h_smart "Smart Horizontal Smoothing" 0.0 0.0 1.0 0.1
 #pragma parameter csize "Corner size" 0.0 0.0 0.07 0.01
 #pragma parameter bsize "Border smoothness" 600.0 100.0 600.0 25.0
 #pragma parameter warpX "CurvatureX (default 0.03)" 0.0 0.0 0.125 0.01
@@ -52,7 +52,6 @@
 #pragma parameter maskDark "Lottes maskDark" 0.5 0.0 2.0 0.05
 #pragma parameter maskLight "Lottes maskLight" 1.5 0.0 2.0 0.05
 #pragma parameter CGWG "CGWG Mask Str." 0.3 0.0 1.0 0.05
-#pragma parameter GTW "Gamma Tweak" 1.05 0.5 1.5 0.01
 #pragma parameter gamma_out "Gamma out" 2.4 1.0 3.5 0.05
 
 #if defined(VERTEX)
@@ -144,6 +143,7 @@ uniform COMPAT_PRECISION float IOS;
 uniform COMPAT_PRECISION float OS;
 uniform COMPAT_PRECISION float BLOOM;
 uniform COMPAT_PRECISION float brightboost;
+uniform COMPAT_PRECISION float brightboost1;
 uniform COMPAT_PRECISION float gsl;
 uniform COMPAT_PRECISION float scanline1;
 uniform COMPAT_PRECISION float scanline2;
@@ -153,7 +153,6 @@ uniform COMPAT_PRECISION float beam_size;
 uniform COMPAT_PRECISION float spike;
 uniform COMPAT_PRECISION float h_sharp;
 uniform COMPAT_PRECISION float s_sharp;
-uniform COMPAT_PRECISION float h_smart;
 uniform COMPAT_PRECISION float csize;
 uniform COMPAT_PRECISION float bsize;
 uniform COMPAT_PRECISION float warpX;
@@ -169,7 +168,6 @@ uniform COMPAT_PRECISION float mcut;
 uniform COMPAT_PRECISION float maskDark;
 uniform COMPAT_PRECISION float maskLight;
 uniform COMPAT_PRECISION float CGWG;
-uniform COMPAT_PRECISION float GTW;
 uniform COMPAT_PRECISION float gamma_out;
 #else
 #define TATE         0.00     // Screen orientation
@@ -182,17 +180,16 @@ uniform COMPAT_PRECISION float gamma_out;
 #define scanline2    8.0      // scanline param, vertical sharpness
 #define beam_min     1.35     // dark area beam min - narrow
 #define beam_max     1.05     // bright area beam max - wide
-#define beam_size    0.65     // increased max. beam size
-#define spike        1.00     // scanline spike removal
+#define beam_size    0.70     // increased max. beam size
+#define spike        1.25     // scanline spike removal
 #define h_sharp      5.25     // pixel sharpness
 #define s_sharp      0.05     // substractive sharpness
-#define h_smart      0.00     // smart horizontal smoothing
 #define csize        0.00     // corner size
 #define bsize        0.00     // border smoothness
 #define warpX        0.00     // Curvature X
 #define warpY        0.00     // Curvature Y
 #define glow         0.02     // Glow Strength
-#define shadowMask   5.00     // Mask Style
+#define shadowMask   0.00     // Mask Style
 #define masksize     1.00     // Mask Size
 #define vertmask     0.00     // Vertical mask
 #define slotmask     0.00     // Slot Mask ON/OFF
@@ -202,7 +199,6 @@ uniform COMPAT_PRECISION float gamma_out;
 #define maskDark     0.50     // Dark "Phosphor"
 #define maskLight    1.50     // Light "Phosphor"
 #define CGWG         0.30     // CGWG Mask Strength
-#define GTW          1.10     // Gamma tweak
 #define gamma_out    2.40     // output gamma
 #endif
 
@@ -383,7 +379,6 @@ vec2 Overscan(vec2 pos, float dx, float dy){
 	return pos*0.5+0.5;
 } 
 
-
 // Borrowed from cgwg's crt-geom, under GPL
 
 float corner(vec2 coord)
@@ -397,10 +392,6 @@ float corner(vec2 coord)
 	return clamp((cdist.x-dist)*bsize,0.0, 1.0);
 }
 
-vec3 gamma_correct(vec3 color, vec3 tmp)
-{
-	return color*mix(GTW, 1.0, max(max(tmp.r,tmp.g),tmp.b));
-}
 
 void main()
 {
@@ -447,47 +438,16 @@ void main()
 		offy = dx;
 		fpx = fp.y;
 	}
-   
-	bool sharp = (s_sharp > 0.0);
-
-
-	float hsharp_tl, hsharp_tr, hsharp_bl, hsharp_br, hsharp_tc, hsharp_bc;
 	
-	if (h_smart == 0.0)
-	{
-		hsharp_tl = h_sharp; hsharp_tr = h_sharp; hsharp_bl = h_sharp; hsharp_br = h_sharp; hsharp_tc = h_sharp; hsharp_bc = h_sharp;
-	}
-	else
-	{	
-		// reading differences for smoothing
-		vec3 diffs_top = COMPAT_TEXTURE(PassPrev5Texture, pC4       ).xyz;
-		vec3 diffs_bot = COMPAT_TEXTURE(PassPrev5Texture, pC4 + offy).xyz;
-		
-		if(TATE > 0.5) 
-		{ 	
-			diffs_top.x = floor(10.0*diffs_top.z)*0.11111; diffs_top.y = fract(10.0*diffs_top.z)*1.11111; 
-			diffs_bot.x = floor(10.0*diffs_bot.z)*0.11111; diffs_bot.y = fract(10.0*diffs_bot.z)*1.11111; 		
-		}
-		
-		float ls = mix (4.5, 2.25, h_smart);
-		hsharp_tl = mix(h_sharp, ls, diffs_top.x);
-		hsharp_tr = mix(h_sharp, ls, diffs_top.y);
-		hsharp_bl = mix(h_sharp, ls, diffs_bot.x);
-		hsharp_br = mix(h_sharp, ls, diffs_bot.y);	
-		hsharp_tc = hsharp_tl;
-		hsharp_bc = hsharp_bl;
-		if (fpx == 0.5) { hsharp_tc = 0.5*(hsharp_tl + hsharp_tr); hsharp_bc = 0.5*(hsharp_bl + hsharp_br); }
-		if (fpx >  0.5) { hsharp_tc = hsharp_tr; hsharp_bc = hsharp_bl; }
-	}
-	
-	float wl2 = 1.5 + fpx; wl2*=wl2; float twl2 = exp2(-hsharp_tl*wl2); twl2 = max(twl2 - s_sharp, -twl2);        float bwl2 = exp2(-hsharp_bl*wl2); bwl2 = max(bwl2 - s_sharp, -bwl2);
-	float wl1 = 0.5 + fpx; wl1*=wl1; float twl1 = exp2(-hsharp_tl*wl1); twl1 = max(twl1 - s_sharp, -0.4*s_sharp); float bwl1 = exp2(-hsharp_bl*wl1); bwl1 = max(bwl1 - s_sharp, -0.4*s_sharp);
-	float wct = 0.5 - fpx; wct*=wct; float twct = exp2(-hsharp_tc*wct); twct = max(twct - s_sharp,  s_sharp);     float bwct = exp2(-hsharp_bc*wct); bwct = max(bwct - s_sharp,  s_sharp);
-	float wr1 = 1.5 - fpx; wr1*=wr1; float twr1 = exp2(-hsharp_tr*wr1); twr1 = max(twr1 - s_sharp, -0.4*s_sharp); float bwr1 = exp2(-hsharp_br*wr1); bwr1 = max(bwr1 - s_sharp, -0.4*s_sharp);
-	float wr2 = 2.5 - fpx; wr2*=wr2; float twr2 = exp2(-hsharp_tr*wr2); twr2 = max(twr2 - s_sharp, -twr2);        float bwr2 = exp2(-hsharp_br*wr2); bwr2 = max(bwr2 - s_sharp, -bwr2);
+	float wl2 = 1.5 + fpx; wl2*=wl2; wl2 = exp2(-h_sharp*wl2); float twl2 = max(wl2 - s_sharp, -wl2);
+	float wl1 = 0.5 + fpx; wl1*=wl1; wl1 = exp2(-h_sharp*wl1); float twl1 = max(wl1 - s_sharp, -0.4*s_sharp);
+	float wct = 0.5 - fpx; wct*=wct; wct = exp2(-h_sharp*wct); float twct = max(wct - s_sharp,  s_sharp);
+	float wr1 = 1.5 - fpx; wr1*=wr1; wr1 = exp2(-h_sharp*wr1); float twr1 = max(wr1 - s_sharp, -0.4*s_sharp);
+	float wr2 = 2.5 - fpx; wr2*=wr2; wr2 = exp2(-h_sharp*wr2); float twr2 = max(wr2 - s_sharp, -wr2);
 
 	float wtt = 1.0/(twl2+twl1+twct+twr1+twr2);
-	float wtb = 1.0/(bwl2+bwl1+bwct+bwr1+bwr2);
+	float wt  = 1.0/(wl2+wl1+wct+wr1+wr2);
+	bool sharp = (s_sharp > 0.0);
 	
 	vec3 l2 = COMPAT_TEXTURE(PassPrev4Texture, pC4 -off2).xyz;
 	vec3 l1 = COMPAT_TEXTURE(PassPrev4Texture, pC4 -offx).xyz;
@@ -509,33 +469,33 @@ void main()
 	
 	if (spike > 0.0)
 	{
-		scolor1 = (sl2*twl2 + sl1*twl1 + sct*twct + sr1*twr1 + sr2*twr2)*wtt;
-		if (sharp) scolor1 = clamp(scolor1, min(min(sl1,sr1),sct), max(max(sl1,sr1),sct)); 
+		scolor1 = (sl2*wl2 + sl1*wl1 + sct*wct + sr1*wr1 + sr2*wr2)*wt;
 		scolor1 = pow(scolor1, gtmp);	
 		scolor1 = mix(color1, scolor1, spike);
 	} 
 	
-	l2 = COMPAT_TEXTURE(PassPrev4Texture, pC4 -off2 +offy).xyz;
-	l1 = COMPAT_TEXTURE(PassPrev4Texture, pC4 -offx +offy).xyz;
-	ct = COMPAT_TEXTURE(PassPrev4Texture, pC4       +offy).xyz; 
-	r1 = COMPAT_TEXTURE(PassPrev4Texture, pC4 +offx +offy).xyz;
-	r2 = COMPAT_TEXTURE(PassPrev4Texture, pC4 +off2 +offy).xyz;
+	pC4+=offy;
 	
-	sl2 = COMPAT_TEXTURE(Texture, pC4 -off2 +offy).xyz;
-	sl1 = COMPAT_TEXTURE(Texture, pC4 -offx +offy).xyz;
-	sct = COMPAT_TEXTURE(Texture, pC4       +offy).xyz; 
-	sr1 = COMPAT_TEXTURE(Texture, pC4 +offx +offy).xyz;
-	sr2 = COMPAT_TEXTURE(Texture, pC4 +off2 +offy).xyz;
+	l2 = COMPAT_TEXTURE(PassPrev4Texture, pC4 -off2).xyz;
+	l1 = COMPAT_TEXTURE(PassPrev4Texture, pC4 -offx).xyz;
+	ct = COMPAT_TEXTURE(PassPrev4Texture, pC4      ).xyz; 
+	r1 = COMPAT_TEXTURE(PassPrev4Texture, pC4 +offx).xyz;
+	r2 = COMPAT_TEXTURE(PassPrev4Texture, pC4 +off2).xyz;
 	
-	vec3 color2 = (l2*bwl2 + l1*bwl1 + ct*bwct + r1*bwr1 + r2*bwr2)*wtb;
+	sl2 = COMPAT_TEXTURE(Texture, pC4 -off2).xyz;
+	sl1 = COMPAT_TEXTURE(Texture, pC4 -offx).xyz;
+	sct = COMPAT_TEXTURE(Texture, pC4      ).xyz; 
+	sr1 = COMPAT_TEXTURE(Texture, pC4 +offx).xyz;
+	sr2 = COMPAT_TEXTURE(Texture, pC4 +off2).xyz;
+	
+	vec3 color2 = (l2*twl2 + l1*twl1 + ct*twct + r1*twr1 + r2*twr2)*wtt;
 	if (sharp) color2 = clamp(color2, min(min(l1,r1),ct), max(max(l1,r1),ct)); 
 
 	vec3 scolor2 = color2;
 	
 	if (spike > 0.0)
 	{	
-		scolor2 = (sl2*bwl2 + sl1*bwl1 + sct*bwct + sr1*bwr1 + sr2*bwr2)*wtb;
-		if (sharp) scolor2 = clamp(scolor2, min(min(sl1,sr1),sct), max(max(sl1,sr1),sct)); 
+		scolor2 = (sl2*wl2 + sl1*wl1 + sct*wct + sr1*wr1 + sr2*wr2)*wt;
 		scolor2 = pow(scolor2, gtmp);	
 		scolor2 = mix(color2, scolor2, spike);
 	} 
@@ -574,8 +534,9 @@ void main()
 	
 	vec3 color = color1*w1 + color2*w2;
 	
-	color*=brightboost;
-	color = min(color, 1.0); 
+	ctmp = 0.5*(ctmp+tmp);
+	color*=mix(brightboost, brightboost1, max(max(ctmp.r,ctmp.g),ctmp.b));
+	color = min(color, 1.0);
    
 	// Apply Mask
 	
