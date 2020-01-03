@@ -221,7 +221,7 @@ void main()
 	if (smart == 1.0)
 	{
 		float factor = OutputSize.y/InputSize.y;
-		float intfactor = round(factor);
+		float intfactor = floor(factor + 0.5);
 		float diff = factor/intfactor;
 		tex.y = Overscan(tex.y*(SourceSize.y/InputSize.y), diff)*(InputSize.y/SourceSize.y); 
 	}
