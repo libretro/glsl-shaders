@@ -1,0 +1,87 @@
+shaders = 13
+
+shader0 = ../stock.glsl
+filter_linear0 = false
+scale_type_x0 = source
+scale_type_y0 = absolute
+scale_y0 = 240
+
+shader1 = ../ntsc/shaders/ntsc-pass1-composite-2phase.glsl
+shader2 = ../ntsc/shaders/ntsc-pass2-2phase-gamma.glsl
+
+filter_linear1 = false
+filter_linear2 = false
+
+scale_type_x1 = source
+scale_type_y1 = source
+scale_x1 = 4.0
+scale_y1 = 1.0
+frame_count_mod1 = 2
+float_framebuffer1 = true
+
+scale_type2 = source
+scale_x2 = 0.5
+scale_y2 = 1.0 
+
+shader3 = ../crt/shaders/guest/lut/lut.glsl
+filter_linear3 = false
+scale_type3 = source
+scale3 = 1.0
+
+textures = "SamplerLUT1;SamplerLUT2;SamplerLUT3"
+SamplerLUT1 = ../crt/shaders/guest/lut/sony_trinitron1.png
+SamplerLUT1_linear = true 
+SamplerLUT2 = ../crt/shaders/guest/lut/sony_trinitron2.png
+SamplerLUT2_linear = true 
+SamplerLUT3 = ../crt/shaders/guest/lut/other1.png
+SamplerLUT3_linear = true 
+
+shader4 = ../crt/shaders/guest/d65-d50.glsl
+filter_linear4 = false
+scale_type4 = source
+scale4 = 1.0
+
+shader5 = ../stock.glsl
+filter_linear5 = false
+scale_type5 = source
+scale5 = 1.0
+
+shader6 = ../stock.glsl
+filter_linear6 = false
+scale_type6 = source
+scale6 = 1.0
+
+shader7 = ../stock.glsl
+filter_linear7 = false
+scale_type7 = source
+scale7 = 1.0
+
+shader8 = ../crt/shaders/guest/linearize.glsl
+filter_linear8 = false
+scale_type8 = source
+scale8 = 1.0
+float_framebuffer8 = true
+
+shader9 = ../crt/shaders/guest/blur_horiz.glsl
+filter_linear9 = false
+scale_type9 = source
+scale9 = 1.0
+float_framebuffer9 = true
+
+shader10 = ../crt/shaders/guest/blur_vert.glsl
+filter_linear10 = false
+scale_type10 = source
+scale10 = 1.0
+float_framebuffer10 = true
+
+shader11 = ../crt/shaders/guest/linearize_scanlines.glsl
+filter_linear11 = true
+scale_type11 = source
+scale11 = 1.0
+float_framebuffer11 = true
+
+shader12 = ../crt/shaders/guest/crt-guest-dr-venom.glsl
+filter_linear12 = true
+scale_type12 = viewport
+scale_x12 = 1.0
+scale_y12 = 1.0 
