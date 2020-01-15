@@ -30,11 +30,8 @@
 #endif
 
 COMPAT_ATTRIBUTE vec4 VertexCoord;
-COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
-COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -47,10 +44,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
-// Paste vertex contents here:
-
 }
 
 #elif defined(FRAGMENT)
@@ -94,10 +88,10 @@ COMPAT_VARYING vec4 TEX0;
 
 
 float dithertable[16] = {
-	16,4,13,1,   
-	8,12,5,9,
-	14,2,15,3,
-	6,10,7,11		
+	16.,4.,13.,1.,   
+	8.,12.,5.,9.,
+	14.,2.,15.,3.,
+	6.,10.,7.,11.		
 };
 
 
@@ -111,14 +105,14 @@ uniform float INTERLACED;
 uniform float VGASIGNAL;
 uniform float LUMBOOST;
 #else
-#define	INTERLACED 1
-#define	VGASIGNAL 0
-#define LUMBOOST 0
+#define	INTERLACED 1.
+#define	VGASIGNAL 0.
+#define LUMBOOST 0.
 #endif
 
-#define LUM_R (76.0f/255.0f)
-#define LUM_G (150.0f/255.0f)
-#define LUM_B (28.0f/255.0f)
+#define LUM_R (76.0/255.0)
+#define LUM_G (150.0/255.0)
+#define LUM_B (28.0/255.0)
 
 void main()
 {
@@ -128,7 +122,7 @@ void main()
 	vec2 texcoord2  = vTexCoord;
 	texcoord2.x *= TextureSize.x;
 	texcoord2.y *= TextureSize.y;
-	vec4 color = texture(Source, texcoord);
+	vec4 color = COMPAT_TEXTURE(Source, texcoord);
 	float fc = mod(float(FrameCount), 2.0);
 
 	// Blend vertically for composite mode
@@ -138,15 +132,15 @@ void main()
 	float tap = 0.62/taps;
 	vec2 texcoord4  = vTexCoord;
 	texcoord4.x = texcoord4.x;
-	texcoord4.y = texcoord4.y + ((tap*(taps/2))/480.0f);
-	vec4 blur1 = texture(Source, texcoord4);
+	texcoord4.y = texcoord4.y + ((tap*(taps/2.))/480.0);
+	vec4 blur1 = COMPAT_TEXTURE(Source, texcoord4);
 	int bl;
 	vec4 ble;
 
 	for (bl=0;bl<taps;bl++)
 		{
-			texcoord4.y += (tap  / 480.0f);
-			ble.rgb += texture(Source, texcoord4).rgb / taps;
+			texcoord4.y += (tap  / 480.0);
+			ble.rgb += COMPAT_TEXTURE(Source, texcoord4).rgb / taps;
 		}
 
         	color.rgb = color.rgb * 0.25 + ( ble.rgb * 0.75);
@@ -165,15 +159,15 @@ void main()
 	vec4 how;
 
 	for (yeh=ditdex; yeh<(ditdex+16); yeh++) 	ohyes =  ((((dithertable[yeh-15]) - 1) * 0.1));
-	color.rb -= (ohyes / 128);
-	color.g -= (ohyes / 128);
+	color.rb -= (ohyes / 128.);
+	color.g -= (ohyes / 128.);
 	{
 	vec4 reduct;		// 16 bits per pixel (5-6-5)
-	reduct.r = 32;
-	reduct.g = 64;	
-	reduct.b = 32;
+	reduct.r = 32.;
+	reduct.g = 64.;	
+	reduct.b = 32.;
 	how = color;
-  	how = pow(how, vec4(1.0f, 1.0f, 1.0f, 1.0f));  	how *= reduct;  	how = floor(how);	how = how / reduct;  	how = pow(how, vec4(1.0f, 1.0f, 1.0f, 1.0f));
+  	how = pow(how, vec4(1.0, 1.0, 1.0, 1.0));  	how *= reduct;  	how = floor(how);	how = how / reduct;  	how = pow(how, vec4(1.0, 1.0, 1.0, 1.0));
 	}
 
 	color.rb = how.rb;
@@ -181,7 +175,7 @@ void main()
 
 	// There's a bit of a precision drop involved in the RGB565ening for VGA
 	// I'm not sure why that is. it's exhibited on PVR1 and PVR3 hardware too
-	if (INTERLACED == 0)
+	if (INTERLACED < 0.5)
 	{
 		if (mod(color.r*32, 2.0)>0) color.r -= 0.023;
 		if (mod(color.g*64, 2.0)>0) color.g -= 0.01;
@@ -191,34 +185,34 @@ void main()
 
 	// RGB565 clamp
 
-	color.rb = round(color.rb * 32)/32;
-	color.g = round(color.g * 64)/64;
+	color.rb = floor(color.rb * 32. + 0.5)/32.;
+	color.g = floor(color.g * 64. + 0.5)/64.;
 
 	// VGA Signal Loss, which probably is very wrong but i tried my best
 	if (bool(VGASIGNAL))
 	{
 
 	int taps = 32;
-	float tap = 12.0f/taps;
+	float tap = 12.0/taps;
 	vec2 texcoord4  = vTexCoord;
-	texcoord4.x = texcoord4.x + (2.0f/640.0f);
+	texcoord4.x = texcoord4.x + (2.0/640.0);
 	texcoord4.y = texcoord4.y;
-	vec4 blur1 = texture(Source, texcoord4);
+	vec4 blur1 = COMPAT_TEXTURE(Source, texcoord4);
 	int bl;
 	vec4 ble;
 	for (bl=0;bl<taps;bl++)
 		{
 			float e = 1;
 			if (bl>=3)
-			e=0.35f;
+			e=0.35;
 			texcoord4.x -= (tap  / 640);
-			ble.rgb += (texture(Source, texcoord4).rgb * e) / (taps/(bl+1));
+			ble.rgb += (COMPAT_TEXTURE(Source, texcoord4).rgb * e) / (taps/(bl+1));
 		}
 
         	color.rgb += ble.rgb * 0.015;
 
-		//color.rb += (4.0f/255.0f);
-		color.g += (9.0f/255.0f);
+		//color.rb += (4.0/255.0);
+		color.g += (9.0/255.0);
 	}
 
    	FragColor = vec4(color);
