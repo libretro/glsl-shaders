@@ -10,6 +10,7 @@
 */
 
 #define HW 1.00
+#define round(c) floor(c + 0.5)
 
 #if defined(VERTEX)
 
@@ -82,8 +83,8 @@ COMPAT_VARYING vec4 TEX0;
 #define Source Texture
 #define vTexCoord TEX0.xy
 #define texture(c, d) COMPAT_TEXTURE(c, d)
-#define FixedSize vec2(640, 480)
-#define SourceSize vec4(FixedSize, 1.0 / FixedSize) //either TextureSize or InputSize
+//#define FixedSize vec2(640., 480.)
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(TextureSize, 1.0 / TextureSize)
 
 
@@ -94,20 +95,15 @@ float dithertable[16] = {
 	6.,10.,7.,11.		
 };
 
-
-
 #pragma parameter INTERLACED "PVR - Interlace smoothing" 1.00 0.00 1.00 1.0
 #pragma parameter VGASIGNAL "PVR - VGA signal loss" 0.00 0.00 1.00 1.0
-#pragma parameter LUMBOOST "PVR - Luminance gain" 0.35 0.00 1.00 0.01
 
 #ifdef PARAMETER_UNIFORM
 uniform float INTERLACED;
 uniform float VGASIGNAL;
-uniform float LUMBOOST;
 #else
 #define	INTERLACED 1.
 #define	VGASIGNAL 0.
-#define LUMBOOST 0.
 #endif
 
 #define LUM_R (76.0/255.0)
@@ -120,36 +116,35 @@ void main()
 	
 	vec2 texcoord  = vTexCoord;
 	vec2 texcoord2  = vTexCoord;
-	texcoord2.x *= TextureSize.x;
-	texcoord2.y *= TextureSize.y;
+	texcoord2.x *= SourceSize.x;
+	texcoord2.y *= SourceSize.y;
 	vec4 color = COMPAT_TEXTURE(Source, texcoord);
 	float fc = mod(float(FrameCount), 2.0);
 
 	// Blend vertically for composite mode
-	if (bool(INTERLACED))
+	if (bool(INTERLACED) && InputSize.y > 400.)
 	{
-	int taps = int(8);
-	float tap = 0.62/taps;
+	int taps = int(3);
+
+	float tap = 2.0/float(taps);
 	vec2 texcoord4  = vTexCoord;
 	texcoord4.x = texcoord4.x;
-	texcoord4.y = texcoord4.y + ((tap*(taps/2.))/480.0);
+	texcoord4.y = texcoord4.y + ((tap*float(taps/2))/480.0);
 	vec4 blur1 = COMPAT_TEXTURE(Source, texcoord4);
 	int bl;
 	vec4 ble;
+	
+	ble.r = 0.00;
+	ble.g = 0.00;
+	ble.b = 0.00;
 
 	for (bl=0;bl<taps;bl++)
 		{
-			texcoord4.y += (tap  / 480.0);
-			ble.rgb += COMPAT_TEXTURE(Source, texcoord4).rgb / taps;
+			texcoord4.y += (tap / 480.0);
+			ble.rgb += COMPAT_TEXTURE(Source, texcoord4).rgb / float(taps);
 		}
 
-        	color.rgb = color.rgb * 0.25 + ( ble.rgb * 0.75);
-	}
-
-	// Some games use a luminance boost (JSR etc)
-	if (bool(LUMBOOST))
-	{
-		color.rgb += (((color.r * LUM_R) + (color.g * LUM_G) + (color.b * LUM_B)) * LUMBOOST);
+        	color.rgb = ( ble.rgb );
 	}
 
 	// Dither. ALWAYS do this for 16bpp
@@ -158,7 +153,7 @@ void main()
 	float ohyes;
 	vec4 how;
 
-	for (yeh=ditdex; yeh<(ditdex+16); yeh++) 	ohyes =  ((((dithertable[yeh-15]) - 1) * 0.1));
+	for (yeh=ditdex; yeh<(ditdex+16); yeh++) 	ohyes =  ((((dithertable[yeh-15]) - 1.) * 0.1));
 	color.rb -= (ohyes / 128.);
 	color.g -= (ohyes / 128.);
 	{
@@ -175,25 +170,25 @@ void main()
 
 	// There's a bit of a precision drop involved in the RGB565ening for VGA
 	// I'm not sure why that is. it's exhibited on PVR1 and PVR3 hardware too
-	if (INTERLACED < 0.5)
+	if (bool(INTERLACED) && InputSize.y > 400.)
 	{
-		if (mod(color.r*32, 2.0)>0) color.r -= 0.023;
-		if (mod(color.g*64, 2.0)>0) color.g -= 0.01;
-		if (mod(color.b*32, 2.0)>0) color.b -= 0.023;
+		if (mod(color.r*32., 2.0)>0.) color.r -= 0.023;
+		if (mod(color.g*64., 2.0)>0.) color.g -= 0.01;
+		if (mod(color.b*32., 2.0)>0.) color.b -= 0.023;
 	}
 
 
 	// RGB565 clamp
 
-	color.rb = floor(color.rb * 32. + 0.5)/32.;
-	color.g = floor(color.g * 64. + 0.5)/64.;
+	color.rb = round(color.rb * 32.)/32.;
+	color.g = round(color.g * 64.)/64.;
 
 	// VGA Signal Loss, which probably is very wrong but i tried my best
 	if (bool(VGASIGNAL))
 	{
 
 	int taps = 32;
-	float tap = 12.0/taps;
+	float tap = 12.0/float(taps);
 	vec2 texcoord4  = vTexCoord;
 	texcoord4.x = texcoord4.x + (2.0/640.0);
 	texcoord4.y = texcoord4.y;
@@ -202,11 +197,11 @@ void main()
 	vec4 ble;
 	for (bl=0;bl<taps;bl++)
 		{
-			float e = 1;
+			float e = 1.;
 			if (bl>=3)
 			e=0.35;
-			texcoord4.x -= (tap  / 640);
-			ble.rgb += (COMPAT_TEXTURE(Source, texcoord4).rgb * e) / (taps/(bl+1));
+			texcoord4.x -= (tap  / 640.);
+			ble.rgb += (COMPAT_TEXTURE(Source, texcoord4).rgb * e) / float(taps/(bl+1));
 		}
 
         	color.rgb += ble.rgb * 0.015;
