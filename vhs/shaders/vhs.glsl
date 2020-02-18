@@ -150,7 +150,7 @@ vec3 Blur(vec2 uv, float d){
     vec3 N13 = COMPAT_TEXTURE(iChannel0, uv + Circle(Start, 14.0, 13.0) * Scale).rgb;
     vec3 N14 = COMPAT_TEXTURE(iChannel0, uv).rgb;
     
-	vec4 clr = texture(iChannel0, uv);
+	vec4 clr = COMPAT_TEXTURE(iChannel0, uv);
     float W = 1.0 / 15.0;
     
     clr.rgb= 
@@ -190,7 +190,7 @@ vec2 jumpy(vec2 uv, float framecount)
 
 void main()
 {
-   float timer = (FrameDirection > 0.5) ? float(FrameCount) : 0.0;
+   float timer = (float(FrameDirection) > 0.5) ? float(FrameCount) : 0.0;
 	float d=.1-round(mod(iTime/3.0,1.0))*.1;
 	vec2 uv = jumpy(vTexCoord.xy, iTime);
 	vec2 uv2 = uv;
