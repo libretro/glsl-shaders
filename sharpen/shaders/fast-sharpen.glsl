@@ -1,3 +1,5 @@
+#version 100
+
 /*
    Fast Sharpen Shader
    
@@ -41,9 +43,7 @@
 #endif
 
 COMPAT_ATTRIBUTE vec4 VertexCoord;
-COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
-COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 
 vec4 _oPosition1; 
@@ -53,6 +53,10 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+COMPAT_VARYING vec2 g10;
+COMPAT_VARYING vec2 g01;
+COMPAT_VARYING vec2 g12;
+COMPAT_VARYING vec2 g21;
 
 // compatibility #defines
 #define vTexCoord TEX0.xy
@@ -63,6 +67,10 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy * 1.00001;
+   g10 = vec2( 0.3333,-1.0)*SourceSize.zw;
+   g01 = vec2(-1.0,-0.3333)*SourceSize.zw;
+   g12 = vec2(-0.3333, 1.0)*SourceSize.zw;
+   g21 = vec2( 1.0, 0.3333)*SourceSize.zw; 
 }
 
 #elif defined(FRAGMENT)
@@ -95,6 +103,10 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING vec2 g10;
+COMPAT_VARYING vec2 g01;
+COMPAT_VARYING vec2 g12;
+COMPAT_VARYING vec2 g21;
 
 // compatibility #defines
 #define Source Texture
@@ -113,15 +125,8 @@ uniform COMPAT_PRECISION float DETAILS;
 #define DETAILS   1.0
 #endif 
 
-vec2 g10 = vec2( 0.3333,-1.0)*SourceSize.zw;
-vec2 g01 = vec2(-1.0,-0.3333)*SourceSize.zw;
-vec2 g12 = vec2(-0.3333, 1.0)*SourceSize.zw;
-vec2 g21 = vec2( 1.0, 0.3333)*SourceSize.zw; 
-
 void main()
 {
-
-
 	vec3 c10 = COMPAT_TEXTURE(Source, vTexCoord + g10).rgb;
 	vec3 c01 = COMPAT_TEXTURE(Source, vTexCoord + g01).rgb;
 	vec3 c21 = COMPAT_TEXTURE(Source, vTexCoord + g21).rgb;
