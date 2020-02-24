@@ -1,5 +1,3 @@
-#version 100
-
 /*
    Fast Sharpen Shader
    
