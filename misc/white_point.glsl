@@ -1,10 +1,15 @@
-// white point adjustment
-// adapted by Dogway (based on hunterk's original shader as template)
+// White Point Mapping
+//          ported by Dogway
 //
-// based on blog post by Neil Bartlett (inspired on Tanner Helland's work)
-// http://www.zombieprototypes.com/?p=210
+// From the first comment post (sRGB and linear light compensated)
+//      http://www.zombieprototypes.com/?p=210#comment-4695029660
+// Based on the Neil Bartlett's blog update
+//      http://www.zombieprototypes.com/?p=210
+// Inspired itself by Tanner Helland's work
+//      http://www.tannerhelland.com/4435/convert-temperature-rgb-algorithm-code/
 
-#pragma parameter temperature "White Point" 6500.0 1000.0 12000.0 100.0
+
+#pragma parameter temperature "White Point" 6504.0 1000.0 12000.0 100.0
 #pragma parameter luma_preserve "Preserve Luminance" 1.0 0.0 1.0 1.0
 #pragma parameter red "Red Shift" 0.0 -1.0 1.0 0.01
 #pragma parameter green "Green Shift" 0.0 -1.0 1.0 0.01
@@ -17,8 +22,8 @@
 #define COMPAT_ATTRIBUTE in
 #define COMPAT_TEXTURE texture
 #else
-#define COMPAT_VARYING varying 
-#define COMPAT_ATTRIBUTE attribute 
+#define COMPAT_VARYING varying
+#define COMPAT_ATTRIBUTE attribute
 #define COMPAT_TEXTURE texture2D
 #endif
 
@@ -34,7 +39,7 @@ COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 
-vec4 _oPosition1; 
+vec4 _oPosition1;
 uniform mat4 MVPMatrix;
 uniform COMPAT_PRECISION int FrameDirection;
 uniform COMPAT_PRECISION int FrameCount;
@@ -94,40 +99,41 @@ COMPAT_VARYING vec4 TEX0;
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float temperature, luma_preserve, red, green, blue;
 #else
-#define temperature 6500.0
+#define temperature 6504.0
 #define luma_preserve 1.0
 #define red 0.0
 #define green 0.0
 #define blue 0.0
 #endif
 
-// white point adjustment
-// based on blog post by Neil Bartlett (inspired by Tanner Helland's work)
-// http://www.zombieprototypes.com/?p=210
+
 vec3 wp_adjust(vec3 color){
-   float temp = temperature / 100.0;
-   
-   // all calculations assume a scale of 255. We'll normalize this at the end
-   vec3 wp = vec3(255.);
-   
-   // calculate RED
-   wp.r = (temp <= 66.) ? 255. : 351.97690566805693 + 0.114206453784165 * (temp - 55.) - 40.25366309332127 * log(temp - 55.);
-   
-   // calculate GREEN
-   float mg = - 155.25485562709179 - 0.44596950469579133 * (temp - 2.)  + 104.49216199393888 * log(temp - 2.);
-   float pg =   325.4494125711974  + 0.07943456536662342 * (temp - 50.) - 28.0852963507957   * log(temp - 50.);
-   wp.g = (temp <= 66.) ? mg : pg;
-   
-   // calculate BLUE
-   wp.b = (temp >= 66.) ? 255. : (temp <= 19.) ? 0. : - 254.76935184120902 + 0.8274096064007395 * (temp - 10.) + 115.67994401066147 * log(temp - 10.) ;
-   
-   // clamp and normalize
-   wp.rgb = clamp(wp.rgb, vec3(0.), vec3(255.)) / vec3(255.);
-   
-   // this is dumb, but various cores don't always show white as white. Use this to make white white...
-   wp.rgb += vec3(red, green, blue);
-   
-   return (color * wp);
+
+    float temp = temperature / 100.0;
+    float k = temperature / 10000.0;
+    float lk = log(k);
+
+    vec3 wp = vec3(1.);
+
+    // calculate RED
+    wp.r = (temp <= 65.) ? 1. : 0.32068362618584273 + (0.19668730877673762 * pow(k - 0.21298613432655075, - 1.5139012907556737)) + (- 0.013883432789258415 * lk);
+
+    // calculate GREEN
+    float mg = 1.226916242502167 + (- 1.3109482654223614 * pow(k - 0.44267061967913873, 3.) * exp(- 5.089297600846147 * (k - 0.44267061967913873))) + (0.6453936305542096 * lk);
+    float pg = 0.4860175851734596 + (0.1802139719519286 * pow(k - 0.14573069517701578, - 1.397716496795082)) + (- 0.00803698899233844 * lk);
+    wp.g = (temp <= 65.5) ? ((temp <= 8.) ? 0. : mg) : pg;
+
+    // calculate BLUE
+    wp.b = (temp <= 19.) ? 0. : (temp >= 66.) ? 1. : 1.677499032830161 + (- 0.02313594016938082 * pow(k - 1.1367244820333684, 3.) * exp(- 4.221279555918655 * (k - 1.1367244820333684))) + (1.6550275798913296 * lk);
+
+    // clamp
+    wp.rgb = clamp(wp.rgb, vec3(0.), vec3(1.));
+
+    // this is dumb, but various cores don't always show white as white. Use this to make white white...
+    wp.rgb += vec3(red, green, blue);
+
+    // Linear color input
+    return (color * wp);
 }
 
 vec3 sRGB_to_XYZ(vec3 RGB){
@@ -168,13 +174,41 @@ vec3 YxytoXYZ(vec3 Yxy){
 }
 
 
+vec3 linear_to_sRGB(vec3 color, float gamma){
+
+    color = clamp(color, 0.0, 1.0);
+    color.r = (color.r <= 0.00313066844250063) ?
+    color.r * 12.92 : 1.055 * pow(color.r, 1.0 / gamma) - 0.055;
+    color.g = (color.g <= 0.00313066844250063) ?
+    color.g * 12.92 : 1.055 * pow(color.g, 1.0 / gamma) - 0.055;
+    color.b = (color.b <= 0.00313066844250063) ?
+    color.b * 12.92 : 1.055 * pow(color.b, 1.0 / gamma) - 0.055;
+
+    return color;
+}
+
+
+vec3 sRGB_to_linear(vec3 color, float gamma){
+
+    color = clamp(color, 0.0, 1.0);
+    color.r = (color.r <= 0.04045) ?
+    color.r / 12.92 : pow((color.r + 0.055) / (1.055), gamma);
+    color.g = (color.g <= 0.04045) ?
+    color.g / 12.92 : pow((color.g + 0.055) / (1.055), gamma);
+    color.b = (color.b <= 0.04045) ?
+    color.b / 12.92 : pow((color.b + 0.055) / (1.055), gamma);
+
+    return color;
+}
+
+
 void main()
 {
-   vec3 original = COMPAT_TEXTURE(Source, vTexCoord).rgb;
+   vec3 original = sRGB_to_linear(COMPAT_TEXTURE(Source, vTexCoord).rgb, vec3(2.4));
    vec3 adjusted = wp_adjust(original);
    vec3 base_luma = XYZtoYxy(sRGB_to_XYZ(original));
    vec3 adjusted_luma = XYZtoYxy(sRGB_to_XYZ(adjusted));
    adjusted = (luma_preserve > 0.5) ? adjusted_luma + (vec3(base_luma.r,0.,0.) - vec3(adjusted_luma.r,0.,0.)) : adjusted_luma;
-   FragColor = vec4(XYZ_to_sRGB(YxytoXYZ(adjusted)), 1.0);
-} 
+   FragColor = vec4(linear_to_sRGB(XYZ_to_sRGB(YxytoXYZ(adjusted)), vec3(2.4)), 1.0);
+}
 #endif
