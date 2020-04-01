@@ -26,8 +26,8 @@
 #pragma parameter IOS "Smart Integer Scaling: 1.0:Y, 2.0:'X'+Y" 0.0 0.0 2.0 1.0
 #pragma parameter OS "R. Bloom Overscan Mode" 1.0 0.0 2.0 1.0
 #pragma parameter BLOOM "Raster bloom %" 0.0 0.0 20.0 1.0
-#pragma parameter brightboost "Bright Boost Dark Pixels" 1.40 0.50 4.00 0.025
-#pragma parameter brightboost1 "Bright Boost Bright Pixels" 1.10 0.50 3.00 0.025
+#pragma parameter brightboost "Bright Boost Dark Pixels" 1.40 0.50 4.00 0.05
+#pragma parameter brightboost1 "Bright Boost Bright Pixels" 1.10 0.50 3.00 0.05
 #pragma parameter gsl "Scanline Type" 0.0 0.0 2.0 1.0
 #pragma parameter scanline1 "Scanline beam shape low" 6.0 1.0 15.0 1.0
 #pragma parameter scanline2 "Scanline beam shape high" 8.0 5.0 23.0 1.0 
@@ -46,7 +46,7 @@
 #pragma parameter masksize "CRT Mask Size (2.0 is nice in 4k)" 1.0 1.0 2.0 1.0
 #pragma parameter vertmask "PVM Like Colors" 0.0 0.0 0.25 0.01
 #pragma parameter slotmask "Slot Mask Strength" 0.0 0.0 1.0 0.05
-#pragma parameter slotwidth "Slot Mask Width" 2.0 2.0 6.0 0.5
+#pragma parameter slotwidth "Slot Mask Width" 2.0 1.0 6.0 0.5
 #pragma parameter double_slot "Slot Mask Height: 2x1 or 4x1" 1.0 1.0 2.0 1.0
 #pragma parameter slotms "Slot Mask Size" 1.0 1.0 2.0 1.0
 #pragma parameter mcut "Mask 5-7 cutoff" 0.2 0.0 0.5 0.05
@@ -614,24 +614,18 @@ void main()
 	color = min(color, 1.0);
 	
 	if (interm > 0.5 && inter <= mix(InputSize.y, InputSize.x, TATE)) 
-	{
-		float line_no  = floor(mod(mix(  OGL2Pos.y,  OGL2Pos.x, TATE),2.0));		
-		float frame_no = floor(mod(float(FrameCount),2.0));
-		
-		if (interm == 1.0)
+	{	
+		if (interm < 3.0)
 		{
-			vec3 icolor1 = mix(color1, color0, abs(line_no-frame_no));
-			vec3 icolor2 = mix(color1, color2, abs(line_no-frame_no));
+			float line_no  = floor(mod(mix(  OGL2Pos.y,  OGL2Pos.x, TATE),2.0));		
+			float frame_no = floor(mod(float(FrameCount),2.0));
+			float ii = (interm > 1.5) ? 0.5 : abs(line_no-frame_no);
+			
+			vec3 icolor1 = mix(color1, color0, ii);
+			vec3 icolor2 = mix(color1, color2, ii);
+			
 			color = mix(icolor1, icolor2, f);
 		} 
-		else if (interm == 2.0)
-		{
-			float v0 = exp2(-2.25*2.25);			
-			float v1 = exp2(-2.25*(0.5+f)*(0.5+f)) - v0;
-			float v2 = exp2(-2.25*(0.5-f)*(0.5-f)) - v0;
-			float v3 = exp2(-2.25*(1.5-f)*(1.5-f)) - v0;
-			color = (v1*color0 + v2*color1 + v3*color2)/(v1+v2+v3);
-		}
 		else color = mix(color1, color2, f);
 		mcolor = sqrt(color);
 	}
@@ -659,9 +653,9 @@ void main()
 	vec3 Bloom = COMPAT_TEXTURE(PassPrev2Texture, pos).xyz;
    
 	vec3 Bloom1 = 2.0*Bloom*Bloom;
-	Bloom1 = min(Bloom1, 0.75);
+	Bloom1 = min(Bloom1, 0.80);
 	float bmax = max(max(Bloom1.r,Bloom1.g),Bloom1.b);
-	float pmax = mix(0.8, 0.7, pixbr);
+	float pmax = mix(0.825, 0.725, pixbr);
 	Bloom1 = min(Bloom1, pmax*bmax)/pmax;
 	
 	Bloom1 = mix(min( Bloom1, color), Bloom1, 0.5*(orig1+color));
@@ -671,7 +665,7 @@ void main()
 	color = color + Bloom1;
 	
 	color = min(color, 1.0);
-	if (interm < 0.5 || inter > mix(InputSize.y, InputSize.x, TATE)) color = declip(color, pow(w3,0.6));	
+	if (interm < 0.5 || inter > mix(InputSize.y, InputSize.x, TATE)) color = declip(color, pow(w3,0.5));	
 	color = min(color, mix(cmask,one,0.5));
 
 	color = color + glow*Bloom;
