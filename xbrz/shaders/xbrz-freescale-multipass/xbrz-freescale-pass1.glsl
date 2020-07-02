@@ -113,8 +113,8 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
-uniform sampler2D OrigTexture;
-uniform COMPAT_PRECISION vec2 OrigTextureSize;
+uniform sampler2D PassPrev2Texture;
+uniform COMPAT_PRECISION vec2 PassPrev2TextureSize;
 COMPAT_VARYING vec4 TEX0;
 
 // compatibility #defines
@@ -123,7 +123,7 @@ COMPAT_VARYING vec4 TEX0;
 
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
-#define OriginalSize vec4(OrigTextureSize, 1.0 / OrigTextureSize)
+#define OriginalSize vec4(PassPrev2TextureSize, 1.0 / PassPrev2TextureSize)
 
 #define BLEND_NONE 0.
 #define BLEND_NORMAL 1.
@@ -167,7 +167,7 @@ float get_left_ratio(vec2 center, vec2 origin, vec2 direction, vec2 scale)
 #define eq(a,b)  (a == b)
 #define neq(a,b) (a != b)
 
-#define P(x,y) COMPAT_TEXTURE(OrigTexture, coord + OriginalSize.zw * vec2(x, y)).rgb
+#define P(x,y) COMPAT_TEXTURE(PassPrev2Texture, coord + OriginalSize.zw * vec2(x, y)).rgb
 
 void main()
 {
