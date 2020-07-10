@@ -44,7 +44,7 @@
 #pragma parameter g_signal_type  "Signal Type (0:RGB 1:Composite)"                         1.0 0.0 1.0 1.0
 #pragma parameter g_gamma_type   "Signal Gamma Type (0:sRGB 1:SMPTE-C)"                    1.0 0.0 1.0 1.0
 #pragma parameter g_crtgamut     "Phosphor (1:NTSC-U 2:NTSC-J 3:PAL)"                      2.0 -4.0 3.0 1.0
-#pragma parameter g_space_out    "Diplay Color Space (-1:709 0:sRGB 2:DCI 3:2020 4:Adobe)" 0.0 -1.0 4.0 1.0
+#pragma parameter g_space_out    "Diplay Color Space (-1:709 0:sRGB 1:DCI 2:2020 3:Adobe)" 0.0 -1.0 3.0 1.0
 
 #pragma parameter g_hue_degrees  "Hue"                  0.0 -360.0 360.0 1.0
 #pragma parameter g_I_SHIFT      "I/U Shift"            0.0 -0.2 0.2 0.01
