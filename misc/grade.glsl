@@ -58,7 +58,7 @@
 #pragma parameter g_lum          "Brightness"           0.0 -0.5 1.0 0.01
 #pragma parameter g_cntrst       "Contrast"             0.0 -1.0 1.0 0.05
 #pragma parameter g_mid          "Contrast Pivot"       0.5  0.0 1.0 0.01
-#pragma parameter wp_temperature "White Point"          5505.0 5005.0 12005.0 100.0
+#pragma parameter wp_temperature "White Point"          6504.0 5004.0 12004.0 100.0
 #pragma parameter g_sat          "Saturation"           0.0 -1.0 2.0 0.01
 #pragma parameter g_vibr         "Dullness/Vibrance"    0.0 -1.0 1.0 0.05
 #pragma parameter g_satr         "Hue vs Sat Red"       0.0 -1.0 1.0 0.01
@@ -971,7 +971,7 @@ void main()
                                        m_in*src_h;
 
 // White Point Mapping
-    vec3 wp       = wp_adjust(wp_temperature);
+    vec3 wp       = wp_adjust(wp_temperature - 1000.);
     vec3 base     = (crtgamut == 0.0) ? RGB_to_XYZ(src_h, SPC)      : gamut;
          base     = XYZtoYxy(base);
     vec3 adjusted = (crtgamut == 0.0) ? RGB_to_XYZ(src_h, SPC) * wp : gamut * wp;
