@@ -1,9 +1,9 @@
 /*
    Grade
    > Ubershader grouping some monolithic color related shaders:
-    ::color-mangler (hunterk), ntsc color tuning knobs (Doriphor), white_point (hunterk, Dogway), RA Reshade LUT.
+    ::color-mangler (hunterk), ntsc color tuning knobs (Doriphor), RA Reshade LUT.
    > and the addition of:
-    ::analogue color emulation, phosphor gamut, color space + TRC support, vibrance, HUE vs SAT, vignette (shared by Syh), black level, rolled gain and sigmoidal contrast.
+    ::analogue color emulation, phosphor gamut, color space + TRC support, vibrance, HUE vs SAT, temperature, vignette (shared by Syh), black level, rolled gain and sigmoidal contrast.
 
    Author: Dogway
    License: Public domain
@@ -354,41 +354,25 @@ vec3 YxytoXYZ(vec3 Yxy){
 ///////////////////////// White Point Mapping /////////////////////////
 //
 //
-// From the first comment post (sRGB primaries and linear light compensated)
-//    >> http://www.zombieprototypes.com/?p=210#comment-4695029660
-// Based on the Neil Bartlett's blog update
-//    >> http://www.zombieprototypes.com/?p=210
-// Inspired itself by Tanner Helland's work
-//    >> http://www.tannerhelland.com/4435/convert-temperature-rgb-algorithm-code/
-//
 // PAL: D65      NTSC-U: D65      NTSC-J: CCT NTSC-J NTSC-FCC: C
 // PAL: 6489K    NTSC-U: 6504K    NTSC-J: 8942K      NTSC-FCC: 6780K
 // 0.313 0.329   0.3127 0.3290    0.281 0.311        0.310, 0.316
 
 vec3 wp_adjust(float temperature){
 
-    float temp = temperature / 100.;
-    float k = temperature / 10000.;
-    float lk = log(k);
+    float temp3 = pow(10.,3.) / temperature;
+    float temp6 = pow(10.,6.) / pow(temperature, 2.);
+    float temp9 = pow(10.,9.) / pow(temperature, 3.);
 
     vec3 wp = vec3(1.);
 
-    // calculate RED
-    wp.r = (temp <= 65.) ? 1. : 0.32068362618584273 + (0.19668730877673762 * pow(k - 0.21298613432655075, - 1.5139012907556737)) + (- 0.013883432789258415 * lk);
+    wp.x = (temperature <= 7000.) ? 0.244063 + 0.09911 * temp3 + 2.9678 * temp6 - 4.6070 * temp9 : \
+                                    0.237040 + 0.24748 * temp3 + 1.9018 * temp6 - 2.0064 * temp9 ;
 
-    // calculate GREEN
-    float mg = 1.226916242502167 + (- 1.3109482654223614 * pow(k - 0.44267061967913873, 3.) * exp(- 5.089297600846147 * (k - 0.44267061967913873))) + (0.6453936305542096 * lk);
-    float pg = 0.4860175851734596 + (0.1802139719519286 * pow(k - 0.14573069517701578, - 1.397716496795082)) + (- 0.00803698899233844 * lk);
-    wp.g = (temp <= 65.5) ? ((temp <= 8.) ? 0. : mg) : pg;
+    wp.y = -3.000 * pow(wp.x,2.) + 2.870 * wp.x - 0.275;
+    wp.z = 1. - wp.x - wp.y;
 
-    // calculate BLUE
-    wp.b = (temp <= 19.) ? 0. : (temp >= 66.) ? 1. : 1.677499032830161 + (- 0.02313594016938082 * pow(k - 1.1367244820333684, 3.) * exp(- 4.221279555918655 * (k - 1.1367244820333684))) + (1.6550275798913296 * lk);
-
-    // clamp
-    wp.rgb = clamp(wp.rgb, vec3(0.), vec3(1.));
-
-   // Linear color input
-    return wp;
+    return wp.xyz;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -887,7 +871,7 @@ void main()
     vec3 vcolor = (LUT1_toggle == 0.0) ? col : mixfix(color1, color2, mixer);
 
 
-// OETF - Opto-Electronic Transfer Function
+// OETF - Opto-Electronic Transfer Function (to linear in Digital Terms)
     vcolor = moncurve_f_f3(vcolor, 2.20 + 0.20, 0.055);
     vcolor = RGB_to_XYZ(vcolor, 0.);
 
@@ -987,7 +971,7 @@ void main()
                                        m_in*src_h;
 
 // White Point Mapping
-    vec3 wp       = RGB_to_XYZ(wp_adjust(wp_temperature), 0.);
+    vec3 wp       = wp_adjust(wp_temperature);
     vec3 base     = (crtgamut == 0.0) ? RGB_to_XYZ(src_h, SPC)      : gamut;
          base     = XYZtoYxy(base);
     vec3 adjusted = (crtgamut == 0.0) ? RGB_to_XYZ(src_h, SPC) * wp : gamut * wp;
