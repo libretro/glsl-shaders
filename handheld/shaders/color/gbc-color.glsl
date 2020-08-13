@@ -1,13 +1,10 @@
 /*
-   GBC Color Correction Shader
-   A shader that replicates the LCD dynamics from a Game Boy Color
-   Color values are derived from Gambatte's color correction implementation, with some tweaks.
-   Further tweaks by Pokefan531.
-   
-   Based on Color Mangler
+   Shader Modified: Pokefan531
+   Color Mangler
    Author: hunterk
    License: Public domain
 */
+// Shader that replicates the LCD dynamics from a GameBoy Color
 
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
@@ -16,29 +13,34 @@
 #define COMPAT_PRECISION
 #endif
 
-// GBC-Color option has brightness values from 0 to 1.2. light position relative to screen - Top: 1.2 Mid: 0.5 Bottom: 0.0
-#pragma parameter brighten_screen "Brighten Screen" 0.5 -0.25 1.2 0.05
+// Parameter lines go here:
+#pragma parameter lighten_screen "Lighten Screen" 1.0 0.0 1.0 0.05
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float brighten_screen;
+uniform COMPAT_PRECISION float lighten_screen;
 #else
-#define brighten_screen 0.0
+#define lighten_screen 1.0
 #endif
 
 #define target_gamma 2.2
 #define display_gamma 2.2
+#define sat 1.0
+#define lum 0.94
+#define contrast 1.0
 #define blr 0.0
 #define blg 0.0
 #define blb 0.0
-#define r 0.87
-#define g 0.66
-#define b 0.79
-#define rg 0.115
-#define rb 0.14
-#define gr 0.18
-#define gb 0.07
-#define br -0.05
-#define bg 0.225
+#define r 0.82
+#define g 0.665
+#define b 0.73
+#define rg 0.125
+#define rb 0.195
+#define gr 0.24
+#define gb 0.075
+#define br -0.06
+#define bg 0.21
+#define overscan_percent_x 0.0
+#define overscan_percent_y 0.0
 
 #if defined(VERTEX)
 
@@ -112,21 +114,29 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-
+#define texture(c, d) COMPAT_TEXTURE(c, d)
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 void main()
 {
-   vec4 screen = pow(COMPAT_TEXTURE(Source, vTexCoord), vec4(target_gamma - brighten_screen)).rgba;
-
-   //                red   green  blue  alpha ; alpha does nothing for our purposes
-   mat4 color = mat4(r,    rg,    rb,   0.0,    //red
-                     gr,   g,     gb,   0.0,    //green
-                     br,   bg,    b,    0.0,    //blue
-                     blr,  blg,   blb,  0.0);   //black
-
-   screen = color * screen;
-   FragColor = pow(screen, vec4(1.0 / display_gamma));
+   vec4 screen = pow(texture(Source, vTexCoord), vec4(target_gamma + (lighten_screen * -1.0))).rgba;
+   vec4 avglum = vec4(0.5);
+   screen = mix(screen, avglum, (1.0 - contrast));
+   
+ //				r   g    b   black
+mat4 color = mat4(r,  rg,  rb, 0.0,  //red channel
+			   gr,  g,   gb, 0.0,  //green channel
+			   br,  bg,  b,  0.0,  //blue channel
+			  blr, blg, blb,    0.0); //alpha channel; these numbers do nothing for our purposes.
+			  
+mat4 adjust = mat4((1.0 - sat) * 0.3086 + sat, (1.0 - sat) * 0.3086, (1.0 - sat) * 0.3086, 1.0,
+(1.0 - sat) * 0.6094, (1.0 - sat) * 0.6094 + sat, (1.0 - sat) * 0.6094, 1.0,
+(1.0 - sat) * 0.0820, (1.0 - sat) * 0.0820, (1.0 - sat) * 0.0820 + sat, 1.0,
+0.0, 0.0, 0.0, 1.0);
+	color *= adjust;
+	screen = clamp(screen * lum, 0.0, 1.0);
+	screen = color * screen;
+	FragColor = pow(screen, vec4(1.0 / display_gamma));
 } 
 #endif
