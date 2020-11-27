@@ -1,0 +1,11 @@
+shaders = 1
+
+shader0 = shaders/side-by-side-simple.glsl
+
+parameters = "eye_sep;y_loc;BOTH;ana_zoom;warpY;warpX"
+eye_sep = "0.125"
+y_loc = "0.10"
+BOTH = "0.255"
+ana_zoom = "0.66"
+warpY = "0.1"
+warpX = "0.1"
