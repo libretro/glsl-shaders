@@ -1,5 +1,5 @@
 /*
-   SGENPT-MIX - Sega Genesis Pseudo Transparency Mixer Shader - v4
+   SGENPT-MIX - Sega Genesis Pseudo Transparency Mixer Shader - v5
    
    2011-2020 Hyllian - sergiogdb@gmail.com
 
@@ -25,6 +25,8 @@
 
 #pragma parameter SGPT_SHARPNESS "SGENPT-MIX Sharpness" 1.0 0.0 1.0 0.1
 #pragma parameter SGPT_BLEND_OPTION "OFF | Transparency | Checkerboard" 1.0 0.0 2.0 1.0
+#pragma parameter SGPT_BLEND_LEVEL "SGENPT-MIX Blend Level" 1.0 0.0 1.0 0.1
+
 
 #define texCoord TEX0
 
@@ -101,10 +103,15 @@ IN vec2 texCoord;
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float SGPT_SHARPNESS;
 uniform COMPAT_PRECISION float SGPT_BLEND_OPTION;
+uniform COMPAT_PRECISION float SGPT_BLEND_LEVEL;
 #else
 #define SGPT_SHARPNESS 1.0
 #define SGPT_BLEND_OPTION 1.0
+#define SGPT_BLEND_LEVEL 1.0
 #endif
+
+
+const vec3 Y = vec3(.2126, .7152, .0722);
 
 
 void main()
@@ -127,7 +134,9 @@ void main()
 		vec3 min_sample = min(C, max(L, R));
 		vec3 max_sample = max(C, min(L, R));
 
-		color = 0.5*C + 0.25*(L + R);
+		float diff = (1.0 - SGPT_BLEND_LEVEL) * dot(max(max(C, L), max(C, R)) - min(min(C, L), min(C, R)), Y);
+
+		color = 0.5*( 1.0 + diff )*C + 0.25*( 1.0 - diff )*(L + R);
 
 		if (SGPT_BLEND_OPTION > 1.0)
 		{
@@ -135,7 +144,7 @@ void main()
 			min_sample = max(min_sample, min(C, max(U, D)));
 			max_sample = min(max_sample, max(C, min(U, D)));
 
-			color = 0.5*C + 0.125*(L + R + U + D);
+			color = 0.5*( 1.0 + diff )*C + 0.125*( 1.0 - diff )*(L + R + U + D);
 		}
 
 		// Sharpness control
