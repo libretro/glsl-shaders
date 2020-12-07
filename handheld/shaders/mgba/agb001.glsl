@@ -103,8 +103,29 @@ void main()
 	arrayY[2] = vec3(1.0, 1.0, 1.0);
 	arrayY[3] = vec3(0.8, 0.8, 0.8);
 	color.rgb = pow(color.rgb * vec3(0.8, 0.8, 0.8), vec3(1.8, 1.8, 1.8)) + vec3(0.16, 0.16, 0.16);
-	color.rgb *= arrayX[int(mod(vTexCoord.s * SourceSize.x * 4.0, 4.0))];
-	color.rgb *= arrayY[int(mod(vTexCoord.t * SourceSize.y * 4.0, 4.0))];
+
+	int colorX = int(mod(vTexCoord.s * SourceSize.x * 4.0, 4.0));
+	if (colorX == 0) {
+		color.rgb *= arrayX[0];
+	} else if (colorX == 1) {
+		color.rgb *= arrayX[1];
+	} else if (colorX == 2) {
+		color.rgb *= arrayX[2];
+	} else {
+		color.rgb *= arrayX[3];
+	}
+
+	int colorY = int(mod(vTexCoord.t * SourceSize.y * 4.0, 4.0));
+	if (colorY == 0) {
+		color.rgb *= arrayY[0];
+	} else if (colorY == 1) {
+		color.rgb *= arrayY[1];
+	} else if (colorY == 2) {
+		color.rgb *= arrayY[2];
+	} else {
+		color.rgb *= arrayY[3];
+	}
+
 	color.a = 0.5;
 	FragColor = color;
 }
