@@ -128,8 +128,8 @@ void main()
    vec4 frame2 = vec4(0.0);
    if ( fragCoord2.x < 1.0 && fragCoord2.x > 0.0 && fragCoord2.y < 1.0 && fragCoord2.y > 0.0 )
    frame2 = COMPAT_TEXTURE(Texture, warpCoord2);
-   frame1.rgb = (v_mode < 4) ? vec3(frame1.r) : vec3(frame1.g);
-   frame2.rgb = (v_mode != 4) ? frame2.b : frame2.g;
+   frame1.rgb = (int(v_mode) < 4) ? vec3(frame1.r) : vec3(frame1.g);
+   frame2.rgb = (int(v_mode) != 4) ? vec3(frame2.b) : vec3(frame2.g);
    vec4 final = vec4(0.0);
    if (palette > 0.5)
    final = frame1 + frame2;
