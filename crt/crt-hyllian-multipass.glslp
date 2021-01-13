@@ -1,6 +1,6 @@
 shaders = 2
 
-shader0 = shaders/crt-hyllian-multipass/crt-hyllian-pass0.glsl
+shader0 = shaders/hyllian/crt-hyllian-multipass/crt-hyllian-pass0.glsl
 filter_linear0 = false
 srgb_framebuffer0 = true
 scale_type_x0 = viewport
@@ -8,6 +8,6 @@ scale_type_y0 = source
 scale_x0 = 1.0
 scale_y0 = 1.0
 
-shader1 = shaders/crt-hyllian-multipass/crt-hyllian-pass1.glsl
+shader1 = shaders/hyllian/crt-hyllian-multipass/crt-hyllian-pass1.glsl
 filter_linear1 = false
 srgb_framebuffer1 = false
