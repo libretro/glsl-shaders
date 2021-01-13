@@ -4,7 +4,7 @@
 #pragma parameter BLOOM_STRENGTH "Glow Strength" 0.45 0.0 0.8 0.05
 #pragma parameter OUTPUT_GAMMA "Monitor Gamma" 2.2 1.8 2.6 0.02
 #pragma parameter PHOSPHOR_LAYOUT "PHOSPHOR LAYOUT" 4.0 0.0 19.0 1.0
-#pragma parameter GLOW_MASK_INTENSITY "MASK INTENSITY" 0.5 0.0 1.0 0.1
+#pragma parameter MASK_INTENSITY "MASK INTENSITY" 0.5 0.0 1.0 0.1
 
 #if defined(VERTEX)
 
@@ -89,12 +89,12 @@ COMPAT_VARYING vec4 TEX0;
 uniform COMPAT_PRECISION float BLOOM_STRENGTH;
 uniform COMPAT_PRECISION float OUTPUT_GAMMA;
 uniform COMPAT_PRECISION float PHOSPHOR_LAYOUT;
-uniform COMPAT_PRECISION float GLOW_MASK_INTENSITY;
+uniform COMPAT_PRECISION float MASK_INTENSITY;
 #else
 #define BLOOM_STRENGTH 0.45
 #define OUTPUT_GAMMA 2.2
 #define PHOSPHOR_LAYOUT 4.0
-#define GLOW_MASK_INTENSITY 0.5
+#define MASK_INTENSITY 0.5
 #endif
 
 
@@ -418,7 +418,7 @@ void main()
     vec2 mask_coords = gl_FragCoord.xy; //texCoord.xy * OutputSize.xy;
 //    vec2 mask_coords = (vTexCoord.xy * OutputSize.xy) * TextureSize.xy / InputSize.xy;
 
-    source.rgb*=mask_weights(mask_coords, GLOW_MASK_INTENSITY, int(PHOSPHOR_LAYOUT));
+    source.rgb*=mask_weights(mask_coords, MASK_INTENSITY, int(PHOSPHOR_LAYOUT));
 #endif
     FragColor = vec4(pow(clamp(source, 0.0, 1.0), vec3(1.0 / OUTPUT_GAMMA)), 1.0);
 } 
