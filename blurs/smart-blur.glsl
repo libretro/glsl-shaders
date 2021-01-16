@@ -24,6 +24,7 @@
 */
 
 // Parameter lines go here:
+#pragma parameter SB_BLUR_LEVEL "Smart Blur Level" 0.66 0.00 1.00 0.02
 #pragma parameter SB_RED_THRESHOLD "Smart Blur Red Threshold" 0.2 0.0 0.6 0.01
 #pragma parameter SB_GREEN_THRESHOLD "Smart Blur Green Threshold" 0.2 0.0 0.6 0.01
 #pragma parameter SB_BLUE_THRESHOLD "Smart Blur Blue Threshold" 0.2 0.0 0.6 0.01
@@ -69,10 +70,12 @@ uniform COMPAT_PRECISION vec2 InputSize;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float SB_BLUR_LEVEL;
 uniform COMPAT_PRECISION float SB_RED_THRESHOLD;
 uniform COMPAT_PRECISION float SB_GREEN_THRESHOLD;
 uniform COMPAT_PRECISION float SB_BLUE_THRESHOLD;
 #else
+#define SB_BLUR_LEVEL 0.66
 #define SB_RED_THRESHOLD 0.2
 #define SB_GREEN_THRESHOLD 0.2
 #define SB_BLUE_THRESHOLD 0.2
@@ -133,10 +136,12 @@ COMPAT_VARYING vec4 t3;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float SB_BLUR_LEVEL;
 uniform COMPAT_PRECISION float SB_RED_THRESHOLD;
 uniform COMPAT_PRECISION float SB_GREEN_THRESHOLD;
 uniform COMPAT_PRECISION float SB_BLUE_THRESHOLD;
 #else
+#define SB_BLUR_LEVEL 0.66
 #define SB_RED_THRESHOLD 0.2
 #define SB_GREEN_THRESHOLD 0.2
 #define SB_BLUE_THRESHOLD 0.2
@@ -172,8 +177,8 @@ void main()
 
     if (eq(E,F) && eq(E,H) && eq(E,I) && eq(E,B) && eq(E,C) && eq(E,A) && eq(E,D) && eq(E,G))
     {
-        sum = (E+A+C+D+F+G+I+B+H)/9.0;
-        E = sum;
+	sum = (A+C+D+F+G+I+B+H)/8.0;
+	E = mix(E, sum, SB_BLUR_LEVEL);
     }
 
     FragColor = vec4(E, 1.0);
