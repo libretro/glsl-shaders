@@ -14,31 +14,31 @@
 #endif
 
 // Parameter lines go here:
-#pragma parameter darken_screen "Darken Screen" 0.5 -0.25 1.5 0.05
+#pragma parameter darken_screen "Darken Screen" 1.0 -0.25 1.0 0.05
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
 uniform COMPAT_PRECISION float darken_screen;
 #else
-#define darken_screen 0.5
+#define darken_screen 1.0
 #endif
 
 #define target_gamma 2.2
 #define display_gamma 2.2
 #define sat 1.0
-#define lum 1.0
+#define lum 0.94
 #define contrast 1.0
 #define blr 0.0
 #define blg 0.0
 #define blb 0.0
-#define r 0.86
-#define g 0.66
-#define b 0.81
-#define rg 0.11
-#define rb 0.1325
-#define gr 0.19
-#define gb 0.0575
-#define br -0.05
-#define bg 0.23
+#define r 0.82
+#define g 0.665
+#define b 0.73
+#define rg 0.125
+#define rb 0.195
+#define gr 0.24
+#define gb 0.075
+#define br -0.06
+#define bg 0.21
 #define overscan_percent_x 0.0
 #define overscan_percent_y 0.0
 

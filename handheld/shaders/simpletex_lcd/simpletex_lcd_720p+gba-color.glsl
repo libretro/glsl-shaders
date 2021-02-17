@@ -182,15 +182,16 @@ const COMPAT_PRECISION float INV_BG_TEXTURE_SIZE = 1.0 / BG_TEXTURE_SIZE;
 // Colour correction
 #define TARGET_GAMMA 2.2
 const COMPAT_PRECISION float INV_DISPLAY_GAMMA = 1.0 / 2.2;
-#define CC_R 0.86
-#define CC_G 0.66
-#define CC_B 0.81
-#define CC_RG 0.11
-#define CC_RB 0.1325
-#define CC_GR 0.19
-#define CC_GB 0.0575
-#define CC_BR -0.05
-#define CC_BG 0.23
+#define CC_LUM 0.94
+#define CC_R 0.82
+#define CC_G 0.665
+#define CC_B 0.73
+#define CC_RG 0.125
+#define CC_RB 0.195
+#define CC_GR 0.24
+#define CC_GB 0.075
+#define CC_BR -0.06
+#define CC_BG 0.21
 
 void main()
 {
@@ -202,10 +203,10 @@ void main()
 	COMPAT_PRECISION vec3 colour = COMPAT_TEXTURE(Texture, InvTextureSize.xy * imgCenterCoord.xy).rgb;
 	
 	// Darken colours (if required...) and apply colour correction
-	colour.rgb = pow(colour.rgb, vec3(TARGET_GAMMA + 0.5 + DARKEN_COLOUR));
+	colour.rgb = pow(colour.rgb, vec3(TARGET_GAMMA + 1.0 + DARKEN_COLOUR));
 	colour.rgb = mat3(CC_R,  CC_RG, CC_RB,
 							CC_GR, CC_G,  CC_GB,
-							CC_BR, CC_BG, CC_B) * colour.rgb;
+							CC_BR, CC_BG, CC_B) * (colour.rgb * CC_LUM);
 	colour.rgb = clamp(pow(colour.rgb, vec3(INV_DISPLAY_GAMMA)), 0.0, 1.0);
 	
 	// Generate grid pattern...
