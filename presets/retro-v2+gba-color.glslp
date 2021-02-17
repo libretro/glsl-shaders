@@ -10,5 +10,5 @@ scale0 = "1.000000"
 filter_linear1 = "false"
 
 parameters = "darken_screen;RETRO_PIXEL_SIZE"
-darken_screen = "0.500000"
+darken_screen = "1.000000"
 RETRO_PIXEL_SIZE = "0.840000"

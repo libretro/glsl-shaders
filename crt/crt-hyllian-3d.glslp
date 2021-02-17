@@ -1,5 +1,5 @@
 shaders = 1
 
-shader0 = shaders/crt-hyllian-3d.glsl
+shader0 = shaders/hyllian/crt-hyllian-3d.glsl
 filter_linear0 = true
 srgb_framebuffer0 = true
