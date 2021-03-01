@@ -19,8 +19,8 @@ shader2 = shaders/glow/gauss_horiz.glsl
 filter_linear2 = false
 scale_type_x2 = viewport
 scale_type_y2 = source
-scale_x = 1.0
-scale_y = 1.0
+scale_x2 = 1.0
+scale_y2 = 1.0
 srgb_framebuffer2 = true
 
 shader3 = shaders/glow/gauss_vert.glsl

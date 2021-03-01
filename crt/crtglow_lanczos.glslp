@@ -8,8 +8,8 @@ shader1 = shaders/glow/lanczos_horiz.glsl
 filter_linear1 = false
 scale_type_x1 = viewport
 scale_type_y1 = source
-scale_x = 1.0
-scale_y = 1.0
+scale_x1 = 1.0
+scale_y1 = 1.0
 srgb_framebuffer1 = true
 
 shader2 = shaders/glow/gauss_vert.glsl

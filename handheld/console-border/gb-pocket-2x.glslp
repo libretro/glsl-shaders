@@ -35,7 +35,7 @@ filter_linear5 = true
 scale_type5 = source
 scale5 = 1.0
 
-parameters = "video_scale;SCALE;OUT_X;OUT_Y;baseline_alpha;grey_balance;contrast;screen_light;pixel_opacity"
+parameters = "video_scale;SCALE;OUT_X;OUT_Y;baseline_alpha;grey_balance;contrast;screen_light;pixel_opacity;shadow_opacity"
 video_scale = "3.0"
 SCALE = "0.6667"
 OUT_X = "1600.0"

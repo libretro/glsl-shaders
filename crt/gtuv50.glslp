@@ -15,5 +15,5 @@ float_framebuffer1 = true
 
 shader2 = shaders/gtu-v050/pass3.glsl
 scale_type2 = viewport
-scale_2 = 1.0
+scale2 = 1.0
 filter_linear2 = false
