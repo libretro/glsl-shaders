@@ -33,7 +33,7 @@ alias4 = "PASS4"
 shader5 = shader-files/gb-pass-5.glsl
 filter_linear5 = true
 
-parameters = "video_scale;SCALE;OUT_X;OUT_Y;baseline_alpha;grey_balance;contrast;screen_light;pixel_opacity"
+parameters = "video_scale;SCALE;OUT_X;OUT_Y;baseline_alpha;grey_balance;contrast;screen_light;pixel_opacity;shadow_opacity"
 video_scale = "4.0"
 SCALE = "1.5"
 OUT_X = "4800.0"
