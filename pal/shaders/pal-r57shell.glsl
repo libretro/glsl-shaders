@@ -108,6 +108,9 @@
 
 // TWEAKS end
 
+#pragma parameter USE_RAW_param "(NES ONLY) Decode RAW Colors" 0.0 0.0 1.0 1.0
+#pragma parameter USE_LUT_param "(NES ONLY) Use RAW LUT For Speed" 0.0 0.0 1.0 1.0
+
 #pragma parameter Gamma "PAL Gamma" 2.5 0.0 10.0 0.03125
 #pragma parameter Brightness "PAL Brightness" 0.0 -1.0 2.0 0.03125
 #pragma parameter Contrast "PAL Contrast" 1.0 -1.0 2.0 0.03125
@@ -143,11 +146,31 @@
 #define COMPAT_PRECISION
 #endif
 
+// have to duplicate these in both stages...
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float USE_RAW_param;
+uniform COMPAT_PRECISION float USE_LUT_param;
+
+bool USE_RAW = bool(USE_RAW_param);
+bool USE_LUT = bool(USE_LUT_param);
+
+#endif
+#ifndef PARAMETER_UNIFORM
+
+// use true/false to togglehttps://github.com/libretro/RetroArch/pull/12539
+bool USE_RAW = false;
+bool USE_LUT = false;
+
+#endif
+
 COMPAT_ATTRIBUTE vec4 VertexCoord;
 COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING float DeltaV;
+COMPAT_VARYING float Voltage_0;
+COMPAT_VARYING float Voltage_1;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -166,6 +189,14 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy;
+
+	if(USE_RAW)
+	{
+		Voltage_0 = (!USE_LUT) ? 0.518 : 0.15103768593097774;
+		Voltage_1 = (!USE_LUT) ? 1.962 : 1.;
+		DeltaV = (Voltage_1-Voltage_0);
+	}
+	else DeltaV = 1.;
 }
 
 #elif defined(FRAGMENT)
@@ -191,40 +222,7 @@ out COMPAT_PRECISION vec4 FragColor;
 #define COMPAT_TEXTURE texture2D
 #endif
 
-uniform COMPAT_PRECISION int FrameDirection;
-uniform COMPAT_PRECISION int FrameCount;
-uniform COMPAT_PRECISION vec2 OutputSize;
-uniform COMPAT_PRECISION vec2 TextureSize;
-uniform COMPAT_PRECISION vec2 InputSize;
-uniform sampler2D Texture;
-COMPAT_VARYING vec4 TEX0;
-
-// compatibility #defines
-#define Source Texture
-#define vTexCoord TEX0.xy
-
-#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutSize vec4(OutputSize, 1.0 / OutputSize)
-
 #ifdef PARAMETER_UNIFORM
-
-#pragma parameter Gamma "PAL Gamma" 2.5 0.0 10.0 0.03125
-#pragma parameter Brightness "PAL Brightness" 0.0 -1.0 2.0 0.03125
-#pragma parameter Contrast "PAL Contrast" 1.0 -1.0 2.0 0.03125
-#pragma parameter Saturation "PAL Saturation" 1.0 -1.0 2.0 0.03125
-#pragma parameter HueShift "PAL Hue Shift" -2.5 -6.0 6.0 0.015625
-#pragma parameter HueRotation "PAL Hue Rotation" 2.0 -5.0 5.0 0.015625
-#pragma parameter Ywidth "PAL Y Width" 12.0 1.0 32.0 1.0
-#pragma parameter Uwidth "PAL U Width" 23.0 1.0 32.0 1.0
-#pragma parameter Vwidth "PAL V Width" 23.0 1.0 32.0 1.0
-#pragma parameter SizeX "Active Width" 256.0 1.0 4096.0 1.0
-#pragma parameter SizeY "Active Height" 240.0 1.0 4096.0 1.0
-#pragma parameter TV_Pixels "PAL TV Pixels" 200.0 1.0 2400.0 1.0
-#pragma parameter dark_scanline "PAL Scanline" 0.5 0.0 1.0 0.025
-#pragma parameter Phase_Y "PAL Phase Y" 2.0 0.0 12.0 0.025
-#pragma parameter Phase_One "PAL Phase One" 0.0 0.0 12.0 0.025
-#pragma parameter Phase_Two "PAL Phase Two" 8.0 0.0 12.0 0.025
-
 uniform COMPAT_PRECISION float Gamma;
 uniform COMPAT_PRECISION float Brightness;
 uniform COMPAT_PRECISION float Contrast;
@@ -241,6 +239,11 @@ uniform COMPAT_PRECISION float dark_scanline;
 uniform COMPAT_PRECISION float Phase_Y;
 uniform COMPAT_PRECISION float Phase_One;
 uniform COMPAT_PRECISION float Phase_Two;
+uniform COMPAT_PRECISION float USE_RAW_param;
+uniform COMPAT_PRECISION float USE_LUT_param;
+
+bool USE_RAW = bool(USE_RAW_param);
+bool USE_LUT = bool(USE_LUT_param);
 
 static const float Mwidth = 24.;
 
@@ -272,6 +275,10 @@ static const float2 size = float2(SizeX,SizeY);
 #endif
 
 #ifndef PARAMETER_UNIFORM
+
+// use true/false to toggle
+bool USE_RAW = false;
+bool USE_LUT = false;
 
 // NTSC standard gamma = 2.2
 // PAL standard gamma = 2.8
@@ -312,6 +319,25 @@ static const float dark_scanline = 0.5; // half
 
 #endif
 
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
+uniform COMPAT_PRECISION vec2 OutputSize;
+uniform COMPAT_PRECISION vec2 TextureSize;
+uniform COMPAT_PRECISION vec2 InputSize;
+uniform sampler2D Texture;
+uniform sampler2D nes_lut;
+COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING float DeltaV;
+COMPAT_VARYING float Voltage_0;
+COMPAT_VARYING float Voltage_1;
+
+// compatibility #defines
+#define Source Texture
+#define vTexCoord TEX0.xy
+
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
+#define OutSize vec4(OutputSize, 1.0 / OutputSize)
+
 static const mat3 RGB_to_XYZ =
 mat3(
 	0.4306190, 0.3415419, 0.1783091,
@@ -336,21 +362,6 @@ mat3(
 	float3( 0.701,-0.587,-0.114)*YUV_v //R-Y
 );
 
-#ifdef USE_RAW
-#ifndef USE_LUT
-static const float Voltage_0 = 0.518;
-static const float Voltage_1 = 1.962;
-static const float DeltaV = (Voltage_1-Voltage_0);
-#else
-static const float Voltage_0 = 0.15103768593097774;
-static const float Voltage_1 = 1.;
-static const float DeltaV = (Voltage_1-Voltage_0);
-#endif
-
-#else
-static const float DeltaV = 1.;
-#endif
-
 #ifdef USE_DELAY_LINE
 static const float comb_line = 1.;
 #else
@@ -362,8 +373,6 @@ static float RGB_u = comb_line*Contrast_static*Saturation_static/YUV_u/float(Uwi
 static float RGB_v = comb_line*Contrast_static*Saturation_static/YUV_v/float(Vwidth_static)/DeltaV;
 
 static const float pi = 3.1415926535897932384626433832795;
-
-#ifdef USE_RAW
 
 bool InColorPhase(int color, float phase)
 {
@@ -381,10 +390,16 @@ const float levels_5 = 1.506;
 const float levels_6 = 1.962;
 const float levels_7 = 1.962;
 
-#ifndef USE_LUT
 // from nesdev wiki page NTSC_video
 float NTSCsignal(float3 pixel, float phase)
 {
+   // use LUT for RAW palette decoding for speed vs quality and return early
+   if(USE_LUT) return COMPAT_TEXTURE(nes_lut,float2(dot(pixel,float3(
+		15.*(8.)/512.,
+		3.*(16.*8.)/512.,
+		7./512.)
+		) + 0.5/(4.*16.*8.), frac(phase/24.))).r;
+		
 	// Voltage levels, relative to synch voltage
 	static const float black=.518, white=1.962, attenuation=.746;
 
@@ -415,22 +430,6 @@ float NTSCsignal(float3 pixel, float phase)
 	else
 		return signal;
 }
-
-#else
-
-uniform sampler2D nes_lut;
-float NTSCsignal(float3 pixel, float phase)
-{
-	return COMPAT_TEXTURE(nes_lut,float2(dot(pixel,float3(
-		15.*(8.)/512.,
-		3.*(16.*8.)/512.,
-		7./512.)
-		) + 0.5/(4.*16.*8.), frac(phase/24.))).r;
-}
-
-#endif
-
-#endif
 
 float sinn(float x)
 {
@@ -491,34 +490,36 @@ mat3 YUV_to_RGB = mat3(
 		ss = -2.0;
 	}
 
-	float ysum = 0., usum = 0., vsum = 0.;
+	float ysum = 0., usum = 0., vsum = 0., sig = 0., sig1 = 0.;
 	for (int i=0; i<int(Mwidth); ++i)
-	{
-		float4 res = COMPAT_TEXTURE(tex, uv);
-#ifdef USE_RAW
-		float sig = NTSCsignal(res.xyz,HueShift*2.+alpha-res.g*ss*HueRotation)-Voltage_0;
-		// outside of texture is 0,0,0 which is white instead of black
-		if (uv.x <= 0.0 || uv.x >= border)
-			sig = 0.;
+	{	
+	   float4 res = COMPAT_TEXTURE(tex, uv);
+	   
+      if(USE_RAW)
+      {
+		   sig = NTSCsignal(res.xyz,HueShift*2.+alpha-res.g*ss*HueRotation)-Voltage_0;
+		   // outside of texture is 0,0,0 which is white instead of black
+		   if (uv.x <= 0.0 || uv.x >= border)
+			   sig = 0.;
 #ifdef USE_DELAY_LINE
-		float4 res1 = COMPAT_TEXTURE(tex, uv+sh);
-		float sig1 = NTSCsignal(res1.xyz,HueShift*2.+12012.0-alpha+res.g*ss*HueRotation)-Voltage_0;
-		if (uv.x + sh.x <= 0.0 || uv.x + sh.x >= border)
-			sig1 = 0.;
+		   float4 res1 = COMPAT_TEXTURE(tex, uv+sh);
+		   sig1 = NTSCsignal(res1.xyz,HueShift*2.+12012.0-alpha+res.g*ss*HueRotation)-Voltage_0;
+		   if (uv.x + sh.x <= 0.0 || uv.x + sh.x >= border)
+			   sig1 = 0.;
 #endif
-
-#else
-		float3 yuv = mul(RGB_to_YUV, res.xyz);
-		float a1 = alpha+(HueShift+2.5)*2.-yuv.x*ss*HueRotation;
-		float sig = yuv.x+dot(yuv.yz,sign(float2(sinn(a1),coss(a1))));
+      }
+      else
+      {
+		   float3 yuv = mul(RGB_to_YUV, res.xyz);
+		   float a1 = alpha+(HueShift+2.5)*2.-yuv.x*ss*HueRotation;
+		   sig = yuv.x+dot(yuv.yz,sign(float2(sinn(a1),coss(a1))));
 #ifdef USE_DELAY_LINE
-		float4 res1 = COMPAT_TEXTURE(tex, uv+sh);
-		float3 yuv1 = mul(RGB_to_YUV, res1.xyz);
-		float a2 = (HueShift+2.5)*2.+12012.0-alpha+yuv.x*ss*HueRotation;
-		float sig1 = yuv1.x+dot(yuv1.yz,sign(float2(sinn(a2),coss(a2))));
+		   float4 res1 = COMPAT_TEXTURE(tex, uv+sh);
+		   float3 yuv1 = mul(RGB_to_YUV, res1.xyz);
+		   float a2 = (HueShift+2.5)*2.+12012.0-alpha+yuv.x*ss*HueRotation;
+		   sig1 = yuv1.x+dot(yuv1.yz,sign(float2(sinn(a2),coss(a2))));
 #endif
-
-#endif
+      }
 		if (i < int(Ywidth))
 			ysum += sig;
 
