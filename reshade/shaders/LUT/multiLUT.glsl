@@ -116,7 +116,7 @@ void main()
 		red = ( imgColor.r * (LUT_Size1 - 1.0) + 0.4999 ) / (LUT_Size1 * LUT_Size1);
 		green = ( imgColor.g * (LUT_Size1 - 1.0) + 0.4999 ) / LUT_Size1;
 		blue1 = (floor( imgColor.b  * (LUT_Size1 - 1.0) ) / LUT_Size1) + red;
-		blue2 = (ceil( imgColor.b  * (LUT_Size1 - 1.0) ) / LUT_Size1) + red;
+		blue2 = (ceil( imgColor.b  + 0.000001 * (LUT_Size1 - 1.0) ) / LUT_Size1) + red;
 		mixer = clamp(max((imgColor.b - blue1) / (blue2 - blue1), 0.0), 0.0, 32.0);
 		color1 = COMPAT_TEXTURE( SamplerLUT1, vec2( blue1, green ));
 		color2 = COMPAT_TEXTURE( SamplerLUT1, vec2( blue2, green ));
@@ -126,7 +126,7 @@ void main()
 		red = ( imgColor.r * (LUT_Size2 - 1.0) + 0.4999 ) / (LUT_Size2 * LUT_Size2);
 		green = ( imgColor.g * (LUT_Size2 - 1.0) + 0.4999 ) / LUT_Size2;
 		blue1 = (floor( imgColor.b  * (LUT_Size2 - 1.0) ) / LUT_Size2) + red;
-		blue2 = (ceil( imgColor.b  * (LUT_Size2 - 1.0) ) / LUT_Size2) + red;
+		blue2 = (ceil( imgColor.b  + 0.000001 * (LUT_Size2 - 1.0) ) / LUT_Size2) + red;
 		mixer = clamp(max((imgColor.b - blue1) / (blue2 - blue1), 0.0), 0.0, 32.0);
 		color1 = COMPAT_TEXTURE( SamplerLUT2, vec2( blue1, green ));
 		color2 = COMPAT_TEXTURE( SamplerLUT2, vec2( blue2, green ));
