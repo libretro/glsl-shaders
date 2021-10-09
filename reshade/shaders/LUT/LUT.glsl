@@ -103,7 +103,7 @@ void main()
 	float red = ( imgColor.r * (LUT_Size - 1.0) + 0.4999 ) / (LUT_Size * LUT_Size);
 	float green = ( imgColor.g * (LUT_Size - 1.0) + 0.4999 ) / LUT_Size;
 	float blue1 = (floor( imgColor.b  * (LUT_Size - 1.0) ) / LUT_Size) + red;
-	float blue2 = (ceil( imgColor.b  * (LUT_Size - 1.0) ) / LUT_Size) + red;
+	float blue2 = (ceil( imgColor.b + 0.000001 * (LUT_Size - 1.0) ) / LUT_Size) + red;
 	float mixer = clamp(max((imgColor.b - blue1) / (blue2 - blue1), 0.0), 0.0, 32.0);
 	vec4 color1 = COMPAT_TEXTURE( SamplerLUT, vec2( blue1, green ));
 	vec4 color2 = COMPAT_TEXTURE( SamplerLUT, vec2( blue2, green ));
