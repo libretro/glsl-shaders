@@ -36,7 +36,7 @@ MIT license
 #endif
 
 #pragma name crt-blurPi
-#pragma parameter scanlineGain 		"scanlineGain" 		0.25 	0.0 	1.0 	0.05
+#pragma parameter scanlineGain 		"scanlineGain" 		0.15 	0.0 	1.0 	0.05
 #pragma parameter scanlineVertical 	"scanlineVertical" 	0.0 	0.0 	1.0 	1.0
 
 
@@ -105,19 +105,19 @@ uniform COMPAT_PRECISION float scanlineVertical;
 void main(){
 
 	float texCN;
-	float scanLine;
-	//y tex coods so that screen maps exactly to [0..1]
-	if(scanlineVertical >
-	 0.5){
+	float scanLine;	
+	if(scanlineVertical > 0.5){
+	 	//y tex coods so that screen maps exactly to [0..1]
  		texCN = TEX0.x * TextureSize.x / InputSize.x;
  		scanLine = mod(texCN * OutputSize.x * 0.5, 1.0);
  	}else{
+ 		//y tex coods so that screen maps exactly to [0..1]
  		texCN = TEX0.y * TextureSize.y / InputSize.y;
  		scanLine = mod(texCN * OutputSize.y * 0.5, 1.0);
  	}
-	scanLine = (scanLine < 0.5) ? 1.0 : 1.0 - scanlineGain;
+	scanLine = (scanLine > 0.5) ? 1.0 + scanlineGain * 0.5 : 1.0 - scanlineGain * 0.5;
 	vec3 color = COMPAT_TEXTURE(Texture, TEX0.xy).rgb;
-    FragColor = vec4( color * scanLine, 1);
+    FragColor = vec4( color * scanLine, 1.0 );
     
 } 
 #endif
