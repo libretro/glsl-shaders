@@ -1,0 +1,25 @@
+# crt-blurPi slang shader #
+# 
+# Looks good on low res screens (640 x 480 or less), providing screen space scanlines.
+# Works great for anbernic handheld devices.
+# Use the "soft" variant if you are not using integer scaling
+# Made by Oriol Ferrer Mesià (armadillu)
+# http://uri.cat
+# MIT license
+
+
+shaders = 2
+
+shader0 = shaders/crt-blurPi.glsl
+filter_linear0 = false
+scale_type0 = source
+scale0 = 1.0
+
+shader1 = shaders/crt-blurPiScanlines.glsl
+filter_linear1 = true
+scale_type1 = viewport
+scale_x1 = 1.0
+scale_y1 = 1.0
+
+blurGain = "0.08"
+blurRadius = "0.50"
