@@ -2,7 +2,7 @@
 // original by hunterk
 
 ///////////////////////  Runtime Parameters  ///////////////////////
-
+#pragma parameter brightboost "Brightness Boost" 1.10 0.00 2.00 0.10
 #pragma parameter SCANLINE_SINE_COMP_B "Scanline Intensity" 0.30 0.0 1.0 0.05
 #pragma parameter cgwg "cgwg mask str. " 0.3 0.0 1.0 0.1
 #pragma parameter SCANLINE_SINE_COMP_A "Scanline Sine Comp A" 0.0 0.0 0.10 0.01
@@ -98,12 +98,14 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float brightboost;
 uniform COMPAT_PRECISION float SCANLINE_BASE_BRIGHTNESS;
 uniform COMPAT_PRECISION float SCANLINE_SINE_COMP_A;
 uniform COMPAT_PRECISION float SCANLINE_SINE_COMP_B;
 uniform COMPAT_PRECISION float cgwg;
 
 #else
+#define brightboost 1.10
 #define SCANLINE_BASE_BRIGHTNESS 0.95
 #define SCANLINE_SINE_COMP_A 0.0
 #define SCANLINE_SINE_COMP_B 0.30
@@ -145,7 +147,7 @@ void main()
 	vec4 res = COMPAT_TEXTURE(Source, pos);
 // apply the mask
 	res *= Mask(gl_FragCoord.xy * 1.0001);
-	
+	res *=brightboost;
     FragColor = scanline(pos, res),1.0;
 
 } 
