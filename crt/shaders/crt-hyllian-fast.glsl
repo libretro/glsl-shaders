@@ -26,8 +26,8 @@
 #pragma parameter MASK_INTENSITY "MASK INTENSITY" 0.5 0.0 1.0 0.1
 #pragma parameter InputGamma "INPUT GAMMA" 2.4 0.0 5.0 0.1
 #pragma parameter OutputGamma "OUTPUT GAMMA" 2.2 0.0 5.0 0.1
-#pragma parameter BRIGHTBOOST "BRIGHT BOOST" 0.0 0.0 2.0 0.1
-#pragma parameter SCANLINES "SCANLINES STRENGTH" 0.5 0.0 1.0 0.05
+#pragma parameter BRIGHTBOOST "BRIGHT BOOST" 1.5 0.0 2.0 0.1
+#pragma parameter SCANLINES "SCANLINES STRENGTH" 0.72 0.0 1.0 0.02
 
 #define GAMMA_IN(color)     pow(color, vec3(InputGamma, InputGamma, InputGamma))
 #define GAMMA_OUT(color)    pow(color, vec3(1.0 / OutputGamma, 1.0 / OutputGamma, 1.0 / OutputGamma))
