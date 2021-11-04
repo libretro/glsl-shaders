@@ -75,15 +75,6 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
-// Parameter lines go here:
-
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-
-#else
-
-#endif
-
 void main()
 {
    FragColor = vec4(pow(vec3(COMPAT_TEXTURE(PassPrev6Texture, vTexCoord).rgb), vec3(10.0)),1.0);
