@@ -1,6 +1,6 @@
 shaders = "1"
 feedback_pass = "0"
-shader0 = shaders/crt-hyllian-fast.glsl
+shader0 = shaders/hyllian/crt-hyllian-fast.glsl
 filter_linear0 = "false"
 wrap_mode0 = "clamp_to_border"
 mipmap_input0 = "false"
