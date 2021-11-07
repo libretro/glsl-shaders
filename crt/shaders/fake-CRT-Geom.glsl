@@ -6,7 +6,6 @@
 /////  comment these lines to disable effects and gain speed  //////
 ////////////////////////////////////////////////////////////////////
 
-#define MASK // fancy, expensive phosphor mask effect
 #define CURVATURE // applies barrel distortion to the screen
 #define SCANLINES  // applies horizontal scanline effect
 
@@ -21,9 +20,10 @@
 #pragma parameter SCANLINE_SINE_COMP_B "Scanline Intensity" 0.60 0.0 1.0 0.05
 #pragma parameter warpX "warpX" 0.03 0.0 0.125 0.01
 #pragma parameter warpY "warpY" 0.02 0.0 0.125 0.01
-#pragma parameter cgwg "cgwg mask str. " 0.5 0.0 1.0 0.1
+#pragma parameter cgwg "CGWG mask str. " 0.5 0.0 1.0 0.1
 #pragma parameter crt_gamma "CRT Gamma" 2.2 1.0 4.0 0.05
-#pragma parameter monitor_gamma "Monitor Gamma" 2.2 1.0 4.0 0.05
+#pragma parameter monitor_gamma "Monitor Gamma" 2.4 1.0 4.0 0.05
+#pragma parameter bloom "Bloom Strength" 0.00 0.00 1.00 0.02
 #pragma parameter SCANLINE_SINE_COMP_A "Scanline Sine Comp A" 0.0 0.0 0.10 0.01
 #pragma parameter SCANLINE_BASE_BRIGHTNESS "Scanline Base Brightness" 0.95 0.0 1.0 0.01
 
@@ -75,7 +75,7 @@ uniform COMPAT_PRECISION float WHATEVER;
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    TEX0.xy = TexCoord.xy;
+    TEX0.xy = TexCoord.xy*1.0001;
 }
 
 #elif defined(FRAGMENT)
@@ -126,6 +126,7 @@ uniform COMPAT_PRECISION float maskDark;
 uniform COMPAT_PRECISION float cgwg;
 uniform COMPAT_PRECISION float crt_gamma;
 uniform COMPAT_PRECISION float monitor_gamma;
+uniform COMPAT_PRECISION float bloom;
 #else
 #define SCANLINE_BASE_BRIGHTNESS 0.95
 #define SCANLINE_SINE_COMP_A 0.0
@@ -134,8 +135,9 @@ uniform COMPAT_PRECISION float monitor_gamma;
 #define warpY 0.041
 #define maskDark 0.5
 #define cgwg 0.4
-#define crt_gamma 2.5
-#define monitor_gamma 2.2
+#define crt_gamma 2.2
+#define monitor_gamma 2.4
+#define bloom 0.00
 #endif
 
 vec4 scanline(vec2 coord, vec4 frame)
@@ -161,9 +163,20 @@ vec2 Warp(vec2 pos)
     
     return pos*0.5 + 0.5;
 }
+
+float corner(vec2 coord)
+{
+                coord *= TextureSize / InputSize;
+                coord = (coord - vec2(0.5)) * 1.0 + vec2(0.5);
+                coord = min(coord, vec2(1.0)-coord) * vec2(1.0, InputSize.y/InputSize.x);
+                vec2 cdist = vec2(0.03); // alter value to change corner size
+                coord = (cdist - min(coord,cdist));
+                float dist = sqrt(dot(coord,coord));
+                return clamp((cdist.x-dist)*300.0,0.0, 1.0);
+}  
 #endif
 
-// mask caclulation
+// mask calculation
 
 
 	// cgwg mask.
@@ -210,7 +223,9 @@ void main()
 #endif
 
 	// re-apply the gamma curve for the mask path
-    FragColor = pow(scanline(pos, res), out_gamma);
+    vec4 color = pow(scanline(pos, res), out_gamma);
+    color+=bloom*color;
+    FragColor = color*corner(pos);
 
 } 
 #endif
