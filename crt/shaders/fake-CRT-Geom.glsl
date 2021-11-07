@@ -203,11 +203,28 @@ void main()
 	vec2 pos = TEX0.xy;
 #endif
 
-	// mask effects look bad unless applied in linear gamma space
+//borrowed from CRT-Pi
+		vec2 OGL2Pos = pos * TextureSize;
+		vec2 pC4 = floor(OGL2Pos) + 0.5;
+		vec2 coord = pC4 / TextureSize;
+		vec2 deltas = OGL2Pos - pC4;
+		vec2 signs = sign(deltas);
+		deltas.x *= 2.0;
+		deltas = deltas * deltas;
+		deltas.y = deltas.y * deltas.y;
+		deltas.x *= 0.5;
+		deltas.y *= 8.0;
+		deltas /= TextureSize;
+		deltas *= signs;
+		vec2 tc = coord + deltas;
+
+
+// mask effects look bad unless applied in linear gamma space
 	vec4 in_gamma = vec4(monitor_gamma, monitor_gamma, monitor_gamma, 1.0);
 	vec4 out_gamma = vec4(1.0 / crt_gamma, 1.0 / crt_gamma, 1.0 / crt_gamma, 1.0);
-	vec4 res = pow(COMPAT_TEXTURE(Source, pos), in_gamma);
-
+	vec3 res1 = COMPAT_TEXTURE(Texture, tc).rgb;
+	vec4 res = vec4(res1.rgb,1.0);
+	res=pow(res,in_gamma);
 
 	// apply the mask; looks bad with vert scanlines so make them mutually exclusive
 	res *= Mask(gl_FragCoord.xy * 1.0001);
@@ -215,7 +232,7 @@ void main()
 
 #if defined CURVATURE && defined GL_ES
 	// hacky clamp fix for GLES
-    vec2 bordertest = (pos);
+    vec2 bordertest = (tc);
     if ( bordertest.x > 0.0001 && bordertest.x < 0.9999 && bordertest.y > 0.0001 && bordertest.y < 0.9999)
         res = res;
     else
@@ -225,7 +242,7 @@ void main()
 	// re-apply the gamma curve for the mask path
     vec4 color = pow(scanline(pos, res), out_gamma);
     color+=bloom*color;
-    FragColor = color*corner(pos);
+    FragColor = color*corner(tc);
 
 } 
 #endif
