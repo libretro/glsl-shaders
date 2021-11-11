@@ -1,8 +1,8 @@
 // Parameter lines go here:
 #pragma parameter SCANLINE_BASE_BRIGHTNESS "Scanline Base Brightness" 0.95 0.0 1.0 0.01
-#pragma parameter SCANLINE_SINE_COMP_A "Vertical Scanline Strength" 0.0 0.0 1.00 0.02
+#pragma parameter SCANLINE_SINE_COMP_A "Grid Strength" 0.0 0.0 1.00 0.02
 #pragma parameter SCANLINE_SINE_COMP_B "Scanline Strength" 0.25 0.0 1.0 0.05
-#pragma parameter size "Vertical Scanline size"  1.0 1.0 2.0 1.0
+#pragma parameter size "Grid size"  1.0 1.0 2.0 1.0
 #define pi 3.141592654
 
 #if defined(VERTEX)
