@@ -1,8 +1,8 @@
 // Parameter lines go here:
 #pragma parameter SCANLINE_BASE_BRIGHTNESS "Scanline Base Brightness" 0.95 0.0 1.0 0.01
-#pragma parameter SCANLINE_SINE_COMP_A "Scanline Sine Comp A" 0.0 0.0 0.10 0.01
-#pragma parameter SCANLINE_SINE_COMP_B "Scanline Sine Comp B" 0.15 0.0 1.0 0.05
-
+#pragma parameter SCANLINE_SINE_COMP_A "Vertical Scanline Strength" 0.0 0.0 1.00 0.02
+#pragma parameter SCANLINE_SINE_COMP_B "Scanline Strength" 0.25 0.0 1.0 0.05
+#pragma parameter size "Vertical Scanline size"  1.0 1.0 2.0 1.0
 #define pi 3.141592654
 
 #if defined(VERTEX)
@@ -37,13 +37,14 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION float size;
 
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy;
-	omega = vec2(pi * OutputSize.x, 2.0 * pi * TextureSize.y);
+    omega = vec2(pi * size * OutputSize.x, 2.0 * pi * TextureSize.y);
 }
 
 #elif defined(FRAGMENT)
