@@ -331,13 +331,12 @@ void main()
 	
 	color*=brightboost;
 	color = min(color, 1.0);
+	color = color*Mask(gl_FragCoord.xy*1.0001, color);
 
 	color = pow(color, vec3(gamma_out, gamma_out, gamma_out));
-	vec3 mcolor = color;
 
 	float l = length(color);
 	color = normalize(pow(color, vec3(saturation,saturation,saturation)))*l;
-	color = color*Mask(gl_FragCoord.xy*1.0001, mcolor);
 
     FragColor = vec4(color, 1.0);
 } 
