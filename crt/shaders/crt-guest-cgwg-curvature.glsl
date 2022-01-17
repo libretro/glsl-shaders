@@ -27,7 +27,7 @@
 #pragma parameter beam_max "Scanline bright" 2.1 0.5 3.0 0.05
 #pragma parameter h_sharp "Horizontal sharpness" 2.00 1.0 5.0 0.05
 #pragma parameter gamma_out "Gamma out" 0.5 0.2 0.6 0.01
-#pragma parameter shadowMask "CRT Mask: 0:CGWG, 1-4:Lottes, 5-6:'Trinitron'" 0.0 -1.0 7.0 1.0
+#pragma parameter shadowMask "CRT Mask: 0:CGWG, 1-4:Lottes, 5-6:'Trinitron'" 0.0 -1.0 8.0 1.0
 #pragma parameter masksize "CRT Mask Size (2.0 is nice in 4k)" 1.0 1.0 2.0 1.0
 #pragma parameter mcut "Mask 5-7 cutoff" 0.2 0.0 0.5 0.05
 #pragma parameter maskDark "Lottes maskDark" 0.5 0.0 2.0 0.1
@@ -269,7 +269,22 @@ vec3 Mask(vec2 pos, vec3 c)
 		pos.x = fract(pos.x/2.0);
 		if  (pos.x < 0.5) mask = vec3(1.0 + 0.6*(1.0-mx));
 	}    
-	
+	else if (shadowMask == 8.0)
+	{
+		float line = maskLight;
+		float odd  = 0.0;
+
+		if (fract(pos.x/4.0) < 0.5)
+			odd = 1.0;
+		if (fract((pos.y + odd)/2.0) < 0.5)
+			line = maskDark;
+
+		pos.x = fract(pos.x/2.0);
+    
+		if  (pos.x < 0.5) {mask.r = maskLight; mask.b = maskLight;}
+		else  mask.g = maskLight;	
+		mask*=line;  
+	} 
 	return mask;
 }  
 
