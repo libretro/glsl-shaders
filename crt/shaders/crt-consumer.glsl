@@ -8,7 +8,7 @@
 #pragma parameter SCANLINE "Scanline Strength" 0.3 0.0 1.0 0.02
 #pragma parameter BRIGHTBOOST1 "Bright boost dark pixels" 1.1 0.0 3.0 0.05
 #pragma parameter BRIGHTBOOST2 "Bright boost bright pixels" 1.05 0.0 3.0 0.05
-#pragma parameter Shadowmask "Mask Type" 0.0 -1.0 1.0 1.0
+#pragma parameter Shadowmask "Mask Type" 0.0 -1.0 4.0 1.0
 #pragma parameter masksize "Mask Size" 1.0 0.0 2.0 1.0
 #pragma parameter MaskDark "Mask Dark" 0.5 0.0 1.0 0.1
 #pragma parameter MaskLight "Mask Light" 1.5 0.0 1.0 0.1
@@ -285,11 +285,11 @@ vec4 glow (vec2 texcoord,vec4 col)
 
    // blur in x (horiz)
    // take nine samples, with the distance blurSize between them
-   sum += texture(iChannel0, vec2(texcoord.x - i*dx, texcoord.y)) * k;
+   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - i*dx, texcoord.y)) * k;
     
     // blur in y (vertical)
    // take nine samples, with the distance blurSize between them
-   sum += texture(iChannel0, vec2(texcoord.x, texcoord.y - i*dy)) * k;
+   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x, texcoord.y - i*dy)) * k;
   
     }
     sum=vec4((sum.rgb/k_total),1.0);
@@ -307,9 +307,9 @@ void main()
     vec2 uv = Warp(pos.xy*(TextureSize.xy/InputSize.xy))*(InputSize.xy/TextureSize.xy);
     
     // Take multiple samples to displace different color channels
-    vec3 sample1 = texture(iChannel0, vec2(uv.x-CONVX/1000.0,uv.y-CONVY/1000.0)).rgb; 
-    vec3 sample2 = texture(iChannel0, uv).rgb;
-    vec3 sample3 = texture(iChannel0, vec2(uv.x+CONVX/1000.0,uv.y+CONVY/1000.0)).rgb;
+    vec3 sample1 = COMPAT_TEXTURE(iChannel0, vec2(uv.x-CONVX/1000.0,uv.y-CONVY/1000.0)).rgb; 
+    vec3 sample2 = COMPAT_TEXTURE(iChannel0, uv).rgb;
+    vec3 sample3 = COMPAT_TEXTURE(iChannel0, vec2(uv.x+CONVX/1000.0,uv.y+CONVY/1000.0)).rgb;
  
     
     vec4 color = vec4(0.5*sample1.r+0.5*sample2.r, 0.25*sample1.g+0.5*sample2.g+0.25*sample3.g, 0.5*sample2.b+0.5*sample3.b, 1.0);
