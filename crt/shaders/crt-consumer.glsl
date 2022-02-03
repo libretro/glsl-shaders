@@ -1,5 +1,3 @@
-
-
 // Parameter lines go here:
 
 #pragma parameter WARP "Curvature" 0.0 0.0 0.12 0.01
@@ -11,14 +9,13 @@
 #pragma parameter Shadowmask "Mask Type" 0.0 -1.0 4.0 1.0
 #pragma parameter masksize "Mask Size" 1.0 0.0 2.0 1.0
 #pragma parameter MaskDark "Mask Dark" 0.5 0.0 1.0 0.1
-#pragma parameter MaskLight "Mask Light" 1.5 0.0 1.0 0.1
-#pragma parameter GAMMA_IN "Gamma In" 2.5 0.0 4.0 0.1
+#pragma parameter MaskLight "Mask Light" 1.5 0.0 1.5 0.1
+#pragma parameter GAMMA_IN "Gamma In" 2.4 0.0 4.0 0.1
 #pragma parameter GAMMA_OUT "Gamma Out" 2.2 0.0 4.0 0.1
 #pragma parameter SATURATION "Saturation" 1.0 0.0 2.0 0.05
 #pragma parameter intensity "Glow Strength, 0.0 for speedup" 0.0 0.0 0.5 0.01
-#pragma parameter FALLOFF "Glow Fall off" 0.5 0.1 10.0 0.05
-#pragma parameter GlowSize "Glow Size" 1.5 0.0 8.0 0.25
-#pragma parameter SAMPLES "Glow Samples" 2.0 1.0 8.0 1.0
+#pragma parameter Size "Glow Size" 0.4 0.0 256.0 0.05
+#pragma parameter nois "Noise (rec: RF:12.0,Composite 20.0,RGB 32.0" 0.0 0.0 64.0 1.0
 
 
 #define PI 3.14159
@@ -120,34 +117,30 @@ uniform COMPAT_PRECISION float MaskDark;
 uniform COMPAT_PRECISION float MaskLight;
 uniform COMPAT_PRECISION float masksize;
 uniform COMPAT_PRECISION float intensity;
-uniform COMPAT_PRECISION float FALLOFF;
-uniform COMPAT_PRECISION float GlowSize;
-uniform COMPAT_PRECISION float SAMPLES;
+uniform COMPAT_PRECISION float Size;
+uniform COMPAT_PRECISION float nois;
 
 
 
 #else
-#define WARP 0.06
-#define CONVX 0.1
-#define CONVY 0.2
+#define WARP 0.0
+#define CONVX 0.0
+#define CONVY 0.0
 #define SCANLINE 0.3
 #define SATURATION 1.0 
-#define BRIGHTBOOST1 1.5 
-#define BRIGHTBOOST2 1.1 
-#define GAMMA_IN 2.5
+#define BRIGHTBOOST1 1.1 
+#define BRIGHTBOOST2 1.05 
+#define GAMMA_IN 2.4
 #define GAMMA_OUT 2.2
 #define Shadowmask 0.0
 #define MaskDark 0.5
 #define MaskLight 1.5
 #define masksize 1.0
-#define intensity 0.2
-#define FALLOFF 0.3
-#define GlowSize 1.0
-#define GlowSize 3.0
+#define intensity 0.3
+#define Size 1.0
+#define nois 0.0
 
 #endif
-
-
 
 
 // Slight fish eye effect, bulge in the middle
@@ -170,13 +163,13 @@ vec4 scanLine(vec4 c, float y )
     float lum=length(c)*0.5775;
     lum=1.8*pow(lum,0.45)-0.8; lum=clamp(lum,0.0,1.0);
 
-    float intensity = 1.0*lum+(SCANLINE *sin(y*InputSize.y*PI*(2.0*TextureSize.y/InputSize.y)));
+    float intensity = lum+(SCANLINE *sin(y*PI*2.0*TextureSize.y));
 
     vec4 result = vec4(intensity * c.rgb, 1.0);
     return result;
 }
 
-vec4 mask(vec2 x)
+vec4 mask(vec2 x, vec4 col)
 {
     x = floor(x/masksize);        
   
@@ -185,13 +178,13 @@ vec4 mask(vec2 x)
     {
     float m =fract(x.x*0.4999);
 
-    if (m<0.4999) return vec4(MaskLight,MaskDark,MaskLight,1.0);
-    else return vec4(MaskDark,MaskLight,MaskDark,1.0);
+    if (m<0.4999) return vec4(MaskLight,col.g,MaskLight,1.0);
+    else return vec4(col.r,MaskLight,col.b,1.0);
     }
    
     else if (Shadowmask == 1.0)
     {
-        vec4 Mask = vec4(MaskDark,MaskDark,MaskDark,1.0);
+        vec4 Mask = vec4(col.rgb,1.0);
 
         float line = MaskLight;
         float odd  = 0.0;
@@ -216,9 +209,9 @@ vec4 mask(vec2 x)
     {
     float m =fract(x.x*0.3333);
 
-    if (m<0.3333) return vec4(MaskLight,MaskDark,MaskDark,1.0);
-    if (m<0.6666) return vec4(MaskDark,MaskLight,MaskDark,1.0);
-    else return vec4(MaskDark,MaskDark,MaskLight,1.0);
+    if (m<0.3333) return vec4(MaskLight,col.g,col.b,1.0);
+    if (m<0.6666) return vec4(col.r,MaskLight,col.b,1.0);
+    else return vec4(col.r,col.g,MaskLight,1.0);
     }
 
     if (Shadowmask == 3.0)
@@ -226,13 +219,13 @@ vec4 mask(vec2 x)
     float m =fract(x.x*0.5);
 
     if (m<0.5) return vec4(MaskLight,MaskLight,MaskLight,1.0);
-    else return vec4(MaskDark,MaskDark,MaskDark,1.0);
+    else return vec4(col.rgb,1.0);
     }
    
 
     else if (Shadowmask == 4.0)
     {   
-        vec4 Mask = vec4(MaskDark,MaskDark,MaskDark,1.0);
+        vec4 Mask = vec4(col.rgb,1.0);
         float line = MaskLight;
         float odd  = 0.0;
 
@@ -269,35 +262,42 @@ vec4 saturation (vec4 textureColor)
 
 
 vec4 glow (vec2 texcoord,vec4 col)
+
 {
-    vec4 sum = vec4(0.0);
-    float dx = GlowSize * SourceSize.z;
-    float dy = GlowSize *SourceSize.w;
-    float k=0.0;
-    float k_total=0.0;
-
-    for (float i = -SAMPLES; i <= SAMPLES; i++) 
-    {
-    float x=i;
-    k = exp(-FALLOFF * (x) * (x));
-    k_total += k;
-        
-
-   // blur in x (horiz)
+   vec4 sum = vec4(0);
+    float blurSize = Size/512.0;
+   // blur in y (vertical)
    // take nine samples, with the distance blurSize between them
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - i*dx, texcoord.y)) * k;
+   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - 4.0*blurSize, texcoord.y)) * 0.05;
+   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - 3.0*blurSize, texcoord.y)) * 0.09;
+   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - 2.0*blurSize, texcoord.y)) * 0.12;
+   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - blurSize, texcoord.y)) * 0.15;
+   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x, texcoord.y)) * 0.16;
+   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + blurSize, texcoord.y)) * 0.15;
+   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + 2.0*blurSize, texcoord.y)) * 0.12;
+   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + 3.0*blurSize, texcoord.y)) * 0.09;
+   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + 4.0*blurSize, texcoord.y)) * 0.05;
     
     // blur in y (vertical)
    // take nine samples, with the distance blurSize between them
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x, texcoord.y - i*dy)) * k;
-  
-    }
-    sum=vec4((sum.rgb/k_total),1.0);
-   //increase blur with intensity!
+   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x, texcoord.y - 4.0*blurSize)) * 0.05;
+   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x, texcoord.y - 3.0*blurSize)) * 0.09;
+   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x, texcoord.y - 2.0*blurSize)) * 0.12;
+   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x, texcoord.y - blurSize)) * 0.15;
+   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x, texcoord.y)) * 0.16;
+   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x, texcoord.y + blurSize)) * 0.15;
+   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x, texcoord.y + 2.0*blurSize)) * 0.12;
+   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x, texcoord.y + 3.0*blurSize)) * 0.09;
+   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x, texcoord.y + 4.0*blurSize)) * 0.05;
+
    return sum*intensity; 
- 
+
 }
 
+float noise(vec2 co)
+{
+return fract(sin(iTime * dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
 
 void main()
 {
@@ -305,7 +305,7 @@ void main()
     
     // Normalized pixel coordinates (from 0 to 1)
     vec2 uv = Warp(pos.xy*(TextureSize.xy/InputSize.xy))*(InputSize.xy/TextureSize.xy);
-    
+
     // Take multiple samples to displace different color channels
     vec3 sample1 = COMPAT_TEXTURE(iChannel0, vec2(uv.x-CONVX/1000.0,uv.y-CONVY/1000.0)).rgb; 
     vec3 sample2 = COMPAT_TEXTURE(iChannel0, uv).rgb;
@@ -313,20 +313,21 @@ void main()
  
     
     vec4 color = vec4(0.5*sample1.r+0.5*sample2.r, 0.25*sample1.g+0.5*sample2.g+0.25*sample3.g, 0.5*sample2.b+0.5*sample3.b, 1.0);
-    
+
     
     color=pow(color,vec4(GAMMA_IN, GAMMA_IN,GAMMA_IN,1.0));
     
     color*=mix(BRIGHTBOOST1, BRIGHTBOOST2, max(max(color.r,color.g),color.b));    
 
     color=scanLine(color,uv.y);
-    color*=mask(gl_FragCoord.xy);
+    color*=mask(gl_FragCoord.xy*1.0001,color);
 
     color=pow(color,vec4(1.0/GAMMA_OUT,1.0/GAMMA_OUT,1.0/GAMMA_OUT,1.0)); 
 
     if (intensity !=0.0) color+=glow(uv,color);
     if (SATURATION != 1.0) color = saturation(color);
-
+    if (nois != 0.0) color+=noise(uv*2.0)/nois;
     FragColor = color;
 } 
 #endif
+
