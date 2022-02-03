@@ -15,7 +15,7 @@
 #pragma parameter SATURATION "Saturation" 1.0 0.0 2.0 0.05
 #pragma parameter intensity "Glow Strength, 0.0 for speedup" 0.0 0.0 0.5 0.01
 #pragma parameter Size "Glow Size" 0.4 0.0 256.0 0.05
-#pragma parameter nois "Noise (rec: RF:12.0,Composite 20.0,RGB 32.0" 0.0 0.0 64.0 1.0
+#pragma parameter nois "Noise" 0.0 0.0 64.0 1.0
 
 
 #define PI 3.14159
@@ -326,7 +326,7 @@ void main()
 
     if (intensity !=0.0) color+=glow(uv,color);
     if (SATURATION != 1.0) color = saturation(color);
-    if (nois != 0.0) color+=noise(uv*2.0)/nois;
+    if (nois != 0.0) color*=1.0+noise(uv*2.0)/nois;
     FragColor = color;
 } 
 #endif
