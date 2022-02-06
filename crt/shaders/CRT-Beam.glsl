@@ -1,22 +1,22 @@
 
 // Parameter lines go here:
-#pragma parameter Scanline "Scanline overall Strength" 0.5 0.0 2.0 0.05
+#pragma parameter Scanline "Scanline overall Strength" 0.45 0.0 2.0 0.05
 #pragma parameter weightr "Scanline Red Weight" 0.04 0.0 0.8 0.01
-#pragma parameter weightg "Scanline Green Weight" 0.324 0.0 0.8 0.01
+#pragma parameter weightg "Scanline Green Weight" 0.32 0.0 0.8 0.01
 #pragma parameter weightb "Scanline Blue Weight" 0.04 0.0 0.8 0.01
 #pragma parameter gap "Scanline gap Brightness" 0.06 0.0 1.0 0.01
-#pragma parameter blur "Blur Horizontal" 0.70 0.00 1.20 0.10
-#pragma parameter glow "Glow Strength" 0.08 0.0 0.3 0.01
+#pragma parameter blur "Blur Horizontal" 0.50 0.00 1.20 0.10
+#pragma parameter glow "Glow Strength" 0.0 0.0 0.3 0.01
 #pragma parameter mask "Mask -1:Off,0:CGWG,1-2:Lottes,3-4 Gray,5-6:CGWG slot,7 VGA" 7.0 -1.0 7.0 1.0
 #pragma parameter msk_size "Mask size" 1.0 1.0 2.0 1.0
 #pragma parameter scale "VGA Mask Vertical Scale" 2.0 2.00 10.00 1.0
 #pragma parameter MaskDark "Lottes Mask Dark" 0.50 0.00 2.00 0.10
 #pragma parameter MaskLight "Lottes Mask Light" 1.50 0.00 2.00 0.10
-#pragma parameter bright "Brightness" 1.06 0.00 2.00 0.02
-#pragma parameter sat "Saturation, 1.0:Off" 1.30 0.00 2.00 0.05
-#pragma parameter contrast "Contrast, 1.0:Off" 1.1 0.00 2.00 0.05
-#pragma parameter WP "Color Temperature %, 0.0:Off" -10.0 -100.0 100.0 5.0 
-#pragma parameter gamma "Gamma correct, 0.0:Off" 0.42 0.00 0.60 0.01
+#pragma parameter bright "Brightness" 1.0 0.00 2.00 0.02
+#pragma parameter sat "Saturation, 1.0:Off" 1.1 0.00 2.00 0.05
+#pragma parameter contrast "Contrast, 1.0:Off" 1.0 0.00 2.00 0.05
+#pragma parameter WP "Color Temperature %, 0.0:Off" 0.0 -100.0 100.0 5.0 
+#pragma parameter gamma "Gamma correct, 0.0:Off" 0.55 0.00 0.60 0.01
 
 #if defined(VERTEX)
 
