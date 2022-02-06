@@ -1,10 +1,10 @@
-// Simple scanlines with curvature and mask effects lifted from crt-geom
+// Simple scanlines with mask effects from crt-geom
 // original by hunterk
 
 ///////////////////////  Runtime Parameters  ///////////////////////
 #pragma parameter brightboost "Brightness Boost" 1.10 0.00 2.00 0.10
 #pragma parameter SCANLINE_SINE_COMP_B "Scanline Intensity" 0.30 0.0 1.0 0.05
-#pragma parameter cgwg "cgwg mask str. " 0.3 0.0 1.0 0.1
+#pragma parameter cgwg "CGWG mask strength" 0.3 0.0 1.0 0.1
 #pragma parameter SCANLINE_SINE_COMP_A "Scanline Sine Comp A" 0.0 0.0 0.10 0.01
 #pragma parameter SCANLINE_BASE_BRIGHTNESS "Scanline Base Brightness" 0.95 0.0 1.0 0.01
 
@@ -56,7 +56,7 @@ uniform COMPAT_PRECISION float WHATEVER;
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    TEX0.xy = TexCoord.xy;
+    TEX0.xy = TexCoord.xy*1.0001;
 }
 
 #elif defined(FRAGMENT)
@@ -115,39 +115,36 @@ uniform COMPAT_PRECISION float cgwg;
 
 
 //scanline calculation
-vec4 scanline(vec2 coord, vec4 frame)
+vec4 scanline(vec2 coord, vec3 frame)
 {
 	vec2 omega = vec2(3.1415 * OutputSize.x, 2.0 * 3.1415 * TextureSize.y);
 	vec2 sine_comp = vec2(SCANLINE_SINE_COMP_A, SCANLINE_SINE_COMP_B);
-	vec3 res = frame.xyz;
 	
-	vec3 scanline = res * (SCANLINE_BASE_BRIGHTNESS + dot(sine_comp * sin(coord * omega), vec2(1.0, 1.0)));
+	vec3 scanline = frame * (SCANLINE_BASE_BRIGHTNESS + dot(sine_comp * sin(coord * omega), vec2(1.0, 1.0)));
 
 	return vec4(scanline.x, scanline.y, scanline.z, 1.0);
 }
 
 // CGWG mask calculation
 	
-	vec4 Mask(vec2 pos)
-	{
-	vec3 mask = vec3(0.5, 0.5, 0.5);
-	  
-	{
-      float mf = fract(gl_FragCoord.x * 0.5);
+      vec3 Mask(float pos)
+{	
+      float mf = fract(pos * 0.5);
       float mc = 1.0 - cgwg;	
-      if (mf <0.5) { mask.r = 1.0; mask.g = mc; mask.b = 1.0; }
-      else { mask.r = mc; mask.g = 1.0; mask.b = mc; };
-   }  
-		return vec4(mask, 1.0);
-	}
+      if (mf <0.5) return vec3(1.0,mc,1.0);
+      else return vec3(mc,1.0,mc);
+     
+}
 
 void main()
 {
 	vec2 pos = TEX0.xy;
-	vec4 res = COMPAT_TEXTURE(Source, pos);
+
+	vec3 res = COMPAT_TEXTURE(Source, pos).rgb;
+
 // apply the mask
-	res *= Mask(gl_FragCoord.xy * 1.0001);
-	res *=brightboost;
+	res *= Mask(gl_FragCoord.x*1.0001);
+	res *= brightboost;
     FragColor = scanline(pos, res),1.0;
 
 } 
