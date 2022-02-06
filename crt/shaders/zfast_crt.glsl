@@ -100,10 +100,9 @@ uniform COMPAT_PRECISION float MASK_FADE;
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-	
-	TEX0.xy = (TexCoord.xy);
-	maskFade = 0.3333*MASK_FADE;
-	invDims = 1.0/TextureSize.xy;
+    TEX0.xy = TexCoord.xy*1.0001;
+    maskFade = 0.3333*MASK_FADE;
+    invDims = 1.0/TextureSize.xy;
 }
 
 #elif defined(FRAGMENT)
@@ -167,7 +166,6 @@ uniform COMPAT_PRECISION float MASK_FADE;
 
 void main()
 {
-
 	//This is just like "Quilez Scaling" but sharper
 	COMPAT_PRECISION vec2 p = vTexCoord * TextureSize;
 	COMPAT_PRECISION vec2 i = floor(p) + 0.50;
@@ -178,10 +176,10 @@ void main()
 	COMPAT_PRECISION float YY = Y*Y;
 	
 #if defined(FINEMASK) 
-	COMPAT_PRECISION float whichmask = fract(floor(vTexCoord.x*OutputSize.x*-0.4999));
+	COMPAT_PRECISION float whichmask = fract((gl_FragCoord.x*1.0001)*-0.4999);
 	COMPAT_PRECISION float mask = 1.0 + float(whichmask < 0.5) * -MASK_DARK;
 #else
-	COMPAT_PRECISION float whichmask = fract(floor(vTexCoord.x*OutputSize.x)*-0.3333);
+	COMPAT_PRECISION float whichmask = fract((gl_FragCoord.x*1.0001)*-0.3333);
 	COMPAT_PRECISION float mask = 1.0 + float(whichmask <= 0.33333) * -MASK_DARK;
 #endif
 	COMPAT_PRECISION vec3 colour = COMPAT_TEXTURE(Source, p).rgb;
@@ -193,7 +191,7 @@ void main()
 	colour.rgb*=float(tc.x > 0.0)*float(tc.y > 0.0); //why doesn't the driver do the right thing?
 #endif
 
-	FragColor.rgba = vec4(colour.rgb*mix(scanLineWeight*mask, scanLineWeightB, dot(colour.rgb,vec3(maskFade))),1.0);
+	FragColor = vec4(colour*mix(scanLineWeight*mask, scanLineWeightB, dot(colour.rgb,vec3(maskFade))),1.0);
 	
 } 
 #endif
