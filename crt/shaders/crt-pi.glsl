@@ -29,12 +29,12 @@ MASK_TYPE defines what, if any, shadow mask to use. MASK_BRIGHTNESS defines how 
 
 #pragma parameter CURVATURE_X "Screen curvature - horizontal" 0.10 0.0 1.0 0.01
 #pragma parameter CURVATURE_Y "Screen curvature - vertical" 0.15 0.0 1.0 0.01
-#pragma parameter MASK_BRIGHTNESS "Mask brightness" 0.70 0.0 1.0 0.01
+#pragma parameter MASK_BRIGHTNESS "Mask brightness" 0.70 0.0 1.0 0.1
 #pragma parameter SCANLINE_WEIGHT "Scanline weight" 6.0 0.0 15.0 0.1
 #pragma parameter SCANLINE_GAP_BRIGHTNESS "Scanline gap brightness" 0.12 0.0 1.0 0.01
-#pragma parameter BLOOM_FACTOR "Bloom factor" 1.5 0.0 5.0 0.01
-#pragma parameter INPUT_GAMMA "Input gamma" 2.4 0.0 5.0 0.01
-#pragma parameter OUTPUT_GAMMA "Output gamma" 2.2 0.0 5.0 0.01
+#pragma parameter BLOOM_FACTOR "Bloom factor" 1.5 0.0 5.0 0.05
+#pragma parameter INPUT_GAMMA "Input gamma" 2.4 0.0 5.0 0.1
+#pragma parameter OUTPUT_GAMMA "Output gamma" 2.2 0.0 5.0 0.1
 
 // Haven't put these as parameters as it would slow the code down.
 #define SCANLINES
@@ -98,7 +98,7 @@ void main()
 	screenScale = TextureSize / InputSize;
 #endif
 	filterWidth = (InputSize.y / OutputSize.y) / 3.0;
-	TEX0 = TexCoord;
+	TEX0 = TexCoord*1.0001;
 	gl_Position = MVPMatrix * VertexCoord;
 }
 #elif defined(FRAGMENT)
@@ -209,14 +209,14 @@ void main()
 		gl_FragColor = vec4(colour, 1.0);
 #else
 #if MASK_TYPE == 1
-		float whichMask = fract(gl_FragCoord.x * 0.5);
+		float whichMask = fract((gl_FragCoord.x*1.0001) * 0.5);
 		vec3 mask;
 		if (whichMask < 0.5)
 			mask = vec3(MASK_BRIGHTNESS, 1.0, MASK_BRIGHTNESS);
 		else
 			mask = vec3(1.0, MASK_BRIGHTNESS, 1.0);
 #elif MASK_TYPE == 2
-		float whichMask = fract(gl_FragCoord.x * 0.3333333);
+		float whichMask = fract((gl_FragCoord.x*1.0001) * 0.3333333);
 		vec3 mask = vec3(MASK_BRIGHTNESS, MASK_BRIGHTNESS, MASK_BRIGHTNESS);
 		if (whichMask < 0.3333333)
 			mask.x = 1.0;
