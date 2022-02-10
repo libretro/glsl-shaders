@@ -1,15 +1,15 @@
 // Parameter lines go here:
 
-#pragma parameter WARP "Curvature" 0.0 0.0 0.12 0.01
-#pragma parameter CONVX "Convergence X" 0.0 -1.0 1.0 0.05
-#pragma parameter CONVY "Convergence Y" 0.0 -1.0 1.0 0.05
+#pragma parameter WARP "Curvature" 0.03 0.0 0.12 0.01
+#pragma parameter CONVX "Convergence X" 0.45 -1.0 1.0 0.05
+#pragma parameter CONVY "Convergence Y" -0.15 -1.0 1.0 0.05
 #pragma parameter SCANLINE "Scanline Strength" 0.3 0.0 1.0 0.02
 #pragma parameter BRIGHTBOOST1 "Bright boost dark pixels" 1.1 0.0 3.0 0.05
-#pragma parameter BRIGHTBOOST2 "Bright boost bright pixels" 1.05 0.0 3.0 0.05
-#pragma parameter Shadowmask "Mask Type" 0.0 -1.0 4.0 1.0
+#pragma parameter BRIGHTBOOST2 "Bright boost bright pixels" 0.9 0.0 3.0 0.05
+#pragma parameter Shadowmask "Mask Type" 0.0 -1.0 7.0 1.0
 #pragma parameter masksize "Mask Size" 1.0 0.0 2.0 1.0
-#pragma parameter MaskDark "Mask Dark" 0.5 0.0 1.0 0.1
-#pragma parameter MaskLight "Mask Light" 1.5 0.0 1.5 0.1
+#pragma parameter MaskDark "Mask Dark" 0.5 0.0 2.0 0.1
+#pragma parameter MaskLight "Mask Light" 1.5 0.0 2.0 0.1
 #pragma parameter GAMMA_IN "Gamma In" 2.4 0.0 4.0 0.1
 #pragma parameter GAMMA_OUT "Gamma Out" 2.2 0.0 4.0 0.1
 #pragma parameter SATURATION "Saturation" 1.0 0.0 2.0 0.05
@@ -123,9 +123,9 @@ uniform COMPAT_PRECISION float nois;
 
 
 #else
-#define WARP 0.0
-#define CONVX 0.0
-#define CONVY 0.0
+#define WARP 0.03
+#define CONVX 0.45
+#define CONVY -0.15
 #define SCANLINE 0.3
 #define SATURATION 1.0 
 #define BRIGHTBOOST1 1.1 
@@ -162,8 +162,10 @@ vec4 scanLine(vec4 c, float y )
 {
     float lum=length(c)*0.5775;
     lum=1.8*pow(lum,0.45)-0.8; lum=clamp(lum,0.0,1.0);
-
-    float intensity = lum+(SCANLINE *sin(y*PI*2.0*TextureSize.y));
+    
+    //lame hack for mask 5 that scanlines don't align well
+    float intensity = lum;
+    if(Shadowmask != 5.0) intensity = 1.0+(SCANLINE *sin(y*PI*2.0*TextureSize.y));
 
     vec4 result = vec4(intensity * c.rgb, 1.0);
     return result;
@@ -172,8 +174,9 @@ vec4 scanLine(vec4 c, float y )
 vec4 mask(vec2 x, vec4 col)
 {
     x = floor(x/masksize);        
-  
+    col = min(col,0.9);
 
+   //cgwg dot
     if (Shadowmask == 0.0)
     {
     float m =fract(x.x*0.4999);
@@ -182,6 +185,7 @@ vec4 mask(vec2 x, vec4 col)
     else return vec4(col.r,MaskLight,col.b,1.0);
     }
    
+   //lottes 1
     else if (Shadowmask == 1.0)
     {
         vec4 Mask = vec4(col.rgb,1.0);
@@ -204,7 +208,7 @@ vec4 mask(vec2 x, vec4 col)
         return Mask; 
     } 
     
-
+   //lottes 2 
     else if (Shadowmask == 2.0)
     {
     float m =fract(x.x*0.3333);
@@ -214,6 +218,7 @@ vec4 mask(vec2 x, vec4 col)
     else return vec4(col.r,col.g,MaskLight,1.0);
     }
 
+   //gray-white dot
     if (Shadowmask == 3.0)
     {
     float m =fract(x.x*0.5);
@@ -222,7 +227,7 @@ vec4 mask(vec2 x, vec4 col)
     else return vec4(col.rgb,1.0);
     }
    
-
+   //cgwg slot-like, looks good at 1080p 
     else if (Shadowmask == 4.0)
     {   
         vec4 Mask = vec4(col.rgb,1.0);
@@ -242,6 +247,50 @@ vec4 mask(vec2 x, vec4 col)
         Mask*=line;  
         return Mask;
     } 
+    
+    //magenta-green slot mask
+     else if (Shadowmask == 5.0)
+
+    {
+        vec4 Mask = vec4(1.0);
+        float l = (col.r*0.4+col.g*0.5+col.b*0.1);
+        if (fract(x.x/4.0)<0.5)   
+            {if (fract(x.y/3.0)<0.666)  {if (fract(x.x/2.0)<0.5) Mask=vec4(MaskLight,col.g,MaskLight,1.0); else Mask=vec4(MaskDark,MaskLight,col.b,1.0);}
+            else Mask*=l;}
+        else if (fract(x.x/4.0)>=0.5)   
+            {if (fract(x.y/3.0)>0.333)  {if (fract(x.x/2.0)<0.5) Mask=vec4(MaskLight,col.g,MaskLight,1.0); else Mask=vec4(MaskDark,MaskLight,col.b,1.0);}
+            else Mask*=l;}
+
+    return Mask;
+    }
+   
+   //slot mask that looks good at 1440p
+    else if (Shadowmask == 6.0)
+
+    {
+        vec4 Mask = vec4(MaskDark*col.r,MaskDark*col.g,MaskDark*col.b,1.0);
+        float lum=length(col)*0.5775;
+        if (fract(x.x/6.0)<0.5)   
+            {if (fract(x.y/4.0)<0.75)  {if (fract(x.x/3.0)<0.3333) Mask.r = MaskLight; else if (fract(x.x/3.0)<0.6666) Mask.g=MaskLight; else Mask.b=MaskLight;}
+            else Mask*lum*0.9;}
+        else if (fract(x.x/6.0)>=0.5)   
+            {if (fract(x.y/4.0)>=0.5 || fract(x.y/4.0)<0.25 )  {if (fract(x.x/3.0)<0.3333) Mask.r=MaskLight; else if (fract(x.x/3.0)<0.6666) Mask.g=MaskLight; else Mask.b=MaskLight;}
+            else Mask*lum*0.9;}
+
+    return Mask;
+
+    }
+
+   //lottes 2 hack for brightness boost, close to how a consumer trinitron looks like
+    else if (Shadowmask == 7.0)
+    {
+    float m =fract(x.x*0.3333);
+
+    if (m<0.3333) return vec4(MaskDark,MaskLight,MaskLight*col.b,1.0);  //Cyan
+    if (m<0.6666) return vec4(MaskLight*col.r,MaskDark,MaskLight,1.0);  //Magenta
+    else return vec4(MaskLight,MaskLight*col.g,MaskDark,1.0);           //Yellow
+    }
+
     else return vec4(1.0);
 }
 
@@ -313,8 +362,7 @@ void main()
  
     
     vec4 color = vec4(0.5*sample1.r+0.5*sample2.r, 0.25*sample1.g+0.5*sample2.g+0.25*sample3.g, 0.5*sample2.b+0.5*sample3.b, 1.0);
-
-    
+  
     color=pow(color,vec4(GAMMA_IN, GAMMA_IN,GAMMA_IN,1.0));
     
     color*=mix(BRIGHTBOOST1, BRIGHTBOOST2, max(max(color.r,color.g),color.b));    

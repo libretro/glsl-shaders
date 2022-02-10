@@ -101,7 +101,7 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
 	
-	TEX0.xy = (TexCoord.xy);
+	TEX0.xy = TexCoord.xy*1.0001;
 	maskFade = 0.3333*MASK_FADE;
 	invDims = 1.0/TextureSize.xy;
 }
