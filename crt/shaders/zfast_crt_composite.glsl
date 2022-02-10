@@ -145,24 +145,24 @@ void main()
 	COMPAT_PRECISION vec3 sample3 = COMPAT_TEXTURE(Source,vec2(pos.x - blurx/1000.0, pos.y + blury/1000.0)).rgb;
 	
 	COMPAT_PRECISION vec3 colour = vec3 (sample1.r*0.5+sample2.r*0.5, sample1.g*0.25 + sample2.g*0.5 + sample3.g*0.25, sample2.b*0.5 + sample3.b*0.5);
-    COMPAT_PRECISION float lum = colour.r*0.4 + colour.g*0.4 + colour.b*0.2;
+    	COMPAT_PRECISION float lum = colour.r*0.4 + colour.g*0.4 + colour.b*0.2;
 		
-    COMPAT_PRECISION vec3 lumweight=vec3(0.3,0.6,0.1);
-    COMPAT_PRECISION float gray = dot(colour,lumweight);
-    COMPAT_PRECISION vec3 graycolour = vec3(gray);
+    	COMPAT_PRECISION vec3 lumweight=vec3(0.3,0.6,0.1);
+    	COMPAT_PRECISION float gray = dot(colour,lumweight);
+    	COMPAT_PRECISION vec3 graycolour = vec3(gray);
 
-	//Gamma-like 
+	//Gamma-like
 	colour*=mix(0.2,1.0,lum);    
     
 	COMPAT_PRECISION float SCANAMOUNT = mix(HIGHSCANAMOUNT1,HIGHSCANAMOUNT2,lum);
 	COMPAT_PRECISION float scanLine =  SCANAMOUNT * sin(2.0*pi*pos.y*TextureSize.y);
 	
-	COMPAT_PRECISION float whichmask = fract(gl_FragCoord.x*-0.4999);
+	COMPAT_PRECISION float whichmask = fract((gl_FragCoord.x*1.0001)*-0.4999);
 	COMPAT_PRECISION float mask = 1.0 + float(whichmask < 0.5) * -MASK_DARK;
 
 	//Gamma-like 
 	colour*=mix(2.0,1.0,lum);    
-
+	
 	colour = vec3(mix(graycolour,colour.rgb,sat));
 
 	colour.rgb *= mix(mask*(1.0-scanLine), 1.0-scanLine, dot(colour.rgb,vec3(maskFade)));
