@@ -375,6 +375,16 @@ void main()
     if (intensity !=0.0) color+=glow(uv,color);
     if (SATURATION != 1.0) color = saturation(color);
     if (nois != 0.0) color*=1.0+noise(uv*2.0)/nois;
+     
+     #if defined GL_ES
+	// hacky clamp fix for GLES
+    vec2 bordertest = (uv);
+    if ( bordertest.x > 0.0001 && bordertest.x < 0.9999 && bordertest.y > 0.0001 && bordertest.y < 0.9999)
+        color = color;
+    else
+        color = vec4(0.0);
+#endif
+    
     FragColor = color;
 } 
 #endif
