@@ -337,6 +337,14 @@ void main()
 
 	float l = length(color);
 	color = normalize(pow(color, vec3(saturation,saturation,saturation)))*l;
+#if defined GL_ES
+	// hacky clamp fix for GLES
+    	vec2 bordertest = (pos);
+    	if ( bordertest.x > 0.0001 && bordertest.x < 0.9999 && bordertest.y > 0.0001 && bordertest.y < 0.9999)
+        color = color;
+    else
+        color = vec3(0.0);
+#endif
 
     FragColor = vec4(color, 1.0);
 } 
