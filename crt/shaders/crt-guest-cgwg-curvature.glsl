@@ -20,11 +20,11 @@
 */
 
 // Parameter lines go here:
-#pragma parameter brightboost "Bright boost" 1.1 0.5 2.0 0.05
-#pragma parameter saturation "Saturation adjustment" 1.1 0.1 2.0 0.05
+#pragma parameter brightboost "Bright boost" 1.0 0.5 2.0 0.05
+#pragma parameter sat "Saturation adjustment" 1.0 0.0 2.0 0.05
 #pragma parameter scanline "Scanline adjust" 8.0 1.0 12.0 1.0
-#pragma parameter beam_min "Scanline dark" 1.70 0.5 3.0 0.05
-#pragma parameter beam_max "Scanline bright" 2.1 0.5 3.0 0.05
+#pragma parameter beam_min "Scanline dark" 1.35 0.5 3.0 0.05
+#pragma parameter beam_max "Scanline bright" 1.05 0.5 3.0 0.05
 #pragma parameter h_sharp "Horizontal sharpness" 2.00 1.0 5.0 0.05
 #pragma parameter gamma_out "Gamma out" 0.5 0.2 0.6 0.01
 #pragma parameter shadowMask "CRT Mask: 0:CGWG, 1-4:Lottes, 5-6:'Trinitron'" 0.0 -1.0 8.0 1.0
@@ -35,6 +35,9 @@
 #pragma parameter CGWG "CGWG Mask Str." 0.4 0.0 1.0 0.1
 #pragma parameter warpX "warpX" 0.0 0.0 0.125 0.01
 #pragma parameter warpY "warpY" 0.0 0.0 0.125 0.01
+#pragma parameter vignette "Vignette On/Off" 0.0 0.0 1.0 1.0
+#pragma parameter vpower "Vignette Power" 0.2 0.0 1.0 0.01
+#pragma parameter vstr "Vignette strength" 40.0 0.0 50.0 1.0
 
 #if defined(VERTEX)
 
@@ -116,12 +119,12 @@ COMPAT_VARYING vec4 TEX0;
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
 uniform COMPAT_PRECISION float brightboost;
-uniform COMPAT_PRECISION float saturation;
 uniform COMPAT_PRECISION float scanline;
 uniform COMPAT_PRECISION float beam_min;
 uniform COMPAT_PRECISION float beam_max;
 uniform COMPAT_PRECISION float h_sharp;
 uniform COMPAT_PRECISION float gamma_out;
+uniform COMPAT_PRECISION float sat;
 uniform COMPAT_PRECISION float shadowMask;
 uniform COMPAT_PRECISION float masksize;
 uniform COMPAT_PRECISION float mcut;
@@ -130,14 +133,17 @@ uniform COMPAT_PRECISION float maskLight;
 uniform COMPAT_PRECISION float CGWG;
 uniform COMPAT_PRECISION float warpX;
 uniform COMPAT_PRECISION float warpY;
+uniform COMPAT_PRECISION float vignette;
+uniform COMPAT_PRECISION float vpower;
+uniform COMPAT_PRECISION float vstr;
 #else
 #define brightboost  1.20     // adjust brightness
-#define saturation   1.10     // 1.0 is normal saturation
 #define scanline     8.0      // scanline param, vertical sharpness
-#define beam_min     1.70     // dark area beam min - wide
-#define beam_max     2.10     // bright area beam max - narrow
+#define beam_min     1.35     // dark area beam min - wide
+#define beam_max     1.05     // bright area beam max - narrow
 #define h_sharp      1.25     // pixel sharpness
 #define gamma_out    0.50     // output gamma
+#define sat          1.0     // saturation
 #define shadowMask   0.0      // Shadow mask type 
 #define masksize     1.0      // Shadow mask size
 #define mcut         0.20     // Mask 5&6 cutoff
@@ -146,15 +152,17 @@ uniform COMPAT_PRECISION float warpY;
 #define CGWG         0.40     // CGWG Mask Strength
 #define warpX        0.0    // Curvature X
 #define warpY        0.0    // Curvature Y
+#define vignette 1.0
+#define vpower 0.2
+#define vstr 40.0
 #endif
 
-float sw(float x, float l)
+float sw (vec3 x,vec3 color)
 {
-	float d = x;
-	float bm = scanline;
-	float b = mix(beam_min,beam_max,l);
-	d = exp2(-bm*pow(d,b));
-	return d;
+    float scan = mix(scanline-2.0,scanline,x.y);
+    vec3 tmp = mix(vec3(beam_min),vec3(beam_max), color);
+    vec3 ex = x*tmp;
+    return exp2(-scan*ex.y*ex.y);
 }
 
 // Shadow mask (1-4 from PD CRT Lottes shader).
@@ -288,6 +296,20 @@ vec3 Mask(vec2 pos, vec3 c)
 	return mask;
 }  
 
+mat3 vign( float l )
+{
+    vec2 vpos = vTexCoord * (TextureSize.xy / InputSize.xy);
+
+    vpos *= 1.0 - vpos.xy;
+    float vig = vpos.x * vpos.y * vstr;
+    vig = min(pow(vig, vpower), 1.0); 
+    if (vignette == 0.0) vig=1.0;
+   
+    return mat3(vig, 0, 0,
+                 0,   vig, 0,
+                 0,    0, vig);
+
+}
 
 // Distortion of scanlines, and end of screen alpha.
 vec2 Warp(vec2 pos)
@@ -296,6 +318,20 @@ vec2 Warp(vec2 pos)
     pos *= vec2(1.0 + (pos.y*pos.y)*warpX, 1.0 + (pos.x*pos.x)*warpY);
     return pos*0.5 + 0.5;
 } 
+
+vec3 saturation (vec3 textureColor)
+{
+    float lum=length(textureColor.rgb)*0.5775;
+
+    vec3 luminanceWeighting = vec3(0.3,0.6,0.1);
+    if (lum<0.5) luminanceWeighting.rgb=(luminanceWeighting.rgb*luminanceWeighting.rgb)+(luminanceWeighting.rgb*luminanceWeighting.rgb);
+
+    float luminance = dot(textureColor.rgb, luminanceWeighting);
+    vec3 greyScaleColor = vec3(luminance);
+
+    vec3 res = vec3(mix(greyScaleColor, textureColor.rgb, sat));
+    return res;
+}
 
 void main()
 {
@@ -323,28 +359,26 @@ void main()
 
 // calculating scanlines
 	
-	float f = fp.y;
-	float luma1 = length(color1)*0.57735;
-	float luma2 = length(color2)*0.57735;
+	float f = fp.y; if (InputSize.y > 400.0) f=1.0;
+    vec3 f1 = vec3(f); 
 	
-	vec3 color = color1*sw(f,luma1) + color2*sw(1.0-f,luma2);
-	
-	color*=brightboost;
-	color = min(color, 1.0);
+    vec3 color = color1*sw(f1,color1) + color2*sw(1.0-f1,color2);
+		
 	color = color*Mask(gl_FragCoord.xy*1.0001, color);
-
+	float lum = color.r*0.3+color.g*0.6+color.b*0.1;
 	color = pow(color, vec3(gamma_out, gamma_out, gamma_out));
-
-	float l = length(color);
-	color = normalize(pow(color, vec3(saturation,saturation,saturation)))*l;
-#if defined GL_ES
+	color*= mix(1.0,brightboost,lum);
+	color = saturation(color);
+	color*= vign(lum);
+	
+	#if defined GL_ES
 	// hacky clamp fix for GLES
     	vec2 bordertest = (pos);
-    	if ( bordertest.x > 0.0001 && bordertest.x < 0.9999 && bordertest.y > 0.0001 && bordertest.y < 0.9999)
-        color = color;
-    else
-        color = vec3(0.0);
-#endif
+    		if ( bordertest.x > 0.0001 && bordertest.x < 0.9999 && bordertest.y > 0.0001 && bordertest.y < 0.9999)
+        	color = color;
+        else
+        	color = vec3(0.0);
+	#endif
 
     FragColor = vec4(color, 1.0);
 } 
