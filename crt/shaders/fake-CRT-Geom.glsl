@@ -19,11 +19,11 @@
 
 #pragma parameter SCANLINE_SINE_COMP_B "Scanline Intensity" 0.60 0.0 1.0 0.05
 #pragma parameter warpX "warpX" 0.03 0.0 0.125 0.01
-#pragma parameter warpY "warpY" 0.02 0.0 0.125 0.01
+#pragma parameter warpY "warpY" 0.05 0.0 0.125 0.01
 #pragma parameter cgwg "CGWG mask str. " 0.5 0.0 1.0 0.1
-#pragma parameter crt_gamma "CRT Gamma" 2.2 1.0 4.0 0.05
-#pragma parameter monitor_gamma "Monitor Gamma" 2.4 1.0 4.0 0.05
-#pragma parameter bloom "Bloom Strength" 0.00 0.00 1.00 0.02
+#pragma parameter crt_gamma "CRT Gamma" 2.5 1.0 4.0 0.05
+#pragma parameter monitor_gamma "Monitor Gamma" 2.2 1.0 4.0 0.05
+#pragma parameter boost "Bright boost " 0.00 0.00 1.00 0.02
 #pragma parameter SCANLINE_SINE_COMP_A "Scanline Sine Comp A" 0.0 0.0 0.10 0.01
 #pragma parameter SCANLINE_BASE_BRIGHTNESS "Scanline Base Brightness" 0.95 0.0 1.0 0.01
 
@@ -122,22 +122,20 @@ uniform COMPAT_PRECISION float SCANLINE_SINE_COMP_A;
 uniform COMPAT_PRECISION float SCANLINE_SINE_COMP_B;
 uniform COMPAT_PRECISION float warpX;
 uniform COMPAT_PRECISION float warpY;
-uniform COMPAT_PRECISION float maskDark;
 uniform COMPAT_PRECISION float cgwg;
 uniform COMPAT_PRECISION float crt_gamma;
 uniform COMPAT_PRECISION float monitor_gamma;
-uniform COMPAT_PRECISION float bloom;
+uniform COMPAT_PRECISION float boost;
 #else
 #define SCANLINE_BASE_BRIGHTNESS 0.95
 #define SCANLINE_SINE_COMP_A 0.0
 #define SCANLINE_SINE_COMP_B 0.40
 #define warpX 0.031
 #define warpY 0.041
-#define maskDark 0.5
 #define cgwg 0.4
 #define crt_gamma 2.2
 #define monitor_gamma 2.4
-#define bloom 0.00
+#define boost 0.00
 #endif
 
 vec4 scanline(vec2 coord, vec4 frame)
@@ -177,20 +175,16 @@ float corner(vec2 coord)
 #endif
 
 // mask calculation
-
-
 	// cgwg mask.
 	vec4 Mask(vec2 pos)
 	{
-		vec3 mask = vec3(maskDark, maskDark, maskDark);
-	  
+	  vec3 mask = vec3(1.0);
 	{
       float mf = floor(mod(pos.x,2.0));
       float mc = 1.0 - cgwg;	
-      if (mf == 0.0) { mask.r = 1.0; mask.g = mc; mask.b = 1.0; }
-      else { mask.r = mc; mask.g = 1.0; mask.b = mc; };
+      if (mf == 0.0) { mask.g = mc; }
+      else { mask.r = mc; mask.b = mc; };
    }  
-
 		return vec4(mask, 1.0);
 	}
 
@@ -220,10 +214,11 @@ void main()
 
 
 // mask effects look bad unless applied in linear gamma space
-	vec4 in_gamma = vec4(monitor_gamma, monitor_gamma, monitor_gamma, 1.0);
-	vec4 out_gamma = vec4(1.0 / crt_gamma, 1.0 / crt_gamma, 1.0 / crt_gamma, 1.0);
-	vec3 res1 = COMPAT_TEXTURE(Texture, tc).rgb;
-	vec4 res = vec4(res1.rgb,1.0);
+	vec4 in_gamma = vec4(crt_gamma, crt_gamma, crt_gamma, 1.0);
+	vec4 out_gamma = vec4(1.0 / monitor_gamma, 1.0 / monitor_gamma, 1.0 / monitor_gamma, 1.0);
+	
+	vec4 res = COMPAT_TEXTURE(Texture, tc);
+	
 	res=pow(res,in_gamma);
 
 	// apply the mask; looks bad with vert scanlines so make them mutually exclusive
@@ -231,7 +226,7 @@ void main()
 
 
 #if defined CURVATURE && defined GL_ES
-	// hacky clamp fix for GLES
+    // hacky clamp fix for GLES
     vec2 bordertest = (tc);
     if ( bordertest.x > 0.0001 && bordertest.x < 0.9999 && bordertest.y > 0.0001 && bordertest.y < 0.9999)
         res = res;
@@ -239,9 +234,9 @@ void main()
         res = vec4(0.,0.,0.,0.);
 #endif
 
-	// re-apply the gamma curve for the mask path
+    // re-apply the gamma curve for the mask path
     vec4 color = pow(scanline(pos, res), out_gamma);
-    color+=bloom*color;
+    color+=boost*color;
     FragColor = color*corner(tc);
 
 } 

@@ -31,11 +31,12 @@
 #pragma parameter y_tilt "CRTGeom Vertical Tilt" 0.0 -0.5 0.5 0.05
 #pragma parameter overscan_x "CRTGeom Horiz. Overscan %" 100.0 -125.0 125.0 1.0
 #pragma parameter overscan_y "CRTGeom Vert. Overscan %" 100.0 -125.0 125.0 1.0
-#pragma parameter DOTMASK "CRTGeom Dot Mask Toggle" 0.3 0.0 0.3 0.3
+#pragma parameter DOTMASK "CRTGeom Dot Mask Strength" 0.3 0.0 1.0 0.1
 #pragma parameter SHARPER "CRTGeom Sharpness" 1.0 1.0 3.0 1.0
 #pragma parameter scanline_weight "CRTGeom Scanline Weight" 0.3 0.1 0.5 0.05
 #pragma parameter lum "CRTGeom Luminance" 0.0 0.0 1.0 0.01
 #pragma parameter interlace_detect "CRTGeom Interlacing Simulation" 1.0 0.0 1.0 1.0
+#pragma parameter SATURATION "CRTGeom Saturation" 1.0 0.0 2.0 0.05
 
 #ifndef PARAMETER_UNIFORM
 #define CRTgamma 2.4
@@ -54,6 +55,7 @@
 #define scanline_weight 0.3
 #define lum 0.0
 #define interlace_detect 1.0
+#define SATURATION 1.0
 #endif
 
 #if defined(VERTEX)
@@ -114,6 +116,7 @@ uniform COMPAT_PRECISION float SHARPER;
 uniform COMPAT_PRECISION float scanline_weight;
 uniform COMPAT_PRECISION float lum;
 uniform COMPAT_PRECISION float interlace_detect;
+uniform COMPAT_PRECISION float SATURATION;
 #endif
 
 #define FIX(c) max(abs(c), 1e-5);
@@ -195,9 +198,9 @@ void main()
     gl_Position = VertexCoord.x * MVPMatrix[0] + VertexCoord.y * MVPMatrix[1] + VertexCoord.z * MVPMatrix[2] + VertexCoord.w * MVPMatrix[3];
     _oPosition1 = gl_Position;
     _oColor = COLOR;
-    _otexCoord = TexCoord.xy;
+    _otexCoord = TexCoord.xy*1.0001;
     COL0 = COLOR;
-    TEX0.xy = TexCoord.xy;
+    TEX0.xy = TexCoord.xy*1.0001;
 
 // Precalculate a bunch of useful values we'll need in the fragment
 // shader.
@@ -300,6 +303,7 @@ uniform COMPAT_PRECISION float SHARPER;
 uniform COMPAT_PRECISION float scanline_weight;
 uniform COMPAT_PRECISION float lum;
 uniform COMPAT_PRECISION float interlace_detect;
+uniform COMPAT_PRECISION float SATURATION;
 #endif
 
 float intersect(vec2 xy)
@@ -342,7 +346,7 @@ float corner(vec2 coord)
 	vec2 cdist = vec2(cornersize);
 	coord = (cdist - min(coord,cdist));
 	float dist = sqrt(dot(coord,coord));
-	return clamp((cdist.x-dist)*cornersmooth,0.0, 1.0);
+	return clamp((cdist.x-dist)*cornersmooth,0.0, 1.0)*1.0001;
         }
 
 // Calculate the influence of a scanline on the current pixel.
@@ -373,6 +377,21 @@ vec4 scanlineWeights(float distance, vec4 color)
 	return (lum + 1.4) * exp(-pow(weights * inversesqrt(0.5 * wid), wid)) / (0.6 + 0.2 * wid);
 #endif
         }
+
+vec3 saturation (vec3 textureColor)
+{
+    float lum=length(textureColor)*0.5775;
+
+    vec3 luminanceWeighting = vec3(0.3,0.6,0.1);
+    if (lum<0.5) luminanceWeighting.rgb=(luminanceWeighting.rgb*luminanceWeighting.rgb)+(luminanceWeighting.rgb*luminanceWeighting.rgb);
+
+    float luminance = dot(textureColor, luminanceWeighting);
+    vec3 greyScaleColor = vec3(luminance);
+
+    vec3 res = vec3(mix(greyScaleColor, textureColor, SATURATION));
+    return res;
+}
+
 
 void main()
 {
@@ -476,6 +495,7 @@ vec3 dotMaskWeights = mix(
 
 // Convert the image gamma for display on our output device.
 	mul_res = pow(mul_res, vec3(1.0 / monitorgamma));
+        mul_res = saturation(mul_res);
 
 // Color the texel.
     output_dummy _OUT;

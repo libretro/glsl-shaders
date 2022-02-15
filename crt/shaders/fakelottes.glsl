@@ -249,8 +249,8 @@ void main()
 
 #if defined MASK && !defined ROTATE_SCANLINES
 	// mask effects look bad unless applied in linear gamma space
-	vec4 in_gamma = vec4(monitor_gamma, monitor_gamma, monitor_gamma, 1.0);
-	vec4 out_gamma = vec4(1.0 / crt_gamma, 1.0 / crt_gamma, 1.0 / crt_gamma, 1.0);
+	vec4 in_gamma = vec4(crt_gamma, crt_gamma, crt_gamma, 1.0);
+	vec4 out_gamma = vec4(1.0 / monitor_gamma, 1.0 / monitor_gamma, 1.0 / monitor_gamma, 1.0);
 	vec4 res = pow(COMPAT_TEXTURE(Source, pos), in_gamma);
 #else
 	vec4 res = COMPAT_TEXTURE(Source, pos);
