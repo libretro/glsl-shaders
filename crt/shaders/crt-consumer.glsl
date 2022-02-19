@@ -2,20 +2,24 @@
 // Parameter lines go here:
 #pragma parameter blurx "Convergence X" 0.25 -2.0 2.0 0.05
 #pragma parameter blury "Convergence Y" -0.15 -2.0 2.0 0.05
-#pragma parameter warpx "Curvature X" 0.01 0.0 0.12 0.01
-#pragma parameter warpy "Curvature Y" 0.05 0.0 0.12 0.01
+#pragma parameter warpx "Curvature X" 0.03 0.0 0.12 0.01
+#pragma parameter warpy "Curvature Y" 0.04 0.0 0.12 0.01
 #pragma parameter corner "Corner size" 0.01 0.0 0.10 0.01
 #pragma parameter smoothness "Border Smoothness" 400.0 25.0 600.0 5.0
 #pragma parameter scanlow "Beam low" 6.0 1.0 15.0 1.0
 #pragma parameter scanhigh "Beam high" 8.0 1.0 15.0 1.0
-#pragma parameter beamlow "Scanlines dark" 1.35 0.5 2.5 0.1 
-#pragma parameter beamhigh "Scanlines bright" 1.05 0.5 2.5 0.1 
+#pragma parameter beamlow "Scanlines dark" 1.35 0.5 2.5 0.05 
+#pragma parameter beamhigh "Scanlines bright" 1.05 0.5 2.5 0.05 
 #pragma parameter brightboost1 "Bright boost dark pixels" 1.1 0.0 3.0 0.05
 #pragma parameter brightboost2 "Bright boost bright pixels" 1.05 0.0 3.0 0.05
-#pragma parameter Shadowmask "Mask Type" 7.0 -1.0 7.0 1.0 
+#pragma parameter Shadowmask "Mask Type" 7.0 -1.0 8.0 1.0 
 #pragma parameter masksize "Mask Size" 1.0 1.0 2.0 1.0
 #pragma parameter MaskDark "Mask dark" 0.5 0.0 2.0 0.1
 #pragma parameter MaskLight "Mask light" 1.5 0.0 2.0 0.1
+#pragma parameter slotmask "Slot Mask Strength" 0.0 0.0 1.0 0.05
+#pragma parameter slotwidth "Slot Mask Width" 2.0 1.0 6.0 0.5
+#pragma parameter double_slot "Slot Mask Height: 2x1 or 4x1" 1.0 1.0 2.0 1.0
+#pragma parameter slotms "Slot Mask Size" 1.0 1.0 2.0 1.0
 #pragma parameter GAMMA_IN "Gamma In" 2.5 0.0 4.0 0.1
 #pragma parameter GAMMA_OUT "Gamma Out" 2.2 0.0 4.0 0.1
 #pragma parameter glow "Glow Strength" 0.05 0.0 0.5 0.01
@@ -28,7 +32,7 @@
 #pragma parameter vignette "Vignette On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter vpower "Vignette Power" 0.2 0.0 1.0 0.01
 #pragma parameter vstr "Vignette strength" 40.0 0.0 50.0 1.0
-
+#pragma parameter alloff "Switch off shader" 0.0 0.0 1.0 1.0
 #define pi 6.28318
 
 #if defined(VERTEX)
@@ -65,7 +69,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    TEX0.xy = TexCoord.xy * 1.00001;
+    TEX0.xy = TexCoord.xy * 1.001;
 }
 
 #elif defined(FRAGMENT)
@@ -127,6 +131,10 @@ uniform COMPAT_PRECISION float Shadowmask;
 uniform COMPAT_PRECISION float masksize;
 uniform COMPAT_PRECISION float MaskDark;
 uniform COMPAT_PRECISION float MaskLight;
+uniform COMPAT_PRECISION float slotmask;
+uniform COMPAT_PRECISION float slotwidth;
+uniform COMPAT_PRECISION float double_slot;
+uniform COMPAT_PRECISION float slotms;
 uniform COMPAT_PRECISION float GAMMA_IN;
 uniform COMPAT_PRECISION float GAMMA_OUT;
 uniform COMPAT_PRECISION float glow;
@@ -139,7 +147,7 @@ uniform COMPAT_PRECISION float inter;
 uniform COMPAT_PRECISION float vignette;
 uniform COMPAT_PRECISION float vpower;
 uniform COMPAT_PRECISION float vstr;
-
+uniform COMPAT_PRECISION float alloff;
 #else
 #define blurx  0.0    
 #define blury  0.0    
@@ -156,7 +164,11 @@ uniform COMPAT_PRECISION float vstr;
 #define Shadowmask 0.0    
 #define masksize 1.0    
 #define MaskDark 0.5  
-#define MaskLight 1.5  
+#define MaskLight 1.5 
+#define slotmask     0.00     // Slot Mask ON/OFF
+#define slotwidth    2.00     // Slot Mask Width
+#define double_slot  1.00     // Slot Mask Height
+#define slotms       1.00     // Slot Mask Size 
 #define GAMMA_IN 2.4
 #define GAMMA_OUT 2.2
 #define glow 0.0 
@@ -169,7 +181,7 @@ uniform COMPAT_PRECISION float vstr;
 #define vignette 1.0
 #define vpower 0.2
 #define vstr 40.0
-
+#define alloff 0.0
 #endif
 
 
@@ -216,9 +228,9 @@ vec3 mask(vec2 x,vec3 col,float l)
 
         float m = fract(x.x/3.0);
     
-        if      (m< 0.333)  Mask.r = MaskLight;
+        if      (m< 0.333)  Mask.b = MaskLight;
         else if (m < 0.666) Mask.g = MaskLight;
-        else                Mask.b = MaskLight;
+        else                Mask.r = MaskLight;
         
         Mask*=line; 
         return Mask; 
@@ -281,7 +293,7 @@ vec3 mask(vec2 x,vec3 col,float l)
     else if (Shadowmask == 6.0)
 
     {
-        vec3 Mask = vec3(MaskDark,MaskDark,MaskDark);
+        vec3 Mask = vec3(MaskDark);
         if (fract(x.x/6.0)<0.5)   
             {if (fract(x.y/4.0)<0.75)  {if (fract(x.x/3.0)<0.3333) Mask.r=MaskLight; else if (fract(x.x/3.0)<0.6666) Mask.g=MaskLight; else Mask.b=MaskLight;}
             else Mask*l*0.9;}
@@ -303,8 +315,54 @@ vec3 mask(vec2 x,vec3 col,float l)
     else return vec3(MaskLight,MaskLight*col.g,MaskDark);           //Yellow
     }
 
+  
+     else if (Shadowmask == 8.0)
+    {
+        vec3 Mask = vec3(MaskDark);
+
+        float bright = MaskLight;
+        float dark = MaskLight;
+        float left  = 0.0;
+      
+
+        if (fract(x.x/6.0) < 0.5)
+            left = 1.0;
+             
+        float m = fract(x.x/3.0);
+    
+        if      (m < 0.333) Mask.b = MaskLight;
+        else if (m < 0.666) Mask.g = MaskLight;
+        else                Mask.r = MaskLight;
+        
+        if      (mod(x.y,10.0)==1.0 && left == 1.0 || mod(x.y,10.0)==2.0 && left == 0.0 ) Mask*=bright; 
+        if      (mod(x.y,10.0)==3.0 && left == 1.0 || mod(x.y,10.0)==8.0 && left == 0.0 ) Mask*=bright; 
+        else if (mod(x.y,10.0)==0.0 && left == 0.0 || mod(x.y,10.0)==4.0 && left == 0.0 ) Mask*=dark; 
+        else if (mod(x.y,10.0)==7.0 && left == 1.0 || mod(x.y,10.0)==6.0 && left == 0.0 ) Mask*=bright; 
+        else if (mod(x.y,10.0)==5.0 && left == 1.0 || mod(x.y,10.0)==9.0 && left == 1.0 ) Mask*=dark; 
+
+        return Mask; 
+    } 
+    
     else return vec3(1.0);
 }
+
+float SlotMask(vec2 pos, vec3 c)
+{
+    if (slotmask == 0.0) return 1.0;
+    
+    pos = floor(pos/slotms);
+    float mx = pow(max(max(c.r,c.g),c.b),1.33);
+    float mlen = slotwidth*2.0;
+    float px = fract(pos.x/mlen);
+    float py = floor(fract(pos.y/(2.0*double_slot))*2.0*double_slot);
+    float slot_dark = mix(1.0-slotmask, 1.0-0.80*slotmask, mx);
+    float slot = 1.0 + 0.7*slotmask*(1.0-mx);
+    if (py == 0.0 && px <  0.5) slot = slot_dark; else
+    if (py == double_slot && px >= 0.5) slot = slot_dark;       
+    
+    return slot;
+}
+
 
 mat4 contrastMatrix( float contrast )
 {
@@ -426,8 +484,6 @@ const mat3 XYZ_to_D50 = mat3 (
           -0.4685105,  0.0334540,  1.4216174);         
 
 
-
-
 void main()
 {
 	vec2 pos = Warp(TEX0.xy*(TextureSize.xy/InputSize.xy))*(InputSize.xy/TextureSize.xy);
@@ -437,6 +493,9 @@ void main()
 	vec2 pC4 = (pos + 0.5/tex_size.xy);
 	vec2 fp = fract(pos*tex_size.xy);
     if (inter >0.5 && InputSize.y >400.0) fp.y=1.0; 
+    vec4 res = vec4(1.0);
+    if (alloff == 1.0) res= COMPAT_TEXTURE(Source,pC4); else
+    {
 	vec3 sample1 = COMPAT_TEXTURE(Source,vec2(pC4.x + blurx/1000.0, pC4.y - blury/1000.0)).rgb;
 	vec3 sample2 = COMPAT_TEXTURE(Source,pC4).rgb;
 	vec3 sample3 = COMPAT_TEXTURE(Source,vec2(pC4.x - blurx/1000.0, pC4.y + blury/1000.0)).rgb;
@@ -465,6 +524,8 @@ void main()
     color = color*sw(f1,color) + color*sw(1.0-f1,color);
     
     color*=mask(gl_FragCoord.xy*1.0001,color,lum);
+    if (slotmask !=0.0) color*=SlotMask(gl_FragCoord.xy*1.0001,color);
+    
     color*=mix(brightboost1,brightboost2, max(max(color.r,color.g),color.b));    
 
     color=pow(color,vec3(1.0/GAMMA_OUT));
@@ -475,11 +536,11 @@ void main()
     if (corner!=0.0) color*= corner0(pC4);
     if (nois != 0.0) color*=1.0+noise(pC4*2.0)/nois;
 	
-    vec4 res = vec4(color,1.0);
-    if (contrast !=1.0) res = contrastMatrix(contrast)*res;
+	res = vec4(color,1.0);
+	if (contrast !=1.0) res = contrastMatrix(contrast)*res;
     if (inter >0.5 && InputSize.y >400.0 && fract(iTime)<0.5) res=res*0.95; else res;
     res.rgb*= vign(lum);
-
+}
 #if defined GL_ES
     // hacky clamp fix for GLES
     vec2 bordertest = (pC4);

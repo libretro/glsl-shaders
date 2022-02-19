@@ -1,5 +1,6 @@
 /*
-   CRT - Guest - Nomask w. Curvature
+   CRT - Guest 
+   edited by metallic77
    
    Copyright (C) 2017-2018 guest(r) - guest.r@gmail.com
 
@@ -27,7 +28,7 @@
 #pragma parameter beam_max "Scanline bright" 1.05 0.5 3.0 0.05
 #pragma parameter h_sharp "Horizontal sharpness" 2.00 1.0 5.0 0.05
 #pragma parameter gamma_out "Gamma out" 0.5 0.2 0.6 0.01
-#pragma parameter shadowMask "CRT Mask: 0:CGWG, 1-4:Lottes, 5-6:'Trinitron'" 0.0 -1.0 8.0 1.0
+#pragma parameter shadowMask "CRT Mask: 0:CGWG, 1-4:Lottes, 5-6:'Trinitron'" 0.0 -1.0 9.0 1.0
 #pragma parameter masksize "CRT Mask Size (2.0 is nice in 4k)" 1.0 1.0 2.0 1.0
 #pragma parameter mcut "Mask 5-7 cutoff" 0.2 0.0 0.5 0.05
 #pragma parameter maskDark "Lottes maskDark" 0.5 0.0 2.0 0.1
@@ -199,9 +200,9 @@ vec3 Mask(vec2 pos, vec3 c)
 
 		pos.x = fract(pos.x/3.0);
     
-		if      (pos.x < 0.333) mask.r = maskLight;
+		if      (pos.x < 0.333) mask.b = maskLight;
 		else if (pos.x < 0.666) mask.g = maskLight;
-		else                    mask.b = maskLight;
+		else                    mask.r = maskLight;
 		
 		mask*=line;  
 	} 
@@ -211,9 +212,9 @@ vec3 Mask(vec2 pos, vec3 c)
 	{
 		pos.x = fract(pos.x/3.0);
 
-		if      (pos.x < 0.333) mask.r = maskLight;
+		if      (pos.x < 0.333) mask.b = maskLight;
 		else if (pos.x < 0.666) mask.g = maskLight;
-		else                    mask.b = maskLight;
+		else                    mask.r = maskLight;
 	} 
 
 	// Stretched VGA style shadow mask (same as prior shaders).
@@ -293,6 +294,35 @@ vec3 Mask(vec2 pos, vec3 c)
 		else  mask.g = maskLight;	
 		mask*=line;  
 	} 
+	//5x5
+	 else if (shadowMask == 9.0)
+    {
+        vec3 Mask = vec3(maskDark);
+
+        float bright = maskLight;
+        float dark = maskLight;
+        float left  = 0.0;
+      
+
+        if (fract(pos.x/6.0) < 0.5)
+            left = 1.0;
+          
+            
+        float m = fract(pos.x/3.0);
+    
+        if      (m < 0.333) Mask.b = maskLight;
+        else if (m < 0.666) Mask.g = maskLight;
+        else                Mask.r = maskLight;
+        
+        if      (mod(pos.y,10.0)==1.0 && left == 1.0 || mod(pos.y,10.0)==2.0 && left == 0.0 ) Mask*=bright; 
+        if      (mod(pos.y,10.0)==3.0 && left == 1.0 || mod(pos.y,10.0)==8.0 && left == 0.0 ) Mask*=bright; 
+        else if (mod(pos.y,10.0)==0.0 && left == 0.0 || mod(pos.y,10.0)==4.0 && left == 0.0 ) Mask*=dark; 
+        else if (mod(pos.y,10.0)==7.0 && left == 1.0 || mod(pos.y,10.0)==6.0 && left == 0.0 ) Mask*=bright; 
+        else if (mod(pos.y,10.0)==5.0 && left == 1.0 || mod(pos.y,10.0)==9.0 && left == 1.0 ) Mask*=dark; 
+
+        return Mask; 
+    } 
+    
 	return mask;
 }  
 
@@ -344,7 +374,10 @@ void main()
 	vec2 dy = vec2(0.0, ps.y);
 
 	vec2 pC4 = floor(OGL2Pos) * ps + 0.5*ps;	
-	
+	float f = fp.y; if (InputSize.y > 400.0) f=1.0;
+    vec3 f1 = vec3(f); 
+	vec3 color = vec3 (0.0);
+
 	// Reading the texels
 	vec3 ul = COMPAT_TEXTURE(Texture, pC4     ).xyz; ul*=ul;
 	vec3 ur = COMPAT_TEXTURE(Texture, pC4 + dx).xyz; ur*=ur;
@@ -359,10 +392,7 @@ void main()
 
 // calculating scanlines
 	
-	float f = fp.y; if (InputSize.y > 400.0) f=1.0;
-    vec3 f1 = vec3(f); 
-	
-    vec3 color = color1*sw(f1,color1) + color2*sw(1.0-f1,color2);
+    color = color1*sw(f1,color1) + color2*sw(1.0-f1,color2);
 		
 	color = color*Mask(gl_FragCoord.xy*1.0001, color);
 	float lum = color.r*0.3+color.g*0.6+color.b*0.1;
