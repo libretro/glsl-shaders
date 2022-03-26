@@ -33,6 +33,8 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING float fragpos;
+COMPAT_VARYING vec2 omega;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -57,6 +59,8 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
+    omega = vec2(3.1415 * OutputSize.x, 2.0 * 3.1415 * TextureSize.y);
+    fragpos=TEX0.x*OutputSize.x*TextureSize.x/InputSize.x;
 }
 
 #elif defined(FRAGMENT)
@@ -89,6 +93,8 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING float fragpos;
+COMPAT_VARYING vec2 omega;
 
 // compatibility #defines
 #define Source Texture
@@ -114,41 +120,34 @@ uniform COMPAT_PRECISION float cgwg;
 #endif
 
 
-//scanline calculation
-vec4 scanline(vec2 coord, vec4 frame)
-{
-	vec2 omega = vec2(3.1415 * OutputSize.x, 2.0 * 3.1415 * TextureSize.y);
-	vec2 sine_comp = vec2(SCANLINE_SINE_COMP_A, SCANLINE_SINE_COMP_B);
-	vec3 res = frame.xyz;
-	
-	vec3 scanline = res * (SCANLINE_BASE_BRIGHTNESS + dot(sine_comp * sin(coord * omega), vec2(1.0, 1.0)));
 
-	return vec4(scanline.x, scanline.y, scanline.z, 1.0);
-}
 
 // CGWG mask calculation
 	
-	vec4 Mask(vec2 pos)
-	{
-	vec3 mask = vec3(0.5, 0.5, 0.5);
-	  
-	{
-      float mf = fract(gl_FragCoord.x * 0.5);
-      float mc = 1.0 - cgwg;	
-      if (mf <0.5) { mask.r = 1.0; mask.g = mc; mask.b = 1.0; }
-      else { mask.r = mc; mask.g = 1.0; mask.b = mc; };
-   }  
-		return vec4(mask, 1.0);
-	}
+      vec3 Mask(float pos)
+      {
+	
+      float mf = fract(pos * 0.5);
+      float mc = 1.0 - cgwg;
+
+      if (mf <0.5) return vec3(1.0,mc,1.0);
+      else return vec3(mc,1.0,mc);
+  
+      }
 
 void main()
 {
 	vec2 pos = TEX0.xy;
-	vec4 res = COMPAT_TEXTURE(Source, pos);
+	vec3 res = COMPAT_TEXTURE(Source, pos).rgb;
+
+	vec2 sine_comp = vec2(SCANLINE_SINE_COMP_A, SCANLINE_SINE_COMP_B);
+	res = res * (SCANLINE_BASE_BRIGHTNESS + dot(sine_comp * sin(pos * omega), vec2(1.0, 1.0)));
+
 // apply the mask
-	res *= Mask(gl_FragCoord.xy * 1.0001);
-	res *=brightboost;
-    FragColor = scanline(pos, res),1.0;
+	res *= Mask(fragpos);
+	res *= brightboost;
+
+    FragColor = vec4(res,1.0);
 
 } 
 #endif

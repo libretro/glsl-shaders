@@ -23,7 +23,7 @@
 #endif
 
 // Parameter lines go here:
-#pragma parameter blurx "Convergence X-Axis" 0.45 -1.0 1.0 0.05
+#pragma parameter blurx "Convergence X-Axis" 0.45 -1.0 2.0 0.05
 #pragma parameter blury "Convergence Y-Axis" -0.25 -1.0 1.0 0.05
 #pragma parameter HIGHSCANAMOUNT1 "Scanline Amount (Low)" 0.3 0.0 1.0 0.05
 #pragma parameter HIGHSCANAMOUNT2 "Scanline Amount (High)" 0.2 0.0 1.0 0.05
@@ -152,12 +152,12 @@ void main()
     	COMPAT_PRECISION vec3 graycolour = vec3(gray);
 
 	//Gamma-like
-	colour*=mix(0.2,1.0,lum);    
+	colour*=mix(0.4,1.0,lum);    
     
 	COMPAT_PRECISION float SCANAMOUNT = mix(HIGHSCANAMOUNT1,HIGHSCANAMOUNT2,lum);
 	COMPAT_PRECISION float scanLine =  SCANAMOUNT * sin(2.0*pi*pos.y*TextureSize.y);
 	
-	COMPAT_PRECISION float whichmask = fract((gl_FragCoord.x*1.0001)*-0.4999);
+	COMPAT_PRECISION float whichmask = fract(gl_FragCoord.x*-0.4999);
 	COMPAT_PRECISION float mask = 1.0 + float(whichmask < 0.5) * -MASK_DARK;
 
 	//Gamma-like 
