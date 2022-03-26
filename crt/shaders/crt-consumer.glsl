@@ -69,7 +69,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    TEX0.xy = TexCoord.xy * 1.001;
+    TEX0.xy = TexCoord.xy * 1.0001;
 }
 
 #elif defined(FRAGMENT)
@@ -321,7 +321,6 @@ vec3 mask(vec2 x,vec3 col,float l)
         vec3 Mask = vec3(MaskDark);
 
         float bright = MaskLight;
-        float dark = MaskLight;
         float left  = 0.0;
       
 
@@ -330,16 +329,12 @@ vec3 mask(vec2 x,vec3 col,float l)
              
         float m = fract(x.x/3.0);
     
-        if      (m < 0.333) Mask.b = MaskLight;
-        else if (m < 0.666) Mask.g = MaskLight;
-        else                Mask.r = MaskLight;
+        if      (m < 0.333) Mask.b = 0.9;
+        else if (m < 0.666) Mask.g = 0.9;
+        else                Mask.r = 0.9;
         
-        if      (mod(x.y,10.0)==1.0 && left == 1.0 || mod(x.y,10.0)==2.0 && left == 0.0 ) Mask*=bright; 
-        if      (mod(x.y,10.0)==3.0 && left == 1.0 || mod(x.y,10.0)==8.0 && left == 0.0 ) Mask*=bright; 
-        else if (mod(x.y,10.0)==0.0 && left == 0.0 || mod(x.y,10.0)==4.0 && left == 0.0 ) Mask*=dark; 
-        else if (mod(x.y,10.0)==7.0 && left == 1.0 || mod(x.y,10.0)==6.0 && left == 0.0 ) Mask*=bright; 
-        else if (mod(x.y,10.0)==5.0 && left == 1.0 || mod(x.y,10.0)==9.0 && left == 1.0 ) Mask*=dark; 
-
+        if      (mod(x.y,2.0)==1.0 && left == 1.0 || mod(x.y,2.0)==0.0 && left == 0.0 ) Mask*=bright; 
+      
         return Mask; 
     } 
     
