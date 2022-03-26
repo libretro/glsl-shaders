@@ -28,9 +28,9 @@
 #pragma parameter beam_max "Scanline bright" 1.05 0.5 3.0 0.05
 #pragma parameter h_sharp "Horizontal sharpness" 2.00 1.0 5.0 0.05
 #pragma parameter gamma_out "Gamma out" 0.5 0.2 0.6 0.01
-#pragma parameter shadowMask "CRT Mask: 0:CGWG, 1-4:Lottes, 5-6:'Trinitron'" 0.0 -1.0 9.0 1.0
+#pragma parameter shadowMask "CRT Mask: 0:CGWG, 1-4:Lottes, 5-6:'Trinitron'" 0.0 -1.0 10.0 1.0
 #pragma parameter masksize "CRT Mask Size (2.0 is nice in 4k)" 1.0 1.0 2.0 1.0
-#pragma parameter mcut "Mask 5-7 cutoff" 0.2 0.0 0.5 0.05
+#pragma parameter mcut "Mask 5-7-10 cutoff" 0.2 0.0 0.5 0.05
 #pragma parameter maskDark "Lottes maskDark" 0.5 0.0 2.0 0.1
 #pragma parameter maskLight "Lottes maskLight" 1.5 0.0 2.0 0.1
 #pragma parameter CGWG "CGWG Mask Str." 0.4 0.0 1.0 0.1
@@ -200,8 +200,8 @@ vec3 Mask(vec2 pos, vec3 c)
 
 		pos.x = fract(pos.x/3.0);
     
-		if      (pos.x < 0.333) mask.b = maskLight;
-		else if (pos.x < 0.666) mask.g = maskLight;
+		if      (pos.x < 0.3333) mask.b = maskLight;
+		else if (pos.x < 0.6666) mask.g = maskLight;
 		else                    mask.r = maskLight;
 		
 		mask*=line;  
@@ -212,8 +212,8 @@ vec3 Mask(vec2 pos, vec3 c)
 	{
 		pos.x = fract(pos.x/3.0);
 
-		if      (pos.x < 0.333) mask.b = maskLight;
-		else if (pos.x < 0.666) mask.g = maskLight;
+		if      (pos.x < 0.3333) mask.b = maskLight;
+		else if (pos.x < 0.6666) mask.g = maskLight;
 		else                    mask.r = maskLight;
 	} 
 
@@ -223,8 +223,8 @@ vec3 Mask(vec2 pos, vec3 c)
 		pos.x += pos.y*3.0;
 		pos.x  = fract(pos.x/6.0);
 
-		if      (pos.x < 0.333) mask.r = maskLight;
-		else if (pos.x < 0.666) mask.g = maskLight;
+		if      (pos.x < 0.3333) mask.r = maskLight;
+		else if (pos.x < 0.6666) mask.g = maskLight;
 		else                    mask.b = maskLight;
 	}
 
@@ -235,8 +235,8 @@ vec3 Mask(vec2 pos, vec3 c)
 		pos.x += pos.y*3.0;
 		pos.x  = fract(pos.x/6.0);
 
-		if      (pos.x < 0.333) mask.r = maskLight;
-		else if (pos.x < 0.666) mask.g = maskLight;
+		if      (pos.x < 0.3333) mask.r = maskLight;
+		else if (pos.x < 0.6666) mask.g = maskLight;
 		else                    mask.b = maskLight;
 	}
 	
@@ -263,8 +263,8 @@ vec3 Mask(vec2 pos, vec3 c)
 		float adj = 0.80*maskLight - 0.5*(0.80*maskLight - 1.0)*mx + 0.75*(1.0-mx);
 		mask = maskTmp;
 		pos.x = fract(pos.x/3.0);
-		if      (pos.x < 0.333) mask.r = adj;
-		else if (pos.x < 0.666) mask.g = adj;
+		if      (pos.x < 0.3333) mask.r = adj;
+		else if (pos.x < 0.6666) mask.g = adj;
 		else                    mask.b = adj; 
 	}
 	
@@ -294,13 +294,12 @@ vec3 Mask(vec2 pos, vec3 c)
 		else  mask.g = maskLight;	
 		mask*=line;  
 	} 
-	//5x5
+
 	 else if (shadowMask == 9.0)
     {
         vec3 Mask = vec3(maskDark);
 
         float bright = maskLight;
-        float dark = maskLight;
         float left  = 0.0;
       
 
@@ -310,19 +309,36 @@ vec3 Mask(vec2 pos, vec3 c)
             
         float m = fract(pos.x/3.0);
     
-        if      (m < 0.333) Mask.b = maskLight;
-        else if (m < 0.666) Mask.g = maskLight;
-        else                Mask.r = maskLight;
+        if      (m < 0.3333) Mask.b = 0.9;
+        else if (m < 0.6666) Mask.g = 0.9;
+        else                Mask.r = 0.9;
         
-        if      (mod(pos.y,10.0)==1.0 && left == 1.0 || mod(pos.y,10.0)==2.0 && left == 0.0 ) Mask*=bright; 
-        if      (mod(pos.y,10.0)==3.0 && left == 1.0 || mod(pos.y,10.0)==8.0 && left == 0.0 ) Mask*=bright; 
-        else if (mod(pos.y,10.0)==0.0 && left == 0.0 || mod(pos.y,10.0)==4.0 && left == 0.0 ) Mask*=dark; 
-        else if (mod(pos.y,10.0)==7.0 && left == 1.0 || mod(pos.y,10.0)==6.0 && left == 0.0 ) Mask*=bright; 
-        else if (mod(pos.y,10.0)==5.0 && left == 1.0 || mod(pos.y,10.0)==9.0 && left == 1.0 ) Mask*=dark; 
-
+        if      (mod(pos.y,2.0)==1.0 && left == 1.0 || mod(pos.y,2.0)==0.0 && left == 0.0 ) Mask*=bright; 
+        
         return Mask; 
     } 
     
+	 else if (shadowMask == 10.0)
+    {
+        vec3 Mask = vec3(maskDark);
+        float line = maskLight;
+		float odd  = 0.0;
+
+		if (fract(pos.x/6.0) < 0.5)
+			odd = 1.0;
+		if (fract((pos.y + odd)/2.0) < 0.5)
+			line = 1.0;    
+    
+        float m = fract(pos.x/3.0);
+        float y = fract(pos.y/2.0);
+        
+        if      (m > 0.3333)  {Mask.r = 1.0; Mask.b = 1.0;}
+        else if (m > 0.6666) Mask.g = 1.0;
+        else                 Mask = vec3(mcut);
+        if (m>0.333) Mask*=line; 
+        return Mask; 
+    } 
+
 	return mask;
 }  
 
