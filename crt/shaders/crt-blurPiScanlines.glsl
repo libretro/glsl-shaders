@@ -115,7 +115,7 @@ void main(){
  		texCN = TEX0.y * TextureSize.y / InputSize.y;
  		scanLine = mod(texCN * OutputSize.y * 0.5, 1.0);
  	}
-	scanLine = (scanLine > 0.5) ? 1.0 + scanlineGain * 0.5 : 1.0 - scanlineGain * 0.5;
+	scanLine = (scanLine > 0.5) ? 1.0 + 0.1 * scanlineGain : 1.0 - scanlineGain * 0.50;
 	vec3 color = COMPAT_TEXTURE(Texture, TEX0.xy).rgb;
     FragColor = vec4( color * scanLine, 1.0 );
     
