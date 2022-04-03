@@ -11,7 +11,7 @@
 shaders = 2
 
 shader0 = shaders/crt-blurPi.glsl
-filter_linear0 = false
+filter_linear0 = true
 scale_type0 = source
 scale0 = 1.0
 
@@ -21,5 +21,5 @@ scale_type1 = viewport
 scale_x1 = 1.0
 scale_y1 = 1.0
 
-blurGain = "0.08"
+blurGain = "0.20"
 blurRadius = "0.50"
