@@ -20,6 +20,7 @@
 #pragma parameter SCANLINE_SINE_COMP_B "Scanline Intensity" 0.60 0.0 1.0 0.05
 #pragma parameter warpX "warpX" 0.03 0.0 0.125 0.01
 #pragma parameter warpY "warpY" 0.05 0.0 0.125 0.01
+#pragma parameter corner_round "Corner Roundness" 0.030 0.005 0.100 0.005
 #pragma parameter cgwg "CGWG mask str. " 0.5 0.0 1.0 0.1
 #pragma parameter crt_gamma "CRT Gamma" 2.5 1.0 4.0 0.05
 #pragma parameter monitor_gamma "Monitor Gamma" 2.2 1.0 4.0 0.05
@@ -122,6 +123,7 @@ uniform COMPAT_PRECISION float SCANLINE_SINE_COMP_A;
 uniform COMPAT_PRECISION float SCANLINE_SINE_COMP_B;
 uniform COMPAT_PRECISION float warpX;
 uniform COMPAT_PRECISION float warpY;
+uniform COMPAT_PRECISION float corner_round;
 uniform COMPAT_PRECISION float cgwg;
 uniform COMPAT_PRECISION float crt_gamma;
 uniform COMPAT_PRECISION float monitor_gamma;
@@ -132,6 +134,7 @@ uniform COMPAT_PRECISION float boost;
 #define SCANLINE_SINE_COMP_B 0.40
 #define warpX 0.031
 #define warpY 0.041
+#define corner_round 0.030
 #define cgwg 0.4
 #define crt_gamma 2.2
 #define monitor_gamma 2.4
@@ -167,7 +170,7 @@ float corner(vec2 coord)
                 coord *= TextureSize / InputSize;
                 coord = (coord - vec2(0.5)) * 1.0 + vec2(0.5);
                 coord = min(coord, vec2(1.0)-coord) * vec2(1.0, InputSize.y/InputSize.x);
-                vec2 cdist = vec2(0.03); // alter value to change corner size
+                vec2 cdist = vec2(corner_round);
                 coord = (cdist - min(coord,cdist));
                 float dist = sqrt(dot(coord,coord));
                 return clamp((cdist.x-dist)*300.0,0.0, 1.0);
