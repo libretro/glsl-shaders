@@ -1,17 +1,10 @@
-#version 130
-
 /*
 	Bicubic Catmull-Rom 9 taps (Fast) - ported by Hyllian - 2020
-
 	The following code is licensed under the MIT license: https://gist.github.com/TheRealMJP/bc503b0b87b643d3505d41eab8b332ae
-
 	Ported from code: https://gist.github.com/TheRealMJP/c83b8c0f46b63f3a88a5986f4fa982b1
-
 	Samples a texture with Catmull-Rom filtering, using 9 texture fetches instead of 16.
 	See http://vec3.ca/bicubic-filtering-in-fewer-taps/ for more details
-
 	ATENTION: This code only work using LINEAR filter sampling set on Retroarch!
-
 */
 
 #if defined(VERTEX)
@@ -128,25 +121,30 @@ void main()
     texPos3  *= SourceSize.zw;
     texPos12 *= SourceSize.zw;
 
-    vec4 c00  = texture(Source, vec2(texPos0.x, texPos0.y));
-    vec4 c10  = texture(Source, vec2(texPos12.x, texPos0.y));
-    vec4 c20  = texture(Source, vec2(texPos3.x, texPos0.y));
+    vec4 c00  = COMPAT_TEXTURE(Source, vec2(texPos0.x, texPos0.y));
+    vec4 c10  = COMPAT_TEXTURE(Source, vec2(texPos12.x, texPos0.y));
+    vec4 c20  = COMPAT_TEXTURE(Source, vec2(texPos3.x, texPos0.y));
 
-    vec4 c01  = texture(Source, vec2(texPos0.x, texPos12.y));
-    vec4 c11  = texture(Source, vec2(texPos12.x, texPos12.y));
-    vec4 c21  = texture(Source, vec2(texPos3.x, texPos12.y));
+    vec4 c01  = COMPAT_TEXTURE(Source, vec2(texPos0.x, texPos12.y));
+    vec4 c11  = COMPAT_TEXTURE(Source, vec2(texPos12.x, texPos12.y));
+    vec4 c21  = COMPAT_TEXTURE(Source, vec2(texPos3.x, texPos12.y));
 
-    vec4 c02  = texture(Source, vec2(texPos0.x, texPos3.y));
-    vec4 c12  = texture(Source, vec2(texPos12.x, texPos3.y));
-    vec4 c22  = texture(Source, vec2(texPos3.x, texPos3.y));
+    vec4 c02  = COMPAT_TEXTURE(Source, vec2(texPos0.x, texPos3.y));
+    vec4 c12  = COMPAT_TEXTURE(Source, vec2(texPos12.x, texPos3.y));
+    vec4 c22  = COMPAT_TEXTURE(Source, vec2(texPos3.x, texPos3.y));
 
-    vec3 wx   = vec3(w0.x, w12.x, w3.x);
-    vec3 wy   = vec3(w0.y, w12.y, w3.y);
+    // initialize some variables
+    vec4 c1, c2, c3, wx, wy = vec4(0.,0.,0.,0.);
+    // junk vec4 used only to round out the non-square 3x4 matrices
+    vec4 dummy = vec4(0.,0.,0.,1.);
 
-    vec4 c1   = vec4(mul(wx, mat3x4(c00, c10, c20)), 0);
-    vec4 c2   = vec4(mul(wx, mat3x4(c01, c11, c21)), 0);
-    vec4 c3   = vec4(mul(wx, mat3x4(c02, c12, c22)), 0);
+    wx   = vec4(w0.x, w12.x, w3.x, 1.0);
+    wy   = vec4(w0.y, w12.y, w3.y, 1.0);
 
-    FragColor.xyz = mul(wy, mat3x4(c1, c2, c3));
+    c1   = vec4(mul(wx, mat4(c00, c10, c20, dummy)));
+    c2   = vec4(mul(wx, mat4(c01, c11, c21, dummy)));
+    c3   = vec4(mul(wx, mat4(c02, c12, c22, dummy)));
+
+    FragColor = mul(wy, mat4(c1, c2, c3, dummy));
 }
 #endif
