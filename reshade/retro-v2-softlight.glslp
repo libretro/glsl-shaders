@@ -1,0 +1,21 @@
+shaders = 2
+shader0 = ../handheld/shaders/retro-v2.glsl
+shader1 = shaders/blendsoftlight/blendsoftlight.glsl
+
+
+
+textures = "overlay"
+# change this path to point to your overlay image
+overlay = shaders/blendsoftlight/shine.png
+OverlayMix = 1.0
+
+scale_type0 = source
+scale0 = 4
+
+filter_linear0 = false
+filter_linear1 = true
+
+parameters = "RETRO_PIXEL_SIZE"
+# set these to the width/height of your overlay image
+SCALE = "1.0"
+RETRO_PIXEL_SIZE = "0.70"
