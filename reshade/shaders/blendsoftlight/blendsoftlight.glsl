@@ -60,10 +60,12 @@ uniform COMPAT_PRECISION float OUT_Y;
 void main()
 {
     gl_Position =   MVPMatrix * VertexCoord;
-    vec2 scale  =   (OutputSize.xy / InputSize.xy) / SCALE;
-    vec2 middle =   vec2(0.5, 0.5) * InputSize.xy / TextureSize.xy;
-    vec2 diff   =   TexCoord.xy - middle;
-    TEX0.xy     =   middle + diff * scale;
+    TEX0.xy = TexCoord.xy;
+    
+    // vec2 scale  =   (OutputSize.xy / InputSize.xy) / SCALE;
+    // vec2 middle =   vec2(0.5, 0.5) * InputSize.xy / TextureSize.xy;
+    // vec2 diff   =   TexCoord.xy - middle;
+    // TEX0.xy     =   middle + diff * scale;
 }
 
 #elif defined(FRAGMENT)
