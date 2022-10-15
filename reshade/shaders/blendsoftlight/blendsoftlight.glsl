@@ -15,6 +15,9 @@
 #pragma parameter OverlayMix "Overlay Mix" 1.0 0.0 1.0 0.05
 #pragma parameter SCALE "Box Scale" 4.0 0.25 4.0 0.05
 #pragma parameter ASPECTRATIO "Aspect Ratio" 87.0 43.0 87.0 44.0
+#pragma parameter BorderBool "Normal Borders" 0.0 0.0 1.0 1.0
+#pragma parameter ThickBool "Thick Borders" 0.0 0.0 1.0 1.0
+#pragma parameter ThinBool "Thin Borders" 0.0 0.0 1.0 1.0
 
 #if defined(VERTEX)
 
@@ -110,7 +113,10 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 uniform sampler2D BORDER;
+uniform sampler2D BORDERTHICK;
+uniform sampler2D BORDERTHIN;
 uniform sampler2D overlay;
+uniform sampler2D overlay2;
 COMPAT_VARYING vec4 TEX0;
 
 // compatibility #defines
@@ -123,9 +129,15 @@ COMPAT_VARYING vec4 TEX0;
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float OverlayMix;
 uniform COMPAT_PRECISION float ASPECTRATIO;
+uniform COMPAT_PRECISION float BorderBool;
+uniform COMPAT_PRECISION float ThickBool;
+uniform COMPAT_PRECISION float ThinBool;
 #else
 #define OverlayMix 1.0
 #define ASPECTRATIO 43.0
+#define BorderBool 0.0
+#define ThickBool 0.0
+#define ThinBool 0.0
 #endif
 
 float blendSoftlight(float base, float blend) {
@@ -135,8 +147,12 @@ float blendSoftlight(float base, float blend) {
 void main()
 {
 
-    vec4 frame  =   COMPAT_TEXTURE(Source, vTexCoord).rgba;
-    vec4 softlight =   COMPAT_TEXTURE(overlay, vTexCoord).rgba;
+    vec4 frame     = COMPAT_TEXTURE(Source, vTexCoord).rgba;
+    vec4 softlight = COMPAT_TEXTURE(overlay, vTexCoord).rgba;
+    if ( OverlayMix < 1.0 ){
+        softlight   = COMPAT_TEXTURE(overlay2, vTexCoord).rgba;
+        softlight.a = OverlayMix;
+    }
 
     vec4 ImageFinal  = frame;
 
@@ -144,11 +160,19 @@ void main()
     ImageFinal.g = blendSoftlight(frame.g,softlight.g);
     ImageFinal.b = blendSoftlight(frame.b,softlight.b);
     ImageFinal.a = blendSoftlight(frame.a,softlight.a);
-    ImageFinal   = mix(frame,clamp(ImageFinal,0.0,OverlayMix),softlight.a);
+    ImageFinal   = mix(frame,ImageFinal,softlight.a);
+    // ImageFinal   = mix(frame,clamp(ImageFinal,0.0,OverlayMix),softlight.a);
 
-    if (ASPECTRATIO == 87.0) {
+    // Aspect ratio 8:7 will always have a normal border applied
+    // otherwise glitching will occur on the edges
+    if (ASPECTRATIO == 87.0 || BorderBool == 1.0 || ThickBool == 1.0 || ThinBool == 1.0) {
         vec4 background = COMPAT_TEXTURE(BORDER, vTexCoord);
-
+        if(ThickBool == 1.0){
+            background = COMPAT_TEXTURE(BORDERTHICK, vTexCoord);
+        }
+        if(ThinBool == 1.0){
+            background = COMPAT_TEXTURE(BORDERTHIN, vTexCoord);
+        }
         FragColor = vec4(mix(ImageFinal, background, background.a));
     }
     else{
