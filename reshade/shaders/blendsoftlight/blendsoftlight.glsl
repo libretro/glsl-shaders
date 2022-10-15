@@ -3,11 +3,18 @@
 // blendSoftlight
 // based on:
 // https://github.com/jamieowen/glsl-blend for blendSoftlight
+//
+// The MIT License (MIT) Copyright (c) 2015 Jamie Owen
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+// Same MIT License applies to contributions from Ben Reaves
+//
 
 #pragma parameter OverlayMix "Overlay Mix" 1.0 0.0 1.0 0.05
-#pragma parameter SCALE "Box Scale" 0.6667 0.6667 1.5 0.33333
-#pragma parameter OUT_X "Out X" 1600.0 1600.0 4800.0 8000.0
-#pragma parameter OUT_Y "Out Y" 800.0 800.0 2400.0 400.0
+#pragma parameter SCALE "Box Scale" 4.0 0.25 4.0 0.05
+#pragma parameter ASPECTRATIO "Aspect Ratio" 87.0 43.0 87.0 44.0
 
 #if defined(VERTEX)
 
@@ -44,28 +51,33 @@ uniform COMPAT_PRECISION vec2 InputSize;
 // compatibility #defines
 #define vTexCoord TEX0.xy
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutSize vec4(OutputSize, 1.0 / OutputSize)
+#define OutputSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
 uniform COMPAT_PRECISION float SCALE;
-uniform COMPAT_PRECISION float OUT_X;
-uniform COMPAT_PRECISION float OUT_Y;
+uniform COMPAT_PRECISION float ASPECTRATIO;
 #else
-#define SCALE 0.66667
-#define OUT_X 1600.0
-#define OUT_Y 800.0
+#define SCALE 1.0
+#define ASPECTRATIO 43.0
 #endif
 
 void main()
 {
     gl_Position =   MVPMatrix * VertexCoord;
-    TEX0.xy = TexCoord.xy;
-    
-    // vec2 scale  =   (OutputSize.xy / InputSize.xy) / SCALE;
-    // vec2 middle =   vec2(0.5, 0.5) * InputSize.xy / TextureSize.xy;
-    // vec2 diff   =   TexCoord.xy - middle;
-    // TEX0.xy     =   middle + diff * scale;
+    if (ASPECTRATIO == 43.0) {
+        TEX0.xy = TexCoord.xy;
+    }
+    else if (ASPECTRATIO == 87.0) {
+        vec2 box_scale = vec2(SCALE + 0.06, SCALE + 0.06);
+        vec2 scale = (OutputSize.xy / SourceSize.xy) / box_scale;
+        vec2 middle =   vec2(0.5, 0.5) * SourceSize.xy / TextureSize.xy;
+        vec2 diff   =   TexCoord.xy - middle;
+        TEX0.xy     =   (middle + diff * scale);
+    }
+    else {
+        TEX0.xy = TexCoord.xy;
+    }
 }
 
 #elif defined(FRAGMENT)
@@ -97,6 +109,7 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
+uniform sampler2D BORDER;
 uniform sampler2D overlay;
 COMPAT_VARYING vec4 TEX0;
 
@@ -109,8 +122,10 @@ COMPAT_VARYING vec4 TEX0;
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float OverlayMix;
+uniform COMPAT_PRECISION float ASPECTRATIO;
 #else
 #define OverlayMix 1.0
+#define ASPECTRATIO 43.0
 #endif
 
 float blendSoftlight(float base, float blend) {
@@ -130,7 +145,14 @@ void main()
     ImageFinal.b = blendSoftlight(frame.b,softlight.b);
     ImageFinal.a = blendSoftlight(frame.a,softlight.a);
     ImageFinal   = mix(frame,clamp(ImageFinal,0.0,OverlayMix),softlight.a);
-    
-    FragColor = vec4(ImageFinal);
+
+    if (ASPECTRATIO == 87.0) {
+        vec4 background = COMPAT_TEXTURE(BORDER, vTexCoord);
+
+        FragColor = vec4(mix(ImageFinal, background, background.a));
+    }
+    else{
+        FragColor = vec4(ImageFinal);
+    }
 } 
 #endif

@@ -4,10 +4,12 @@ shader1 = shaders/blendsoftlight/blendsoftlight.glsl
 
 
 
-textures = "overlay"
+textures = "overlay;BORDER"
 # change this path to point to your overlay image
 overlay = shaders/blendsoftlight/shine.png
+BORDER = shaders/blendsoftlight/border.png
 OverlayMix = 1.0
+ASPECTRATIO = "43.0"
 
 scale_type0 = source
 scale0 = 4
