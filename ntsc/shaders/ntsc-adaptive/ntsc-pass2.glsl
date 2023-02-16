@@ -95,7 +95,7 @@ uniform COMPAT_PRECISION float linearize;
 
 vec3 unpack_float(vec3 color)
 {
-	return (color + 100.0) / 1000.0;
+	return (color + 1.0) / 10.0;
 }
 
 const mat3 yiq2rgb_mat = mat3(
