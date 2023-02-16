@@ -124,7 +124,7 @@ vec3 rgb2yiq(vec3 col)
 
 vec4 pack_float(vec4 color)
 {
-	return ((color * 1000.0) - 100.0);
+	return ((color * 10.0) - 1.0);
 }
 
 void main()
