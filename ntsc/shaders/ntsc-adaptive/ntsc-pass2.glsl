@@ -6,7 +6,7 @@
 #pragma parameter linearize "Linearize Output Gamma" 0.0 0.0 1.0 1.0
 
 #define fetch_offset(offset, one_x) \
-   COMPAT_TEXTURE(Source, vTexCoord + vec2((offset) * (one_x), 0.0)).xyz
+   unpack_float(COMPAT_TEXTURE(Source, vTexCoord + vec2((offset) * (one_x), 0.0)).xyz)
 
 #if defined(VERTEX)
 
@@ -92,6 +92,11 @@ uniform COMPAT_PRECISION float linearize;
 #else
 #define linearize 0.0
 #endif
+
+vec3 unpack_float(vec3 color)
+{
+	return (color + 100.0) / 1000.0;
+}
 
 const mat3 yiq2rgb_mat = mat3(
    1.0, 0.956, 0.6210,
@@ -256,7 +261,7 @@ void main()
             fetch_offset(float(TAPS_2_phase) - offset, one_x);
          signal += sums * vec3(luma_filter_2_phase[i], chroma_filter_2_phase[i], chroma_filter_2_phase[i]);
       }
-      signal += COMPAT_TEXTURE(Source, vTexCoord).xyz *
+      signal += unpack_float(COMPAT_TEXTURE(Source, vTexCoord).xyz) *
          vec3(luma_filter_2_phase[TAPS_2_phase], chroma_filter_2_phase[TAPS_2_phase], chroma_filter_2_phase[TAPS_2_phase]);
    }
    else if(phase > 2.5)
@@ -269,7 +274,7 @@ void main()
             fetch_offset(float(TAPS_3_phase) - offset, one_x);
          signal += sums * vec3(luma_filter_3_phase[i], chroma_filter_3_phase[i], chroma_filter_3_phase[i]);
       }
-      signal += COMPAT_TEXTURE(Source, vTexCoord).xyz *
+      signal += unpack_float(COMPAT_TEXTURE(Source, vTexCoord).xyz) *
          vec3(luma_filter_3_phase[TAPS_3_phase], chroma_filter_3_phase[TAPS_3_phase], chroma_filter_3_phase[TAPS_3_phase]);
    }
 
