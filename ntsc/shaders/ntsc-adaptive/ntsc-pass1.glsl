@@ -99,7 +99,6 @@ uniform COMPAT_PRECISION float bw;
 #define PI 3.14159265
 float phase = (OrigInputSize.x > 300.0) ? 2.0 : 3.0;
 
-
 #define mix_mat mat3(BRIGHTNESS, FRINGING, FRINGING, ARTIFACTING, 2.0 * SATURATION, 0.0, ARTIFACTING, 0.0, 2.0 * SATURATION)
 
 const mat3 yiq2rgb_mat = mat3(
@@ -121,6 +120,11 @@ const mat3 yiq_mat = mat3(
 vec3 rgb2yiq(vec3 col)
 {
    return col * yiq_mat;
+}
+
+vec4 pack_float(vec4 color)
+{
+	return ((color * 1000.0) - 100.0);
 }
 
 void main()
@@ -145,5 +149,6 @@ void main()
    yiq *= mix_mat; // Cross-talk.
    yiq.yz *= vec2(i_mod, q_mod); // Demodulate.
    FragColor = vec4(yiq, 1.0);
+   FragColor = pack_float(FragColor);
 } 
 #endif
