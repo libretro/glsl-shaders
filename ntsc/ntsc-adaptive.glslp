@@ -5,6 +5,7 @@ scale_type0 = source
 scale_x0 = 4.0
 filter_linear0 = false
 scale_y0 = 1.0
+float_framebuffer0 = true
 
 shader1 = shaders/ntsc-adaptive/ntsc-pass2.glsl
 scale_type1 = source
