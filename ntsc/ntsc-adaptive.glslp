@@ -12,3 +12,4 @@ scale_type1 = source
 scale_x1 = 0.5
 scale_y1 = 1.0
 filter_linear1 = false
+wrap_mode1 = mirrored_repeat
