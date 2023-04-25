@@ -2,12 +2,12 @@
     crt-1tap v1.0 by fishku
     Copyright (C) 2023
     Ported by dariusg to GLSL
-    Public domain license
-
+   
     Extremely fast and lightweight dynamic scanline shader.
     Contrasty and sharp output. Easy to configure.
     Can be combined with other shaders.
-
+    
+    Public domain license (CC0)
     How it works: Uses a single texture "tap" per pixel, hence the name.
     Exploits bilinear interpolation plus local coordinate distortion to shape
     the scanline. A pseudo-sigmoid function with a configurable slope at the
@@ -20,16 +20,19 @@
     for even and odd integer scaling.
 
     Changelog:
+    v1.2: Better scanline sharpness; Minor cleanups.
+    v1.1: Update license; Better defaults; Don't compute alpha.
     v1.0: Initial release.
 */
 
 // clang-format off
-#pragma parameter MIN_THICK "MIN_THICK: Scanline thickness of dark pixels." 0.3 0.0 1.4 0.05
-#pragma parameter MAX_THICK "MAX_THICK: Scanline thickness of bright pixels." 1.05 0.0 1.4 0.05
-#pragma parameter V_SHARP "V_SHARP: Vertical sharpness of the scanline" 0.2 0.0 1.0 0.05
-#pragma parameter H_SHARP "H_SHARP: Horizontal sharpness of pixel transitions." 0.15 0.0 1.0 0.05
-#pragma parameter SUBPX_POS "SUBPX_POS: Scanline subpixel position." 0.05 -0.5 0.5 0.01
-#pragma parameter THICK_FALLOFF "THICK_FALLOFF: Reduction of thinner scanlines." 0.65 0.2 2.0 0.05
+#pragma parameter CRT1TAP_SETTINGS "=== CRT-1tap v1.2 settings ===" 0.0 0.0 1.0 1.0
+#pragma parameter MIN_THICK "Scanline thickness of dark pixels" 0.3 0.0 1.4 0.05
+#pragma parameter MAX_THICK "Scanline thickness of bright pixels" 0.9 0.0 1.4 0.05
+#pragma parameter V_SHARP "Vertical sharpness of the scanline" 0.5 0.0 1.0 0.05
+#pragma parameter H_SHARP "Horizontal sharpness of pixel transitions" 0.15 0.0 1.0 0.05
+#pragma parameter SUBPX_POS "Scanline subpixel position" 0.3 -0.5 0.5 0.01
+#pragma parameter THICK_FALLOFF "Reduction / increase of thinner scanlines" 0.65 0.2 2.0 0.05
 
 
 #if defined(VERTEX)
@@ -124,10 +127,10 @@ uniform COMPAT_PRECISION float SUBPX_POS;
 uniform COMPAT_PRECISION float THICK_FALLOFF;
 #else
 #define MIN_THICK 0.3
-#define MAX_THICK 1.05
-#define V_SHARP 0.2
+#define MAX_THICK 0.9
+#define V_SHARP 0.5
 #define H_SHARP 0.15
-#define SUBPX_POS 0.05
+#define SUBPX_POS 0.3
 #define THICK_FALLOFF 0.65
 #endif
 
@@ -135,38 +138,28 @@ uniform COMPAT_PRECISION float THICK_FALLOFF;
 void main() {
 
     float src_x_int;
-    const float src_x_fract =
-        modf(vTexCoord.x * SourceSize.x - 0.5f, src_x_int);
+    const float src_x_fract = modf(vTexCoord.x * SourceSize.x - 0.5, src_x_int);
 
     float src_y_int;
     const float src_y_fract =
-        modf(vTexCoord.y * SourceSize.y - SUBPX_POS, src_y_int);
+        modf(vTexCoord.y * SourceSize.y - SUBPX_POS, src_y_int) - 0.5;
 
     // Function similar to smoothstep and sigmoid.
-    const float s = sign(src_x_fract - 0.5f);
-    const float o = (1.0f + s) * 0.5f;
+    const float s = sign(src_x_fract - 0.5);
+    const float o = (1.0 + s) * 0.5;
     const float src_x =
-        src_x_int + o -
-        0.5f * s *
-            pow(2.0f * (o - s * src_x_fract), mix(1.5f, 10.0f, H_SHARP));
+        src_x_int + o - 0.5 * s * pow(2.0 * (o - s * src_x_fract), mix(1.0, 6.0, H_SHARP));
 
-    const vec4 signal =
-        COMPAT_TEXTURE(Source, vec2((src_x + 0.5f) * SourceSize.z,
-                             (src_y_int + 0.5f) * SourceSize.w));
+    const vec3 signal = texture(Source, vec2((src_x + 0.5) * SourceSize.z,
+                                             (src_y_int + 0.5) * SourceSize.w))
+                            .rgb;
 
     // Vectorize operations for speed.
-    const float eff_v_sharp = 5.0f + 100.0f * V_SHARP * V_SHARP;
-    const vec4 min_thick = {MIN_THICK, MIN_THICK, MIN_THICK,
-                            MIN_THICK};
-    const vec4 max_thick = {MAX_THICK, MAX_THICK, MAX_THICK,
-                            MAX_THICK};
-    const vec4 thick_falloff = {THICK_FALLOFF, THICK_FALLOFF,
-                                THICK_FALLOFF, THICK_FALLOFF};
-    FragColor =
-        signal * clamp(eff_v_sharp * ((pow(mix(min_thick, max_thick, signal),
-                                           thick_falloff) *
-                                       0.5f) -
-                                      abs(src_y_fract - 0.5f)),
-                       0.0f, 1.0f);
+    const float eff_v_sharp = 3.0 + 50.0 * V_SHARP * V_SHARP;
+    const vec3 radius =
+        pow(mix(MIN_THICK.xxx, MAX_THICK.xxx, signal), THICK_FALLOFF.xxx) * 0.5;
+    FragColor.rgb =
+        signal * clamp(0.25 - eff_v_sharp * (src_y_fract * src_y_fract - radius * radius),
+        0.0, 1.0);
 }
 #endif
