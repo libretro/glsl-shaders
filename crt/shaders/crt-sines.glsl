@@ -1,5 +1,5 @@
-// Simple scanlines with curvature and mask effects lifted from crt-geom
-// original by hunterk, edited by DariusG @2022
+// A fast shader using sines and some tricks in the book
+// by DariusG @2023
 
 ///////////////////////  Runtime Parameters  ///////////////////////
 #pragma parameter SCANLINE1 "Scanline Brightness Dark" 0.3 0.0 1.0 0.05
