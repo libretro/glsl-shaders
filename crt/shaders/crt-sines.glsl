@@ -1,4 +1,5 @@
-// A fast shader using sines and some tricks in the book
+// A very fast CRT shader that uses sine calculations for mask/scanlines effects
+// and some tricks in the book to offer a pleasant experience.
 // by DariusG @2023
 
 ///////////////////////  Runtime Parameters  ///////////////////////
@@ -8,12 +9,12 @@
 #pragma parameter SCALE "Scanlines downscale"  1.0 1.0 4.0 1.0
 #pragma parameter MSK1 "   Mask Brightness Dark" 0.4 0.0 1.0 0.05
 #pragma parameter MSK2 "   Mask Brightness Bright" 0.7 0.0 1.0 0.05
-#pragma parameter MSK_SIZE "   Mask Size" 1.0 0.25 4.0 0.25
+#pragma parameter MSK_SIZE "   Mask Size, variable " 1.0 0.25 4.0 0.25
 #pragma parameter fade "   Mask/Scanlines Fade" 0.2 0.0 1.0 0.05
-#pragma parameter BOOST "Bright Colors Boost" 1.06 1.0 1.5 0.02
+#pragma parameter BOOST "Bright Colors Boost" 1.00 1.0 1.5 0.02
 #pragma parameter PRESERVE "Protect Bright Colors" 0.6 0.0 1.0 0.01
-#pragma parameter WP "Color Temperature shift" 0.04 -0.25 0.25 0.01
-#pragma parameter GAMMA "Gamma Adjust" 1.2 0.0 1.5 0.01
+#pragma parameter WP "Color Temperature shift" 0.00 -0.25 0.25 0.01
+#pragma parameter GAMMA "Gamma Adjust" 1.0 0.0 1.2 0.01
 #pragma parameter sat "Saturation" 1.1 0.0 2.0 0.05
 
 #define pi  3.141592654
@@ -68,7 +69,7 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
-    omega = vec2(pi * OutputSize.x/MSK_SIZE, pi * SourceSize.y/SCALE);
+    omega = vec2(pi * SourceSize.x*MSK_SIZE, pi * SourceSize.y/SCALE);
 }
 
 #elif defined(FRAGMENT)
@@ -170,10 +171,10 @@ void main()
     vec3 lumweight=vec3(0.3,0.6,0.1);
     float lum = dot(res,lumweight);
     //FAKE GAMMA
-         res *= mix(GAMMA, 1.0, lum);
+       if (GAMMA != 1.0)  {res *= mix(GAMMA, 1.0, lum);}
     //APPLY MASK 
          float MSK = mix(MSK1,MSK2,lum);       
-         float mask = mix((1.0-MSK)*(sin(vTexCoord.x*omega.x*pi))+MSK, 1.0, lum*PRESERVE);
+         float mask = mix((1.0-MSK)*abs(sin(vTexCoord.x*omega.x))+MSK, 1.0, lum*PRESERVE);
 
          float scan = 1.0;
          float SCANLINE = mix(SCANLINE1,SCANLINE2,lum);
@@ -182,15 +183,16 @@ void main()
          scan= (1.0 - SCANLINE)*abs(sin(vTexCoord.y* omega.y)) + SCANLINE+lum*0.1;
          res *=mix(scan*mask, scan, dot(res, vec3(fade)));
     //BRIGHT BOOST
-         res *= mix(1.0,BOOST,lum);
+       if (BOOST != 1.0)  res *= mix(1.0,BOOST,lum);
     //CHEAP TEMPERATURE CONTROL     
-         res *= vec3(1.0+WP,1.0,1.0-WP);
+       if (WP != 0.0) { res *= vec3(1.0+WP,1.0,1.0-WP);}
     
     //FAST SATURATION CONTROL
+        if(sat !=1.0){
         float gray = lum;
         vec3 graycolour = vec3(gray);
         res = vec3(mix(graycolour,res,sat));
-
+        }
     FragColor = vec4(res,1.0);
 }
 #endif
