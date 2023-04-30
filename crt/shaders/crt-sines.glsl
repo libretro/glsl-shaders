@@ -8,12 +8,12 @@
 #pragma parameter SCALE "Scanlines downscale"  1.0 1.0 4.0 1.0
 #pragma parameter MSK1 "   Mask Brightness Dark" 0.4 0.0 1.0 0.05
 #pragma parameter MSK2 "   Mask Brightness Bright" 0.7 0.0 1.0 0.05
-#pragma parameter MSK_SIZE "   Mask Size" 1.0 1.0 4.0 1.0
+#pragma parameter MSK_SIZE "   Mask Size" 1.0 0.25 4.0 0.25
 #pragma parameter fade "   Mask/Scanlines Fade" 0.2 0.0 1.0 0.05
 #pragma parameter BOOST "Bright Colors Boost" 1.06 1.0 1.5 0.02
 #pragma parameter PRESERVE "Protect Bright Colors" 0.6 0.0 1.0 0.01
 #pragma parameter WP "Color Temperature shift" 0.04 -0.25 0.25 0.01
-#pragma parameter GAMMA "Gamma Adjust" 0.84 0.0 1.0 0.01
+#pragma parameter GAMMA "Gamma Adjust" 1.2 0.0 1.5 0.01
 #pragma parameter sat "Saturation" 1.1 0.0 2.0 0.05
 
 #define pi  3.141592654
