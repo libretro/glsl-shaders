@@ -1,5 +1,4 @@
 // Parameter lines go here:
-#pragma parameter SCANLINE_BASE_BRIGHTNESS "Scanline Base Brightness" 0.95 0.0 1.0 0.01
 #pragma parameter SCANLINE_SINE_COMP_A "Grid Strength" 0.0 0.0 1.00 0.02
 #pragma parameter SCANLINE_SINE_COMP_B "Scanline Strength" 0.25 0.0 1.0 0.05
 #pragma parameter size "Grid size"  1.0 1.0 2.0 1.0
@@ -43,8 +42,8 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
-    TEX0.xy = TexCoord.xy;
-    omega = vec2(pi * size * OutputSize.x, 2.0 * pi * TextureSize.y);
+    TEX0.xy = TexCoord.xy*1.0001;
+    omega = vec2(pi * size * OutputSize.x, 1.999 * pi * TextureSize.y);
 }
 
 #elif defined(FRAGMENT)
@@ -88,11 +87,9 @@ COMPAT_VARYING vec2 omega;
 
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float SCANLINE_BASE_BRIGHTNESS;
 uniform COMPAT_PRECISION float SCANLINE_SINE_COMP_A;
 uniform COMPAT_PRECISION float SCANLINE_SINE_COMP_B;
 #else
-#define SCANLINE_BASE_BRIGHTNESS 0.95
 #define SCANLINE_SINE_COMP_A 0.0
 #define SCANLINE_SINE_COMP_B 0.15
 #endif
@@ -101,7 +98,7 @@ void main()
 {
    vec2 sine_comp = vec2(SCANLINE_SINE_COMP_A, SCANLINE_SINE_COMP_B);
    vec3 res = COMPAT_TEXTURE(Source, vTexCoord).xyz;
-   vec3 scanline = res * (SCANLINE_BASE_BRIGHTNESS + dot(sine_comp * sin(vTexCoord * omega), vec2(1.0, 1.0)));
-   FragColor = vec4(scanline.x, scanline.y, scanline.z, 1.0);
+   vec3 scanline = res * ((1.0-SCANLINE_SINE_COMP_B*0.5) + dot(sine_comp * sin(vTexCoord * omega), vec2(1.0, 1.0)));
+   FragColor = vec4(scanline, 1.0);
 } 
 #endif
