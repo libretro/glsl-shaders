@@ -2,37 +2,39 @@
 // Parameter lines go here:
 #pragma parameter blurx "Convergence X" 0.25 -2.0 2.0 0.05
 #pragma parameter blury "Convergence Y" -0.15 -2.0 2.0 0.05
-#pragma parameter warpx "Curvature X" 0.03 0.0 0.12 0.01
-#pragma parameter warpy "Curvature Y" 0.04 0.0 0.12 0.01
-#pragma parameter corner "Corner size" 0.01 0.0 0.10 0.01
-#pragma parameter smoothness "Border Smoothness" 400.0 25.0 600.0 5.0
+#pragma parameter warpx "  Curvature X" 0.03 0.0 0.12 0.01
+#pragma parameter warpy "  Curvature Y" 0.04 0.0 0.12 0.01
+#pragma parameter corner "  Corner size" 0.01 0.0 0.10 0.01
+#pragma parameter smoothness "  Border Smoothness" 400.0 25.0 600.0 5.0
 #pragma parameter scanlow "Beam low" 6.0 1.0 15.0 1.0
 #pragma parameter scanhigh "Beam high" 8.0 1.0 15.0 1.0
+#pragma parameter inter "Interlacing Toggle" 1.0 0.0 1.0 1.0
+#pragma parameter scan_type "Scanline Type, pronounced/soft"  2.0 1.0 3.0 1.0 
 #pragma parameter beamlow "Scanlines dark" 1.35 0.5 2.5 0.05 
 #pragma parameter beamhigh "Scanlines bright" 1.05 0.5 2.5 0.05 
-#pragma parameter brightboost1 "Bright boost dark pixels" 1.1 0.0 3.0 0.05
-#pragma parameter brightboost2 "Bright boost bright pixels" 1.05 0.0 3.0 0.05
-#pragma parameter Shadowmask "Mask Type" 7.0 -1.0 8.0 1.0 
-#pragma parameter masksize "Mask Size" 1.0 1.0 2.0 1.0
-#pragma parameter MaskDark "Mask dark" 0.5 0.0 2.0 0.1
-#pragma parameter MaskLight "Mask light" 1.5 0.0 2.0 0.1
-#pragma parameter slotmask "Slot Mask Strength" 0.0 0.0 1.0 0.05
-#pragma parameter slotwidth "Slot Mask Width" 2.0 1.0 6.0 0.5
-#pragma parameter double_slot "Slot Mask Height: 2x1 or 4x1" 1.0 1.0 2.0 1.0
-#pragma parameter slotms "Slot Mask Size" 1.0 1.0 2.0 1.0
-#pragma parameter GAMMA_IN "Gamma In" 2.5 0.0 4.0 0.1
+#pragma parameter Shadowmask "  Mask Type" 0.0 -1.0 8.0 1.0 
+#pragma parameter masksize "  Mask Size" 1.0 1.0 2.0 1.0
+#pragma parameter MaskDark "  Mask dark" 0.5 0.0 2.0 0.1
+#pragma parameter MaskLight "  Mask light" 1.5 0.0 2.0 0.1
+#pragma parameter slotmask "   Slot Mask Strength" 0.0 0.0 1.0 0.05
+#pragma parameter slotwidth "   Slot Mask Width" 2.0 1.0 6.0 0.5
+#pragma parameter double_slot "   Slot Mask Height: 2x1 or 4x1" 1.0 1.0 2.0 1.0
+#pragma parameter slotms "   Slot Mask Size" 1.0 1.0 2.0 1.0
+#pragma parameter GAMMA_IN "Gamma In" 2.4 0.0 4.0 0.1
 #pragma parameter GAMMA_OUT "Gamma Out" 2.2 0.0 4.0 0.1
-#pragma parameter glow "Glow Strength" 0.05 0.0 0.5 0.01
-#pragma parameter Size "Glow Size" 1.0 0.1 4.0 0.05
+#pragma parameter brightboost1 "Bright boost dark pixels" 1.3 0.0 3.0 0.05
+#pragma parameter brightboost2 "Bright boost bright pixels" 1.05 0.0 3.0 0.05
+#pragma parameter glow "Glow Strength" 0.08 0.0 1.5 0.01
+#pragma parameter Size "Glow Size" 2.0 1.0 4.0 1.0
+#pragma parameter quality "Glow quality" 1.5 0.5 4.0 0.25
 #pragma parameter sat "Saturation" 1.1 0.0 2.0 0.05
 #pragma parameter contrast "Contrast, 1.0:Off" 1.0 0.00 2.00 0.05
-#pragma parameter nois "Noise" 0.0 0.0 32.0 1.0
+#pragma parameter nois "Noise" 0.0 0.0 1.0 0.01
 #pragma parameter WP "Color Temperature %" 0.0 -100.0 100.0 5.0 
-#pragma parameter inter "Interlacing Toggle" 1.0 0.0 1.0 1.0 
-#pragma parameter vignette "Vignette On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter vpower "Vignette Power" 0.2 0.0 1.0 0.01
-#pragma parameter vstr "Vignette strength" 40.0 0.0 50.0 1.0
-#pragma parameter alloff "Switch off shader" 0.0 0.0 1.0 1.0
+#pragma parameter vignette "  Vignette On/Off" 1.0 0.0 1.0 1.0
+#pragma parameter vpower "  Vignette Power" 0.15 0.0 1.0 0.01
+#pragma parameter vstr "  Vignette strength" 45.0 0.0 50.0 1.0
+#pragma parameter alloff "  Switch off shader" 0.0 0.0 1.0 1.0
 #define pi 6.28318
 
 #if defined(VERTEX)
@@ -125,6 +127,7 @@ uniform COMPAT_PRECISION float scanlow;
 uniform COMPAT_PRECISION float scanhigh;
 uniform COMPAT_PRECISION float beamlow;
 uniform COMPAT_PRECISION float beamhigh;
+uniform COMPAT_PRECISION float scan_type;
 uniform COMPAT_PRECISION float brightboost1;
 uniform COMPAT_PRECISION float brightboost2;
 uniform COMPAT_PRECISION float Shadowmask;
@@ -139,6 +142,7 @@ uniform COMPAT_PRECISION float GAMMA_IN;
 uniform COMPAT_PRECISION float GAMMA_OUT;
 uniform COMPAT_PRECISION float glow;
 uniform COMPAT_PRECISION float Size;
+uniform COMPAT_PRECISION float quality;
 uniform COMPAT_PRECISION float sat;
 uniform COMPAT_PRECISION float contrast;
 uniform COMPAT_PRECISION float nois;
@@ -158,7 +162,8 @@ uniform COMPAT_PRECISION float alloff;
 #define scanlow  6.0    
 #define scanhigh  8.0    
 #define beamlow  1.35    
-#define beamhigh  1.05    
+#define beamhigh  1.05 
+#define scan_type 2.0   
 #define brightboost1 1.45    
 #define brightboost2 1.1    
 #define Shadowmask 0.0    
@@ -173,6 +178,7 @@ uniform COMPAT_PRECISION float alloff;
 #define GAMMA_OUT 2.2
 #define glow 0.0 
 #define Size 0.4
+#define quality 1.0
 #define sat 1.0 
 #define contrast  1.0   
 #define nois 0.0
@@ -193,12 +199,12 @@ vec2 Warp(vec2 pos)
 } 
 
 
-float sw (vec3 x,vec3 color)
+float sw (float y,float l)
 {
-    float scan = mix(scanlow,scanhigh,x.y);
-    vec3 tmp = mix(vec3(beamlow),vec3(beamhigh), color);
-    vec3 ex = x*tmp;
-    return exp2(-scan*ex.y*ex.y);
+    float scan = mix(scanlow,scanhigh,y);
+    float beam = mix(beamlow,beamhigh,l);
+    float ex = y*beam;
+    return exp2(-scan*pow(ex,scan_type));
 }
 
 vec3 mask(vec2 x,vec3 col,float l)
@@ -386,59 +392,46 @@ mat3 vign( float l )
 
 }
 
-vec3 saturation (vec3 textureColor)
+vec3 saturation (vec3 Color, float l, vec3 lweight)
 {
-    float lum=length(textureColor.rgb)*0.5775;
+    float lum=l;
+    
+    if (lum<0.5) lweight=(lweight*lweight) + (lweight*lweight);
 
-    vec3 luminanceWeighting = vec3(0.4,0.5,0.1);
-    if (lum<0.5) luminanceWeighting.rgb=(luminanceWeighting.rgb*luminanceWeighting.rgb)+(luminanceWeighting.rgb*luminanceWeighting.rgb);
-
-    float luminance = dot(textureColor.rgb, luminanceWeighting);
+    float luminance = dot(Color, lweight);
     vec3 greyScaleColor = vec3(luminance);
 
-    vec3 res = vec3(mix(greyScaleColor, textureColor.rgb, sat));
+    vec3 res = vec3(mix(greyScaleColor, Color, sat));
     return res;
 }
 
-vec3 glow0 (vec2 texcoord,vec3 col)
-
+vec3 glow0 (vec2 texcoord)
 {
-   vec3 sum = vec3(0.0);
-    float blurSize = Size/1024.0;
 
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - 2.0*blurSize, texcoord.y)).rgb * 0.1;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - blurSize,     texcoord.y)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x,                texcoord.y)).rgb * 0.16;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + blurSize,     texcoord.y)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + 2.0*blurSize, texcoord.y)).rgb * 0.1;
+   // the more quality, the smaller the offset and better quality, less visible glow too
+     vec2 size = SourceSize.zw/quality;
+     
+     vec3 c01;
+     vec3 sum = vec3(0.0);
+   
 
-   //sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - 2.0*blurSize, texcoord.y - 2.0*blurSize)) * 0.1;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - 2.0*blurSize, texcoord.y - blurSize)).rgb * 0.1;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - blurSize,     texcoord.y - 2.0*blurSize)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - blurSize,     texcoord.y - blurSize)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + blurSize,     texcoord.y + blurSize)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + blurSize,     texcoord.y + 2.0*blurSize)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + 2.0*blurSize, texcoord.y + blurSize)).rgb * 0.1;
-   
-   //sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + 2.0*blurSize,  texcoord.y + 2.0*blurSize)) * 0.1;
-   //sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - 2.0*blurSize, texcoord.y + 2.0*blurSize)) * 0.1;
-   
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - 2.0*blurSize, texcoord.y + blurSize)).rgb * 0.1;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - blurSize,     texcoord.y + 2.0*blurSize)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - blurSize,     texcoord.y + blurSize)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + blurSize,     texcoord.y - blurSize)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + blurSize,     texcoord.y - 2.0*blurSize)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + 2.0*blurSize, texcoord.y - blurSize)).rgb * 0.1;
-   
-   //sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + 2.0*blurSize,  texcoord.y - 2.0*blurSize)) * 0.1;
+    for (float x = - Size; x <= Size; x = x+1.0)
+     {
 
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x,               texcoord.y - 2.0*blurSize)).rgb * 0.1;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x,               texcoord.y - blurSize)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x,               texcoord.y + blurSize)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x,               texcoord.y + 2.0*blurSize)).rgb * 0.1;
+   // multiply texture, the more far away the less pronounced
+        float factor = 1.0/Size;
+        for (float y = -Size; y <= Size; y = y+1.0)
+        {
+
+        vec2 offset = vec2(x, y) * size;
+
+         c01 = COMPAT_TEXTURE(Source, texcoord + offset).rgb*factor; c01 = c01*c01;
+          
+                sum += c01;
+        }
+    }
   
-   return sum*glow; 
-
+    return glow * sum / Size  ;
 }
 
 
@@ -483,53 +476,62 @@ void main()
 {
 	vec2 pos = Warp(TEX0.xy*(TextureSize.xy/InputSize.xy))*(InputSize.xy/TextureSize.xy);
     vec2 tex_size = SourceSize.xy;	
+    
     if (inter < 0.5 && InputSize.y >400.0) tex_size*=0.5;
 
 	vec2 pC4 = (pos + 0.5/tex_size.xy);
 	vec2 fp = fract(pos*tex_size.xy);
+    
     if (inter >0.5 && InputSize.y >400.0) fp.y=1.0; 
+    
     vec4 res = vec4(1.0);
-    if (alloff == 1.0) res= COMPAT_TEXTURE(Source,pC4); else
-    {
-	vec3 sample1 = COMPAT_TEXTURE(Source,vec2(pC4.x + blurx/1000.0, pC4.y - blury/1000.0)).rgb;
-	vec3 sample2 = COMPAT_TEXTURE(Source,pC4).rgb;
-	vec3 sample3 = COMPAT_TEXTURE(Source,vec2(pC4.x - blurx/1000.0, pC4.y + blury/1000.0)).rgb;
+    
+    if (alloff == 1.0) res= COMPAT_TEXTURE(Source,pC4); 
+
+        else
+            {
+	       vec3 sample1 = COMPAT_TEXTURE(Source,vec2(pC4.x + blurx*0.001, pC4.y - blury*0.001)).rgb;
+	       vec3 sample2 = COMPAT_TEXTURE(Source,pC4).rgb;
+	       vec3 sample3 = COMPAT_TEXTURE(Source,vec2(pC4.x - blurx*0.001, pC4.y + blury*0.001)).rgb;
 	
-	vec3 color = vec3 (sample1.r*0.5+sample2.r*0.5, sample1.g*0.25 + sample2.g*0.5 + sample3.g*0.25, sample2.b*0.5 + sample3.b*0.5);
+	vec3 color = vec3((sample1.r+sample2.r)*0.5, 
+                      (sample1.g + sample3.g)*0.25 + sample2.g*0.5, 
+                      (sample2.b+ sample3.b)*0.5);
    
     //COLOR TEMPERATURE FROM GUEST.R-DR.VENOM
-    if (WP !=0.0){
+    if (WP !=0.0)
+    {
     vec3 warmer = D50_to_XYZ*color;
     warmer = XYZ_to_D65*warmer; 
     vec3 cooler = D65_to_XYZ*color;
     cooler = XYZ_to_D50*cooler;
-    float m = abs(WP)/100.0;
+    float m = abs(WP)*0.01;
     vec3 comp = (WP < 0.0) ? cooler : warmer;
     comp=clamp(comp,0.0,1.0);   
     color = vec3(mix(color, comp, m));
     }
 
     color=pow(color,vec3(GAMMA_IN));
-    
-	float lum=color.r*0.4+color.g*0.5+color.b*0.1;
+
+    vec3 lumWeighting = vec3(0.22,0.7,0.08);
+	float lum=dot(color,lumWeighting);
 	
     float f = fp.y;
-    vec3 f1 = vec3(f); 
-
-    color = color*sw(f1,color) + color*sw(1.0-f1,color);
     
-    color*=mask(gl_FragCoord.xy*1.0001,color,lum);
+    color = color*sw(f,lum) + color*sw(1.0-f,lum);
+    
+    color*=mix(mask(gl_FragCoord.xy*1.0001,color,lum), vec3(1.0),lum*0.9);
     if (slotmask !=0.0) color*=SlotMask(gl_FragCoord.xy*1.0001,color);
     
-    color*=mix(brightboost1,brightboost2, max(max(color.r,color.g),color.b));    
+    color*=mix(brightboost1, brightboost2, lum);    
 
     color=pow(color,vec3(1.0/GAMMA_OUT));
 
-    if (glow !=0.0) color+=glow0(pC4,color);
-    if (sat != 1.0) color = saturation(color);
+    if (glow !=0.0) color+=glow0(pC4);
+    if (sat != 1.0) color = saturation(color, lum, lumWeighting);
     
     if (corner!=0.0) color*= corner0(pC4);
-    if (nois != 0.0) color*=1.0+noise(pC4*2.0)/nois;
+    if (nois != 0.0) color*=1.0+noise(pC4)*nois;
 	
 	res = vec4(color,1.0);
 	if (contrast !=1.0) res = contrastMatrix(contrast)*res;
