@@ -3,16 +3,16 @@
 // by DariusG @2023
 
 ///////////////////////  Runtime Parameters  ///////////////////////
-#pragma parameter SCANLINE1 "Scanline Brightness Dark" 0.3 0.0 1.0 0.05
-#pragma parameter SCANLINE2 "Scanline Brightness Bright" 0.5 0.0 1.0 0.05
+#pragma parameter SCANLINE1 "Scanline Brightness Dark" 0.1 0.0 1.0 0.05
+#pragma parameter SCANLINE2 "Scanline Brightness Bright" 0.75 0.0 1.0 0.05
 #pragma parameter INTERLACE "Interlace Mode" 1.0 0.0 1.0 1.0
 #pragma parameter SCALE "Scanlines downscale"  1.0 1.0 4.0 1.0
-#pragma parameter MSK1 "   Mask Brightness Dark" 0.4 0.0 1.0 0.05
-#pragma parameter MSK2 "   Mask Brightness Bright" 0.7 0.0 1.0 0.05
-#pragma parameter MSK_SIZE "   Mask Size, variable " 1.0 0.25 4.0 0.25
-#pragma parameter fade "   Mask/Scanlines Fade" 0.2 0.0 1.0 0.05
+#pragma parameter MSK1 "   Mask Brightness Dark" 0.25 0.0 1.0 0.05
+#pragma parameter MSK2 "   Mask Brightness Bright" 0.5 0.0 1.0 0.05
+#pragma parameter MSK_SIZE "   Mask Size " 2.0 0.25 2.0 0.25
+#pragma parameter fade "   Mask/Scanlines Fade" 0.3 0.0 1.0 0.05
 #pragma parameter BOOST "Bright Colors Boost" 1.00 1.0 1.5 0.02
-#pragma parameter PRESERVE "Protect Bright Colors" 0.6 0.0 1.0 0.01
+#pragma parameter PRESERVE "Protect Bright Colors" 0.4 0.0 1.0 0.01
 #pragma parameter WP "Color Temperature shift" 0.00 -0.25 0.25 0.01
 #pragma parameter GAMMA "Gamma Adjust" 1.0 0.0 1.2 0.01
 #pragma parameter sat "Saturation" 1.1 0.0 2.0 0.05
@@ -69,7 +69,7 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
-    omega = vec2(pi * SourceSize.x*MSK_SIZE, pi * SourceSize.y/SCALE);
+    omega = vec2(pi * OutputSize.x*MSK_SIZE, pi * SourceSize.y/SCALE);
 }
 
 #elif defined(FRAGMENT)
@@ -168,22 +168,26 @@ void main()
           res+= InvX.w*c13.xyz;
 
     /////////////////////
-    vec3 lumweight=vec3(0.3,0.6,0.1);
+    vec3 lumweight=vec3(0.2126,0.7152,0.0722);
     float lum = dot(res,lumweight);
     //FAKE GAMMA
        if (GAMMA != 1.0)  {res *= mix(GAMMA, 1.0, lum);}
+    
     //APPLY MASK 
          float MSK = mix(MSK1,MSK2,lum);       
          float mask = mix((1.0-MSK)*abs(sin(vTexCoord.x*omega.x))+MSK, 1.0, lum*PRESERVE);
 
          float scan = 1.0;
          float SCANLINE = mix(SCANLINE1,SCANLINE2,lum);
+
     //INTERLACING MODE FIX SCANLINES
     if (INTERLACE > 0.0 && InputSize.y > 400.0 ) scan; else
-         scan= (1.0 - SCANLINE)*abs(sin(vTexCoord.y* omega.y)) + SCANLINE+lum*0.1;
+         scan= (1.0 - SCANLINE)*abs(sin(vTexCoord.y* omega.y)) + SCANLINE;
          res *=mix(scan*mask, scan, dot(res, vec3(fade)));
+    
     //BRIGHT BOOST
        if (BOOST != 1.0)  res *= mix(1.0,BOOST,lum);
+    
     //CHEAP TEMPERATURE CONTROL     
        if (WP != 0.0) { res *= vec3(1.0+WP,1.0,1.0-WP);}
     
