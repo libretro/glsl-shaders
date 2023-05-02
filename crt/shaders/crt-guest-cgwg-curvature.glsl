@@ -1,5 +1,5 @@
 /*
-   CRT - Guest 
+   CRT - Guest mini
    edited by metallic77
    
    Copyright (C) 2017-2018 guest(r) - guest.r@gmail.com
@@ -23,11 +23,11 @@
 // Parameter lines go here:
 #pragma parameter brightboost "Bright boost" 1.0 0.5 2.0 0.05
 #pragma parameter sat "Saturation adjustment" 1.0 0.0 2.0 0.05
-#pragma parameter scanline "Scanline adjust" 8.0 1.0 12.0 1.0
+#pragma parameter scanline "Scanline adjust" 8.0 1.0 15.0 1.0
 #pragma parameter beam_min "Scanline dark" 1.35 0.5 3.0 0.05
 #pragma parameter beam_max "Scanline bright" 1.05 0.5 3.0 0.05
 #pragma parameter h_sharp "Horizontal sharpness" 2.00 1.0 5.0 0.05
-#pragma parameter gamma_out "Gamma out" 0.5 0.2 0.6 0.01
+#pragma parameter gamma_out "Gamma out" 0.45 0.2 0.6 0.01
 #pragma parameter shadowMask "CRT Mask: 0:CGWG, 1-4:Lottes, 5-6:'Trinitron'" 0.0 -1.0 10.0 1.0
 #pragma parameter masksize "CRT Mask Size (2.0 is nice in 4k)" 1.0 1.0 2.0 1.0
 #pragma parameter mcut "Mask 5-7-10 cutoff" 0.2 0.0 0.5 0.05
@@ -37,8 +37,10 @@
 #pragma parameter warpX "warpX" 0.0 0.0 0.125 0.01
 #pragma parameter warpY "warpY" 0.0 0.0 0.125 0.01
 #pragma parameter vignette "Vignette On/Off" 0.0 0.0 1.0 1.0
-#pragma parameter vpower "Vignette Power" 0.2 0.0 1.0 0.01
-#pragma parameter vstr "Vignette strength" 40.0 0.0 50.0 1.0
+#pragma parameter vpower "Vignette Power" 0.15 0.0 1.0 0.01
+#pragma parameter vstr "Vignette strength" 45.0 0.0 50.0 1.0
+
+#define lumweight vec3(0.22,0.7,0.08)
 
 #if defined(VERTEX)
 
@@ -63,6 +65,8 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING vec2 scale;
+COMPAT_VARYING vec2 invscale;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -77,6 +81,8 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy * 1.00001;
+    scale = TextureSize.xy/InputSize.xy;
+    invscale = 1.0/scale;
 }
 
 #elif defined(FRAGMENT)
@@ -109,6 +115,8 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING vec2 scale;
+COMPAT_VARYING vec2 invscale;
 
 // compatibility #defines
 #define Source Texture
@@ -154,23 +162,23 @@ uniform COMPAT_PRECISION float vstr;
 #define warpX        0.0    // Curvature X
 #define warpY        0.0    // Curvature Y
 #define vignette 1.0
-#define vpower 0.2
-#define vstr 40.0
+#define vpower 0.15
+#define vstr 45.0
 #endif
 
-float sw (vec3 x,vec3 color)
+float sw (float y, float l)
 {
-    float scan = mix(scanline-2.0,scanline,x.y);
-    vec3 tmp = mix(vec3(beam_min),vec3(beam_max), color);
-    vec3 ex = x*tmp;
-    return exp2(-scan*ex.y*ex.y);
+    float scan = mix(scanline-2.0, scanline, y);
+    float tmp = mix(beam_min, beam_max, l);
+    float ex = y*tmp;
+    return exp2(-scan*ex*ex);
 }
 
 // Shadow mask (1-4 from PD CRT Lottes shader).
 vec3 Mask(vec2 pos, vec3 c)
 {
 	pos = floor(pos/masksize);
-	vec3 mask = vec3(maskDark, maskDark, maskDark);
+	vec3 mask = vec3(maskDark);
 	
 	// No mask
 	if (shadowMask == -1.0)
@@ -180,11 +188,11 @@ vec3 Mask(vec2 pos, vec3 c)
 	
 	// Phosphor.
 	else if (shadowMask == 0.0)
-	{
+	{	
 		pos.x = fract(pos.x*0.5);
 		float mc = 1.0 - CGWG;
-		if (pos.x < 0.5) { mask.r = 1.1; mask.g = mc; mask.b = 1.1; }
-		else { mask.r = mc; mask.g = 1.1; mask.b = mc; }
+		if (pos.x < 0.5) { mask.r = 1.0; mask.g = mc; mask.b = 1.0; }
+		else { mask.r = mc; mask.g = 1.0; mask.b = mc; }
 	}    
    
 	// Very compressed TV style shadow mask.
@@ -344,44 +352,45 @@ vec3 Mask(vec2 pos, vec3 c)
 
 mat3 vign( float l )
 {
-    vec2 vpos = vTexCoord * (TextureSize.xy / InputSize.xy);
+    vec2 vpos = vTexCoord * scale;
+    vpos *= 1.0 - vpos;    
 
-    vpos *= 1.0 - vpos.xy;
     float vig = vpos.x * vpos.y * vstr;
+
     vig = min(pow(vig, vpower), 1.0); 
+    
     if (vignette == 0.0) vig=1.0;
    
     return mat3(vig, 0, 0,
                  0,   vig, 0,
                  0,    0, vig);
-
 }
 
 // Distortion of scanlines, and end of screen alpha.
 vec2 Warp(vec2 pos)
 {
-    pos  = pos*2.0-1.0;    
+    pos  = (pos*2.0)-1.0;    
     pos *= vec2(1.0 + (pos.y*pos.y)*warpX, 1.0 + (pos.x*pos.x)*warpY);
-    return pos*0.5 + 0.5;
+    return (pos*0.5) + 0.5;
 } 
 
-vec3 saturation (vec3 textureColor)
+vec3 saturation (vec3 Color, float l)
 {
-    float lum=length(textureColor.rgb)*0.5775;
+    float lum=l;
 
-    vec3 luminanceWeighting = vec3(0.3,0.6,0.1);
-    if (lum<0.5) luminanceWeighting.rgb=(luminanceWeighting.rgb*luminanceWeighting.rgb)+(luminanceWeighting.rgb*luminanceWeighting.rgb);
+    vec3 lweight = lumweight;
+    if (lum<0.5) lweight=(lweight*lweight)+(lweight*lweight);
 
-    float luminance = dot(textureColor.rgb, luminanceWeighting);
+    float luminance = dot(Color, lweight);
     vec3 greyScaleColor = vec3(luminance);
 
-    vec3 res = vec3(mix(greyScaleColor, textureColor.rgb, sat));
+    vec3 res = vec3(mix(greyScaleColor, Color, sat));
     return res;
 }
 
 void main()
 {
-	vec2 pos = Warp(TEX0.xy*(TextureSize.xy/InputSize.xy))*(InputSize.xy/TextureSize.xy);	
+	vec2 pos = Warp(TEX0.xy*scale) * invscale;	
 
 	vec2 ps = SourceSize.zw;
 	vec2 OGL2Pos = pos * SourceSize.xy;
@@ -391,30 +400,32 @@ void main()
 
 	vec2 pC4 = floor(OGL2Pos) * ps + 0.5*ps;	
 	float f = fp.y; if (InputSize.y > 400.0) f=1.0;
-    vec3 f1 = vec3(f); 
-	vec3 color = vec3 (0.0);
+	vec3 color;
 
 	// Reading the texels
-	vec3 ul = COMPAT_TEXTURE(Texture, pC4     ).xyz; ul*=ul;
-	vec3 ur = COMPAT_TEXTURE(Texture, pC4 + dx).xyz; ur*=ur;
-	vec3 dl = COMPAT_TEXTURE(Texture, pC4 + dy).xyz; dl*=dl;
-	vec3 dr = COMPAT_TEXTURE(Texture, pC4 + ps).xyz; dr*=dr;
+	vec3 ul = COMPAT_TEXTURE(Texture, pC4     ).xyz; 
+	vec3 ur = COMPAT_TEXTURE(Texture, pC4 - dx).xyz; 
+	vec3 dl = COMPAT_TEXTURE(Texture, pC4 + dy).xyz; 
+	vec3 dr = COMPAT_TEXTURE(Texture, pC4 + vec2(-ps.x,ps.y)).xyz; 
 	
 	float lx = fp.x;        lx = pow(lx, h_sharp);
 	float rx = 1.0 - fp.x;  rx = pow(rx, h_sharp);
 	
-	vec3 color1 = (ur*lx + ul*rx)/(lx+rx);
-	vec3 color2 = (dr*lx + dl*rx)/(lx+rx);
+	vec3 color1 = (ur*rx + ul*lx)/(lx+rx);  
+	vec3 color2 = (dr*rx + dl*lx)/(lx+rx);	
+	color1 *=color1; color2 *=color2;
 
 // calculating scanlines
-	
-    color = color1*sw(f1,color1) + color2*sw(1.0-f1,color2);
-		
+	float lum = dot (color1, lumweight);
+	float lum2 = dot (color2, lumweight);
+
+    color = color1*sw(f, lum) + color2*sw(1.0-f, lum2); 
 	color = color*Mask(gl_FragCoord.xy*1.0001, color);
-	float lum = color.r*0.3+color.g*0.6+color.b*0.1;
-	color = pow(color, vec3(gamma_out, gamma_out, gamma_out));
+
+	color = pow(color, vec3(gamma_out));
+
 	color*= mix(1.0,brightboost,lum);
-	color = saturation(color);
+	color = saturation(color, lum);
 	color*= vign(lum);
 	
 	#if defined GL_ES
