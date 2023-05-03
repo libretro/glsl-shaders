@@ -1,5 +1,5 @@
 // Simple scanlines with curvature and mask effects lifted from crt-geom
-// original by hunterk
+// original by hunterk, edit by DariusG
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////  SETTINGS  ////////////////////////////
@@ -25,10 +25,8 @@
 #pragma parameter crt_gamma "CRT Gamma" 2.5 1.0 4.0 0.05
 #pragma parameter monitor_gamma "Monitor Gamma" 2.2 1.0 4.0 0.05
 #pragma parameter boost "Bright boost " 0.00 0.00 1.00 0.02
-#pragma parameter SCANLINE_SINE_COMP_A "Scanline Sine Comp A" 0.0 0.0 0.10 0.01
-#pragma parameter SCANLINE_BASE_BRIGHTNESS "Scanline Base Brightness" 0.95 0.0 1.0 0.01
 
-
+#define pi 3.141592
 
 #if defined(VERTEX)
 
@@ -53,6 +51,7 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING float omega;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -77,6 +76,8 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
+    omega =  2.0 * pi * TextureSize.y;
+
 }
 
 #elif defined(FRAGMENT)
@@ -109,6 +110,7 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING float omega;
 
 // compatibility #defines
 #define Source Texture
@@ -118,8 +120,6 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float SCANLINE_BASE_BRIGHTNESS;
-uniform COMPAT_PRECISION float SCANLINE_SINE_COMP_A;
 uniform COMPAT_PRECISION float SCANLINE_SINE_COMP_B;
 uniform COMPAT_PRECISION float warpX;
 uniform COMPAT_PRECISION float warpY;
@@ -129,8 +129,6 @@ uniform COMPAT_PRECISION float crt_gamma;
 uniform COMPAT_PRECISION float monitor_gamma;
 uniform COMPAT_PRECISION float boost;
 #else
-#define SCANLINE_BASE_BRIGHTNESS 0.95
-#define SCANLINE_SINE_COMP_A 0.0
 #define SCANLINE_SINE_COMP_B 0.40
 #define warpX 0.031
 #define warpY 0.041
@@ -144,11 +142,9 @@ uniform COMPAT_PRECISION float boost;
 vec4 scanline(vec2 coord, vec4 frame)
 {
 
-	vec2 omega = vec2(3.1415 * OutputSize.x, 2.0 * 3.1415 * TextureSize.y);
-	vec2 sine_comp = vec2(SCANLINE_SINE_COMP_A, SCANLINE_SINE_COMP_B);
 	vec3 res = frame.xyz;
 	
-	vec3 scanline = res * (SCANLINE_BASE_BRIGHTNESS + dot(sine_comp * sin(coord * omega), vec2(1.0, 1.0)));
+	vec3 scanline = res *  (1.0 + SCANLINE_SINE_COMP_B*(sin(vTexCoord.y * omega)*0.5 - 0.5));
 
 	return vec4(scanline.x, scanline.y, scanline.z, 1.0);
 
