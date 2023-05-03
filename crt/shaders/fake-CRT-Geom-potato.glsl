@@ -1,14 +1,13 @@
-// Simple scanlines with curvature and mask effects lifted from crt-geom
-// original by hunterk
+// Simple scanlines and mask effect
+// original by hunterk, edit by DariusG
 
 ///////////////////////  Runtime Parameters  ///////////////////////
-#pragma parameter brightboost "Brightness Boost" 1.10 0.00 2.00 0.10
-#pragma parameter SCANLINE_SINE_COMP_B "Scanline Intensity" 0.30 0.0 1.0 0.05
-#pragma parameter cgwg "cgwg mask str. " 0.3 0.0 1.0 0.1
-#pragma parameter SCANLINE_SINE_COMP_A "Scanline Sine Comp A" 0.0 0.0 0.10 0.01
-#pragma parameter SCANLINE_BASE_BRIGHTNESS "Scanline Base Brightness" 0.95 0.0 1.0 0.01
+#pragma parameter SCANLINE "Scanline Intensity" 0.30 0.0 1.0 0.05
+#pragma parameter MSK "Mask Brightness" 0.7 0.0 1.0 0.05
 
 
+
+#define pi 3.141592
 
 #if defined(VERTEX)
 
@@ -34,7 +33,7 @@ COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING float fragpos;
-COMPAT_VARYING vec2 omega;
+COMPAT_VARYING float omega;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -59,7 +58,7 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
-    omega = vec2(3.1415 * OutputSize.x, 2.0 * 3.1415 * TextureSize.y);
+    omega = (2.0*pi * TextureSize.y);
     fragpos=TEX0.x*OutputSize.x*TextureSize.x/InputSize.x;
 }
 
@@ -94,7 +93,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING float fragpos;
-COMPAT_VARYING vec2 omega;
+COMPAT_VARYING float omega;
 
 // compatibility #defines
 #define Source Texture
@@ -104,50 +103,36 @@ COMPAT_VARYING vec2 omega;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float brightboost;
 uniform COMPAT_PRECISION float SCANLINE_BASE_BRIGHTNESS;
-uniform COMPAT_PRECISION float SCANLINE_SINE_COMP_A;
-uniform COMPAT_PRECISION float SCANLINE_SINE_COMP_B;
-uniform COMPAT_PRECISION float cgwg;
+uniform COMPAT_PRECISION float SCANLINE;
+uniform COMPAT_PRECISION float MSK;
+
 
 #else
-#define brightboost 1.10
-#define SCANLINE_BASE_BRIGHTNESS 0.95
-#define SCANLINE_SINE_COMP_A 0.0
-#define SCANLINE_SINE_COMP_B 0.30
-#define cgwg 0.30
+#define SCANLINE 0.30
+#define MSK 0.70
 
 #endif
 
-
-
-
-// CGWG mask calculation
-	
-      vec3 Mask(float pos)
+// MSK mask calculation
+     
+      float Mask(float pos)
       {
-	
       float mf = fract(pos * 0.5);
-      float mc = 1.0 - cgwg;
 
-      if (mf <0.5) return vec3(1.0,mc,1.0);
-      else return vec3(mc,1.0,mc);
+      if (mf < 0.5) return (MSK);
+      else return (1.0);
   
       }
 
 void main()
 {
-	vec2 pos = TEX0.xy;
-	vec3 res = COMPAT_TEXTURE(Source, pos).rgb;
+     vec3 res = COMPAT_TEXTURE(Source, vTexCoord.xy).rgb;
 
-	vec2 sine_comp = vec2(SCANLINE_SINE_COMP_A, SCANLINE_SINE_COMP_B);
-	res = res * (SCANLINE_BASE_BRIGHTNESS + dot(sine_comp * sin(pos * omega), vec2(1.0, 1.0)));
+     res *= 1.0 + SCANLINE*(sin(vTexCoord.y * omega)*0.5 - 0.5) ; 
 
-// apply the mask
-	res *= Mask(fragpos);
-	res *= brightboost;
+     res *= Mask(fragpos);
 
     FragColor = vec4(res,1.0);
-
 } 
 #endif
