@@ -1,7 +1,7 @@
 // Parameter lines go here:
-#pragma parameter SCANLINE_SINE_COMP_A "Grid Strength" 0.0 0.0 1.00 0.02
+#pragma parameter SCANLINE_SINE_COMP_A "Grid Strength" 0.0 0.0 1.00 0.05
 #pragma parameter SCANLINE_SINE_COMP_B "Scanline Strength" 0.25 0.0 1.0 0.05
-#pragma parameter size "Grid size"  1.0 1.0 2.0 1.0
+#pragma parameter size "Grid size"  1.0 1.0 4.0 1.0
 #define pi 3.141592654
 
 #if defined(VERTEX)
@@ -98,7 +98,7 @@ void main()
 {
    vec2 sine_comp = vec2(SCANLINE_SINE_COMP_A, SCANLINE_SINE_COMP_B);
    vec3 res = COMPAT_TEXTURE(Source, vTexCoord).xyz;
-   vec3 scanline = res * ((1.0-SCANLINE_SINE_COMP_B*0.5) + dot(sine_comp * sin(vTexCoord * omega), vec2(1.0, 1.0)));
+   vec3 scanline = res * ((1.0-(SCANLINE_SINE_COMP_B + SCANLINE_SINE_COMP_A) *0.5) + dot(sine_comp * sin(vTexCoord * omega), vec2(1.0, 1.0)));
    FragColor = vec4(scanline, 1.0);
 } 
 #endif
