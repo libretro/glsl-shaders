@@ -178,11 +178,11 @@ void main()
 	COMPAT_PRECISION float YY = Y*Y;
 	
 #if defined(FINEMASK) 
-	COMPAT_PRECISION float whichmask = fract(floor(vTexCoord.x*OutputSize.x*-0.4999));
-	COMPAT_PRECISION float mask = 1.0 + float(whichmask < 0.5) * -MASK_DARK;
+	COMPAT_PRECISION float whichmask = floor(vTexCoord.x*4.0*OutputSize.x)*-0.4999;
+	COMPAT_PRECISION float mask = 1.0 + float(fract(whichmask) < 0.5) * -MASK_DARK;
 #else
-	COMPAT_PRECISION float whichmask = fract(floor(vTexCoord.x*OutputSize.x)*-0.3333);
-	COMPAT_PRECISION float mask = 1.0 + float(whichmask <= 0.33333) * -MASK_DARK;
+	COMPAT_PRECISION float whichmask = floor(vTexCoord.x*4.0*OutputSize.x)*-0.3333;
+	COMPAT_PRECISION float mask = 1.0 + float(fract(whichmask) < 0.3333) * -MASK_DARK;
 #endif
 	COMPAT_PRECISION vec3 colour = COMPAT_TEXTURE(Source, p).rgb;
 	
