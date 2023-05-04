@@ -97,7 +97,7 @@
 #pragma parameter MASK "Mask Type" 1.0 0.0 3.0 1.0
 #pragma parameter MASK_INTENSITY "Mask Intensity" 0.5 0.0 1.0 0.05
 #pragma parameter SCANLINE_THINNESS "Scanline Intensity" 0.5 0.0 1.0 0.1
-#pragma parameter SCAN_BLUR "Sharpness" 2.5 1.0 3.0 0.1
+#pragma parameter SCAN_BLUR "Sharpness" 2.5 1.0 6.0 0.5
 #pragma parameter CURVATURE "Curvature" 0.02 0.0 0.25 0.01
 #pragma parameter TRINITRON_CURVE "Trinitron-style Curve" 0.0 0.0 1.0 1.0
 #pragma parameter CORNER "Corner Round" 3.0 0.0 11.0 1.0
@@ -294,6 +294,7 @@ vec3 ToSrgb(vec3 c){return vec3(
 #define INPUT_THIN 0.5 + (0.5 * SCANLINE_THINNESS)
 //--------------------------------------------------------------
 // Horizonal scan blur
+// <-3.0 = sharper
 //  -3.0 = pixely
 //  -2.5 = default
 //  -2.0 = smooth

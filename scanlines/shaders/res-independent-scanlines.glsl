@@ -1,11 +1,22 @@
 /*
-   based on scanline shader by:
-   Author: Themaister
-   License: Public domain
+    Resolution-Independent Scanlines
+    based on
+    Scanlines Sine Absolute Value
+    An ultra light scanline shader
+    by RiskyJumps
+    license: public domain
 */
 
-#pragma parameter SCANLINE_SINE_COMP_B "Scanline Sine Comp B" 0.25 0.0 1.0 0.05
-#pragma parameter scanline_size "Scanline Scale" 4.0 1.0 20.0 1.0
+#pragma parameter amp          "Amplitude"      1.2500  0.000 2.000 0.05
+#pragma parameter phase        "Phase"          0.5000  0.000 2.000 0.05
+#pragma parameter lines_black  "Lines Blacks"   0.0000  0.000 1.000 0.05
+#pragma parameter lines_white  "Lines Whites"   1.0000  0.000 2.000 0.05
+#pragma parameter imageSize "Simulated Image Height" 224.0 144.0 288.0 1.0
+#pragma parameter autoscale "Automatic Scale" 0.0 0.0 1.0 1.0
+
+#define freq             0.500000
+#define offset           0.000000
+#define pi               3.141592654
 
 #if defined(VERTEX)
 
@@ -28,7 +39,7 @@
 COMPAT_ATTRIBUTE vec4 VertexCoord;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 omega;
+COMPAT_VARYING float omega;
 
 uniform mat4 MVPMatrix;
 uniform COMPAT_PRECISION int FrameDirection;
@@ -48,7 +59,7 @@ void main()
 {
    gl_Position = MVPMatrix * VertexCoord;
    TEX0.xy = TexCoord.xy;
-   omega = vec2(pi * OutputSize.x, 2.0 * pi * SourceSize.y);
+   omega = 2.0 * pi * freq;              // Angular frequency
 }
 
 #elif defined(FRAGMENT)
@@ -81,7 +92,7 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 omega;
+COMPAT_VARYING float omega;
 
 // compatibility #defines
 #define Source Texture
@@ -92,18 +103,36 @@ COMPAT_VARYING vec2 omega;
 
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float SCANLINE_SINE_COMP_B, scanline_size;
+uniform COMPAT_PRECISION float amp, phase, lines_black,  lines_white,
+         imageSize,  autoscale;
 #else
-#define SCANLINE_SINE_COMP_B 0.25
-#define scanline_size 4.0
+#define amp  1.25
+#define phase  0.5
+#define lines_black 0.0
+#define lines_white 1.0
+#define imageSize 224.0
+#define autoscale 0.0
+
 #endif
 
 void main()
 {
-   vec2 sine_comp = vec2(0.0, SCANLINE_SINE_COMP_B);
-   vec3 res = COMPAT_TEXTURE(Source, vTexCoord).xyz;
-   vec2 fragcoord = fract(floor(gl_FragCoord.xy * 1.0001) / scanline_size);
-   vec3 scanline = (fragcoord.y > 0.5)? res : vec3(0.0);//res * ((1. - 0.75 * SCANLINE_SINE_COMP_B) + dot(sine_comp * sin((fragcoord / scanline_size) * omega), vec2(1.0, 1.0)));
-   FragColor = vec4(scanline.x, scanline.y, scanline.z, 1.0);
-} 
+    float scale = imageSize; if (autoscale == 1.0) scale = InputSize.y; 
+    float angle = (gl_FragCoord.y * OutSize.w) * omega * scale + phase;
+    vec3 color = COMPAT_TEXTURE(Source, vTexCoord).xyz;
+    float grid;
+ 
+    float lines;
+ 
+    lines = sin(angle);
+    lines *= amp;
+    lines += offset;
+    lines = abs(lines);
+    lines *= lines_white - lines_black;
+    lines += lines_black;
+    color *= lines;
+ 
+    FragColor = vec4(color.xyz, 1.0);
+}
+
 #endif
