@@ -21,7 +21,8 @@
 
 // Parameter lines go here:
 #pragma parameter CRTCGWG_GAMMA "CRTcgwg Gamma" 2.7 0.0 10.0 0.01
-
+#pragma parameter CGWG "CGWG Mask Brightness" 0.7 0.0 1.0 0.05
+#pragma parameter SIZE "Mask Size" 4.0 1.0 4.0 1.0
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -64,7 +65,7 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
-
+uniform COMPAT_PRECISION float SIZE;
 #define vTexCoord TEX0.xy
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
@@ -86,7 +87,7 @@ void main()
     c12 = vTexCoord + vec2(0.0, dy);
     c22 = vTexCoord + vec2(dx, dy);
     c32 = vTexCoord + vec2(2.0 * dx, dy);
-    mod_factor  = vTexCoord.x * outsize.x;
+    mod_factor  = vTexCoord.x * outsize.x*SIZE;
     ratio_scale = vTexCoord * SourceSize.xy;
 }
 
@@ -138,6 +139,7 @@ COMPAT_VARYING vec2 ratio_scale;
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
 uniform COMPAT_PRECISION float CRTCGWG_GAMMA;
+uniform COMPAT_PRECISION float CGWG;
 #else
 #define CRTCGWG_GAMMA 2.7
 #endif
@@ -185,7 +187,7 @@ void main()
     weights2 = exp(pow2) / div2;
 
     vec3 multi = col * weights + col2 * weights2;
-    vec3 mcol  = mix(vec3(1.0, 0.7, 1.0), vec3(0.7, 1.0, 0.7), floor(mod(mod_factor, 2.0)));
+    vec3 mcol  = mix(vec3(1.0, CGWG, 1.0), vec3(CGWG, 1.0, CGWG), floor(mod(mod_factor, 2.0)));
 
     FragColor = vec4(pow(mcol * multi, vec3(0.454545, 0.454545, 0.454545)), 1.0);
 } 
