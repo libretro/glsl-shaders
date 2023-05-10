@@ -145,7 +145,7 @@ float scanline4(float y, float lm)
 float scanline3(float y, float lm)
 {
    float l = 1.0/LINES;
-   float m = fract(y*lm);
+   float m = fract(y*l);
    if (m<l) return 1.0-L1*(1.0-lm*HYBRID);
    else if (m<2.0*l) return 1.0-L2*(1.0-lm*HYBRID);
    else return   1.0-L3*(1.0-lm*HYBRID);
