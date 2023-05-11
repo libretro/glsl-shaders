@@ -15,13 +15,13 @@
    License: Public domain
 */
 
-#pragma parameter g_csize      "Corner Size"         0.0 0.0 0.07 0.01
+#pragma parameter g_csize      "Corner Size"         0.02 0.0 0.07 0.01
 #pragma parameter g_bsize      "Border Smoothness"   600.0 100.0 600.0 25.0
 #pragma parameter g_flicker    "Screen Flicker"      0.25 0.0 1.0 0.01
 #pragma parameter g_shaker     "Screen Shake"        0.02 0.0 0.5 0.01
 #pragma parameter g_refltog    "Reflection Toggle"   1.0 0.0 1.0 1.00
 #pragma parameter g_reflgrain  "Refl. Deband Grain"  0.0 0.0 2.0 0.01
-#pragma parameter g_reflstr    "Refl. Brightness"    0.25 0.0 1.0 0.01
+#pragma parameter g_reflstr    "Refl. Brightness"    0.15 0.0 1.0 0.01
 #pragma parameter g_fresnel    "Refl. Fresnel"       1.0 0.0 1.0 0.10
 #pragma parameter g_reflblur   "Refl. Blur"          0.6 0.0 1.0 0.10
 #pragma parameter gz           "Zoom"                1.2 1.0 1.5 0.01
@@ -39,10 +39,10 @@
 
 // https://www.desmos.com/calculator/1nfq4uubnx
 // PER = 2.0 for realistic (1.0 or less when using scanlines). Phosphor Index; it's the same as in the "grade" shader
-#pragma parameter TO           "Afterglow OFF/ON"                       1.0 0.0 1.0 1.0
-#pragma parameter PH           "AG Phosphor (1:NTSC-U 2:NTSC-J 3:PAL)"  2.0 0.0 3.0 1.0
-#pragma parameter ASAT         "Afterglow Saturation"                   0.20 0.0 1.0 0.01
-#pragma parameter PER          "Persistence (more is less)"             0.75 0.5 2.0 0.1
+#pragma parameter TO           "Afterglow OFF/ON"                            1.0 0.0 1.0 1.0
+#pragma parameter PH           "AG Phosphor (0:RGB 1:NTSC-U 2:NTSC-J 3:PAL)" 2.0 0.0 3.0 1.0
+#pragma parameter ASAT         "Afterglow Saturation"                        0.20 0.0 1.0 0.01
+#pragma parameter PER          "Persistence (more is less)"                  0.75 0.5 2.0 0.1
 
 
 #define SW    TO
@@ -248,7 +248,7 @@ vec3 afterglow(float Pho, vec3 decay)
     if (Pho ==  3.0) { p_in = PAL;            }
 
 // Phosphor Response / Cone Response
-    vec3 p_res = (p_in / (vec3(0.21264933049678802, 0.71516913175582890, 0.07218152284622192)) / 10.0);
+    vec3 p_res = (p_in / (vec3(0.21259990334510803, 0.71517896652221680, 0.07222118973731995)) / 10.0);
 
     float decr = clamp((log(1. / p_res.r) + 0.2) / (decay.r), 0., 1.);
     float decg = clamp((log(1. / p_res.g) + 0.2) / (decay.g), 0., 1.);
@@ -270,6 +270,8 @@ float corner(vec2 coord)
 }
 
 
+
+
 void main()
 {
 
@@ -289,7 +291,7 @@ void main()
     float prob    = 0.5 + g_shaker/3.0;
     float shaker  = rand(      float(FrameCount), 43758.5453)           * \
                     rand(      float(FrameCount), 4.37585453) * g_shaker;
-                    
+
           shaker  = shaker + shaker * round(rand(float(FrameCount), 53.7585453) * prob) * scale * clamp(g_shaker,0.0,0.01)*100.;
 
     vec2 coords  = vec2(gx,   gy   + shaker * 0.5);
@@ -318,12 +320,10 @@ void main()
 
     glow = normalize(pow(glow + vec3(0.001), vec3(sat)))*length(glow);
 
-    vec3 glowl  = pow(glow,  vec3(2.2));
-    vec3 colorl = pow(color, vec3(2.2));
-    float glowY  = glowl.r  * 0.21265 + glowl.g  * 0.71517 + glowl.b  * 0.07218;
-    float colorY = colorl.r * 0.21265 + colorl.g * 0.71517 + colorl.b * 0.07218;
+    float glowY  = dot(pow(glow,  vec3(2.2)), vec3(0.21260, 0.71518, 0.07222));
+    float colorY = dot(pow(color, vec3(2.2)), vec3(0.21260, 0.71518, 0.07222));
 
-    vec3 colormax = (colorY > glowY)  ? color : glow;
+    vec3 colormax = (colorY > glowY) ? color : glow;
 
     color = (SW == 0.0) ? color : clamp(colormax,0.0,1.0);
 
@@ -389,7 +389,7 @@ void main()
     // Initialize the PRNG by hashing the position + a random uniform
     vec3 m = vec3(vTexCoord, randg(sin(vTexCoord.x / vTexCoord.y) * mod(float(FrameCount), 79) + 22.759)) + vec3(1.0);
     float h = permute(permute(permute(m.x) + m.y) + m.z);
-        
+
     if (GRAIN > 0.0)
         {
             vec3 noise;
