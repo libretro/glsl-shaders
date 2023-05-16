@@ -127,7 +127,11 @@ uniform COMPAT_PRECISION float MSK;
 
 void main()
 {
-     vec3 res = COMPAT_TEXTURE(Source, vTexCoord.xy).rgb;
+    float OGL2Pos = vTexCoord.y*SourceSize.y;
+    float cent = floor(OGL2Pos)+0.5;
+    float ycoord = cent*SourceSize.w; 
+
+   vec3 res = texture2D(Source, vec2(vTexCoord.x, ycoord)).rgb;
 
      res *= 1.0 + SCANLINE*(sin(vTexCoord.y * omega)*0.5 - 0.5) ; 
 
