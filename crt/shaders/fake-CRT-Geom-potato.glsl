@@ -33,7 +33,6 @@ COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING float fragpos;
-COMPAT_VARYING float omega;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -58,7 +57,6 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
-    omega = (2.0*pi * TextureSize.y);
     fragpos=TEX0.x*OutputSize.x*TextureSize.x/InputSize.x;
 }
 
@@ -93,7 +91,6 @@ uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING float fragpos;
-COMPAT_VARYING float omega;
 
 // compatibility #defines
 #define Source Texture
@@ -133,7 +130,7 @@ void main()
 
    vec3 res = texture2D(Source, vec2(vTexCoord.x, ycoord)).rgb;
 
-     res *= 1.0 + SCANLINE*(sin(vTexCoord.y * omega)*0.5 - 0.5) ; 
+     res *= SCANLINE*sin(fract(vTexCoord.y*SourceSize.y)*pi)+1.0-SCANLINE ; 
 
      res *= Mask(fragpos);
 
