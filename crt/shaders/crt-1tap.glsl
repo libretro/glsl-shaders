@@ -137,22 +137,24 @@ uniform COMPAT_PRECISION float THICK_FALLOFF;
 
 void main() {
 
-    float src_x_int;
-    const float src_x_fract = modf(vTexCoord.x * SourceSize.x - 0.5, src_x_int);
+    vec2 cent = vTexCoord*SourceSize.xy;
+    float src_x_fract = fract(cent.x - 0.5);
+    float src_x_int = floor(cent.x-0.5);
 
-    float src_y_int;
-    const float src_y_fract = modf(vTexCoord.y * SourceSize.y - SUBPX_POS, src_y_int) - 0.5;
+    float src_y_fract = fract(cent.y - SUBPX_POS) -0.5;
+    float src_y_int = floor (cent.y - SUBPX_POS);
 
 // Function similar to smoothstep and sigmoid.
-    const float s = sign(src_x_fract - 0.5);
-    const float o = (1.0 + s) * 0.5;
-    const float src_x = src_x_int + o - 0.5 * s * pow(2.0 * (o - s * src_x_fract), mix(1.0, 6.0, H_SHARP));
+    float s = sign(src_x_fract - 0.5);
+    float o = (1.0 + s) * 0.5;
+    float src_x = src_x_int + o - 0.5 * s * pow(2.0 * (o - s * src_x_fract), mix(1.0, 6.0, H_SHARP));
 
-    const vec3 signal = COMPAT_TEXTURE(Source, vec2((src_x + 0.5) * SourceSize.z, (src_y_int + 0.5) * SourceSize.w)).rgb;
+    vec3 signal = COMPAT_TEXTURE(Source, vec2((src_x + 0.5) * SourceSize.z, (src_y_int + 0.5) * SourceSize.w)).rgb;
 
 // Vectorize operations for speed.
-    const float eff_v_sharp = 3.0 + 50.0 * V_SHARP * V_SHARP;
-    const vec3 radius = pow(mix(MIN_THICK.xxx, MAX_THICK.xxx, signal), THICK_FALLOFF.xxx) * 0.5;
+    float eff_v_sharp = 3.0 + 50.0 * V_SHARP * V_SHARP;
+    vec3 thickmin = vec3(MIN_THICK); vec3 thickmax = vec3(MAX_THICK); vec3 thickfall = vec3(THICK_FALLOFF);
+    vec3 radius = pow(mix(thickmin, thickmax, signal), thickfall) * 0.5;
    
     FragColor.rgb = signal * clamp(0.25 - eff_v_sharp * (src_y_fract * src_y_fract - radius * radius),0.0, 1.0);
 }
