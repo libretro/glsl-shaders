@@ -97,7 +97,7 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float temperature, luma_preserve, red, green, blue;
+uniform COMPAT_PRECISION float temperature, luma_preserve, red, green, blue, wp_red,wp_green, wp_blue ;
 #else
 #define temperature 9311.0
 #define luma_preserve 1.0

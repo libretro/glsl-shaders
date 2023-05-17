@@ -1,0 +1,7 @@
+shaders = "2"
+shader0 = "shaders/deposterize-pass0.glsl"
+filter_linear0 = "false"
+wrap_mode0 = "clamp_to_border"
+shader1 = "shaders/deposterize-pass1.glsl"
+filter_linear1 = "false"
+wrap_mode1 = "clamp_to_border"
