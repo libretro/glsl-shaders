@@ -1,0 +1,5 @@
+shaders = "1"
+shader0 = grade.glsl
+filter_linear0 = "false"
+
+
