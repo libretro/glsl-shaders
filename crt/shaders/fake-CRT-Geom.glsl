@@ -1,32 +1,22 @@
 // Simple scanlines with curvature and mask effects lifted from crt-geom
 // original by hunterk, edit by DariusG
 
-////////////////////////////////////////////////////////////////////
-////////////////////////////  SETTINGS  ////////////////////////////
-/////  comment these lines to disable effects and gain speed  //////
-////////////////////////////////////////////////////////////////////
-
-#define CURVATURE // applies barrel distortion to the screen
-#define SCANLINES  // applies horizontal scanline effect
-
-
-
-////////////////////////////////////////////////////////////////////
-//////////////////////////  END SETTINGS  //////////////////////////
-////////////////////////////////////////////////////////////////////
-
 ///////////////////////  Runtime Parameters  ///////////////////////
 
 #pragma parameter SCANLINE_SINE_COMP_B "Scanline Intensity" 0.60 0.0 1.0 0.05
 #pragma parameter warpX "warpX" 0.03 0.0 0.125 0.01
 #pragma parameter warpY "warpY" 0.05 0.0 0.125 0.01
 #pragma parameter corner_round "Corner Roundness" 0.030 0.005 0.100 0.005
-#pragma parameter cgwg "CGWG mask str. " 0.5 0.0 1.0 0.1
-#pragma parameter crt_gamma "CRT Gamma" 2.5 1.0 4.0 0.05
-#pragma parameter monitor_gamma "Monitor Gamma" 2.2 1.0 4.0 0.05
+#pragma parameter cgwg "CGWG mask str. " 0.3 0.0 1.0 0.1
+#pragma parameter crt_gamma "CRT Gamma" 2.4 1.0 4.0 0.05
+#pragma parameter monitor_gamma "Monitor Gamma" 2.25 1.0 4.0 0.05
 #pragma parameter boost "Bright boost " 0.00 0.00 1.00 0.02
 
 #define pi 3.141592
+#define in_gamma  vec4(crt_gamma, crt_gamma, crt_gamma, 1.0)
+#define out_gamma  vec4(1.0 / monitor_gamma, 1.0 / monitor_gamma, 1.0 / monitor_gamma, 1.0)
+#define FCC vec4(1.1,0.93,1.18,1.0)
+#define scale vec4(TextureSize/InputSize,InputSize/TextureSize)
 
 #if defined(VERTEX)
 
@@ -141,17 +131,13 @@ uniform COMPAT_PRECISION float boost;
 
 vec4 scanline(vec2 coord, vec4 frame)
 {
-
 	vec3 res = frame.xyz;
-	
-	vec3 scanline = res *  (1.0 + SCANLINE_SINE_COMP_B*(sin(vTexCoord.y * omega)*0.5 - 0.5));
+	vec3 scanline = res * (SCANLINE_SINE_COMP_B*sin(fract(coord.y*TextureSize.y)*pi)+1.0- SCANLINE_SINE_COMP_B);
 
-	return vec4(scanline.x, scanline.y, scanline.z, 1.0);
-
-
+	return vec4(scanline, 1.0);
 }
 
-#ifdef CURVATURE
+
 // Distortion of scanlines, and end of screen alpha.
 vec2 Warp(vec2 pos)
 {
@@ -163,7 +149,7 @@ vec2 Warp(vec2 pos)
 
 float corner(vec2 coord)
 {
-                coord *= TextureSize / InputSize;
+                coord *= scale.xy;
                 coord = (coord - vec2(0.5)) * 1.0 + vec2(0.5);
                 coord = min(coord, vec2(1.0)-coord) * vec2(1.0, InputSize.y/InputSize.x);
                 vec2 cdist = vec2(corner_round);
@@ -171,60 +157,41 @@ float corner(vec2 coord)
                 float dist = sqrt(dot(coord,coord));
                 return clamp((cdist.x-dist)*300.0,0.0, 1.0);
 }  
-#endif
+
 
 // mask calculation
 	// cgwg mask.
 	vec4 Mask(vec2 pos)
 	{
 	  vec3 mask = vec3(1.0);
-	{
-      float mf = floor(mod(pos.x,2.0));
-      float mc = 1.0 - cgwg;	
-      if (mf == 0.0) { mask.g = mc; }
-      else { mask.r = mc; mask.b = mc; };
-   }  
-		return vec4(mask, 1.0);
+	
+      float m = fract(pos.x*0.5);
+      if (m<0.5) return vec4(cgwg,cgwg,cgwg,1.0);
+      else return vec4(mask,1.0);
+ 
 	}
 
 
 void main()
 {
-#ifdef CURVATURE
-	vec2 pos = Warp(TEX0.xy*(TextureSize.xy/InputSize.xy))*(InputSize.xy/TextureSize.xy);
-#else
-	vec2 pos = TEX0.xy;
-#endif
+
+	vec2 pos = Warp(TEX0.xy*(scale.xy))*(scale.zw);
 
 //borrowed from CRT-Pi
 		vec2 OGL2Pos = pos * TextureSize;
 		vec2 pC4 = floor(OGL2Pos) + 0.5;
 		vec2 coord = pC4 / TextureSize;
-		vec2 deltas = OGL2Pos - pC4;
-		vec2 signs = sign(deltas);
-		deltas.x *= 2.0;
-		deltas = deltas * deltas;
-		deltas.y = deltas.y * deltas.y;
-		deltas.x *= 0.5;
-		deltas.y *= 8.0;
-		deltas /= TextureSize;
-		deltas *= signs;
-		vec2 tc = coord + deltas;
 
+		vec2 tc = vec2(vTexCoord.x, coord.y);
 
-// mask effects look bad unless applied in linear gamma space
-	vec4 in_gamma = vec4(crt_gamma, crt_gamma, crt_gamma, 1.0);
-	vec4 out_gamma = vec4(1.0 / monitor_gamma, 1.0 / monitor_gamma, 1.0 / monitor_gamma, 1.0);
-	
-	vec4 res = COMPAT_TEXTURE(Texture, tc);
-	
-	res=pow(res,in_gamma);
+	vec4 res = COMPAT_TEXTURE(Texture, tc)*FCC;
+	res = scanline(pos,res);
+	res = pow(res,in_gamma);
 
 	// apply the mask; looks bad with vert scanlines so make them mutually exclusive
 	res *= Mask(gl_FragCoord.xy * 1.0001);
 
-
-#if defined CURVATURE && defined GL_ES
+#if defined GL_ES
     // hacky clamp fix for GLES
     vec2 bordertest = (tc);
     if ( bordertest.x > 0.0001 && bordertest.x < 0.9999 && bordertest.y > 0.0001 && bordertest.y < 0.9999)
@@ -232,10 +199,11 @@ void main()
     else
         res = vec4(0.,0.,0.,0.);
 #endif
+	vec4 color = res;
 
     // re-apply the gamma curve for the mask path
-    vec4 color = pow(scanline(pos, res), out_gamma);
-    color+=boost*color;
+    color = pow(color, out_gamma);
+    color += boost*color;
     FragColor = color*corner(tc);
 
 } 
