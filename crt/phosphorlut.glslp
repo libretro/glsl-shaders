@@ -7,14 +7,14 @@ scale_type0 = source
 srgb_framebuffer0 = true
 filter_linear0 = false
 
-shader1 = ../blurs/blur-gauss-v.glsl
+shader1 = ../blurs/shaders/blur-gauss-v.glsl
 scale_type1 = source
 scale1 = 1.0
 srgb_framebuffer1 = true
 filter_linear1 = true
 alias1 = blurPassV
 
-shader2 = ../blurs/blur-gauss-h.glsl
+shader2 = ../blurs/shaders/blur-gauss-h.glsl
 alias2 = blurPass
 filter_linear2 = true
 scale2 = 1.0

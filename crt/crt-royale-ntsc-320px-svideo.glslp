@@ -116,7 +116,7 @@ srgb_framebuffer4 = "true"
 # Base this on BLOOM_APPROX: This blur should be small and fast, and blurring
 # a constant portion of the screen is probably physically correct if the
 # viewport resolution is proportional to the simulated CRT size.
-shader5 = "../blurs/blur9fast-vertical.glsl"
+shader5 = "../blurs/shaders/royale/blur9fast-vertical.glsl"
 filter_linear5 = "true"
 scale_type5 = "source"
 scale5 = "1.0"
@@ -124,7 +124,7 @@ srgb_framebuffer5 = "true"
 
 # Pass6: Horizontally blur the input for halation and refractive diffusion.
 # Note: Using a one-pass 9x9 blur is about 1% slower.
-shader6 = "../blurs/blur9fast-horizontal.glsl"
+shader6 = "../blurs/shaders/royale/blur9fast-horizontal.glsl"
 alias6 = "HALATION_BLUR"
 filter_linear6 = "true"
 scale_type6 = "source"

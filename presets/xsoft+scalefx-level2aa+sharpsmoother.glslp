@@ -32,7 +32,7 @@ filter_linear5 = false
 scale_type5 = source
 scale5 = 3.0
 
-shader6 = ../blurs/sharpsmoother.glsl
+shader6 = ../blurs/shaders/sharpsmoother.glsl
 filter_linear6 = false
 scale_type6 = source
 scale6 = 1.0
