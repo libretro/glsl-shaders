@@ -31,4 +31,4 @@ scale_y3 = 1.0
 float_framebuffer3 = true
 filter_linear3 = false
 
-shader4 = "../../misc/image-adjustment.glsl"
+shader4 = "../../misc/shaders/image-adjustment.glsl"

@@ -28,7 +28,7 @@ scale4 = 1.0
 
 #tvout+interlacing
 shader5 = "../../crt/shaders/tvout-tweaks.glsl"
-shader6 = "../../misc/image-adjustment.glsl"
+shader6 = "../../misc/shaders/image-adjustment.glsl"
 
 scale_type_x5 = "viewport"
 scale_x5 = "1.000000"

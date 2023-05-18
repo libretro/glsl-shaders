@@ -1,7 +1,7 @@
 shaders = 4
 shader0 = ../resources/imgborder-gameboy-player.glsl
 shader1 = ../../crt/shaders/tvout-tweaks.glsl
-shader2 = ../../misc/image-adjustment.glsl
+shader2 = ../../misc/shaders/image-adjustment.glsl
 shader3 = ../../auto-box/box-center.glsl
 
 

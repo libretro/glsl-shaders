@@ -3,8 +3,8 @@ shader0 = ../../nes_raw_palette/shaders/nes-color-decoder.glsl
 shader1 = ../../ntsc/shaders/ntsc-pass1-composite-3phase.glsl
 shader2 = ../../ntsc/shaders/ntsc-pass2-3phase.glsl
 shader3 = ../../crt/shaders/tvout-tweaks.glsl
-shader4 = ../../misc/image-adjustment.glsl
-shader5 = ../../misc/interlacing.glsl
+shader4 = ../../misc/shaders/image-adjustment.glsl
+shader5 = ../../misc/shaders/interlacing.glsl
 
 filter_linear0 = false
 filter_linear1 = false
