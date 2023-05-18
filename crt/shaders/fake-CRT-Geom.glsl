@@ -182,12 +182,7 @@ void main()
 		vec2 pC4 = floor(OGL2Pos) + 0.5;
 		vec2 coord = pC4 / TextureSize;
 
-		vec2 deltas = OGL2Pos - pC4;
-		deltas.y = deltas.y * deltas.y * deltas.y;
-		deltas.y *= 4.0;
-		deltas /= TextureSize;
-
-		vec2 tc = coord + deltas;
+		vec2 tc = vec2(vTexCoord.x, coord.y);
 
 	vec4 res = COMPAT_TEXTURE(Texture, tc)*FCC;
 	res = scanline(pos,res);
