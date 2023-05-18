@@ -1,35 +1,35 @@
 shaders = 8
 
-shader0 = kawase/linearize.glsl
+shader0 = shaders/kawase/linearize.glsl
 srgb_framebuffer0 = true
 scale_type0 = source
 
-shader1 = kawase/kawase0.glsl
+shader1 = shaders/kawase/kawase0.glsl
 filter_linear1 = true
 srgb_framebuffer1 = true
 scale_type1 = source
 
-shader2 = kawase/kawase1.glsl
+shader2 = shaders/kawase/kawase1.glsl
 filter_linear2 = true
 srgb_framebuffer2 = true
 scale_type2 = source
 
-shader3 = kawase/kawase1.glsl
+shader3 = shaders/kawase/kawase1.glsl
 filter_linear3 = true
 srgb_framebuffer3 = true
 scale_type3 = source
 
-shader4 = kawase/kawase2.glsl
+shader4 = shaders/kawase/kawase2.glsl
 filter_linear4 = true
 srgb_framebuffer4 = true
 scale_type4 = source
 
-shader5 = kawase/kawase3.glsl
+shader5 = shaders/kawase/kawase3.glsl
 filter_linear5 = true
 srgb_framebuffer5 = true
 scale_type5 = source
 
-shader7 = kawase/screen_combine.glsl
+shader7 = shaders/kawase/screen_combine.glsl
 
-shader6 = kawase/delinearize.glsl
+shader6 = shaders/kawase/delinearize.glsl
 filter_linear6 = true

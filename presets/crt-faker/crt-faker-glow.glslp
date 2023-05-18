@@ -1,13 +1,13 @@
 shaders = 13
 
-shader0 = ../../blurs/kawase/linearize.glsl
-shader1 = ../../blurs/kawase/kawase0.glsl
-shader2 = ../../blurs/kawase/kawase1.glsl
-shader3 = ../../blurs/kawase/kawase1.glsl
-shader4 = ../../blurs/kawase/kawase2.glsl
-shader5 = ../../blurs/kawase/kawase3.glsl
-shader6 = ../../blurs/kawase/delinearize.glsl
-shader7 = ../../blurs/kawase/screen_combine.glsl
+shader0 = ../../blurs/shaders/kawase/linearize.glsl
+shader1 = ../../blurs/shaders/kawase/kawase0.glsl
+shader2 = ../../blurs/shaders/kawase/kawase1.glsl
+shader3 = ../../blurs/shaders/kawase/kawase1.glsl
+shader4 = ../../blurs/shaders/kawase/kawase2.glsl
+shader5 = ../../blurs/shaders/kawase/kawase3.glsl
+shader6 = ../../blurs/shaders/kawase/delinearize.glsl
+shader7 = ../../blurs/shaders/kawase/screen_combine.glsl
 shader8 = ../../ntsc/shaders/ntsc-pass1-composite-3phase.glsl
 shader9 = ../../ntsc/shaders/ntsc-pass2-3phase.glsl
 shader10 = ../../ntsc/shaders/ntsc-gauss-pass.glsl
