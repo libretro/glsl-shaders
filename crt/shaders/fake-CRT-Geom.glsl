@@ -7,7 +7,7 @@
 #pragma parameter warpX "warpX" 0.03 0.0 0.125 0.01
 #pragma parameter warpY "warpY" 0.05 0.0 0.125 0.01
 #pragma parameter corner_round "Corner Roundness" 0.030 0.005 0.100 0.005
-#pragma parameter cgwg "CGWG mask str. " 0.3 0.0 1.0 0.1
+#pragma parameter cgwg "Mask brightness" 0.7 0.0 1.0 0.1
 #pragma parameter crt_gamma "CRT Gamma" 2.4 1.0 4.0 0.05
 #pragma parameter monitor_gamma "Monitor Gamma" 2.25 1.0 4.0 0.05
 #pragma parameter boost "Bright boost " 0.00 0.00 1.00 0.02
