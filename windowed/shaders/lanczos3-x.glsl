@@ -1,4 +1,3 @@
-
 /*
    Lanczos3 - passX 
 
@@ -85,9 +84,10 @@ void main()
 #define COMPAT_TEXTURE texture
 out vec4 FragColor;
 #else
+#define COMPAT_TEXTURE texture2D
 #define COMPAT_VARYING varying
 #define FragColor gl_FragColor
-#define COMPAT_TEXTURE(c,d) texture(c,d)
+
 #endif
 
 #ifdef GL_ES
