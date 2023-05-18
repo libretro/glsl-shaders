@@ -13,5 +13,5 @@ scale_y1 = 1.0
 filter_linear1 = false
 float_framebuffer1 = true
 
-shader2 = "../../misc/image-adjustment.glsl"
-shader3 = "../../misc/interlacing.glsl"
+shader2 = "../../misc/shaders/image-adjustment.glsl"
+shader3 = "../../misc/shaders/interlacing.glsl"

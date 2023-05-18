@@ -4,7 +4,7 @@ shader1 = ../ntsc/shaders/ntsc-pass2-3phase.glsl
 shader2 = ../ntsc/shaders/ntsc-stock.glsl
 shader3 = ../ntsc/shaders/ntsc-stock.glsl
 shader4 = shaders/static.glsl
-shader5 = ../misc/image-adjustment.glsl
+shader5 = ../misc/shaders/image-adjustment.glsl
 
 filter_linear0 = false
 filter_linear1 = false

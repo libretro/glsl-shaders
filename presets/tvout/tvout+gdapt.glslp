@@ -13,7 +13,7 @@ scale1 = 1.0
 
 #tvout
 shader2 = "../../crt/shaders/tvout-tweaks.glsl"
-shader3 = "../../misc/image-adjustment.glsl"
+shader3 = "../../misc/shaders/image-adjustment.glsl"
 
 scale_type_x2 = "viewport"
 scale_x2 = "1.000000"

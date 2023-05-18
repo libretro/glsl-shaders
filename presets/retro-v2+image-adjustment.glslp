@@ -1,6 +1,6 @@
 shaders = "2"
 
-shader0 = "../misc/image-adjustment.glsl"
+shader0 = "../misc/shaders/image-adjustment.glsl"
 shader1 = "../handheld/shaders/retro-v2.glsl"
 
 filter_linear0 = "false"

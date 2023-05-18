@@ -3,8 +3,8 @@
 shaders = "4"
 shader0 = "../../nes_raw_palette/shaders/nes-color-decoder.glsl"
 shader1 = "../../crt/shaders/tvout-tweaks.glsl"
-shader2 = "../../misc/image-adjustment.glsl"
-shader3 = "../../misc/interlacing.glsl"
+shader2 = "../../misc/shaders/image-adjustment.glsl"
+shader3 = "../../misc/shaders/interlacing.glsl"
 
 scale_type0 = source
 scale0 = 1.0

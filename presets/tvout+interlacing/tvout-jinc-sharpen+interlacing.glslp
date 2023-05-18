@@ -2,9 +2,9 @@
 
 shaders = "4"
 shader0 = "../../crt/shaders/tvout-tweaks.glsl"
-shader1 = "../../misc/image-adjustment.glsl"
+shader1 = "../../misc/shaders/image-adjustment.glsl"
 shader2 = "../../windowed/shaders/jinc2-sharper.glsl"
-shader3 = "../../misc/interlacing.glsl"
+shader3 = "../../misc/shaders/interlacing.glsl"
 
 scale_type_x0 = "source"
 scale_x0 = "2.000000"

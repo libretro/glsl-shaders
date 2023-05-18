@@ -2,7 +2,7 @@ shaders = 5
 shader0 = ../../handheld/shaders/color/gba-color.glsl
 shader1 = ../resources/imgborder-gameboy-player.glsl
 shader2 = ../../crt/shaders/tvout-tweaks.glsl
-shader3 = ../../misc/image-adjustment.glsl
+shader3 = ../../misc/shaders/image-adjustment.glsl
 shader4 = ../../auto-box/box-center.glsl
 
 scale_type0 = source

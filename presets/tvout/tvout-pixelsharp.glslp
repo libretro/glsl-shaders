@@ -1,6 +1,6 @@
 shaders = "3"
 shader0 = "../../crt/shaders/tvout-tweaks.glsl"
-shader1 = "../../misc/image-adjustment.glsl"
+shader1 = "../../misc/shaders/image-adjustment.glsl"
 shader2 = "../../stock.glsl"
 
 scale_type_x0 = "viewport"

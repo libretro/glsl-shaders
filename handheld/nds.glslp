@@ -1,6 +1,6 @@
 shaders = "3"
 
-shader0 = "../misc/color-mangler.glsl"
+shader0 = "../misc/shaders/color-mangler.glsl"
 filter_linear0 = "false"
 scale_type0 = "source"
 
@@ -8,7 +8,7 @@ shader1 = "shaders/lcd-cgwg/lcd-grid.glsl"
 scale_type1 = "viewport"
 filter_linear1 = "false"
 
-shader2 = "../misc/image-adjustment.glsl"
+shader2 = "../misc/shaders/image-adjustment.glsl"
 
 parameters = "display_gamma;target_gamma;sat;lum;cntrst;blr;blg;blb;r;g;b;rg;rb;gr;gb;br;bg;GRID_STRENGTH;target_gamma;monitor_gamma;overscan_percent_x;overscan_percent_y;saturation;contrast;luminance;bright_boost;R;G;B"
 display_gamma = 1.9

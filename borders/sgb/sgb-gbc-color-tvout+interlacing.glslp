@@ -2,8 +2,8 @@ shaders = 6
 shader0 = ../../handheld/shaders/color/gbc-color.glsl
 shader1 = ../resources/imgborder-sgb.glsl
 shader2 = ../../crt/shaders/tvout-tweaks.glsl
-shader3 = ../../misc/image-adjustment.glsl
-shader4 = ../../misc/interlacing.glsl
+shader3 = ../../misc/shaders/image-adjustment.glsl
+shader4 = ../../misc/shaders/interlacing.glsl
 shader5 = ../../auto-box/box-center.glsl
 
 filter_linear0 = false
