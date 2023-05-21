@@ -30,6 +30,7 @@
 #pragma parameter sat "Saturation" 1.1 0.0 2.0 0.05
 #pragma parameter contrast "Contrast, 1.0:Off" 1.0 0.00 2.00 0.05
 #pragma parameter nois "Noise" 0.0 0.0 1.0 0.01
+#pragma parameter GLOW_LINE "Glowing line" 0.006 0.00 0.20 0.001
 #pragma parameter WP "Color Temperature %" 0.0 -100.0 100.0 5.0 
 #pragma parameter vignette "  Vignette On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter vpower "  Vignette Power" 0.15 0.0 1.0 0.01
@@ -111,6 +112,7 @@ COMPAT_VARYING vec2 TEX0;
 #define iChannel0 Texture
 #define iTime (float(FrameCount) / 2.0)
 #define iTimer (float(FrameCount) / 60.0)
+#define Timer (float(FrameCount) * 60.0)
 
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(OutputSize, 1.0 / OutputSize)
@@ -152,6 +154,8 @@ uniform COMPAT_PRECISION float vignette;
 uniform COMPAT_PRECISION float vpower;
 uniform COMPAT_PRECISION float vstr;
 uniform COMPAT_PRECISION float alloff;
+uniform COMPAT_PRECISION float GLOW_LINE;
+
 #else
 #define blurx  0.0    
 #define blury  0.0    
@@ -188,6 +192,7 @@ uniform COMPAT_PRECISION float alloff;
 #define vpower 0.2
 #define vstr 40.0
 #define alloff 0.0
+#define GLOW_LINE 0.0
 #endif
 
 
@@ -471,6 +476,11 @@ const mat3 XYZ_to_D50 = mat3 (
           -1.4678519,  1.9161415, -0.2545973,
           -0.4685105,  0.0334540,  1.4216174);         
 
+// code from cool retro term, https://github.com/Swordfish90/cool-retro-term
+ float randomPass(vec2 coords)
+ {
+    return fract(smoothstep(-120.0, 0.0, coords.y - (TextureSize.y + 120.0) * fract(Timer * 0.00015)));
+}
 
 void main()
 {
@@ -546,6 +556,7 @@ void main()
     else
         res = vec4(0.0);
 #endif
+    res += randomPass(pC4 * TextureSize) * GLOW_LINE;
 
     FragColor = res;
 } 
