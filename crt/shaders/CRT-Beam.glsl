@@ -1,22 +1,22 @@
 
 // Parameter lines go here:
-#pragma parameter Scanline "Scanline overall Strength" 0.5 0.0 2.0 0.05
-#pragma parameter weightr "Scanline Red Weight" 0.04 0.0 0.8 0.01
-#pragma parameter weightg "Scanline Green Weight" 0.324 0.0 0.8 0.01
-#pragma parameter weightb "Scanline Blue Weight" 0.04 0.0 0.8 0.01
-#pragma parameter gap "Scanline gap Brightness" 0.06 0.0 1.0 0.01
-#pragma parameter blur "Blur Horizontal" 0.70 0.00 1.20 0.10
-#pragma parameter glow "Glow Strength" 0.08 0.0 0.3 0.01
+#pragma parameter blur "Blur Horizontal" 0.50 0.00 1.20 0.10
+#pragma parameter Scanline "  Scanline overall Strength" 0.6 0.0 1.1 0.05
+#pragma parameter weightr "  Scanline Red brightness" 0.1 0.0 0.8 0.01
+#pragma parameter weightg "  Scanline Green brightness" 0.3 0.0 0.8 0.01
+#pragma parameter weightb "  Scanline Blue brightness" 0.05 0.0 0.8 0.01
+#pragma parameter gap "  Scanline gap Brightness" 0.06 0.0 1.0 0.01
 #pragma parameter mask "Mask -1:Off,0:CGWG,1-2:Lottes,3-4 Gray,5-6:CGWG slot,7 VGA" 7.0 -1.0 7.0 1.0
 #pragma parameter msk_size "Mask size" 1.0 1.0 2.0 1.0
 #pragma parameter scale "VGA Mask Vertical Scale" 2.0 2.00 10.00 1.0
 #pragma parameter MaskDark "Lottes Mask Dark" 0.50 0.00 2.00 0.10
 #pragma parameter MaskLight "Lottes Mask Light" 1.50 0.00 2.00 0.10
-#pragma parameter bright "Brightness" 1.06 0.00 2.00 0.02
-#pragma parameter sat "Saturation, 1.0:Off" 1.30 0.00 2.00 0.05
-#pragma parameter contrast "Contrast, 1.0:Off" 1.1 0.00 2.00 0.05
-#pragma parameter WP "Color Temperature %, 0.0:Off" -10.0 -100.0 100.0 5.0 
-#pragma parameter gamma "Gamma correct, 0.0:Off" 0.42 0.00 0.60 0.01
+#pragma parameter bright "  Brightness" 1.0 1.00 2.00 0.02
+#pragma parameter glow "  Glow Strength" 0.08 0.0 0.5 0.01
+#pragma parameter sat "  Saturation, 1.0:Off" 1.0 0.00 2.00 0.05
+#pragma parameter contrast "  Contrast, 1.0:Off" 1.05 0.00 2.00 0.05
+#pragma parameter WP "  Color Temperature %, 0.0:Off" 0.0 -100.0 100.0 5.0 
+#pragma parameter gamma "Gamma correct, 0.0:Off" 0.45 0.00 0.60 0.01
 
 #if defined(VERTEX)
 
@@ -40,7 +40,6 @@ COMPAT_ATTRIBUTE vec4 VertexCoord;
 COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 invDims;
 
 
 vec4 _oPosition1; 
@@ -53,15 +52,12 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 // compatibility #defines
 #define vTexCoord TEX0.xy
-#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy * 1.0001;
-    invDims = 1.0/TextureSize.xy;
-
 }
 
 #elif defined(FRAGMENT)
@@ -95,11 +91,11 @@ uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 uniform sampler2D PassPrev2Texture;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 invDims;
 
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 
 
 #ifdef PARAMETER_UNIFORM
@@ -283,38 +279,28 @@ float CalcScanLine(float dy, vec3 col)
 	return scan;
 }
 
-vec4 booster (float pos, vec3 col)
+vec4 booster (vec2 pos)
 {
+	vec2 dx = vec2(SourceSize.z,0.0);
+	vec2 dy = vec2(0.0,SourceSize.w);
 
-	float lum = (col.r*weightr + col.g*weightg + col.b*weightb);
-	lum = min (lum,0.9);
+	vec4 c00 = COMPAT_TEXTURE(Source,pos);
+	vec4 c01 = COMPAT_TEXTURE(Source,pos+dx);
+	vec4 c02 = COMPAT_TEXTURE(Source,pos+dy);
+	vec4 c03 = COMPAT_TEXTURE(Source,pos+dx+dy);
 
-	float bo=lum*glow;
-	
-	if (fract(pos*0.5)>0.5)
-		return vec4(bo);
-	else return vec4(0.0);	
+	vec4 gl = (c00+c01+c02+c03)/4.0; gl *=gl;
 
+	return gl*glow;
 }
 
 
 // Code from https://www.shadertoy.com/view/XdcXzn
-mat4 saturationMatrix( float saturation )
+vec4 saturationMatrix( vec4 frame )
 {
     vec3 luminance = vec3( 0.3086, 0.6094, 0.1520 );
-    
-    float oneMinusSat = 1.0 - saturation;
-    
-    vec3 red = vec3( luminance.x * oneMinusSat ); red+= vec3( saturation, 0, 0 );
-    
-    vec3 green = vec3( luminance.y * oneMinusSat ); green += vec3( 0, saturation, 0 );
-    
-    vec3 blue = vec3( luminance.z * oneMinusSat ); blue += vec3( 0, 0, saturation );
-    
-    return mat4( red,     0,
-                 green,   0,
-                 blue,    0,
-                 0, 0, 0, 1 );
+    float l = dot (luminance, frame.rgb);
+    return mix(vec4(l,l,l,1.0), frame, sat);
 }
 
 mat4 contrastMatrix( float contrast )
@@ -357,16 +343,15 @@ void main()
 //Zfast-CRT filter
 	vec2 pos = TEX0.xy;
 	vec2 p = pos * TextureSize; 
-	vec2 i = floor(p)*1.0001 + 0.5;
+	vec2 i = floor(p) + 0.5;
 	vec2 f = p - i;
-	p = (i + 4.0*f*f*f)*invDims;
+	p = i*SourceSize.zw;
 	p.x = mix(p.x, pos.x, blur);
 
-	vec4 screen = COMPAT_TEXTURE(Source, p);
-//BRIGHTNESS
-	screen*=vec4(bright);
+	vec4 screen = COMPAT_TEXTURE(Source, p)*vec4(1.1,0.93,1.15,1.0);
 
-	vec3 mcolor = vec3 (screen.r,screen.g ,screen.b);
+
+	vec3 mcolor = vec3 (screen.rgb);
 	float scanLineWeight = CalcScanLine(f.y, mcolor);
 
 //COLOR TEMPERATURE FROM GUEST.R-DR.VENOM
@@ -379,22 +364,22 @@ if (WP !=0.0){
 	vec3 comp = (WP < 0.0) ? cooler : warmer;	
 	screen = vec4(mix(mcolor, comp, m),1.0);
 }
+	screen *= scanLineWeight;
 
 //FAKE GAMMA IN
 if (gamma !=0.0) {screen = screen * screen;}
-
+//BRIGHTNESS
+	screen*=vec4(bright);
 //APPLY MASK
 if (mask !=-1.0){screen *= Mask(gl_FragCoord.xy*1.0001);}
-
 //GAMMA OUT
 if (gamma !=0.0){screen = pow(screen,vec4(gamma,gamma,gamma,1.0));}
 //BOOST COLORS	
-if (glow !=0.0)	{screen+= booster(f.y, mcolor);}
+if (glow !=0.0)	{screen+= booster(p);}
 //APPLY SCANLINES
-	screen *= scanLineWeight;
 if (contrast !=1.0) {screen = contrastMatrix(contrast)*screen;}
     
-if (sat !=1.0) FragColor = saturationMatrix(sat)*screen;
+if (sat !=1.0) FragColor = saturationMatrix(screen);
 		else FragColor = screen;
 } 
 #endif
