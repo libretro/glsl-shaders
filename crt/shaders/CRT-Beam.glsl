@@ -5,17 +5,17 @@
 
 #pragma parameter blur "Horizontal Blur" 0.6 0.0 1.0 0.1
 #pragma parameter Scanline "Scanline" 1.0 0.0 1.0 0.05
-#pragma parameter weightr "  Scanline Red brightness" 0.8 0.0 1.0 0.05
-#pragma parameter weightg "  Scanline Green brightness" 0.8 0.0 1.0 0.05
-#pragma parameter weightb "  Scanline Blue brightness" 0.8 0.0 1.0 0.05
+#pragma parameter weightr "  Scanline Red brightness" 0.65 0.0 1.0 0.05
+#pragma parameter weightg "  Scanline Green brightness" 0.65 0.0 1.0 0.05
+#pragma parameter weightb "  Scanline Blue brightness" 0.65 0.0 1.0 0.05
 #pragma parameter mask "Mask 0:CGWG,1-2:Lottes,3-4 Gray,5-6:CGWG slot,7 VGA" 0.0 -1.0 7.0 1.0
 #pragma parameter msk_size "Mask size" 1.0 1.0 2.0 1.0
 #pragma parameter scale "VGA Mask Vertical Scale" 2.0 2.00 10.00 1.0
-#pragma parameter MaskDark "Lottes Mask Dark" 0.70 0.00 2.00 0.10
-#pragma parameter MaskLight "Lottes Mask Light" 1.10 0.00 2.00 0.10
-#pragma parameter bright "  Brightness" 1.2 1.00 2.00 0.02
-#pragma parameter glow "  Glow Strength" 0.08 0.0 0.5 0.01
-#pragma parameter sat "  Saturation" 1.1 0.00 2.00 0.05
+#pragma parameter MaskDark "Lottes Mask Dark" 0.0 0.00 2.00 0.10
+#pragma parameter MaskLight "Lottes Mask Light" 1.50 0.00 2.00 0.10
+#pragma parameter bright "  Brightness" 1.5 1.00 2.00 0.02
+#pragma parameter glow "  Glow Strength" 0.3 0.0 0.5 0.01
+#pragma parameter sat "  Saturation" 1.0 0.00 2.00 0.05
 
 #define pi 3.14159
 
@@ -238,11 +238,12 @@ void main()
 
 	float lum = max(max(res.r*weightr,res.g*weightg),res.b*weightb);
 	float f = fract(OGL2Pos.y);
-	res = mix(vec3(lum), res, sat);
+	
 
 	res *= 1.0-(f-0.5)*(f-0.5)*45.0*(Scanline*(1.0-lum));
 	res = clamp(res,0.0,1.0);
-
+	float l = dot(res,vec3(0.2,0.7,0.1));
+	//res = mix(vec3(l), res, sat);
 	res *= Mask(gl_FragCoord.xy*1.0001);
 	res += booster(coords);
 	res *= mix(1.0,bright,lum);
