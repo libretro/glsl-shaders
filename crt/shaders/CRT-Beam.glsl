@@ -4,10 +4,10 @@
 */
 
 #pragma parameter blur "Horizontal Blur" 0.6 0.0 1.0 0.1
-#pragma parameter Scanline "Scanline" 0.55 0.0 1.0 0.05
-#pragma parameter weightr "  Scanline Red brightness" 0.2 0.0 0.8 0.01
-#pragma parameter weightg "  Scanline Green brightness" 0.7 0.0 0.8 0.01
-#pragma parameter weightb "  Scanline Blue brightness" 0.08 0.0 0.8 0.01
+#pragma parameter Scanline "Scanline" 1.0 0.0 1.0 0.05
+#pragma parameter weightr "  Scanline Red brightness" 0.8 0.0 1.0 0.05
+#pragma parameter weightg "  Scanline Green brightness" 0.8 0.0 1.0 0.05
+#pragma parameter weightb "  Scanline Blue brightness" 0.8 0.0 1.0 0.05
 #pragma parameter mask "Mask 0:CGWG,1-2:Lottes,3-4 Gray,5-6:CGWG slot,7 VGA" 0.0 -1.0 7.0 1.0
 #pragma parameter msk_size "Mask size" 1.0 1.0 2.0 1.0
 #pragma parameter scale "VGA Mask Vertical Scale" 2.0 2.00 10.00 1.0
@@ -236,7 +236,7 @@ void main()
 
 	vec3 res= texture2D(Source, coords).rgb*vec3(1.0,0.93,1.15);
 
-	float lum = dot(res,vec3(weightr,weightg,weightb));
+	float lum = max(max(res.r*weightr,res.g*weightg),res.b*weightb);
 	float f = fract(OGL2Pos.y);
 	res = mix(vec3(lum), res, sat);
 
