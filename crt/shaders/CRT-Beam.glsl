@@ -1,142 +1,92 @@
+/*
+	crt-beam
+	for best results use integer scale 5x or more
+*/
 
-// Parameter lines go here:
-#pragma parameter blur "Blur Horizontal" 0.50 0.00 1.20 0.10
-#pragma parameter Scanline "  Scanline overall Strength" 0.6 0.0 1.1 0.05
-#pragma parameter weightr "  Scanline Red brightness" 0.1 0.0 0.8 0.01
-#pragma parameter weightg "  Scanline Green brightness" 0.3 0.0 0.8 0.01
-#pragma parameter weightb "  Scanline Blue brightness" 0.05 0.0 0.8 0.01
-#pragma parameter gap "  Scanline gap Brightness" 0.06 0.0 1.0 0.01
-#pragma parameter mask "Mask -1:Off,0:CGWG,1-2:Lottes,3-4 Gray,5-6:CGWG slot,7 VGA" 7.0 -1.0 7.0 1.0
+#pragma parameter blur "Horizontal Blur" 0.6 0.0 1.0 0.1
+#pragma parameter Scanline "Scanline" 0.55 0.0 1.0 0.05
+#pragma parameter weightr "  Scanline Red brightness" 0.2 0.0 0.8 0.01
+#pragma parameter weightg "  Scanline Green brightness" 0.7 0.0 0.8 0.01
+#pragma parameter weightb "  Scanline Blue brightness" 0.08 0.0 0.8 0.01
+#pragma parameter mask "Mask 0:CGWG,1-2:Lottes,3-4 Gray,5-6:CGWG slot,7 VGA" 0.0 -1.0 7.0 1.0
 #pragma parameter msk_size "Mask size" 1.0 1.0 2.0 1.0
 #pragma parameter scale "VGA Mask Vertical Scale" 2.0 2.00 10.00 1.0
-#pragma parameter MaskDark "Lottes Mask Dark" 0.50 0.00 2.00 0.10
-#pragma parameter MaskLight "Lottes Mask Light" 1.50 0.00 2.00 0.10
-#pragma parameter bright "  Brightness" 1.0 1.00 2.00 0.02
+#pragma parameter MaskDark "Lottes Mask Dark" 0.70 0.00 2.00 0.10
+#pragma parameter MaskLight "Lottes Mask Light" 1.10 0.00 2.00 0.10
+#pragma parameter bright "  Brightness" 1.2 1.00 2.00 0.02
 #pragma parameter glow "  Glow Strength" 0.08 0.0 0.5 0.01
-#pragma parameter sat "  Saturation, 1.0:Off" 1.0 0.00 2.00 0.05
-#pragma parameter contrast "  Contrast, 1.0:Off" 1.05 0.00 2.00 0.05
-#pragma parameter WP "  Color Temperature %, 0.0:Off" 0.0 -100.0 100.0 5.0 
-#pragma parameter gamma "Gamma correct, 0.0:Off" 0.45 0.00 0.60 0.01
+#pragma parameter sat "  Saturation" 1.1 0.00 2.00 0.05
 
-#if defined(VERTEX)
-
-#if __VERSION__ >= 130
-#define COMPAT_VARYING out
-#define COMPAT_ATTRIBUTE in
-#define COMPAT_TEXTURE texture
-#else
-#define COMPAT_VARYING varying 
-#define COMPAT_ATTRIBUTE attribute 
-#define COMPAT_TEXTURE texture2D
-#endif
+#define pi 3.14159
 
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+precision mediump float;
 #else
 #define COMPAT_PRECISION
 #endif
 
-COMPAT_ATTRIBUTE vec4 VertexCoord;
-COMPAT_ATTRIBUTE vec4 COLOR;
-COMPAT_ATTRIBUTE vec4 TexCoord;
-COMPAT_VARYING vec4 TEX0;
 
+uniform vec2 TextureSize;
+varying vec2 TEX0;
 
-vec4 _oPosition1; 
+#if defined(VERTEX)
 uniform mat4 MVPMatrix;
-uniform COMPAT_PRECISION int FrameDirection;
-uniform COMPAT_PRECISION int FrameCount;
-uniform COMPAT_PRECISION vec2 OutputSize;
-uniform COMPAT_PRECISION vec2 TextureSize;
-uniform COMPAT_PRECISION vec2 InputSize;
-
-// compatibility #defines
-#define vTexCoord TEX0.xy
-#define OutSize vec4(OutputSize, 1.0 / OutputSize)
+attribute vec4 VertexCoord;
+attribute vec2 TexCoord;
+uniform vec2 InputSize;
+uniform vec2 OutputSize;
 
 void main()
 {
-    gl_Position = MVPMatrix * VertexCoord;
-    TEX0.xy = TexCoord.xy * 1.0001;
+	TEX0 = TexCoord*1.0001;                    
+	gl_Position = MVPMatrix * VertexCoord;     
 }
 
 #elif defined(FRAGMENT)
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
-
-#ifdef GL_ES
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
-#endif
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
-uniform COMPAT_PRECISION int FrameDirection;
-uniform COMPAT_PRECISION int FrameCount;
-uniform COMPAT_PRECISION vec2 OutputSize;
-uniform COMPAT_PRECISION vec2 TextureSize;
-uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
-uniform sampler2D PassPrev2Texture;
-COMPAT_VARYING vec4 TEX0;
+uniform vec2 OutputSize;
+uniform vec2 InputSize;
 
-// compatibility #defines
-#define Source Texture
 #define vTexCoord TEX0.xy
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
+#define outSize vec4(OutputSize.xy, 1.0/OutputSize.xy/4.0)
+#define FragColor gl_FragColor
+#define Source Texture
 
 
 #ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
+
+uniform COMPAT_PRECISION float blur;
 uniform COMPAT_PRECISION float Scanline;
 uniform COMPAT_PRECISION float weightr;
 uniform COMPAT_PRECISION float weightg;
 uniform COMPAT_PRECISION float weightb;
-uniform COMPAT_PRECISION float gap;
-uniform COMPAT_PRECISION float blur;
-uniform COMPAT_PRECISION float glow;
 uniform COMPAT_PRECISION float mask;
-uniform COMPAT_PRECISION float msk_size;
 uniform COMPAT_PRECISION float scale;
+uniform COMPAT_PRECISION float msk_size;
 uniform COMPAT_PRECISION float MaskDark;
 uniform COMPAT_PRECISION float MaskLight;
 uniform COMPAT_PRECISION float bright;
-uniform COMPAT_PRECISION float gamma;
 uniform COMPAT_PRECISION float sat;
-uniform COMPAT_PRECISION float contrast;
-uniform COMPAT_PRECISION float WP;
-
+uniform COMPAT_PRECISION float glow;
 
 #else
-#define Scanline  1.0
-#define weightr  0.33
-#define weightg  0.33
-#define weightb  0.33
-#define gap 	  0.12
-#define mask      0.0
-#define blur      0.5
-#define glow      0.05   
+
+#define blur 0.6
+#define Scanline 0.2
+#define weightr  0.2
+#define weightg  0.6
+#define weightb  0.1
+#define mask      7.0   
 #define msk_size  1.0
 #define scale   2.0
 #define MaskDark  0.5
 #define MaskLight  1.5
-#define bright    1.06
-#define gamma     0.45
-#define sat       1.1
-#define contrast  1.0
-#define WP  0.0
+#define bright  1.0
+#define glow      0.05   
+#define sat       1.0
 
 #endif
 
@@ -213,8 +163,8 @@ vec4 Mask (vec2 p)
 
 		p.x = fract(p.x/2.0);
     
-		if  (p.x < 0.5) {Mask.r = MaskLight; Mask.b = MaskLight;}
-		else  Mask.g = MaskLight;	
+		if  (p.x < 0.5) {Mask.r = 1.0; Mask.b = 1.0;}
+		else  Mask.g = 1.0;	
 		Mask*=line;  
 		return vec4 (Mask.r, Mask.g, Mask.b,1.0);  
 
@@ -248,13 +198,13 @@ vec4 Mask (vec2 p)
 
 		if (fract(p.y/scale) < 0.5)
 			{
-				if  (p.x < 0.5) {Mask.r = MaskLight; Mask.b = MaskLight;}
-				else  {Mask.g = MaskLight;}	
+				if  (p.x < 0.5) {Mask.r = 1.0; Mask.b = 1.0;}
+				else  {Mask.g = 1.0;}	
 			}
 		else
 			{
-				if  (p.x < 0.5) {Mask.g = MaskLight;}	
-				else   {Mask.r = MaskLight; Mask.b = MaskLight;}
+				if  (p.x < 0.5) {Mask.g = 1.0;}	
+				else   {Mask.r = 1.0; Mask.b = 1.0;}
 	}
 		Mask*=line;
 		return vec4 (Mask.r, Mask.g, Mask.b,1.0);   
@@ -262,124 +212,40 @@ vec4 Mask (vec2 p)
 	} 
 else return vec4(1.0);
 }
-//CRT-Pi scanline code adjusted so that scanline takes in to account the actual emmited pixel light,
-// e.g. blue emits less light on actual CRT.
-float CalcScanLine(float dy, vec3 col)
-{
-
-	float lum = (col.r*weightr + col.g*weightg + col.b*weightb);
-	lum=pow(1.5,lum)-1.0+(lum/2.0);
-
-	lum=min(lum,0.95);
-	float scan = 1.0;
-	float scanl= dy*dy*20.0*(Scanline-lum); scanl = max(scanl,0.0);
-	if (dy<=0.50 )
-		scan = max(1.0-scanl, gap);
-
-	return scan;
-}
-
-vec4 booster (vec2 pos)
+vec3 booster (vec2 pos)
 {
 	vec2 dx = vec2(SourceSize.z,0.0);
 	vec2 dy = vec2(0.0,SourceSize.w);
 
-	vec4 c00 = COMPAT_TEXTURE(Source,pos);
-	vec4 c01 = COMPAT_TEXTURE(Source,pos+dx);
-	vec4 c02 = COMPAT_TEXTURE(Source,pos+dy);
-	vec4 c03 = COMPAT_TEXTURE(Source,pos+dx+dy);
+	vec4 c00 = texture2D(Source,pos);
+	vec4 c01 = texture2D(Source,pos+dx);
+	vec4 c02 = texture2D(Source,pos+dy);
+	vec4 c03 = texture2D(Source,pos+dx+dy);
 
 	vec4 gl = (c00+c01+c02+c03)/4.0; gl *=gl;
-
-	return gl*glow;
+	vec3 gl0 = gl.rgb;
+	return gl0*glow;
 }
-
-
-// Code from https://www.shadertoy.com/view/XdcXzn
-vec4 saturationMatrix( vec4 frame )
-{
-    vec3 luminance = vec3( 0.3086, 0.6094, 0.1520 );
-    float l = dot (luminance, frame.rgb);
-    return mix(vec4(l,l,l,1.0), frame, sat);
-}
-
-mat4 contrastMatrix( float contrast )
-{
-	float t = ( 1.0 - contrast ) / 2.0;
-    
-    return mat4( contrast, 0, 0, 0,
-                 0, contrast, 0, 0,
-                 0, 0, contrast, 0,
-                 t, t, t, 1 );
-
-}
-
-
-
-const mat3 D65_to_XYZ = mat3 (
-           0.4306190,  0.2220379,  0.0201853,
-           0.3415419,  0.7066384,  0.1295504,
-           0.1783091,  0.0713236,  0.9390944);
-
-const mat3 XYZ_to_D65 = mat3 (
-           3.0628971, -0.9692660,  0.0678775,
-          -1.3931791,  1.8760108, -0.2288548,
-          -0.4757517,  0.0415560,  1.0693490);
-		   
-const mat3 D50_to_XYZ = mat3 (
-           0.4552773,  0.2323025,  0.0145457,
-           0.3675500,  0.7077956,  0.1049154,
-           0.1413926,  0.0599019,  0.7057489);
-		   
-const mat3 XYZ_to_D50 = mat3 (
-           2.9603944, -0.9787684,  0.0844874,
-          -1.4678519,  1.9161415, -0.2545973,
-          -0.4685105,  0.0334540,  1.4216174);		   
-
-
-
 void main()
-{
-//Zfast-CRT filter
-	vec2 pos = TEX0.xy;
-	vec2 p = pos * TextureSize; 
-	vec2 i = floor(p) + 0.5;
-	vec2 f = p - i;
-	p = i*SourceSize.zw;
-	p.x = mix(p.x, pos.x, blur);
+{	
+	vec2 pos =vTexCoord;
+	vec2 OGL2Pos = pos*TextureSize;
+	vec2 cent = (floor(OGL2Pos)+0.5)/TextureSize;
+	float xcoord = mix(cent.x,vTexCoord.x,blur);
+	vec2 coords = vec2(xcoord, cent.y);
 
-	vec4 screen = COMPAT_TEXTURE(Source, p)*vec4(1.1,0.93,1.15,1.0);
+	vec3 res= texture2D(Source, coords).rgb*vec3(1.0,0.93,1.15);
 
+	float lum = dot(res,vec3(weightr,weightg,weightb));
+	float f = fract(OGL2Pos.y);
+	res = mix(vec3(lum), res, sat);
 
-	vec3 mcolor = vec3 (screen.rgb);
-	float scanLineWeight = CalcScanLine(f.y, mcolor);
+	res *= 1.0-(f-0.5)*(f-0.5)*45.0*(Scanline*(1.0-lum));
+	res = clamp(res,0.0,1.0);
 
-//COLOR TEMPERATURE FROM GUEST.R-DR.VENOM
-if (WP !=0.0){
-	vec3 warmer = D50_to_XYZ*mcolor;
-	warmer = XYZ_to_D65*warmer;	
-	vec3 cooler = D65_to_XYZ*mcolor;
-	cooler = XYZ_to_D50*cooler;
-	float m = abs(WP)/100.0;
-	vec3 comp = (WP < 0.0) ? cooler : warmer;	
-	screen = vec4(mix(mcolor, comp, m),1.0);
+	res *= Mask(gl_FragCoord.xy*1.0001);
+	res += booster(coords);
+	res *= mix(1.0,bright,lum);
+	FragColor = vec4(res, 1.0);
 }
-	screen *= scanLineWeight;
-
-//FAKE GAMMA IN
-if (gamma !=0.0) {screen = screen * screen;}
-//BRIGHTNESS
-	screen*=vec4(bright);
-//APPLY MASK
-if (mask !=-1.0){screen *= Mask(gl_FragCoord.xy*1.0001);}
-//GAMMA OUT
-if (gamma !=0.0){screen = pow(screen,vec4(gamma,gamma,gamma,1.0));}
-//BOOST COLORS	
-if (glow !=0.0)	{screen+= booster(p);}
-//APPLY SCANLINES
-if (contrast !=1.0) {screen = contrastMatrix(contrast)*screen;}
-    
-if (sat !=1.0) FragColor = saturationMatrix(screen);
-		else FragColor = screen;
-} 
 #endif
