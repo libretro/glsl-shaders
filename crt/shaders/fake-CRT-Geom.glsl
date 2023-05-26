@@ -4,13 +4,15 @@
 ///////////////////////  Runtime Parameters  ///////////////////////
 
 #pragma parameter SCANLINE_SINE_COMP_B "Scanline Intensity" 0.60 0.0 1.0 0.05
+#pragma parameter SIZE "Scanline size" 1.0 0.5 2.0 0.5
 #pragma parameter warpX "warpX" 0.03 0.0 0.125 0.01
 #pragma parameter warpY "warpY" 0.05 0.0 0.125 0.01
 #pragma parameter corner_round "Corner Roundness" 0.030 0.005 0.100 0.005
-#pragma parameter cgwg "Mask brightness" 0.7 0.0 1.0 0.1
+#pragma parameter cgwg "CGWG mask brightness" 0.7 0.0 1.0 0.1
 #pragma parameter crt_gamma "CRT Gamma" 2.4 1.0 4.0 0.05
 #pragma parameter monitor_gamma "Monitor Gamma" 2.25 1.0 4.0 0.05
 #pragma parameter boost "Bright boost " 0.00 0.00 1.00 0.02
+#pragma parameter GLOW_LINE "Glowing line" 0.006 0.00 0.20 0.001
 
 #define pi 3.141592
 #define in_gamma  vec4(crt_gamma, crt_gamma, crt_gamma, 1.0)
@@ -108,9 +110,11 @@ COMPAT_VARYING float omega;
 
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
+#define iTimer (float(FrameCount)*60.0)
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float SCANLINE_SINE_COMP_B;
+uniform COMPAT_PRECISION float SIZE;
 uniform COMPAT_PRECISION float warpX;
 uniform COMPAT_PRECISION float warpY;
 uniform COMPAT_PRECISION float corner_round;
@@ -118,8 +122,10 @@ uniform COMPAT_PRECISION float cgwg;
 uniform COMPAT_PRECISION float crt_gamma;
 uniform COMPAT_PRECISION float monitor_gamma;
 uniform COMPAT_PRECISION float boost;
+uniform COMPAT_PRECISION float GLOW_LINE;
 #else
 #define SCANLINE_SINE_COMP_B 0.40
+#define SIZE 1.0
 #define warpX 0.031
 #define warpY 0.041
 #define corner_round 0.030
@@ -127,12 +133,13 @@ uniform COMPAT_PRECISION float boost;
 #define crt_gamma 2.2
 #define monitor_gamma 2.4
 #define boost 0.00
+#define GLOW_LINE 0.00
 #endif
 
 vec4 scanline(vec2 coord, vec4 frame)
 {
 	vec3 res = frame.xyz;
-	vec3 scanline = res * (SCANLINE_SINE_COMP_B*sin(fract(coord.y*TextureSize.y)*pi)+1.0- SCANLINE_SINE_COMP_B);
+	vec3 scanline = res * (SCANLINE_SINE_COMP_B*sin(fract(coord.y*SIZE*TextureSize.y)*pi)+1.0- SCANLINE_SINE_COMP_B);
 
 	return vec4(scanline, 1.0);
 }
@@ -171,18 +178,23 @@ float corner(vec2 coord)
  
 	}
 
+ float randomPass(vec2 coords)
+ {
+	return fract(smoothstep(-120.0, 0.0, coords.y - (TextureSize.y + 120.0) * fract(iTimer * 0.00015)));
+}
+
 
 void main()
 {
 
-	vec2 pos = Warp(TEX0.xy*(scale.xy))*(scale.zw);
+	vec2 pos = Warp(TEX0.xy*(scale.xy))*scale.zw;
 
 //borrowed from CRT-Pi
 		vec2 OGL2Pos = pos * TextureSize;
 		vec2 pC4 = floor(OGL2Pos) + 0.5;
 		vec2 coord = pC4 / TextureSize;
 
-		vec2 tc = vec2(vTexCoord.x, coord.y);
+		vec2 tc = vec2(pos.x, coord.y);
 
 	vec4 res = COMPAT_TEXTURE(Texture, tc)*FCC;
 	res = scanline(pos,res);
@@ -204,6 +216,7 @@ void main()
     // re-apply the gamma curve for the mask path
     color = pow(color, out_gamma);
     color += boost*color;
+    color += randomPass(tc * TextureSize) * GLOW_LINE;
     FragColor = color*corner(tc);
 
 } 
