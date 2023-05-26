@@ -3,19 +3,20 @@
 	for best results use integer scale 5x or more
 */
 
-#pragma parameter blur "Horizontal Blur" 0.6 0.0 1.0 0.1
-#pragma parameter Scanline "Scanline" 1.0 0.0 1.0 0.05
-#pragma parameter weightr "  Scanline Red brightness" 0.65 0.0 1.0 0.05
-#pragma parameter weightg "  Scanline Green brightness" 0.65 0.0 1.0 0.05
-#pragma parameter weightb "  Scanline Blue brightness" 0.65 0.0 1.0 0.05
-#pragma parameter mask "Mask 0:CGWG,1-2:Lottes,3-4 Gray,5-6:CGWG slot,7 VGA" 0.0 -1.0 7.0 1.0
+#pragma parameter blur "Horizontal Blur/Beam shape" 0.6 0.0 1.0 0.1
+#pragma parameter Scanline "Scanline thickness" 0.4 0.0 1.0 0.05
+#pragma parameter weightr "  Scanline Red brightness" 0.75 0.0 1.0 0.05
+#pragma parameter weightg "  Scanline Green brightness" 0.75 0.0 1.0 0.05
+#pragma parameter weightb "  Scanline Blue brightness" 0.75 0.0 1.0 0.05
+#pragma parameter mask "Mask 0:CGWG,1-2:Lottes,3-4 Gray,5-6:CGWG slot,7 VGA" 3.0 -1.0 7.0 1.0
 #pragma parameter msk_size "Mask size" 1.0 1.0 2.0 1.0
 #pragma parameter scale "VGA Mask Vertical Scale" 2.0 2.00 10.00 1.0
-#pragma parameter MaskDark "Lottes Mask Dark" 0.0 0.00 2.00 0.10
-#pragma parameter MaskLight "Lottes Mask Light" 1.50 0.00 2.00 0.10
-#pragma parameter bright "  Brightness" 1.5 1.00 2.00 0.02
-#pragma parameter glow "  Glow Strength" 0.3 0.0 0.5 0.01
-#pragma parameter sat "  Saturation" 1.0 0.00 2.00 0.05
+#pragma parameter MaskDark "Lottes Mask Dark" 0.7 0.00 2.00 0.10
+#pragma parameter MaskLight "Lottes Mask Light" 1.00 0.00 2.00 0.10
+#pragma parameter bright "  Boost bright" 1.35 1.00 2.00 0.02
+#pragma parameter dark "  Boost dark" 1.25 1.00 2.00 0.02
+#pragma parameter glow "  Glow Strength" 0.08 0.0 0.5 0.01
+#pragma parameter sat "  Saturation" 1.15 0.00 2.00 0.05
 
 #define pi 3.14159
 
@@ -69,6 +70,7 @@ uniform COMPAT_PRECISION float msk_size;
 uniform COMPAT_PRECISION float MaskDark;
 uniform COMPAT_PRECISION float MaskLight;
 uniform COMPAT_PRECISION float bright;
+uniform COMPAT_PRECISION float dark;
 uniform COMPAT_PRECISION float sat;
 uniform COMPAT_PRECISION float glow;
 
@@ -84,7 +86,8 @@ uniform COMPAT_PRECISION float glow;
 #define scale   2.0
 #define MaskDark  0.5
 #define MaskLight  1.5
-#define bright  1.0
+#define bright  1.5
+#define dark  1.25
 #define glow      0.05   
 #define sat       1.0
 
@@ -234,7 +237,7 @@ void main()
 	float xcoord = mix(cent.x,vTexCoord.x,blur);
 	vec2 coords = vec2(xcoord, cent.y);
 
-	vec3 res= texture2D(Source, coords).rgb*vec3(1.0,0.93,1.15);
+	vec3 res= texture2D(Source, coords).rgb;
 
 	float lum = max(max(res.r*weightr,res.g*weightg),res.b*weightb);
 	float f = fract(OGL2Pos.y);
@@ -242,11 +245,13 @@ void main()
 
 	res *= 1.0-(f-0.5)*(f-0.5)*45.0*(Scanline*(1.0-lum));
 	res = clamp(res,0.0,1.0);
+	res *= vec3(1.0,0.93,1.15);
 	float l = dot(res,vec3(0.2,0.7,0.1));
-	//res = mix(vec3(l), res, sat);
+	res = mix(vec3(l), res, sat);
 	res *= Mask(gl_FragCoord.xy*1.0001);
 	res += booster(coords);
-	res *= mix(1.0,bright,lum);
+	res *= mix(1.0,bright,l);
+	res *= mix(dark,1.0,l);
 	FragColor = vec4(res, 1.0);
 }
 #endif
