@@ -248,10 +248,11 @@ void main()
 	res *= vec3(1.0,0.93,1.15);
 	float l = dot(res,vec3(0.2,0.7,0.1));
 	res = mix(vec3(l), res, sat);
-	res *= Mask(gl_FragCoord.xy*1.0001);
 	res += booster(coords);
-	res *= mix(1.0,bright,l);
-	res *= mix(dark,1.0,l);
-	FragColor = vec4(res, 1.0);
+	vec4 res0 = vec4(res,1.0); 
+	res0 *= Mask(gl_FragCoord.xy*1.0001);
+	res0 *= mix(1.0,bright,l);
+	res0 *= mix(dark,1.0,l);
+	FragColor = res0;
 }
 #endif
