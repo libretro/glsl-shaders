@@ -186,6 +186,14 @@ void main()
    else if (LINES == 3.0){res *= scanline3(OGL2Pos.y,lum);}
    else if (LINES == 2.0){res *= scanline2(OGL2Pos.y,lum);}
 
+#if defined GL_ES
+   // hacky clamp fix for GLES
+    if ( texcoord.x > 0.0001 && texcoord.x < 0.9999 && texcoord.y > 0.0001 && texcoord.y < 0.9999)
+        res = res;
+    else
+        res = vec3(0.0);
+#endif
+
    FragColor = vec4(res,1.0);
 }
 #endif
