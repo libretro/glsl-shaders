@@ -17,7 +17,7 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>. 
    */
  
-#pragma parameter Readme "READ GLSL FILE FOR VARIOUS COEFFS" 0.0 0.0 0.0 0.0 
+#pragma parameter Readme "READ GLSL FILE FOR VARIOUS COEFFS" 0.0 0.0 1.0 1.0 
 #pragma parameter CHROMA_A_X "Chromaticity R x" 0.670 0.0 1.0 0.001
 #pragma parameter CHROMA_A_Y "Chromaticity R y" 0.330 0.0 1.0 0.001
 #pragma parameter CHROMA_B_X "Chromaticity G x" 0.210 0.0 1.0 0.001
