@@ -106,7 +106,7 @@ uniform COMPAT_PRECISION float maskLight;
 #define maskLight 1.5
 #endif
 
-#define mod_factor vTexCoord.x * SourceSize.x * outsize.x / SourceSize.x
+#define mod_factor vTexCoord.x * outsize.x/InputSize.x* SourceSize.x 
 
 // Shadow mask.
 vec3 Mask(vec2 pos)
