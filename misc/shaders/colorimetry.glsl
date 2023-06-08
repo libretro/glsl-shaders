@@ -7,7 +7,7 @@
 */
 
 // Parameter lines go here:
-#pragma parameter color_mode "Colorimetry mode" 0.0 0.0 2.0 1.0
+#pragma parameter color_mode "Colorimetry mode, FCC1953, SMPTE-C, sRGB, SONY P22" 0.0 0.0 3.0 1.0
 #pragma parameter white_point_d93 "Use D93 white point" 1.0 0.0 1.0 1.0
 #pragma parameter clipping_method "Color clipping method" 0.0 0.0 2.0 1.0
 
@@ -180,6 +180,13 @@ vec3 ApplyColorimetry(vec3 color)
       Wx = 0.31;
       Wy = 0.316;
    }
+
+   else if (white_point_d93 > 0.5 && color_mode == 3.0)
+   {
+      Wx = 0.2831;
+      Wy = 0.2971;
+   }
+
    else
    {
       Wx = 0.3127;
@@ -208,7 +215,7 @@ vec3 ApplyColorimetry(vec3 color)
       Bx = 0.155;
       By = 0.07;
    }
-   else
+   else if (color_mode == 2.0) 
    {
       //sRGB (PC Monitors)
       //The colorimetry used in PC monitors, like the one you're (probably) looking at right now.
@@ -218,6 +225,18 @@ vec3 ApplyColorimetry(vec3 color)
       Gy = 0.6;
       Bx = 0.15;
       By = 0.06;
+   }
+
+   else
+
+{
+      //Sony P22
+      Rx = 0.625;
+      Ry = 0.34;
+      Gx = 0.28;
+      Gy = 0.595;
+      Bx = 0.155;
+      By = 0.07;
    }
 
    float Xr = Rx / Ry;
