@@ -19,9 +19,9 @@
 
 
 #pragma parameter COLOR_MODE "SRGB,SMPTE C,REC709,BT2020,SMPTE240,NTSC1953,EBU" 0.0 0.0 6.0 1.0   
-#pragma parameter SCALE_W "Scale white point" 1.0 0.0 1.0 1.0
-#pragma parameter GAMMAIN "Gamma In" 2.4 1.0 4.0 0.05
-#pragma parameter GAMMAOUT "Gamma Out" 2.2 1.0 4.0 0.05
+#pragma parameter SCALE_W "Scale white point" 0.0 0.0 1.0 1.0
+#pragma parameter GAMMAIN "Gamma In" 2.0 1.0 4.0 0.05
+#pragma parameter GAMMAOUT "Gamma Out" 2.0 1.0 4.0 0.05
 
 
 /* 
@@ -154,7 +154,7 @@ CHROMA_A_Y=0.34;
 CHROMA_B_X=0.31;
 CHROMA_B_Y=0.595;
 CHROMA_C_X=	0.155;
-CHROMA_C_Y=	0.07;
+CHROMA_C_Y=	0.070;
 	}
 
 else if (COLOR_MODE == 3.0 ) 
@@ -192,8 +192,8 @@ CHROMA_C_Y=	0.08;
 vec3 luminance()
 {
 //0 SRGB  	 0.299 0.587 0.114
-//1 SMPTE C 	 0.299 0.587 0.114 
-//2 REC709  	 0.212 0.715 0.072 
+//1 SMPTE C  0.299 0.587 0.114 
+//2 REC709   0.212 0.715 0.072 
 //3 BT2020    0.262 0.678 0.059 
 //4 SMPTE240  0.212 0.701 0.086 
 //5 NTSC1953  0.299 0.587 0.114 
@@ -249,7 +249,7 @@ if (COLOR_MODE == 0.0)
 
 else if (COLOR_MODE == 1.0 || COLOR_MODE == 2.0)
 {
-	CRT_TR1 = 0.018;
+	CRT_TR1 = 0.040;
 	CRT_TR2 = 0.099;
 	CRT_TR3 = 4.5;
 }
@@ -297,12 +297,7 @@ void main()
 	Yrgb = sdr_linear(Yrgb);
 	vec3 W = luminance();
 	vec3 RGB = Yrgb_to_RGB(toRGB, W, Yrgb);
-	if (SCALE_W > 0.0) {
-		vec3 white = Yrgb_to_RGB(toRGB, W, WHITE);
-		float G = 1.0 / max(max(white.r, white.g), white.b);
-
-		RGB *= G;
-	}
+	
 	RGB = clamp(RGB, 0.0, 1.0);
 	RGB = srgb_gamma(RGB);
 	FragColor = vec4(RGB, 1.0);
