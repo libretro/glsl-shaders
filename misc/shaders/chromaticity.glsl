@@ -19,7 +19,6 @@
 
 
 #pragma parameter COLOR_MODE "SRGB,SMPTE C,REC709,BT2020,SMPTE240,NTSC1953,EBU" 0.0 0.0 6.0 1.0   
-#pragma parameter SCALE_W "Scale white point" 0.0 0.0 1.0 1.0
 #pragma parameter GAMMAIN "Gamma In" 2.0 1.0 4.0 0.05
 #pragma parameter GAMMAOUT "Gamma Out" 2.0 1.0 4.0 0.05
 
@@ -84,8 +83,6 @@ uniform vec2 OutputSize;
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float COLOR_MODE;
-uniform COMPAT_PRECISION	float SCALE_W;
-
 uniform COMPAT_PRECISION	float GAMMAIN;
 uniform COMPAT_PRECISION	float GAMMAOUT;
 
@@ -95,7 +92,6 @@ uniform COMPAT_PRECISION	float GAMMAOUT;
 #define CS 0.0
 
 
-#define  SCALE_W 1.0
 #define  GAMMAIN 2.4
 #define  GAMMAOUT 2.25
 #endif
