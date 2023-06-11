@@ -19,8 +19,6 @@
 
 
 #pragma parameter COLOR_MODE "SRGB,SMPTE C,REC709,BT2020,SMPTE240,NTSC1953,EBU" 0.0 0.0 6.0 1.0   
-#pragma parameter GAMMAIN "Gamma In" 2.0 1.0 4.0 0.05
-#pragma parameter GAMMAOUT "Gamma Out" 2.0 1.0 4.0 0.05
 
 
 /* 
@@ -83,17 +81,11 @@ uniform vec2 OutputSize;
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float COLOR_MODE;
-uniform COMPAT_PRECISION	float GAMMAIN;
-uniform COMPAT_PRECISION	float GAMMAOUT;
 
 #else
 
 #define COLOR_MODE 0.0
 #define CS 0.0
-
-
-#define  GAMMAIN 2.4
-#define  GAMMAOUT 2.25
 #endif
 
 
@@ -133,7 +125,7 @@ vec3 Yrgb_to_RGB(mat3 toRGB, vec3 W, vec3 Yrgb)
 //6 EBU      0.640 0.330 / 0.290 0.600 / 0.150   0.060 --
 
 float CHROMA_A_X, CHROMA_A_Y,CHROMA_B_X, CHROMA_B_Y, CHROMA_C_X, CHROMA_C_Y;
-	if (COLOR_MODE == 0.0 || COLOR_MODE == 2.0 || COLOR_MODE == 6.0) 
+	if (COLOR_MODE == 0.0 || COLOR_MODE == 2.0 ) 
 	{
 CHROMA_A_X=0.64;
 CHROMA_A_Y=0.33;
@@ -162,7 +154,7 @@ CHROMA_B_Y=0.797;
 CHROMA_C_X=	0.131;
 CHROMA_C_Y=	0.046;
 	}
-else if (COLOR_MODE == 6.0 ) 
+else if (COLOR_MODE == 5.0 ) 
 	{
 CHROMA_A_X=0.67;
 CHROMA_A_Y=0.33;
@@ -171,6 +163,17 @@ CHROMA_B_Y=0.71;
 CHROMA_C_X=	0.14;
 CHROMA_C_Y=	0.08;
 	}
+
+else if (COLOR_MODE == 6.0)
+{
+CHROMA_A_X=0.64;
+CHROMA_A_Y=0.33;
+CHROMA_B_X=0.29;
+CHROMA_B_Y=0.60;
+CHROMA_C_X=	0.15;
+CHROMA_C_Y=	0.06;	
+}
+
 	mat3 xyYrgb = mat3(CHROMA_A_X, CHROMA_A_Y, Yrgb.r,
 	                   CHROMA_B_X, CHROMA_B_Y, Yrgb.g,
 	                   CHROMA_C_X, CHROMA_C_Y, Yrgb.b);
@@ -206,22 +209,25 @@ vec3 luminance()
 
 else if (COLOR_MODE == 2.0 || COLOR_MODE == 4.0)
 {
-	CHROMA_A_WEIGHT = 0.212;
-	CHROMA_B_WEIGHT = 0.715;
-	CHROMA_C_WEIGHT = 0.072;
+	CHROMA_A_WEIGHT = 0.2126;
+	CHROMA_B_WEIGHT = 0.7152;
+	CHROMA_C_WEIGHT = 0.0722;
 }
 
 else if (COLOR_MODE == 3.0 )
 {
-	CHROMA_A_WEIGHT = 0.262;
+	CHROMA_A_WEIGHT = 0.2627;
 	CHROMA_B_WEIGHT = 0.678;
-	CHROMA_C_WEIGHT = 0.059;
+	CHROMA_C_WEIGHT = 0.0593;
 }
 
 
 	return vec3(CHROMA_A_WEIGHT, CHROMA_B_WEIGHT, CHROMA_C_WEIGHT);
 }
 
+
+//////////////////////////////////////////////// 
+/// GAMMA IN FUNCTION /////////////////////////
 
 float sdr_linear(const float x)
 {
@@ -231,44 +237,49 @@ float sdr_linear(const float x)
 //2 REC709   0.018 0.099 4.5
 //3 BT2020   0.059 0.099 4.5
 //4 SMPTE240 0.091 0.111 4.0
-//5 NTSC1953 0.081 0.099 4.5
+//5 NTSC1953 0.018 0.099 4.5
 //6 EBU      0.081 0.099 4.5
 
-float CRT_TR1 ,CRT_TR2, CRT_TR3;
+float CRT_TR1 ,CRT_TR2, CRT_TR3, GAMMAIN;
 
 if (COLOR_MODE == 0.0)
 {
-	CRT_TR1 = 0.040;
+	CRT_TR1 = 0.04045;
 	CRT_TR2 = 0.055;
 	CRT_TR3 = 12.92;
+	GAMMAIN = 2.4;
 }
 
 else if (COLOR_MODE == 1.0 || COLOR_MODE == 2.0)
 {
-	CRT_TR1 = 0.040;
+	CRT_TR1 = 0.081;
 	CRT_TR2 = 0.099;
 	CRT_TR3 = 4.5;
+	GAMMAIN = 2.2;
 }
 else if (COLOR_MODE == 3.0 )
 {
-	CRT_TR1 = 0.059;
+	CRT_TR1 = 0.018;
 	CRT_TR2 = 0.099;
 	CRT_TR3 = 4.5;
+	GAMMAIN = 2.2;
 }
 else if (COLOR_MODE == 4.0 )
 {
-	CRT_TR1 = 0.061;
-	CRT_TR2 = 0.111;
+	CRT_TR1 = 0.0913;
+	CRT_TR2 = 0.1115;
 	CRT_TR3 = 4.0;
+	GAMMAIN = 2.2;
 }
 else if (COLOR_MODE == 5.0 || COLOR_MODE == 6.0)
 {
 	CRT_TR1 = 0.081;
 	CRT_TR2 = 0.099;
 	CRT_TR3 = 4.5;
+	GAMMAIN = 2.2;
 }
 
-	return x < CRT_TR2 ? x / CRT_TR3 : pow((x + CRT_TR1) / (1.0+ CRT_TR1), GAMMAIN);
+	return x < CRT_TR1 ? x / CRT_TR3 : pow((x + CRT_TR2) / (1.0+ CRT_TR2), GAMMAIN);
 }
 
 vec3 sdr_linear(const vec3 x)
@@ -276,9 +287,62 @@ vec3 sdr_linear(const vec3 x)
 	return vec3(sdr_linear(x.r), sdr_linear(x.g), sdr_linear(x.b));
 }
 
+
+//////////////////////////////////////////////// 
+/// GAMMA OUT FUNCTION /////////////////////////
+
 float srgb_gamma(const float x)
 {
-	return x <= 0.0031308 ? 12.92 * x : 1.055 * pow(x, 1.0 / GAMMAOUT) - 0.055;
+//0 SRGB  	 0.00313 0.055 12.92
+//1 SMPTE C  0.018 0.099 4.5
+//2 REC709   0.018 0.099 4.5
+//3 BT2020   0.059 0.099 4.5
+//4 SMPTE240 0.091 0.111 4.0
+//5 NTSC1953 0.018 0.099 4.5
+//6 EBU      0.081 0.099 4.5
+
+float LCD_TR1 ,LCD_TR2, LCD_TR3, GAMMAOUT;
+
+if (COLOR_MODE == 0.0)
+{
+	LCD_TR1 = 0.00313;
+	LCD_TR2 = 0.055;
+	LCD_TR3 = 12.92;
+	GAMMAOUT = 2.4;
+}
+
+else if (COLOR_MODE == 1.0 || COLOR_MODE == 2.0)
+{
+	LCD_TR1 = 0.018;
+	LCD_TR2 = 0.099;
+	LCD_TR3 = 4.5;
+	GAMMAOUT = 2.2;
+}
+else if (COLOR_MODE == 3.0 )
+{
+	LCD_TR1 = 0.018;
+	LCD_TR2 = 0.099;
+	LCD_TR3 = 4.5;
+	GAMMAOUT = 2.2;
+}
+else if (COLOR_MODE == 4.0 )
+{
+	LCD_TR1 = 0.0228;
+	LCD_TR2 = 0.1115;
+	LCD_TR3 = 4.0;
+	GAMMAOUT = 2.2;
+}
+else if (COLOR_MODE == 5.0 || COLOR_MODE == 6.0)
+{
+	LCD_TR1 = 0.018;
+	LCD_TR2 = 0.099;
+	LCD_TR3 = 4.5;
+	GAMMAOUT = 2.2;
+}
+
+
+
+	return x <= LCD_TR1 ? LCD_TR3 * x : (1.0+LCD_TR2) * pow(x, 1.0 / GAMMAOUT) - LCD_TR2;
 }
 
 vec3 srgb_gamma(const vec3 x)
