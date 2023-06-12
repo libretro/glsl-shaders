@@ -11,7 +11,7 @@
  *
  */
 
-#pragma parameter DISTORTION "Distortion" 0.05 0.0 0.30 0.01
+#pragma parameter DISTORTION "Distortion" 0.12 0.0 0.30 0.01
 #pragma parameter SCANLINE "Scanline Weight" 0.3 0.2 0.6 0.05
 #pragma parameter INPUTGAMMA "Input Gamma" 2.4 0.0 4.0 0.05
 #pragma parameter OUTPUTGAMMA "Output Gamma" 2.2 0.0 4.0 0.05
@@ -19,7 +19,7 @@
 #pragma parameter SIZE "Mask Size" 1.0 1.0 2.0 1.0
 
 // Uncomment to enable curvature (ugly)
-//#define CURVATURE        
+#define CURVATURE        
 #define PI 3.141592653589
 #define outgamma 1.0 / OUTPUTGAMMA
 #if defined(VERTEX)
@@ -122,14 +122,7 @@ uniform COMPAT_PRECISION float MASK;
 #endif
 
 
-        // Apply radial distortion to the given coordinate.
-        vec2 radialDistortion(vec2 coord, vec2 pos)
-        {
-                pos /= SourceSize.xy;
-                vec2 cc = pos - 0.5;
-                float dist = dot(cc, cc) * DISTORTION;
-                return coord * (pos + cc * (1.0 + dist) * dist) / pos;
-        }
+     
 
         // Calculate the influence of a scanline on the current pixel.
         //
@@ -156,6 +149,27 @@ uniform COMPAT_PRECISION float MASK;
                 return 1.4 * exp(-pow(weights * inversesqrt(0.5 * wid), wid)) / (0.6 + 0.2 * wid);
         }
 
+
+vec2 Distort(vec2 coord)
+{
+        vec2 CURVATURE_DISTORTION = vec2(DISTORTION, DISTORTION*1.5);
+        // Barrel distortion shrinks the display area a bit, this will allow us to counteract that.
+        vec2 barrelScale = 1.0 - (0.23 * CURVATURE_DISTORTION);
+        coord *= TextureSize/InputSize;
+        coord -= vec2(0.5);
+        float rsq = coord.x * coord.x + coord.y * coord.y;
+        coord += coord * (CURVATURE_DISTORTION * rsq);
+        coord *= barrelScale;
+        if (abs(coord.x) >= 0.5 || abs(coord.y) >= 0.5)
+                coord = vec2(-1.0);             // If out of bounds, return an invalid value.
+        else
+        {
+                coord += vec2(0.5);
+                coord /= TextureSize/InputSize;
+        }
+
+        return coord;
+}
 void main()
 {
         // Texture coordinates of the texel containing the active pixel.
@@ -163,7 +177,7 @@ void main()
         vec2 xy;
 
         #ifdef CURVATURE
-                xy = radialDistortion(TEX0.xy, abspos);
+                xy = Distort(TEX0.xy); float xblur = xy.x;
         #else
                 xy = TEX0.xy;
         #endif
@@ -174,7 +188,7 @@ void main()
 
                 // Snap to the center of the underlying texel.
                 xy = (floor(ratio_scale) + 0.5) / SourceSize.xy;
-
+                xy.x = xblur;
                 // Calculate the effective colour of the current and next
                 // scanlines at the horizontal location of the current pixel.
                 vec4 col  = COMPAT_TEXTURE(Source,xy); 
