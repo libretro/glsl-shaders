@@ -8,6 +8,7 @@
 
 // Parameter lines go here:
 #pragma parameter shadowMask "Mask Style" 3.0 0.0 4.0 1.0
+#pragma parameter BGR "RGB/BGR subpixels" 0.0 0.0 1.0 1.0
 #pragma parameter DOTMASK_STRENGTH "CGWG Dot Mask Strength" 0.3 0.0 1.0 0.01
 #pragma parameter maskDark "Lottes maskDark" 0.5 0.0 2.0 0.1
 #pragma parameter maskLight "Lottes maskLight" 1.5 0.0 2.0 0.1
@@ -96,11 +97,13 @@ COMPAT_VARYING vec4 TEX0;
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
 uniform COMPAT_PRECISION float shadowMask;
+uniform COMPAT_PRECISION float BGR;
 uniform COMPAT_PRECISION float DOTMASK_STRENGTH;
 uniform COMPAT_PRECISION float maskDark;
 uniform COMPAT_PRECISION float maskLight;
 #else
 #define shadowMask 3.0
+#define BGR 0.0
 #define DOTMASK_STRENGTH 0.3
 #define maskDark 0.5
 #define maskLight 1.5
@@ -126,9 +129,9 @@ vec3 Mask(vec2 pos)
 
       pos.x = fract(pos.x/3.0);
     
-      if      (pos.x < 0.333) mask.r = maskLight;
+      if      (pos.x < 0.333) (BGR == 1.0) ? mask.b = maskLight : mask.r = maskLight;
       else if (pos.x < 0.666) mask.g = maskLight;
-      else                    mask.b = maskLight;
+      else                    (BGR == 1.0) ? mask.r = maskLight : mask.b = maskLight;
       mask*=line;  
    } 
 
@@ -137,9 +140,9 @@ vec3 Mask(vec2 pos)
    {
       pos.x = fract(pos.x/3.0);
 
-      if      (pos.x < 0.333) mask.r = maskLight;
+      if      (pos.x < 0.333) (BGR == 1.0) ? mask.b = maskLight : mask.r = maskLight;
       else if (pos.x < 0.666) mask.g = maskLight;
-      else                    mask.b = maskLight;
+      else                    (BGR == 1.0) ? mask.r = maskLight : mask.b = maskLight;
    } 
 
    // Stretched VGA style shadow mask (same as prior shaders).
@@ -148,9 +151,9 @@ vec3 Mask(vec2 pos)
       pos.x += pos.y*3.0;
       pos.x  = fract(pos.x/6.0);
 
-      if      (pos.x < 0.333) mask.r = maskLight;
+      if      (pos.x < 0.333) (BGR == 1.0) ? mask.b = maskLight : mask.r = maskLight;
       else if (pos.x < 0.666) mask.g = maskLight;
-      else                    mask.b = maskLight;
+      else                    (BGR == 1.0) ? mask.r = maskLight : mask.b = maskLight;
    }
 
    // VGA style shadow mask.
@@ -160,9 +163,9 @@ vec3 Mask(vec2 pos)
       pos.x += pos.y*3.0;
       pos.x  = fract(pos.x/6.0);
 
-      if      (pos.x < 0.333) mask.r = maskLight;
+      if      (pos.x < 0.333) (BGR == 1.0) ? mask.b = maskLight : mask.r = maskLight;
       else if (pos.x < 0.666) mask.g = maskLight;
-      else                    mask.b = maskLight;
+      else                    (BGR == 1.0) ? mask.r = maskLight : mask.b = maskLight;
    }
 
    return mask;

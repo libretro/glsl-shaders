@@ -1,0 +1,4 @@
+shaders = "1"
+shader0 = "shaders/simple_color_controls.glsl"
+filter_linear0 = "false"
+
