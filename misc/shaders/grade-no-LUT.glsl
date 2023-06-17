@@ -21,7 +21,7 @@
 
 
 /*
-   Grade (03-06-2023)
+   Grade (16-06-2023)
    > See settings decriptions at: https://forums.libretro.com/t/dogways-grading-shader-slang/27148/442
 
    > Ubershader grouping some monolithic color related shaders:
@@ -33,7 +33,7 @@
    **Syh, Nesguy, hunterk, and the libretro forum members.
 
 
-    ######################################...PRESETS...#######################################
+    #####################################...STANDARDS...######################################
     ##########################################################################################
     ###                                                                                    ###
     ###    PAL                                                                             ###
@@ -299,20 +299,19 @@ mat3 RGB_to_XYZ_mat(mat3 primaries) {
                 0.0, T.y, 0.0,
                 0.0, 0.0, T.z);
 
-   return TB * primaries;
-}
+    return TB * primaries;
+ }
 
 
 vec3 RGB_to_XYZ(vec3 RGB, mat3 primaries) {
 
-   return RGB *         RGB_to_XYZ_mat(primaries);
-}
+    return RGB *         RGB_to_XYZ_mat(primaries);
+ }
 
 vec3 XYZ_to_RGB(vec3 XYZ, mat3 primaries) {
 
-   return XYZ * inverse(RGB_to_XYZ_mat(primaries));
-}
-
+    return XYZ * inverse(RGB_to_XYZ_mat(primaries));
+ }
 
 
 vec3 XYZtoYxy(vec3 XYZ) {
@@ -321,7 +320,7 @@ vec3 XYZtoYxy(vec3 XYZ) {
     float Yxyg = (XYZrgb <= 0.0) ? 0.3805 : XYZ.r / XYZrgb;
     float Yxyb = (XYZrgb <= 0.0) ? 0.3769 : XYZ.g / XYZrgb;
     return vec3(XYZ.g, Yxyg, Yxyb);
-}
+ }
 
 vec3 YxytoXYZ(vec3 Yxy) {
 
@@ -329,13 +328,13 @@ vec3 YxytoXYZ(vec3 Yxy) {
     float Xsz = (Yxy.r <= 0.0) ? 0.0 : 1.0;
     vec3 XYZ = vec3(Xsz,Xsz,Xsz) * vec3(Xs, Yxy.r, (Xs/Yxy.g)-Xs-Yxy.r);
     return XYZ;
-}
+ }
 
 
 ///////////////////////// White Point Mapping /////////////////////////
 //
 //
-// PAL: D65        NTSC-U: D65       NTSC-J: CCT NTSC-J
+// PAL: D65        NTSC-U: D65       NTSC-J: CCT 9300K+27MPCD
 // PAL: 6503.512K  NTSC-U: 6503.512K NTSC-J: ~8945.436K
 // [x:0.31266142   y:0.3289589]      [x:0.281 y:0.311]
 
@@ -345,7 +344,7 @@ vec3 YxytoXYZ(vec3 Yxy) {
 // "RGB to XYZ -> Temperature -> XYZ to RGB" joint matrix
 vec3 wp_adjust(vec3 RGB, float temperature, mat3 primaries, mat3 display) {
 
-    float temp3 = 1000.       / temperature;
+    float temp3 = 1000.       /     temperature;
     float temp6 = 1000000.    / pow(temperature, 2.);
     float temp9 = 1000000000. / pow(temperature, 3.);
 
@@ -376,7 +375,7 @@ vec3 wp_adjust(vec3 RGB, float temperature, mat3 primaries, mat3 display) {
     mat3 matb = RGB_to_XYZ_mat(display);
 
     return RGB.rgb * ((mata * CAM) * inverse(matb));
-}
+ }
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -424,8 +423,8 @@ vec3 EOTF_1886a_f3( vec3 color, float BlackLevel, float brightness, float contra
 //----------------------------------------------------------------------
 
 
-float moncurve_f( float color, float gamma, float offs)
-{
+float moncurve_f( float color, float gamma, float offs) {
+
     // Forward monitor curve
     color    = clamp(color, 0.0, 1.0);
     float fs = (( gamma - 1.0) / offs) * pow( offs * gamma / ( ( gamma - 1.0) * ( 1.0 + offs)), gamma);
@@ -433,20 +432,20 @@ float moncurve_f( float color, float gamma, float offs)
 
     color = ( color > xb) ? pow( ( color + offs) / ( 1.0 + offs), gamma) : color * fs;
     return color;
-}
+ }
 
 
-vec3 moncurve_f_f3( vec3 color, float gamma, float offs)
-{
+vec3 moncurve_f_f3( vec3 color, float gamma, float offs) {
+
     color.r = moncurve_f( color.r, gamma, offs);
     color.g = moncurve_f( color.g, gamma, offs);
     color.b = moncurve_f( color.b, gamma, offs);
     return color.rgb;
-}
+ }
 
 
-float moncurve_r( float color, float gamma, float offs)
-{
+float moncurve_r( float color, float gamma, float offs) {
+
     // Reverse monitor curve
     color = clamp(color, 0.0, 1.0);
     float yb = pow( offs * gamma / ( ( gamma - 1.0) * ( 1.0 + offs)), gamma);
@@ -454,23 +453,23 @@ float moncurve_r( float color, float gamma, float offs)
 
     color = ( color > yb) ? ( 1.0 + offs) * pow( color, 1.0 / gamma) - offs : color * rs;
     return color;
-}
+ }
 
 
-vec3 moncurve_r_f3( vec3 color, float gamma, float offs)
-{
+vec3 moncurve_r_f3( vec3 color, float gamma, float offs) {
+
     color.r = moncurve_r( color.r, gamma, offs);
     color.g = moncurve_r( color.g, gamma, offs);
     color.b = moncurve_r( color.b, gamma, offs);
     return color.rgb;
-}
+ }
 
 
 //-------------------------- Luma Functions ----------------------------
 
 
 //  Performs better in gamma encoded space
-float contrast_sigmoid(float color, float cont, float pivot){
+float contrast_sigmoid(float color, float cont, float pivot) {
 
     cont = pow(cont + 1., 3.);
 
@@ -480,11 +479,11 @@ float contrast_sigmoid(float color, float cont, float pivot){
     color       =(1. / (1. + exp(cont * (pivot - color))) - knee) / (shldr - knee);
 
     return color;
-}
+ }
 
 
 //  Performs better in gamma encoded space
-float contrast_sigmoid_inv(float color, float cont, float pivot){
+float contrast_sigmoid_inv(float color, float cont, float pivot) {
 
     cont = pow(cont - 1., 3.);
 
@@ -494,36 +493,36 @@ float contrast_sigmoid_inv(float color, float cont, float pivot){
     color = pivot - log(1. / (color * (shldr - knee) + knee) - 1.) / cont;
 
     return color;
-}
+ }
 
 
-float rolled_gain(float color, float gain){
+float rolled_gain(float color, float gain) {
 
     float gx   = abs(gain) + 0.001;
     float anch = (gain > 0.0) ? 0.5 / (gx / 2.0) : 0.5 / gx;
     color      = (gain > 0.0) ? color * ((color - anch) / (1 - anch)) : color * ((1 - anch) / (color - anch)) * (1 - gain);
 
     return color;
-}
+ }
 
 
-vec3 rolled_gain_v3(vec3 color, float gain){
+vec3 rolled_gain_v3(vec3 color, float gain) {
 
     color.r = rolled_gain(color.r, gain);
     color.g = rolled_gain(color.g, gain);
     color.b = rolled_gain(color.b, gain);
 
     return color.rgb;
-}
+ }
 
 
-float SatMask(float color_r, float color_g, float color_b)
-{
+float SatMask(float color_r, float color_g, float color_b) {
+
     float max_rgb = max(color_r, max(color_g, color_b));
     float min_rgb = min(color_r, min(color_g, color_b));
     float msk = clamp((max_rgb - min_rgb) / (max_rgb + min_rgb), 0.0, 1.0);
     return msk;
-}
+ }
 
 
 
@@ -540,8 +539,7 @@ vec3 GamutCompression (vec3 rgb, float grey) {
     vec3  WPD  = wp_temperature < 7000 ? vec3(1,temp,(temp-1)/2+1) : vec3((temp-1)/2+1,temp,1);
           sat  = max(0.0,g_sat+1)*(sat*beam) * WPD;
 
-    mat2x3 LimThres = \
-                           mat2x3( 0.100000,0.100000,0.100000,
+    mat2x3 LimThres =      mat2x3( 0.100000,0.100000,0.100000,
                                    0.125000,0.125000,0.125000);
     if (g_space_out < 1.0) {
 
@@ -599,7 +597,7 @@ vec3 GamutCompression (vec3 rgb, float grey) {
 
     // Inverse RGB Ratios to RGB
     // and Mask with "luma"
-    return mix(rgb, ac-cd.xyz*abs(ac), pow(grey,1/2.4));
+    return mix(rgb, ac-cd.xyz*abs(ac), pow(grey,1/g_CRT_l));
     }
 
 
@@ -608,7 +606,7 @@ vec3 GamutCompression (vec3 rgb, float grey) {
 
 
 
-// Matrices in OpenGL column-major
+// Matrices in column-major
 
 
 //----------------------- Y'UV color model -----------------------
@@ -728,7 +726,7 @@ const mat3 SMPTE470BG_ph =
 // NTSC-J P22
 // Mix between averaging KV-20M20, KDS VS19, Dell D93, 4-TR-B09v1_0.pdf and Phosphor Handbook 'P22'
 // ILLUMINANT: D93->[0.281000,0.311000] (CCT of 8945.436K)
-// ILLUMINANT: D97->[0.285000,0.285000] (CCT of 9696K) for Nanao MS-2930s series (in practice prolly more like ~9177.98K)
+// ILLUMINANT: D97->[0.285000,0.285000] (CCT of 9696K) for Nanao MS-2930s series (around 10000.0K for wp_adjust() daylight fit)
 const mat3 P22_J_ph =
     mat3(
      0.625, 0.280, 0.152,
@@ -754,8 +752,8 @@ const mat3 P22_90s_ph =
      0.3329, 0.6310, 0.0642,
      0.0010, 0.0556, 0.7886);
 
-// CRT for Projection Tubes for NTSC-U late 90s, early 00s
-const mat3 CRT_95s_ph =
+// RPTV (Rear Projection TV) for NTSC-U late 90s, early 00s
+const mat3 RPTV_95s_ph =
     mat3(
      0.640, 0.341, 0.150,
      0.335, 0.586, 0.070,
@@ -855,16 +853,16 @@ void main()
     screen *= transpose(color);
 
 
-// CRT Phosphor Gamut (0.0 is noop)
+// CRT Phosphor Gamut (0.0 is sRGB/noop)
     mat3 m_in;
 
     if (g_crtgamut == -3.0) { m_in = SMPTE170M_ph;         } else
-    if (g_crtgamut == -2.0) { m_in = CRT_95s_ph;           } else
+    if (g_crtgamut == -2.0) { m_in = RPTV_95s_ph;          } else
     if (g_crtgamut == -1.0) { m_in = P22_80s_ph;           } else
-    if (g_crtgamut ==  0.0) { m_in = sRGB_prims;           } else
     if (g_crtgamut ==  1.0) { m_in = P22_90s_ph;           } else
     if (g_crtgamut ==  2.0) { m_in = P22_J_ph;             } else
-    if (g_crtgamut ==  3.0) { m_in = SMPTE470BG_ph;        }
+    if (g_crtgamut ==  3.0) { m_in = SMPTE470BG_ph;        } else
+                            { m_in = sRGB_prims;           }
 
 
 // Display color space
@@ -955,15 +953,13 @@ void main()
     src_h *= (g_vignette == 1.0) ? vig : 1.0;
 
 
-// Dark to Dim adaptation OOTF; only for 709 and 2020
-    vec3 src_D = g_Dark_to_Dim > 0.0 ? pow(src_h,vec3(0.9811)) : src_h;
+// Dark to Dim adaptation OOTF; for 709, P3-D65 and 2020
+    float DtD = g_Dark_to_Dim > 0.0 ? 1/0.9811 : 1.0;
 
 // EOTF^-1 - Inverted Electro-Optical Transfer Function
-    vec3 TRC = (g_space_out == 3.0) ?     clamp(pow(src_h, vec3(1./(563./256.))),    0., 1.) : \
-               (g_space_out == 2.0) ? moncurve_r_f3(src_D,          2.20 + 0.022222, 0.0993) : \
-               (g_space_out == 1.0) ?     clamp(pow(src_h, vec3(1./(2.20 + 0.40))),  0., 1.) : \
-               (g_space_out == 0.0) ? moncurve_r_f3(src_h,          2.20 + 0.20,     0.0550) : \
-                                      clamp(pow(    src_D, vec3(1./(2.20 + 0.20))),  0., 1.) ;
+    vec3 TRC  = (g_space_out == 3.0) ?     clamp(pow(src_h, vec3(1./ (563./256.))),        0., 1.) : \
+                (g_space_out == 0.0) ? moncurve_r_f3(src_h,           2.20 + 0.20,         0.0550) : \
+                                       clamp(pow(    src_h, vec3(1./((2.20 + 0.20)*DtD))), 0., 1.) ;
 
 
 // External Flare for Surround Illuminant 2700K (Soft White) at F0 (Lambertian reflectance); defines offset thus also black lift
