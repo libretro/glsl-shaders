@@ -954,13 +954,12 @@ void main()
 
 
 // Dark to Dim adaptation OOTF; for 709, P3-D65 and 2020
-    vec3 src_D = g_Dark_to_Dim > 0.0 ? pow(src_h,vec3(0.9811)) : src_h;
+    float DtD = g_Dark_to_Dim > 0.0 ? 1/0.9811 : 1.0;
 
 // EOTF^-1 - Inverted Electro-Optical Transfer Function
-    vec3 TRC = (g_space_out == 3.0) ?     clamp(pow(src_h, vec3(1./(563./256.))),    0., 1.) : \
-               (g_space_out == 2.0) ? moncurve_r_f3(src_D,          2.20 + 0.022222, 0.0993) : \
-               (g_space_out == 0.0) ? moncurve_r_f3(src_h,          2.20 + 0.20,     0.0550) : \
-                                      clamp(pow(    src_D, vec3(1./(2.20 + 0.20))),  0., 1.) ;
+    vec3 TRC  = (g_space_out == 3.0) ?     clamp(pow(src_h, vec3(1./ (563./256.))),        0., 1.) : \
+                (g_space_out == 0.0) ? moncurve_r_f3(src_h,           2.20 + 0.20,         0.0550) : \
+                                       clamp(pow(    src_h, vec3(1./((2.20 + 0.20)*DtD))), 0., 1.) ;
 
 
 // External Flare for Surround Illuminant 2700K (Soft White) at F0 (Lambertian reflectance); defines offset thus also black lift
