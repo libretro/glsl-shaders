@@ -28,6 +28,7 @@
 #pragma parameter MASK_DARK "Mask Effect Amount" 0.3 0.0 1.0 0.05
 #pragma parameter MASK_FADE "Mask/Scanline Fade" 0.7 0.0 1.0 0.05
 #pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
+#pragma parameter FLICK "Flicker" 10.0 0.0 50.0 1.0
 
 #define pi 3.14159
 
@@ -40,7 +41,10 @@ uniform COMPAT_PRECISION float HIGHSCANAMOUNT2;
 uniform COMPAT_PRECISION float MASK_DARK;
 uniform COMPAT_PRECISION float MASK_FADE;
 uniform COMPAT_PRECISION float sat;
+uniform COMPAT_PRECISION float FLICK;
+
 #else
+
 #define blurx 0.45
 #define blury -0.15
 #define HIGHSCANAMOUNT1  0.30
@@ -48,6 +52,8 @@ uniform COMPAT_PRECISION float sat;
 #define MASK_DARK 0.3
 #define MASK_FADE 0.8
 #define sat 1.0
+#define FLICK 0.0
+
 #endif
 
 #if defined(VERTEX)
@@ -143,6 +149,8 @@ COMPAT_VARYING float omega;
 #define blur_y blury/(TextureSize.y*2.0)
 #define blur_x blurx/(TextureSize.x*2.0)
 #define iTimer (float(FrameCount)*2.0)
+#define flicker FLICK/1000.0
+
 
 void main()
 {
@@ -150,9 +158,9 @@ void main()
 	 float cent = floor(TEX0.y*TextureSize.y)+0.5;
      float ycoord = cent*SourceSize.w; 
      pos = vec2(TEX0.x,ycoord);
-	 vec3 sample1 = sin(iTimer)*0.006 + COMPAT_TEXTURE(Source,vec2(pos.x + blur_x, pos.y - blur_y)).rgb;
+	 vec3 sample1 = sin(iTimer)*flicker + COMPAT_TEXTURE(Source,vec2(pos.x + blur_x, pos.y - blur_y)).rgb;
 	 vec3 sample2 =                0.5*COMPAT_TEXTURE(Source,pos).rgb;
-	 vec3 sample3 = sin(iTimer)*0.006 + COMPAT_TEXTURE(Source,vec2(pos.x - blur_x, pos.y + blur_y)).rgb;
+	 vec3 sample3 = sin(iTimer)*flicker + COMPAT_TEXTURE(Source,vec2(pos.x - blur_x, pos.y + blur_y)).rgb;
 	
 	 vec3 colour = vec3 (sample1.r*0.5  + sample2.r, 
 		                 sample1.g*0.25 + sample2.g + sample3.g*0.25, 
@@ -173,8 +181,9 @@ void main()
 	 float whichmask = fract(gl_FragCoord.x*0.4999);
 	 float mask = 1.0 + float(whichmask < 0.5) * -MASK_DARK;
 
-
+	 colour *= colour;
 	colour.rgb *= mix(mask*scanLine, scanLine, dot(colour.rgb,vec3(maskFade)));
+	colour = sqrt(colour);
 	FragColor.rgb = colour.rgb;
 } 
 #endif
