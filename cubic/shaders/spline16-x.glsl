@@ -124,7 +124,7 @@ float weight(float x)
    {
       return
          (
-          (( -1.0 / 3.0 * (x - 1) + 4.0 / 5.0 ) * (x - 1) - 7.0 / 15.0 ) * (x - 1)
+          (( -1.0 / 3.0 * (x - 1.0) + 4.0 / 5.0 ) * (x - 1.0) - 7.0 / 15.0 ) * (x - 1.0)
          );
    }
    else
@@ -155,28 +155,28 @@ void main()
 
     float ypos = xystart.y  + ps.y * 2.0;
 
-    vec3 C0 = COMPAT_TEXTURE(Source, vec2(xystart.x             , ypos)).rgb;
-    vec3 C1 = COMPAT_TEXTURE(Source, vec2(xystart.x + ps.x      , ypos)).rgb;
-    vec3 C2 = COMPAT_TEXTURE(Source, vec2(xystart.x + ps.x * 2.0, ypos)).rgb;
-    vec3 C3 = COMPAT_TEXTURE(Source, vec2(xystart.x + ps.x * 3.0, ypos)).rgb;
+    vec4 C0 = COMPAT_TEXTURE(Source, vec2(xystart.x             , ypos));
+    vec4 C1 = COMPAT_TEXTURE(Source, vec2(xystart.x + ps.x      , ypos));
+    vec4 C2 = COMPAT_TEXTURE(Source, vec2(xystart.x + ps.x * 2.0, ypos));
+    vec4 C3 = COMPAT_TEXTURE(Source, vec2(xystart.x + ps.x * 3.0, ypos));
 
     vec4 w = weight4(1.0 - fp.x);
 
-    float sum   = dot(  w, vec4(1));
+    float sum   = dot(  w, vec4(1.0));
     w   /= sum;
 
-    vec3 color = mat4x3( C0, C1, C2, C3 ) * w;
+    vec4 color = mat4( C0, C1, C2, C3 ) * w;
 
     // Anti-ringing
     if (S16_ANTI_RINGING == 1.0)
     {
-        vec3 aux = color;
-        vec3 min_sample = min(min(C0, C1), min(C2, C3));
-        vec3 max_sample = max(max(C0, C1), max(C2, C3));
-        color = clamp(color, min_sample, max_sample);
-        color = mix(aux, color, step(0.0, (C0-C1)*(C2-C3)));
+        vec3 aux = color.rgb;
+        vec3 min_sample = min(min(C0.rgb, C1.rgb), min(C2.rgb, C3.rgb));
+        vec3 max_sample = max(max(C0.rgb, C1.rgb), max(C2.rgb, C3.rgb));
+        color.rgb = clamp(color.rgb, min_sample, max_sample);
+        color.rgb = mix(aux, color.rgb, step(0.0, (C0.rgb-C1.rgb)*(C2.rgb-C3.rgb)));
     }
 
-    FragColor = vec4(color, 1.0);
+    FragColor = color;
 }
 #endif

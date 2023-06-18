@@ -177,7 +177,7 @@ mat4 contrastMatrix(float contr)
 
 vec3 toGrayscale(vec3 color)
 {
-  float average = (color.r + color.g + color.b) / 3.0;
+  float average = dot(vec3(0.22,0.71,0.07),color);
   return vec3(average);
 }
 
