@@ -245,7 +245,6 @@ void main()
 
 	res *= 1.0-(f-0.5)*(f-0.5)*45.0*(Scanline*(1.0-lum));
 	res = clamp(res,0.0,1.0);
-	res *= vec3(1.0,0.93,1.15);
 	float l = dot(res,vec3(0.2,0.7,0.1));
 	res = mix(vec3(l), res, sat);
 	res += booster(coords);
