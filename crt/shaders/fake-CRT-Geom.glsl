@@ -17,7 +17,6 @@
 #define pi 3.141592
 #define in_gamma  vec4(crt_gamma, crt_gamma, crt_gamma, 1.0)
 #define out_gamma  vec4(1.0 / monitor_gamma, 1.0 / monitor_gamma, 1.0 / monitor_gamma, 1.0)
-#define FCC vec4(1.1,0.93,1.18,1.0)
 #define scale vec4(TextureSize/InputSize,InputSize/TextureSize)
 
 #if defined(VERTEX)
@@ -196,7 +195,7 @@ void main()
 
 		vec2 tc = vec2(pos.x, coord.y);
 
-	vec4 res = COMPAT_TEXTURE(Texture, tc)*FCC;
+	vec4 res = COMPAT_TEXTURE(Texture, tc);
 	res = scanline(pos,res);
 	res = pow(res,in_gamma);
 
