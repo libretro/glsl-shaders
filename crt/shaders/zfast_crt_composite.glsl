@@ -23,7 +23,7 @@
 // Parameter lines go here:
 #pragma parameter blurx "Convergence X-Axis" 0.45 -2.0 2.0 0.05
 #pragma parameter blury "Convergence Y-Axis" -0.15 -2.0 2.0 0.05
-#pragma parameter HIGHSCANAMOUNT1 "Scanline Amount (Dark)" 0.3 0.0 1.0 0.05
+#pragma parameter HIGHSCANAMOUNT1 "Scanline Amount (Dark)" 0.4 0.0 1.0 0.05
 #pragma parameter HIGHSCANAMOUNT2 "Scanline Amount (Bright)" 0.3 0.0 1.0 0.05
 #pragma parameter MASK_DARK "Mask Effect Amount" 0.3 0.0 1.0 0.05
 #pragma parameter MASK_FADE "Mask/Scanline Fade" 0.7 0.0 1.0 0.05
@@ -142,6 +142,7 @@ COMPAT_VARYING float omega;
 
 #define blur_y blury/(TextureSize.y*2.0)
 #define blur_x blurx/(TextureSize.x*2.0)
+#define iTimer (float(FrameCount)*2.0)
 
 void main()
 {
@@ -149,9 +150,9 @@ void main()
 	 float cent = floor(TEX0.y*TextureSize.y)+0.5;
      float ycoord = cent*SourceSize.w; 
      pos = vec2(TEX0.x,ycoord);
-	 vec3 sample1 = COMPAT_TEXTURE(Source,vec2(pos.x + blur_x, pos.y - blur_y)).rgb;
-	 vec3 sample2 = 0.5*COMPAT_TEXTURE(Source,pos).rgb;
-	 vec3 sample3 = COMPAT_TEXTURE(Source,vec2(pos.x - blur_x, pos.y + blur_y)).rgb;
+	 vec3 sample1 = sin(iTimer)*0.006 + COMPAT_TEXTURE(Source,vec2(pos.x + blur_x, pos.y - blur_y)).rgb;
+	 vec3 sample2 =                0.5*COMPAT_TEXTURE(Source,pos).rgb;
+	 vec3 sample3 = sin(iTimer)*0.006 + COMPAT_TEXTURE(Source,vec2(pos.x - blur_x, pos.y + blur_y)).rgb;
 	
 	 vec3 colour = vec3 (sample1.r*0.5  + sample2.r, 
 		                 sample1.g*0.25 + sample2.g + sample3.g*0.25, 
