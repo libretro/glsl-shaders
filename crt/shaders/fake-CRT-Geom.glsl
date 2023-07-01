@@ -3,7 +3,7 @@
 
 ///////////////////////  Runtime Parameters  ///////////////////////
 
-#pragma parameter SCANLINE_SINE_COMP_B "Scanline Intensity" 0.60 0.0 1.0 0.05
+#pragma parameter SCANLINE_SINE_COMP_B "Scanline Intensity" 0.35 0.0 1.0 0.05
 #pragma parameter SIZE "Scanline size" 1.0 0.5 2.0 0.5
 #pragma parameter warpX "warpX" 0.03 0.0 0.125 0.01
 #pragma parameter warpY "warpY" 0.05 0.0 0.125 0.01
@@ -135,12 +135,13 @@ uniform COMPAT_PRECISION float GLOW_LINE;
 #define GLOW_LINE 0.00
 #endif
 
-vec4 scanline(vec2 coord, vec4 frame)
+vec4 scanline(vec2 coord, vec4 frame, float l)
 {
-	vec3 res = frame.xyz;
-	vec3 scanline = res * (SCANLINE_SINE_COMP_B*sin(fract(coord.y*SIZE*TextureSize.y)*pi)+1.0- SCANLINE_SINE_COMP_B);
+    float SCANLINE_SINE_COMP = mix(SCANLINE_SINE_COMP_B*1.2,SCANLINE_SINE_COMP_B,l);
+    vec3 res = frame.xyz;
+    vec3 scanline = res * (SCANLINE_SINE_COMP*sin(fract(coord.y*SIZE*TextureSize.y)*pi)+1.0- SCANLINE_SINE_COMP);
 
-	return vec4(scanline, 1.0);
+    return vec4(scanline, 1.0);
 }
 
 
@@ -166,41 +167,44 @@ float corner(vec2 coord)
 
 
 // mask calculation
-	// cgwg mask.
-	vec4 Mask(vec2 pos)
-	{
-	  vec3 mask = vec3(1.0);
-	
+    // cgwg mask.
+    vec4 Mask(vec2 pos)
+    {
+      vec3 mask = vec3(1.0);
+    
       float m = fract(pos.x*0.5);
       if (m<0.5) return vec4(cgwg,cgwg,cgwg,1.0);
       else return vec4(mask,1.0);
  
-	}
+    }
 
  float randomPass(vec2 coords)
  {
-	return fract(smoothstep(-120.0, 0.0, coords.y - (TextureSize.y + 120.0) * fract(iTimer * 0.00015)));
+    return fract(smoothstep(-120.0, 0.0, coords.y - (TextureSize.y + 120.0) * fract(iTimer * 0.00015)));
 }
 
 
 void main()
 {
 
-	vec2 pos = Warp(TEX0.xy*(scale.xy))*scale.zw;
+    vec2 pos = Warp(TEX0.xy*(scale.xy))*scale.zw;
 
 //borrowed from CRT-Pi
-		vec2 OGL2Pos = pos * TextureSize;
-		vec2 pC4 = floor(OGL2Pos) + 0.5;
-		vec2 coord = pC4 / TextureSize;
+        vec2 OGL2Pos = pos * TextureSize;
+        vec2 pC4 = floor(OGL2Pos) + 0.5;
+        vec2 coord = pC4 / TextureSize;
 
-		vec2 tc = vec2(pos.x, coord.y);
+        vec2 tc = vec2(pos.x, coord.y);
 
-	vec4 res = COMPAT_TEXTURE(Texture, tc);
-	res = scanline(pos,res);
-	res = pow(res,in_gamma);
+    vec4 res = COMPAT_TEXTURE(Texture, tc);
+    float l = max(max(res.r,res.g),res.b);
+    res = scanline(pos,res,l);
+    res = scanline(1.0-pos,res,l);
+    res = scanline(1.0+pos,res,l);
+    res = pow(res,in_gamma);
 
-	// apply the mask; looks bad with vert scanlines so make them mutually exclusive
-	res *= Mask(gl_FragCoord.xy * 1.0001);
+    // apply the mask; looks bad with vert scanlines so make them mutually exclusive
+    res *= Mask(gl_FragCoord.xy * 1.0001);
 
 #if defined GL_ES
     // hacky clamp fix for GLES
@@ -210,7 +214,7 @@ void main()
     else
         res = vec4(0.,0.,0.,0.);
 #endif
-	vec4 color = res;
+    vec4 color = res;
 
     // re-apply the gamma curve for the mask path
     color = pow(color, out_gamma);
