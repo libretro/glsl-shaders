@@ -3,7 +3,7 @@
 
 ///////////////////////  Runtime Parameters  ///////////////////////
 
-#pragma parameter SCANLINE_SINE_COMP_B "Scanline Intensity" 0.35 0.0 1.0 0.05
+#pragma parameter SCANLINE_SINE_COMP_B "Scanline Intensity" 0.3 0.0 1.0 0.05
 #pragma parameter SIZE "Scanline size" 1.0 0.5 2.0 0.5
 #pragma parameter warpX "warpX" 0.03 0.0 0.125 0.01
 #pragma parameter warpY "warpY" 0.05 0.0 0.125 0.01
@@ -11,7 +11,7 @@
 #pragma parameter cgwg "CGWG mask brightness" 0.7 0.0 1.0 0.1
 #pragma parameter crt_gamma "CRT Gamma" 2.4 1.0 4.0 0.05
 #pragma parameter monitor_gamma "Monitor Gamma" 2.25 1.0 4.0 0.05
-#pragma parameter boost "Bright boost " 0.00 0.00 1.00 0.02
+#pragma parameter boost "Bright boost " 0.20 0.00 1.00 0.02
 #pragma parameter GLOW_LINE "Glowing line" 0.006 0.00 0.20 0.001
 
 #define pi 3.141592
@@ -137,7 +137,7 @@ uniform COMPAT_PRECISION float GLOW_LINE;
 
 vec4 scanline(vec2 coord, vec4 frame, float l)
 {
-    float SCANLINE_SINE_COMP = mix(SCANLINE_SINE_COMP_B*1.2,SCANLINE_SINE_COMP_B,l);
+    float SCANLINE_SINE_COMP = mix(SCANLINE_SINE_COMP_B*1.5,SCANLINE_SINE_COMP_B,l);
     vec3 res = frame.xyz;
     vec3 scanline = res * (SCANLINE_SINE_COMP*sin(fract(coord.y*SIZE*TextureSize.y)*pi)+1.0- SCANLINE_SINE_COMP);
 
