@@ -1,0 +1,8 @@
+shaders = "2"
+feedback_pass = "0"
+shader0 = "shaders/ntsc-cgwg-tm/ntsc-cgwg-p1.glsl"
+scale_type_x0 = "source"
+scale_x0 = "1.000000"
+scale_type_y0 = "source"
+scale_y0 = "1.000000"
+shader1 = "shaders/ntsc-cgwg-tm/ntsc-cgwg-p2.glsl"
