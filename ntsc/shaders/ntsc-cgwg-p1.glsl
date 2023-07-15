@@ -121,7 +121,8 @@ void main()
         yuv = rgb2yuv * rgb.rgb;
 
         float dx = PI/3.0;
-        xyp.x = xyp.x * InputSize.x/256.0;
+        //commented so it works globally
+        //xyp.x = xyp.x * InputSize.x/256.0;
         float c0 = yuv.x + yuv.y * sin(xyp.x+xyp.y) + yuv.z*cos(xyp.x+xyp.y);
         float c1 = yuv.x + yuv.y * sin(xyp.x+xyp.y+dx) + yuv.z * cos(xyp.x+xyp.y+dx);
         rgb = texture2D(Source,xy + vec2(1.0/TextureSize.x * InputSize.x / 512.0, 0.0));
