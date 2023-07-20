@@ -35,6 +35,8 @@
 #pragma parameter vignette "  Vignette On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter vpower "  Vignette Power" 0.15 0.0 1.0 0.01
 #pragma parameter vstr "  Vignette strength" 45.0 0.0 50.0 1.0
+#pragma parameter sawtooth "  Sawtooth Effect" 1.0 0.0 1.0 1.0
+#pragma parameter bleed "  Color Bleed Effect" 1.0 0.0 1.0 1.0
 #pragma parameter alloff "  Switch off shader" 0.0 0.0 1.0 1.0
 #define pi 6.28318
 
@@ -155,6 +157,8 @@ uniform COMPAT_PRECISION float vpower;
 uniform COMPAT_PRECISION float vstr;
 uniform COMPAT_PRECISION float alloff;
 uniform COMPAT_PRECISION float GLOW_LINE;
+uniform COMPAT_PRECISION float sawtooth;
+uniform COMPAT_PRECISION float bleed;
 
 #else
 #define blurx  0.0    
@@ -193,6 +197,8 @@ uniform COMPAT_PRECISION float GLOW_LINE;
 #define vstr 40.0
 #define alloff 0.0
 #define GLOW_LINE 0.0
+#define sawtooth 0.0
+#define bleed 0.0
 #endif
 
 
@@ -482,8 +488,52 @@ const mat3 XYZ_to_D50 = mat3 (
     return fract(smoothstep(-120.0, 0.0, coords.y - (TextureSize.y + 120.0) * fract(Timer * 0.00015)));
 }
 
+float RGB2Y(vec3 _rgb) {
+    return dot(_rgb, vec3(0.29900, 0.58700, 0.11400));
+}
+
+float RGB2U(vec3 _rgb) {
+   return dot(_rgb, vec3(-0.14713, -0.28886, 0.43600));
+}
+
+float RGB2V(vec3 _rgb) {
+   return dot(_rgb, vec3(0.61500, -0.51499, -0.10001));
+}
+
+
+
+float YUV2R(vec3 _yuv) {
+   return dot(_yuv, vec3(1, 0.00000, 1.13983));
+}
+
+float YUV2G(vec3 _yuv) {
+   return dot(_yuv, vec3(1.0, -0.39465, -0.58060));
+}
+
+float YUV2B(vec3 _yuv) {
+    return dot(_yuv, vec3(1.0, 2.03211, 0.00000));
+}
+
+vec3 YUV2RGB(vec3 _yuv) {
+    vec3 _rgb;
+    _rgb.r = YUV2R(_yuv);
+    _rgb.g = YUV2G(_yuv);
+    _rgb.b = YUV2B(_yuv);
+
+   return _rgb;
+}
+
 void main()
 {
+
+
+ float a_kernel[5];
+    a_kernel[0] = 2.0; 
+    a_kernel[1] = 4.0; 
+    a_kernel[2] = 1.0; 
+    a_kernel[3] = 4.0; 
+    a_kernel[4] = 2.0; 
+    
 	vec2 pos = Warp(TEX0.xy*(TextureSize.xy/InputSize.xy))*(InputSize.xy/TextureSize.xy);
     vec2 tex_size = SourceSize.xy;	
     
@@ -507,7 +557,36 @@ void main()
 	vec3 color = vec3((sample1.r+sample2.r)*0.5, 
                       (sample1.g + sample3.g)*0.25 + sample2.g*0.5, 
                       (sample2.b+ sample3.b)*0.5);
-   
+   //sawtooth effect
+  
+if (sawtooth == 1.0){
+    if( mod( floor(pC4.y*SourceSize.y), 2.0 ) == 0.0 ) {
+        color += COMPAT_TEXTURE( Source, pC4 + vec2(SourceSize.z*0.2, 0.0) ).rgb;
+    } else {
+        color += COMPAT_TEXTURE( Source, pC4 - vec2(SourceSize.z*0.2, 0.0) ).rgb;
+    }
+    color /= 2.0;}
+//end of sawtooth
+
+//color bleeding
+if (bleed == 1.0){
+    vec3 yuv = vec3(0.0);
+    float px = 0.0;
+    for( int x = -2; x <= 2; x++ ) {
+        px = float(x) * SourceSize.z - SourceSize.w * 0.5;
+        yuv.g += RGB2U( texture2D( Source, pC4 + vec2(px, 0.0)).rgb ) * a_kernel[x + 2];
+        yuv.b += RGB2V( texture2D( Source, pC4 + vec2(px, 0.0)).rgb ) * a_kernel[x + 2];
+    }
+    
+    yuv.r = RGB2Y(color.rgb);
+    yuv.g /= 10.0;
+    yuv.b /= 10.0;
+
+
+    color.rgb = (color.rgb)*0.5 + (YUV2RGB(yuv) * 1.0)*0.5;
+
+//end of color bleeding
+} 
     //COLOR TEMPERATURE FROM GUEST.R-DR.VENOM
     if (WP !=0.0)
     {
