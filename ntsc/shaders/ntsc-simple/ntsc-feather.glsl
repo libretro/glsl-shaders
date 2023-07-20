@@ -149,12 +149,12 @@ void main() {
     y = cent*SourceSize.w;
     vec2 coords = vec2(pos.x,mix(pos.y,y,0.3));
     vec4 res;
-    
+    float factor = SourceSize.y/InputSize.y;
 //sawtooth effect
-    if( mod( floor(coords.y*OutputSize.y*4.0), 2.0 ) == 0.0 ) {
-        res = texture2D( Source, coords + vec2(OutSize.z*0.1, 0.0) );
+    if( mod( floor(coords.y*OutputSize.y*factor), 2.0 ) == 0.0 ) {
+        res = texture2D( Source, coords + vec2(OutSize.z*0.5*factor, 0.0) );
     } else {
-        res = texture2D( Source, coords - vec2(OutSize.z*0.1, 0.0) );
+        res = texture2D( Source, coords - vec2(OutSize.z*0.5*factor, 0.0) );
     }
 //end of sawtooth
     
@@ -162,7 +162,7 @@ void main() {
     vec2 fragCoord = coords*OutputSize.xy;
     float counter = 1.0;
     for (int i = -2; i <= 2; i++) {
-            vec2 uv = vec2(fragCoord.x + float(i)*0.11, fragCoord.y ) / OutputSize.xy;
+            vec2 uv = vec2(fragCoord.x + float(i)*0.33, fragCoord.y ) / OutputSize.xy;
             res.rgb += texture2D(Source, uv).xyz;
             counter += 1.0;
     }
@@ -176,8 +176,8 @@ void main() {
     float px = 0.0;
     for( int x = -1; x <= 1; x++ ) {
         px = float(x) * SourceSize.z - SourceSize.w * 0.5;
-        yuv.g += RGB2U( texture2D( Source, coords + vec2(px, 0.0)).rgb ) * a_kernel[x + 2];
-        yuv.b += RGB2V( texture2D( Source, coords + vec2(px, 0.0)).rgb ) * a_kernel[x + 2];
+        yuv.g += RGB2U( texture2D( Source, coords + vec2(px*factor, 0.0)).rgb ) * a_kernel[x + 2];
+        yuv.b += RGB2V( texture2D( Source, coords + vec2(px*factor, 0.0)).rgb ) * a_kernel[x + 2];
     }
     
     yuv.r = RGB2Y(res.rgb);
