@@ -7,6 +7,9 @@
    Software Foundation; either version 2 of the License, or (at your option)
    any later version.
 */
+
+#define iTime float(FrameCount)
+#define pi 3.141592
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -89,104 +92,45 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float bleeding;
+uniform COMPAT_PRECISION float GLITCH;
 
 #else
-#define bleeding 0.5
+#define GLITCH 0.1
 #endif
 
-#define PI 3.14159265
-#define _Framecount float (FrameCount)
 
+const mat3 rgb2yuv = mat3(0.299,-0.14713, 0.615,
+                           0.587,-0.28886,-0.51499,
+                           0.114, 0.436  ,-0.10001);
 
-float RGB2Y(vec3 _rgb) {
-    return dot(_rgb, vec3(0.29900, 0.58700, 0.11400));
-}
+const mat3 yuv2rgb = mat3(1.0, 1.0, 1.0,
+                 0.0,-0.39465,2.03211,
+                 1.13983,-0.58060,0.0);
 
-float RGB2U(vec3 _rgb) {
-   return dot(_rgb, vec3(-0.14713, -0.28886, 0.43600));
-}
+void main()
+{
+vec2 pos = vTexCoord;
 
-float RGB2V(vec3 _rgb) {
-   return dot(_rgb, vec3(0.61500, -0.51499, -0.10001));
-}
+vec3 res = texture2D(Source,pos).rgb;
 
-float YUV2R(vec3 _yuv) {
-   return dot(_yuv, vec3(1, 0.00000, 1.13983));
-}
+vec3 leftp = texture2D(Source,pos-vec2(SourceSize.z,0.0)).rgb;
+vec3 rightp = texture2D(Source,pos+vec2(SourceSize.z,0.0)).rgb;
+vec3 dither = (leftp+rightp)/2.0;
 
-float YUV2G(vec3 _yuv) {
-   return dot(_yuv, vec3(1.0, -0.39465, -0.58060));
-}
+res = rgb2yuv*res; dither =rgb2yuv*dither;
+res =dither*0.49+res*0.51; //just keep a tiny evidence of dither
 
-float YUV2B(vec3 _yuv) {
-    return dot(_yuv, vec3(1.0, 2.03211, 0.00000));
-}
+vec3 check = texture2D(Source, pos + vec2(SourceSize.z,0.0)).rgb; 
+check = rgb2yuv*check;
 
-vec3 YUV2RGB(vec3 _yuv) {
-    vec3 _rgb;
-    _rgb.r = YUV2R(_yuv);
-    _rgb.g = YUV2G(_yuv);
-    _rgb.b = YUV2B(_yuv);
+float lum_diff= abs(check.r-res.r); 
+float chr_diff= abs(check.g-res.g); 
 
-   return _rgb;
-}
+//flicker on luma/chroma difference
+res +=lum_diff*abs(sin(iTime))*0.1;
+res +=chr_diff*abs(sin(iTime))*0.1;
 
-
-
-
-void main() {
-    float a_kernel[5];
-    a_kernel[0] = 2.0; 
-    a_kernel[1] = 4.0; 
-    a_kernel[2] = 1.0; 
-    a_kernel[3] = 4.0; 
-    a_kernel[4] = 2.0; 
-    
-    vec2 pos = vTexCoord;
-    float y = pos.y*SourceSize.y;
-    float cent=floor(y)+0.5;
-    y = cent*SourceSize.w;
-    vec2 coords = vec2(pos.x,mix(pos.y,y,0.3));
-    vec4 res;
-    float factor = InputSize.y/SourceSize.y;
-//sawtooth effect
-    if( mod( floor(coords.y*OutputSize.y/factor), 2.0 ) == 0.0 ) {
-        res = texture2D( Source, coords + vec2(OutSize.z*0.5*factor, 0.0) );
-    } else {
-        res = texture2D( Source, coords - vec2(OutSize.z*0.5*factor, 0.0) );
-    }
-//end of sawtooth
-    
-// blur image 
-    vec2 fragCoord = coords*OutputSize.xy;
-    float counter = 1.0;
-    for (int i = -2; i <= 2; i++) {
-            vec2 uv = vec2(fragCoord.x + float(i)*0.5*factor, fragCoord.y ) / OutputSize.xy;
-            res.rgb += texture2D(Source, uv).xyz;
-            counter += 1.0;
-    }
-    res.rgb /= counter;
-//blur end
-
-
-    vec3 yuv = vec3(0.0);
-
-//color bleed   
-    float px = 0.0;
-    for( int x = -1; x <= 1; x++ ) {
-        px = float(x) * SourceSize.z - SourceSize.w * 0.5;
-        yuv.g += RGB2U( texture2D( Source, coords + vec2(px*factor, 0.0)).rgb ) * a_kernel[x + 2];
-        yuv.b += RGB2V( texture2D( Source, coords + vec2(px*factor, 0.0)).rgb ) * a_kernel[x + 2];
-    }
-    
-    yuv.r = RGB2Y(res.rgb);
-    yuv.g /= 10.0;
-    yuv.b /= 10.0;
-
-    res.rgb = (res.rgb * (1.0 - 0.5)) + (YUV2RGB(yuv) * 0.5);
-//color bleed end    
-    
-    FragColor = res;
+res = yuv2rgb*res;
+FragColor = vec4(res,1.0);
 }
 #endif
