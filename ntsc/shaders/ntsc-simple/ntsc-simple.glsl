@@ -226,8 +226,9 @@ void main() {
 
     if (InputSize.y <400.0)
     {
-    Scanline = mix(scanlineL,scanlineH,lum);
     lum = dot(vec3(0.2,0.7,0.1),res.rgb);  
+    Scanline = mix(scanlineL,scanlineH,lum);
+
     res *= Scanline*sin(fract(pos.y*SourceSize.y)*2.0*PI)+1.0-Scanline;
     res *= Scanline*sin(fract(1.0+pos.y*SourceSize.y)*2.0*PI)+1.0-Scanline;}
     
