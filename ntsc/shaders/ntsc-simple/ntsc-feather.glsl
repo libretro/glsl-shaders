@@ -7,13 +7,6 @@
    Software Foundation; either version 2 of the License, or (at your option)
    any later version.
 */
-#pragma parameter curv "Curvature amount" 0.2 0.0 1.0 0.01
-#pragma parameter bleeding "Color Bleeding" 1.0 0.0 2.0 0.1
-#pragma parameter blur "Blur Size" 3.0 0.0 10.0 1.0
-#pragma parameter scanlineL "Scanline Low" 0.2 0.0 0.5 0.05
-#pragma parameter scanlineH "Scanline High" 0.1 0.0 0.5 0.05
-#pragma parameter mask "Mask" 0.5 0.0 1.0 0.05
-#pragma parameter saturation "Saturation" 1.0 0.0 2.0 0.01
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -97,21 +90,9 @@ COMPAT_VARYING vec4 TEX0;
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float bleeding;
-uniform COMPAT_PRECISION float scanlineL;
-uniform COMPAT_PRECISION float scanlineH;
-uniform COMPAT_PRECISION float curv;
-uniform COMPAT_PRECISION float mask;
-uniform COMPAT_PRECISION float saturation;
-uniform COMPAT_PRECISION float blur;
 
 #else
 #define bleeding 0.5
-#define scanlineL 0.2
-#define scanlineH 0.1
-#define curv 0.3
-#define saturation 1.0
-#define mask 0.5
-#define blur 1.0
 #endif
 
 #define PI 3.14159265
@@ -151,21 +132,6 @@ vec3 YUV2RGB(vec3 _yuv) {
    return _rgb;
 }
 
-vec2 curve(vec2 coord, float bend) {
-    // put in symmetrical coords
-    coord = (coord - 0.5) * 2.0;
-
-    coord *= 1.0;   
-
-    // deform coords
-    coord.x *= 1.0 + pow((abs(coord.y) * bend), 2.0);
-    coord.y *= 1.0 + pow((abs(coord.x) * bend), 2.0);
-
-    // transform back to 0.0 - 1.0 space
-    coord  = (coord / 2.0) + 0.5;
-
-    return coord;
-}
 
 
 
@@ -177,27 +143,26 @@ void main() {
     a_kernel[3] = 4.0; 
     a_kernel[4] = 2.0; 
     
-    vec2 pos = curve(vTexCoord*SourceSize.xy/InputSize.xy,curv)*InputSize.xy/SourceSize.xy;
+    vec2 pos = vTexCoord;
     float y = pos.y*SourceSize.y;
     float cent=floor(y)+0.5;
     y = cent*SourceSize.w;
     vec2 coords = vec2(pos.x,mix(pos.y,y,0.3));
     vec4 res;
-    
+    float factor = InputSize.y/SourceSize.y;
 //sawtooth effect
-    if( mod( floor(coords.y*OutputSize.y), 2.0 ) == 0.0 ) {
-        res = texture2D( Source, coords + vec2(OutSize.z*0.5, 0.0) );
+    if( mod( floor(coords.y*OutputSize.y/factor), 2.0 ) == 0.0 ) {
+        res = texture2D( Source, coords + vec2(OutSize.z*0.5*factor, 0.0) );
     } else {
-        res = texture2D( Source, coords - vec2(OutSize.z*0.5, 0.0) );
+        res = texture2D( Source, coords - vec2(OutSize.z*0.5*factor, 0.0) );
     }
 //end of sawtooth
     
-    int blurs = int(blur);
 // blur image 
     vec2 fragCoord = coords*OutputSize.xy;
     float counter = 1.0;
-    for (int i = -blurs; i <= blurs; i++) {
-            vec2 uv = vec2(fragCoord.x + float(i)*0.33, fragCoord.y ) / OutputSize.xy;
+    for (int i = -2; i <= 2; i++) {
+            vec2 uv = vec2(fragCoord.x + float(i)*0.5*factor, fragCoord.y ) / OutputSize.xy;
             res.rgb += texture2D(Source, uv).xyz;
             counter += 1.0;
     }
@@ -209,36 +174,19 @@ void main() {
 
 //color bleed   
     float px = 0.0;
-    for( int x = -2; x <= 2; x++ ) {
+    for( int x = -1; x <= 1; x++ ) {
         px = float(x) * SourceSize.z - SourceSize.w * 0.5;
-        yuv.g += RGB2U( texture2D( Source, coords + vec2(px, 0.0)).rgb ) * a_kernel[x + 2];
-        yuv.b += RGB2V( texture2D( Source, coords + vec2(px, 0.0)).rgb ) * a_kernel[x + 2];
+        yuv.g += RGB2U( texture2D( Source, coords + vec2(px*factor, 0.0)).rgb ) * a_kernel[x + 2];
+        yuv.b += RGB2V( texture2D( Source, coords + vec2(px*factor, 0.0)).rgb ) * a_kernel[x + 2];
     }
     
     yuv.r = RGB2Y(res.rgb);
     yuv.g /= 10.0;
     yuv.b /= 10.0;
 
-    res.rgb = (res.rgb * (1.0 - bleeding*0.5)) + (YUV2RGB(yuv) * bleeding*0.5);
+    res.rgb = (res.rgb * (1.0 - 0.5)) + (YUV2RGB(yuv) * 0.5);
 //color bleed end    
-    res = res*res;
-    float lum = 0.0, Scanline;
-
-    if (InputSize.y <400.0)
-    {
-    lum = dot(vec3(0.2,0.7,0.1),res.rgb);  
-    Scanline = mix(scanlineL,scanlineH,lum);
-
-    res *= Scanline*sin(fract(pos.y*SourceSize.y)*2.0*PI)+1.0-Scanline;
-    res *= Scanline*sin(fract(1.0+pos.y*SourceSize.y)*2.0*PI)+1.0-Scanline;}
     
-    res *= mask*sin(fract(gl_FragCoord.x*0.333)*PI)+1.0-mask;
-    res = sqrt(res);
-    res.rgb = mix( vec3(dot(vec3(0.2126, 0.7152, 0.0722), res.rgb)),res.rgb, saturation);
-
-    #ifdef GL_ES
-    if (coords.x < 0.0001 || coords.y > 0.9999) res.rgb = vec3(0.0);
-    #endif
     FragColor = res;
 }
 #endif
