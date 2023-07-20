@@ -149,9 +149,9 @@ void main() {
     y = cent*SourceSize.w;
     vec2 coords = vec2(pos.x,mix(pos.y,y,0.3));
     vec4 res;
-    float factor = SourceSize.y/InputSize.y;
+    float factor = InputSize.y/SourceSize.y;
 //sawtooth effect
-    if( mod( floor(coords.y*OutputSize.y*factor), 2.0 ) == 0.0 ) {
+    if( mod( floor(coords.y*OutputSize.y/factor), 2.0 ) == 0.0 ) {
         res = texture2D( Source, coords + vec2(OutSize.z*0.5*factor, 0.0) );
     } else {
         res = texture2D( Source, coords - vec2(OutSize.z*0.5*factor, 0.0) );
@@ -162,7 +162,7 @@ void main() {
     vec2 fragCoord = coords*OutputSize.xy;
     float counter = 1.0;
     for (int i = -2; i <= 2; i++) {
-            vec2 uv = vec2(fragCoord.x + float(i)*0.33, fragCoord.y ) / OutputSize.xy;
+            vec2 uv = vec2(fragCoord.x + float(i)*0.5*factor, fragCoord.y ) / OutputSize.xy;
             res.rgb += texture2D(Source, uv).xyz;
             counter += 1.0;
     }
