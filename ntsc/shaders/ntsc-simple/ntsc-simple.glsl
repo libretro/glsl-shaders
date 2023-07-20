@@ -10,7 +10,8 @@
 #pragma parameter curv "Curvature amount" 0.2 0.0 1.0 0.01
 #pragma parameter bleeding "Color Bleeding" 1.0 0.0 2.0 0.1
 #pragma parameter blur "Blur Size" 3.0 0.0 10.0 1.0
-#pragma parameter scanline "Scanline" 0.2 0.0 1.0 0.05
+#pragma parameter scanlineL "Scanline Low" 0.2 0.0 0.5 0.05
+#pragma parameter scanlineH "Scanline High" 0.1 0.0 0.5 0.05
 #pragma parameter mask "Mask" 0.5 0.0 1.0 0.05
 #pragma parameter saturation "Saturation" 1.0 0.0 2.0 0.01
 #if defined(VERTEX)
@@ -96,7 +97,8 @@ COMPAT_VARYING vec4 TEX0;
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float bleeding;
-uniform COMPAT_PRECISION float scanline;
+uniform COMPAT_PRECISION float scanlineL;
+uniform COMPAT_PRECISION float scanlineH;
 uniform COMPAT_PRECISION float curv;
 uniform COMPAT_PRECISION float mask;
 uniform COMPAT_PRECISION float saturation;
@@ -104,7 +106,8 @@ uniform COMPAT_PRECISION float blur;
 
 #else
 #define bleeding 0.5
-#define scanline 0.5
+#define scanlineL 0.2
+#define scanlineH 0.1
 #define curv 0.3
 #define saturation 1.0
 #define mask 0.5
@@ -219,11 +222,22 @@ void main() {
     res.rgb = (res.rgb * (1.0 - bleeding*0.5)) + (YUV2RGB(yuv) * bleeding*0.5);
 //color bleed end    
     res = res*res;
+    float lum = 0.0, Scanline;
+
     if (InputSize.y <400.0)
-    res *= scanline*sin(fract(pos.y*SourceSize.y)*2.0*PI)+1.0-scanline;
+    {
+    Scanline = mix(scanlineL,scanlineH,lum);
+    lum = dot(vec3(0.2,0.7,0.1),res.rgb);  
+    res *= Scanline*sin(fract(pos.y*SourceSize.y)*2.0*PI)+1.0-Scanline;
+    res *= Scanline*sin(fract(1.0+pos.y*SourceSize.y)*2.0*PI)+1.0-Scanline;}
+    
     res *= mask*sin(fract(gl_FragCoord.x*0.333)*PI)+1.0-mask;
     res = sqrt(res);
     res.rgb = mix( vec3(dot(vec3(0.2126, 0.7152, 0.0722), res.rgb)),res.rgb, saturation);
+
+    #ifdef GL_ES
+    if (coords.x < 0.0001 || coords.y > 0.9999) res.rgb = vec3(0.0);
+    #endif
     FragColor = res;
 }
 #endif
