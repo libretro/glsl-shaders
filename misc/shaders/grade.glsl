@@ -21,7 +21,7 @@
 
 
 /*
-   Grade (16-06-2023)
+   Grade (17-07-2023)
    > See settings decriptions at: https://forums.libretro.com/t/dogways-grading-shader-slang/27148/442
 
    > Ubershader grouping some monolithic color related shaders:
@@ -106,9 +106,9 @@
 #pragma parameter br             "Blue-Red Tint"              0.0 -1.0 1.0 0.005
 #pragma parameter bg             "Blue-Green Tint"            0.0 -1.0 1.0 0.005
 #pragma parameter LUT_Size1      "LUT Size 1"                 32.0 8.0 64.0 16.0
-#pragma parameter LUT1_toggle    "LUT 1 Toggle"               0.0  0.0 1.0 1.0
+#pragma parameter LUT1_toggle    "LUT 1 Toggle"               0.0  0.0  1.0  1.0
 #pragma parameter LUT_Size2      "LUT Size 2"                 64.0 0.0 64.0 16.0
-#pragma parameter LUT2_toggle    "LUT 2 Toggle"               0.0  0.0 1.0 1.0
+#pragma parameter LUT2_toggle    "LUT 2 Toggle"               0.0  0.0  1.0  1.0
 
 
 
@@ -143,18 +143,23 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 
-// compatibility #defines
-#define vTexCoord TEX0.xy
-#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutSize vec4(OutputSize, 1.0 / OutputSize)
-
 void main()
 {
-   gl_Position = MVPMatrix * VertexCoord;
-   TEX0.xy = TexCoord.xy;
+    gl_Position = MVPMatrix * VertexCoord;
+    TEX0.xy = TexCoord.xy;
 }
 
 #elif defined(FRAGMENT)
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out COMPAT_PRECISION vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
+#endif
 
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
@@ -167,16 +172,6 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out COMPAT_PRECISION vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
-
 uniform COMPAT_PRECISION int FrameDirection;
 uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
@@ -187,62 +182,13 @@ uniform sampler2D SamplerLUT1;
 uniform sampler2D SamplerLUT2;
 COMPAT_VARYING vec4 TEX0;
 
-// compatibility #defines
+// fragment compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
 
-#define SourceSize vec4(TextureSize, 1.0 / TextureSize)
-#define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float g_signal_type;
-uniform COMPAT_PRECISION float g_crtgamut;
-uniform COMPAT_PRECISION float g_space_out;
-uniform COMPAT_PRECISION float g_Dark_to_Dim;
-uniform COMPAT_PRECISION float g_GCompress;
-uniform COMPAT_PRECISION float g_hue_degrees;
-uniform COMPAT_PRECISION float g_U_SHIFT;
-uniform COMPAT_PRECISION float g_V_SHIFT;
-uniform COMPAT_PRECISION float g_U_MUL;
-uniform COMPAT_PRECISION float g_V_MUL;
-uniform COMPAT_PRECISION float g_CRT_l;
-uniform COMPAT_PRECISION float g_CRT_b;
-uniform COMPAT_PRECISION float g_CRT_c;
-uniform COMPAT_PRECISION float g_CRT_br;
-uniform COMPAT_PRECISION float g_CRT_bg;
-uniform COMPAT_PRECISION float g_CRT_bb;
-uniform COMPAT_PRECISION float g_CRT_rf;
-uniform COMPAT_PRECISION float g_CRT_sl;
-uniform COMPAT_PRECISION float g_vignette;
-uniform COMPAT_PRECISION float g_vstr;
-uniform COMPAT_PRECISION float g_vpower;
-uniform COMPAT_PRECISION float g_lum_fix;
-uniform COMPAT_PRECISION float g_lum;
-uniform COMPAT_PRECISION float g_cntrst;
-uniform COMPAT_PRECISION float g_mid;
-uniform COMPAT_PRECISION float wp_temperature;
-uniform COMPAT_PRECISION float g_sat;
-uniform COMPAT_PRECISION float g_vibr;
-uniform COMPAT_PRECISION float g_satr;
-uniform COMPAT_PRECISION float g_satg;
-uniform COMPAT_PRECISION float g_satb;
-uniform COMPAT_PRECISION float g_lift;
-uniform COMPAT_PRECISION float blr;
-uniform COMPAT_PRECISION float blg;
-uniform COMPAT_PRECISION float blb;
-uniform COMPAT_PRECISION float wlr;
-uniform COMPAT_PRECISION float wlg;
-uniform COMPAT_PRECISION float wlb;
-uniform COMPAT_PRECISION float rg;
-uniform COMPAT_PRECISION float rb;
-uniform COMPAT_PRECISION float gr;
-uniform COMPAT_PRECISION float gb;
-uniform COMPAT_PRECISION float br;
-uniform COMPAT_PRECISION float bg;
-uniform COMPAT_PRECISION float LUT_Size1;
-uniform COMPAT_PRECISION float LUT1_toggle;
-uniform COMPAT_PRECISION float LUT_Size2;
-uniform COMPAT_PRECISION float LUT2_toggle;
+uniform COMPAT_PRECISION float g_signal_type, g_crtgamut, g_space_out, g_Dark_to_Dim, g_GCompress, g_hue_degrees, g_U_SHIFT, g_V_SHIFT, g_U_MUL, g_V_MUL, g_CRT_l, g_CRT_b, g_CRT_c, g_CRT_br, g_CRT_bg, g_CRT_bb, g_CRT_rf, g_CRT_sl, g_vignette, g_vstr, g_vpower, g_lum_fix, g_lum, g_cntrst, g_mid, wp_temperature, g_sat, g_vibr, g_satr, g_satg, g_satb, g_lift, blr, blg, blb, wlr, wlg, wlb, rg, rb, gr, gb, br, bg, LUT_Size1, LUT1_toggle, LUT_Size2, LUT2_toggle;
 #else
 #define g_signal_type 1.0
 #define g_crtgamut 2.0
@@ -330,17 +276,17 @@ vec3 XYZ_to_RGB(vec3 XYZ, mat3 primaries) {
 
 vec3 XYZtoYxy(vec3 XYZ) {
 
-    float XYZrgb = XYZ.r+XYZ.g+XYZ.b;
-    float Yxyg = (XYZrgb <= 0.0) ? 0.3805 : XYZ.r / XYZrgb;
-    float Yxyb = (XYZrgb <= 0.0) ? 0.3769 : XYZ.g / XYZrgb;
+    float XYZrgb =  XYZ.r+XYZ.g+XYZ.b;
+    float Yxyg   = (XYZrgb <= 0.0) ? 0.3805 : XYZ.r / XYZrgb;
+    float Yxyb   = (XYZrgb <= 0.0) ? 0.3769 : XYZ.g / XYZrgb;
     return vec3(XYZ.g, Yxyg, Yxyb);
  }
 
 vec3 YxytoXYZ(vec3 Yxy) {
 
-    float Xs = Yxy.r * (Yxy.g/Yxy.b);
+    float Xs  =  Yxy.r * (Yxy.g/Yxy.b);
     float Xsz = (Yxy.r <= 0.0) ? 0.0 : 1.0;
-    vec3 XYZ = vec3(Xsz,Xsz,Xsz) * vec3(Xs, Yxy.r, (Xs/Yxy.g)-Xs-Yxy.r);
+    vec3 XYZ  = vec3(Xsz,Xsz,Xsz) * vec3(Xs, Yxy.r, (Xs/Yxy.g)-Xs-Yxy.r);
     return XYZ;
  }
 
@@ -359,17 +305,17 @@ vec3 YxytoXYZ(vec3 Yxy) {
 vec3 wp_adjust(vec3 RGB, float temperature, mat3 primaries, mat3 display) {
 
     float temp3 = 1000.       /     temperature;
-    float temp6 = 1000000.    / pow(temperature, 2.);
-    float temp9 = 1000000000. / pow(temperature, 3.);
+    float temp6 = 1000000.    / pow(temperature, 2.0);
+    float temp9 = 1000000000. / pow(temperature, 3.0);
 
-    vec3 wp = vec3(1.);
+    vec3 wp = vec3(1.0);
 
     wp.x = (temperature < 5500.) ? 0.244058 + 0.0989971 * temp3 + 2.96545 * temp6 - 4.59673 * temp9 : \
            (temperature < 8000.) ? 0.200033 + 0.9545630 * temp3 - 2.53169 * temp6 + 7.08578 * temp9 : \
                                    0.237045 + 0.2437440 * temp3 + 1.94062 * temp6 - 2.11004 * temp9 ;
 
-    wp.y = -0.275275 + 2.87396 * wp.x - 3.02034 * pow(wp.x,2) + 0.0297408 * pow(wp.x,3);
-    wp.z = 1. - wp.x - wp.y;
+    wp.y = -0.275275 + 2.87396 * wp.x - 3.02034 * pow(wp.x,2.0) + 0.0297408 * pow(wp.x,3.0);
+    wp.z =  1.0 - wp.x - wp.y;
 
     const mat3 CAT16 = mat3(
      0.401288,-0.250268, -0.002079,
@@ -406,17 +352,17 @@ float EOTF_1886a(float color, float bl, float brightness, float contrast) {
     //  Contrast    = 100
 
     const float wl = 100.0;
-          float b  = pow(bl, 1/2.4);
-          float a  = pow(wl, 1/2.4)-b;
-                b  = (brightness-50) / 250. + b/a;                 // -0.20 to +0.20
-                a  = contrast!=50 ? pow(2,(contrast-50)/50.) : 1.; //  0.50 to +2.00
+          float b  = pow(bl, 1./2.4);
+          float a  = pow(wl, 1./2.4)-b;
+                b  = (brightness-50.) / 250. + b/a;                   // -0.20 to +0.20
+                a  = contrast!=50. ? pow(2.,(contrast-50.)/50.) : 1.; //  0.50 to +2.00
 
     const float Vc = 0.35;                           // Offset
           float Lw = wl/100. * a;                    // White level
           float Lb = min( b  * a,Vc);                // Black level
     const float a1 = 2.6;                            // Shoulder gamma
     const float a2 = 3.0;                            // Knee gamma
-          float k  = Lw /pow(1  + Lb,    a1);
+          float k  = Lw /pow(1. + Lb,    a1);
           float sl = k * pow(Vc + Lb, a1-a2);        // Slope for knee gamma
 
     color = color >= Vc ? k * pow(color + Lb, a1 ) : sl * pow(color + Lb, a2 );
@@ -514,7 +460,7 @@ float rolled_gain(float color, float gain) {
 
     float gx   = abs(gain) + 0.001;
     float anch = (gain > 0.0) ? 0.5 / (gx / 2.0) : 0.5 / gx;
-    color      = (gain > 0.0) ? color * ((color - anch) / (1 - anch)) : color * ((1 - anch) / (color - anch)) * (1 - gain);
+    color      = (gain > 0.0) ? color * ((color - anch) / (1.0 - anch)) : color * ((1.0 - anch) / (color - anch)) * (1.0 - gain);
 
     return color;
  }
@@ -560,11 +506,11 @@ vec4 mixfix_v4(vec4 a, vec4 b, float c) {
 vec3 GamutCompression (vec3 rgb, float grey) {
 
     // Limit/Thres order is Cyan, Magenta, Yellow
-    vec3  beam = max(vec3(0.0),vec3(g_CRT_bg,(g_CRT_bb+g_CRT_br)/2,(g_CRT_br+g_CRT_bg)/2));
-    vec3  sat  = max(vec3(0.0),vec3(g_satg,  (g_satb  +g_satr  )/2,(g_satr  +g_satg)  /2)+1); // center at 1
-    float temp = max(0,abs(wp_temperature-7000)-1000)/825.0+1;                                // center at 1
-    vec3  WPD  = wp_temperature < 7000 ? vec3(1,temp,(temp-1)/2+1) : vec3((temp-1)/2+1,temp,1);
-          sat  = max(0.0,g_sat+1)*(sat*beam) * WPD;
+    vec3  beam = max(vec3(0.0),vec3(g_CRT_bg,(g_CRT_bb+g_CRT_br)/2.,(g_CRT_br+g_CRT_bg)/2.));
+    vec3  sat  = max(vec3(0.0),vec3(g_satg,  (g_satb  +g_satr  )/2.,(g_satr  +g_satg)  /2.)+1.);   // center at 1
+    float temp = max(0.0,abs(wp_temperature-7000.)-1000.)/825.+1.;                                 // center at 1
+    vec3  WPD  = wp_temperature < 7000. ? vec3(1.,temp,(temp-1.)/2.+1.) : vec3((temp-1.)/2.+1.,temp,1.);
+          sat  = max(0.0,g_sat+1.)*(sat*beam) * WPD;
 
     mat2x3 LimThres =      mat2x3( 0.100000,0.100000,0.100000,
                                    0.125000,0.125000,0.125000);
@@ -607,7 +553,7 @@ vec3 GamutCompression (vec3 rgb, float grey) {
     vec3 dl = 1.0+vec3(LimThres[0])*sat;
 
     // Calculate scale so compression function passes through distance limit: (x=dl, y=1)
-    vec3 s = (vec3(1)-th)/sqrt(max(vec3(1.001), dl)-1.0);
+    vec3 s = (vec3(1.0)-th)/sqrt(max(vec3(1.001), dl)-1.0);
 
     // Achromatic axis
     float ac = max(rgb.x, max(rgb.y, rgb.z));
@@ -624,7 +570,7 @@ vec3 GamutCompression (vec3 rgb, float grey) {
 
     // Inverse RGB Ratios to RGB
     // and Mask with "luma"
-    return mix(rgb, ac-cd.xyz*abs(ac), pow(grey,1/g_CRT_l));
+    return mix(rgb, ac-cd.xyz*abs(ac), pow(grey,1.0/g_CRT_l));
     }
 
 
@@ -648,8 +594,7 @@ vec3 GamutCompression (vec3 rgb, float grey) {
 // Rymax 0.701088
 // R'G'B' full range to Decorrelated Intermediate (Y,B-Y,R-Y)
 // Rows should sum to 0, except first one which sums 1
-const mat3 YByRy =
-   mat3(
+const mat3 YByRy = mat3(
     0.298912, 0.586603, 0.114485,
    -0.298912,-0.586603, 0.885515,
     0.701088,-0.586603,-0.114485);
@@ -663,8 +608,8 @@ const mat3 YByRy =
 // Y  excursion is limited to 16-235 for NTSC-U and 0-235 for PAL and NTSC-J
 vec3 r601_YUV(vec3 RGB, float NTSC_U) {
 
-    const float sclU = ((0.5*(235-16)+16)/255.); // This yields Luma   grey  at around 0.49216 or 125.5 in 8-bit
-    const float sclV =       (240-16)    /255. ; // This yields Chroma range at around 0.87843 or 224   in 8-bit
+    const float sclU = ((0.5*(235.-16.)+16.)/255.); // This yields Luma   grey  at around 0.49216 or 125.5 in 8-bit
+    const float sclV =       (240.-16.)     /255. ; // This yields Chroma range at around 0.87843 or 224   in 8-bit
 
     mat3 conv_mat = mat3(
                  vec3(YByRy[0]),
@@ -713,14 +658,12 @@ vec3 Quantize8_f3(vec3 col) {
 
 // Hunt-Pointer-Estevez D65 cone response
 // modification for IPT model
-const mat3 LMS =
-mat3(
+const mat3 LMS = mat3(
  0.4002, 0.7075, -0.0807,
 -0.2280, 1.1500,  0.0612,
  0.0000, 0.0000,  0.9184);
 
-const mat3 IPT =
-mat3(
+const mat3 IPT = mat3(
  0.4000,  0.4000, 0.2000,
  4.4550, -4.8510, 0.3960,
  0.8056, 0.3572, -1.1628);
@@ -734,28 +677,28 @@ mat3(
 ////// STANDARDS ///////
 // SMPTE RP 145-1994 (SMPTE-C), 170M-1999
 // SMPTE-C - Standard Phosphor (Rec.601 NTSC)
+// Standardized in 1982 (as CCIR Rec.601-1) after "Conrac Corp. & RCA" P22 phosphors (circa 1969) for consumer CRTs
 // ILLUMINANT: D65->[0.31266142,0.3289589]
-const mat3 SMPTE170M_ph =
-    mat3(
+const mat3 SMPTE170M_ph = mat3(
      0.630, 0.310, 0.155,
      0.340, 0.595, 0.070,
      0.030, 0.095, 0.775);
 
 // ITU-R BT.470/601 (B/G)
-// EBU Tech.3213 PAL - Standard Phosphor for Studio Monitors
+// EBU Tech.3213 PAL - Standard Phosphor for Studio Monitors (also used in Sony BVMs and Higher-end PVMs)
 // ILLUMINANT: D65->[0.31266142,0.3289589]
-const mat3 SMPTE470BG_ph =
-    mat3(
+const mat3 SMPTE470BG_ph = mat3(
      0.640, 0.290, 0.150,
      0.330, 0.600, 0.060,
      0.030, 0.110, 0.790);
 
 // NTSC-J P22
 // Mix between averaging KV-20M20, KDS VS19, Dell D93, 4-TR-B09v1_0.pdf and Phosphor Handbook 'P22'
+// Phosphors based on 1975's EBU Tech.3123-E (formerly known as JEDEC-P22)
+// Typical P22 phosphors used in Japanese consumer CRTs with 9300K+27MPCD white point
 // ILLUMINANT: D93->[0.281000,0.311000] (CCT of 8945.436K)
 // ILLUMINANT: D97->[0.285000,0.285000] (CCT of 9696K) for Nanao MS-2930s series (around 10000.0K for wp_adjust() daylight fit)
-const mat3 P22_J_ph =
-    mat3(
+const mat3 P22_J_ph = mat3(
      0.625, 0.280, 0.152,
      0.350, 0.605, 0.062,
      0.025, 0.115, 0.786);
@@ -766,22 +709,19 @@ const mat3 P22_J_ph =
 // You can run any of these P22 primaries either through D65 or D93 indistinctly but typically these were D65 based.
 // P22_80 is roughly the same as the old P22 gamut in Grade 2020. P22 1979-1994 meta measurement.
 // ILLUMINANT: D65->[0.31266142,0.3289589]
-const mat3 P22_80s_ph =
-    mat3(
+const mat3 P22_80s_ph = mat3(
      0.6470, 0.2820, 0.1472,
      0.3430, 0.6200, 0.0642,
      0.0100, 0.0980, 0.7886);
 
 // P22 improved with tinted phosphors (Use this for NTSC-U 16-bits, and above for 8-bits)
-const mat3 P22_90s_ph =
-    mat3(
+const mat3 P22_90s_ph = mat3(
      0.6661, 0.3134, 0.1472,
      0.3329, 0.6310, 0.0642,
      0.0010, 0.0556, 0.7886);
 
 // RPTV (Rear Projection TV) for NTSC-U late 90s, early 00s
-const mat3 RPTV_95s_ph =
-    mat3(
+const mat3 RPTV_95s_ph = mat3(
      0.640, 0.341, 0.150,
      0.335, 0.586, 0.070,
      0.025, 0.073, 0.780);
@@ -793,29 +733,25 @@ const mat3 RPTV_95s_ph =
 //----------------------- Display Primaries -----------------------
 
 // sRGB (IEC 61966-2-1) and ITU-R BT.709-6 (originally CCIR Rec.709)
-const mat3 sRGB_prims =
-    mat3(
+const mat3 sRGB_prims = mat3(
      0.640, 0.300, 0.150,
      0.330, 0.600, 0.060,
      0.030, 0.100, 0.790);
 
 // Adobe RGB (1998)
-const mat3 Adobe_prims =
-    mat3(
+const mat3 Adobe_prims = mat3(
      0.640, 0.210, 0.150,
      0.330, 0.710, 0.060,
      0.030, 0.080, 0.790);
 
 // BT-2020/BT-2100 (from 630nm, 532nm and 467nm)
-const mat3 rec2020_prims =
-    mat3(
+const mat3 rec2020_prims = mat3(
      0.707917792, 0.170237195, 0.131370635,
      0.292027109, 0.796518542, 0.045875976,
      0.000055099, 0.033244263, 0.822753389);
 
 // SMPTE RP 432-2 (DCI-P3)
-const mat3 DCIP3_prims =
-    mat3(
+const mat3 DCIP3_prims = mat3(
      0.680, 0.265, 0.150,
      0.320, 0.690, 0.060,
      0.000, 0.045, 0.790);
@@ -832,7 +768,7 @@ void main()
 {
 
 // Retro Sega Systems: Genesis, 32x, CD and Saturn 2D had color palettes designed in TV levels to save on transformations.
-    float lum_exp = (g_lum_fix ==  1.0) ? (255.0/239.0) : 1.0;
+    float lum_exp = (g_lum_fix == 1.0) ? (255.0/239.0) : 1.0;
 
     vec3 src = COMPAT_TEXTURE(Source, vTexCoord).rgb * lum_exp;
 
@@ -857,7 +793,7 @@ void main()
     col.z    = (mod((chroma * sin(hue) + 1.0) + g_V_SHIFT, 2.0) - 1.0) * g_V_MUL;
 
 // Back to R'G'B' full
-    col   = g_signal_type > 0.0 ? max(Quantize8_f3(YUV_r601(col.xyz, NTSC_U ? 1.0 : 0.0))/255.0, 0.0) : src;
+    col      = g_signal_type > 0.0 ? max(Quantize8_f3(YUV_r601(col.xyz, NTSC_U ? 1.0 : 0.0))/255.0, 0.0) : src;
 
 // Look LUT - (in SPC space)
     float red   = (col.r * (LUT_Size1 - 1.0) + 0.4999) / (LUT_Size1 * LUT_Size1);
@@ -907,10 +843,10 @@ void main()
 // Display color space
     mat3 m_ou;
 
-    if (g_space_out ==  1.0) { m_ou = DCIP3_prims;         } else
-    if (g_space_out ==  2.0) { m_ou = rec2020_prims;       } else
-    if (g_space_out ==  3.0) { m_ou = Adobe_prims;         } else
-                             { m_ou = sRGB_prims;          }
+    if (g_space_out == 1.0) { m_ou = DCIP3_prims;          } else
+    if (g_space_out == 2.0) { m_ou = rec2020_prims;        } else
+    if (g_space_out == 3.0) { m_ou = Adobe_prims;          } else
+                            { m_ou = sRGB_prims;           }
 
 
 // White Point Mapping
@@ -928,7 +864,7 @@ void main()
     src_h.xyz *= IPT;
 
     float hue_at = atan(src_h.z, src_h.y);
-    chroma = sqrt(src_h.z * src_h.z + src_h.y * src_h.y);
+    chroma       = sqrt(src_h.z * src_h.z + src_h.y * src_h.y);
 
     //  red 320º green 220º blue 100º
     float hue_radians_r = 320.0 * M_PI;
@@ -940,7 +876,7 @@ void main()
     float hue_radians_b = 100.0 * M_PI;
     float hue_b = cos(hue_at + hue_radians_b);
 
-    float msk = dot(clamp(vec3(hue_r, hue_g, hue_b) * chroma * 2, 0.0, 1.0), -vec3(g_satr, g_satg, g_satb));
+    float msk = dot(clamp(vec3(hue_r, hue_g, hue_b) * chroma * 2.0, 0.0, 1.0), -vec3(g_satr, g_satg, g_satb));
     src_h = mix(col, vec3(dot(coeff, col)), msk);
 
     float sat_msk = (g_vibr < 0.0) ? 1.0 - abs(SatMask(src_h.x, src_h.y, src_h.z) - 1.0) * abs(g_vibr) : \
@@ -987,13 +923,13 @@ void main()
     vpos *= 1.0 - vpos.xy;
     float vig = vpos.x * vpos.y * g_vstr;
     vig = min(pow(vig, g_vpower), 1.0);
-    vig = vig >= 0.5 ? smoothstep(0,1,vig) : vig;
+    vig = vig >= 0.5 ? smoothstep(0.0,1.0,vig) : vig;
 
     src_h *= (g_vignette == 1.0) ? vig : 1.0;
 
 
 // Dark to Dim adaptation OOTF; for 709, P3-D65 and 2020
-    float DtD = g_Dark_to_Dim > 0.0 ? 1/0.9811 : 1.0;
+    float DtD = g_Dark_to_Dim > 0.0 ? 1.0/0.9811 : 1.0;
 
 // EOTF^-1 - Inverted Electro-Optical Transfer Function
     vec3 TRC  = (g_space_out == 3.0) ?     clamp(pow(src_h, vec3(1./ (563./256.))),        0., 1.) : \
