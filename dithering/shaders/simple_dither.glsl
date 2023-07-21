@@ -1,12 +1,14 @@
 #version 110
 
 /*
-   Simple S-video like shader by DariusG 2023
+   Simple dither shader by DariusG 2023
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the Free
    Software Foundation; either version 2 of the License, or (at your option)
    any later version.
 */
+
+#pragma parameter threshold "threshold" 0.2 0.0 3.0 1.0 
 
 #define iTime float(FrameCount)
 #define pi 3.141592
@@ -92,45 +94,40 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float GLITCH;
+uniform COMPAT_PRECISION float threshold;
 
 #else
-#define GLITCH 0.1
+#define threshold 0.1
 #endif
 
 
-const mat3 rgb2yuv = mat3(0.299,-0.14713, 0.615,
-                           0.587,-0.28886,-0.51499,
-                           0.114, 0.436  ,-0.10001);
 
-const mat3 yuv2rgb = mat3(1.0, 1.0, 1.0,
-                 0.0,-0.39465,2.03211,
-                 1.13983,-0.58060,0.0);
+/*blurry dither
+vec3 dith = vec3(.0);
+float counter = 1.0;
+for (int x = -1; x<2; x++)
+{
+    vec2 uv = vec2(vTexCoord.x*SourceSize.x+float(x), vTexCoord.y*SourceSize.y)/SourceSize.xy;    
+    dith += texture2D(Source,uv).rgb;
+    counter = counter+1.0;   
+}
+    res = (res+dith)/counter;
+*/ 
 
 void main()
 {
 vec2 pos = vTexCoord;
+vec3 res = COMPAT_TEXTURE(Source,pos).rgb;
+vec3 left = COMPAT_TEXTURE(Source,pos - vec2(SourceSize.z, 0.0)).rgb;
+vec3 right = COMPAT_TEXTURE(Source,pos + vec2(SourceSize.z, 0.0)).rgb;
+vec3 lleft = COMPAT_TEXTURE(Source,pos - vec2(SourceSize.z*2.0, 0.0)).rgb;
+vec3 rright = COMPAT_TEXTURE(Source,pos + vec2(SourceSize.z*2.0, 0.0)).rgb;
 
-vec3 res = texture2D(Source,pos).rgb;
+float leftv = left.r + left.g + left.b;
+float rightv = right.r + right.g + right.b;
 
-vec3 leftp = COMPAT_TEXTURE(Source,pos-vec2(SourceSize.z,0.0)).rgb;
-vec3 rightp = COMPAT_TEXTURE(Source,pos+vec2(SourceSize.z,0.0)).rgb;
-vec3 dither = (leftp+rightp)/2.0;
+if (abs(leftv-rightv) < threshold) res = (res+right)/2.0;
 
-res = rgb2yuv*res; dither =rgb2yuv*dither;
-res =dither*0.49+res*0.51; //just keep a tiny evidence of dither
-
-vec3 check = COMPAT_TEXTURE(Source, pos + vec2(SourceSize.z,0.0)).rgb; 
-check = rgb2yuv*check;
-
-float lum_diff= abs(check.r-res.r); 
-float chr_diff= abs(check.g-res.g); 
-
-//flicker on luma/chroma difference
-res +=lum_diff*abs(sin(iTime))*0.1;
-res +=chr_diff*abs(sin(iTime))*0.1;
-
-res = yuv2rgb*res;
 FragColor = vec4(res,1.0);
 }
 #endif
