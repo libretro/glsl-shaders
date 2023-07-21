@@ -117,11 +117,11 @@ for (int x = -1; x<2; x++)
 void main()
 {
 vec2 pos = vTexCoord;
-vec3 res = texture2D(Source,pos).rgb;
-vec3 left = texture2D(Source,pos - vec2(SourceSize.z, 0.0)).rgb;
-vec3 right = texture2D(Source,pos + vec2(SourceSize.z, 0.0)).rgb;
-vec3 lleft = texture2D(Source,pos - vec2(SourceSize.z*2.0, 0.0)).rgb;
-vec3 rright = texture2D(Source,pos + vec2(SourceSize.z*2.0, 0.0)).rgb;
+vec3 res = COMPAT_TEXTURE(Source,pos).rgb;
+vec3 left = COMPAT_TEXTURE(Source,pos - vec2(SourceSize.z, 0.0)).rgb;
+vec3 right = COMPAT_TEXTURE(Source,pos + vec2(SourceSize.z, 0.0)).rgb;
+vec3 lleft = COMPAT_TEXTURE(Source,pos - vec2(SourceSize.z*2.0, 0.0)).rgb;
+vec3 rright = COMPAT_TEXTURE(Source,pos + vec2(SourceSize.z*2.0, 0.0)).rgb;
 
 float leftv = left.r + left.g + left.b;
 float rightv = right.r + right.g + right.b;
