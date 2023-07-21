@@ -1,0 +1,5 @@
+shaders = 1_
+shader0 = shaders/simple_dither.glsl
+filter_linear0 = false
+scale_type0 = source
+scale0 = 1.0
