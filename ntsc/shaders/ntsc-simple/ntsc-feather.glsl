@@ -113,14 +113,14 @@ vec2 pos = vTexCoord;
 
 vec3 res = texture2D(Source,pos).rgb;
 
-vec3 leftp = texture2D(Source,pos-vec2(SourceSize.z,0.0)).rgb;
-vec3 rightp = texture2D(Source,pos+vec2(SourceSize.z,0.0)).rgb;
+vec3 leftp = COMPAT_TEXTURE(Source,pos-vec2(SourceSize.z,0.0)).rgb;
+vec3 rightp = COMPAT_TEXTURE(Source,pos+vec2(SourceSize.z,0.0)).rgb;
 vec3 dither = (leftp+rightp)/2.0;
 
 res = rgb2yuv*res; dither =rgb2yuv*dither;
 res =dither*0.49+res*0.51; //just keep a tiny evidence of dither
 
-vec3 check = texture2D(Source, pos + vec2(SourceSize.z,0.0)).rgb; 
+vec3 check = COMPAT_TEXTURE(Source, pos + vec2(SourceSize.z,0.0)).rgb; 
 check = rgb2yuv*check;
 
 float lum_diff= abs(check.r-res.r); 
