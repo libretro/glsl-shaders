@@ -8,7 +8,6 @@
    any later version.
 */
 
-#pragma parameter threshold "threshold" 0.2 0.0 3.0 1.0 
 
 #define iTime float(FrameCount)
 #define pi 3.141592
@@ -117,16 +116,32 @@ for (int x = -1; x<2; x++)
 void main()
 {
 vec2 pos = vTexCoord;
-vec3 res = COMPAT_TEXTURE(Source,pos).rgb;
-vec3 left = COMPAT_TEXTURE(Source,pos - vec2(SourceSize.z, 0.0)).rgb;
-vec3 right = COMPAT_TEXTURE(Source,pos + vec2(SourceSize.z, 0.0)).rgb;
-vec3 lleft = COMPAT_TEXTURE(Source,pos - vec2(SourceSize.z*2.0, 0.0)).rgb;
-vec3 rright = COMPAT_TEXTURE(Source,pos + vec2(SourceSize.z*2.0, 0.0)).rgb;
 
-float leftv = left.r + left.g + left.b;
-float rightv = right.r + right.g + right.b;
 
-if (abs(leftv-rightv) < threshold) res = (res+right)/2.0;
+//          --------same---------
+//          |                   | 
+//       lleft left res right rright
+//               |        |   
+//               ---same---
+//        
+//        = there is a dither pattern
+
+
+vec3 res   = COMPAT_TEXTURE(Source,pos).rgb;
+vec3 left  = COMPAT_TEXTURE(Source,pos + vec2(SourceSize.z, 0.0)).rgb; 
+vec3 right = COMPAT_TEXTURE(Source,pos - vec2(SourceSize.z, 0.0)).rgb;
+vec3 lleft = COMPAT_TEXTURE(Source,pos + vec2(SourceSize.z*2.0, 0.0)).rgb;
+vec3 rright= COMPAT_TEXTURE(Source,pos - vec2(SourceSize.z*2.0, 0.0)).rgb;
+
+float cond1 = lleft == rright  ? 1.0 :0.0;
+float cond2 = left == right  ? 1.0 :0.0;
+
+float lumres = dot(vec3(0.2,0.7,0.1),res);
+float lumright = dot(vec3(0.2,0.7,0.1),right);
+float diff = lumres-lumright;
+res = cond2 == 1.0 && diff < 0.0 ? (res*3.0+right)/4.0 : res;
+
+res = cond1 == 1.0 && cond2 == 1.0 ? (res+right)/2.0 : res;
 
 FragColor = vec4(res,1.0);
 }
