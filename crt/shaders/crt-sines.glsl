@@ -3,18 +3,18 @@
 // by DariusG @2023
 
 ///////////////////////  Runtime Parameters  ///////////////////////
-#pragma parameter SCANLINE1 "Scanline Brightness Dark" 0.1 0.0 1.0 0.05
-#pragma parameter SCANLINE2 "Scanline Brightness Bright" 0.75 0.0 1.0 0.05
+#pragma parameter SCANLINE1 "Scanline Brightness Dark" 0.4 0.0 1.0 0.05
+#pragma parameter SCANLINE2 "Scanline Brightness Bright" 0.7 0.0 1.0 0.05
 #pragma parameter INTERLACE "Interlace Mode" 1.0 0.0 1.0 1.0
 #pragma parameter SCALE "Scanlines downscale"  1.0 1.0 4.0 1.0
-#pragma parameter MSK1 "   Mask Brightness Dark" 0.25 0.0 1.0 0.05
-#pragma parameter MSK2 "   Mask Brightness Bright" 0.5 0.0 1.0 0.05
-#pragma parameter MSK_SIZE "   Mask Size" 2.0 0.25 2.0 0.25
+#pragma parameter MSK1 "   Mask Strength Dark" 0.5 0.0 1.0 0.05
+#pragma parameter MSK2 "   Mask Strength Bright" 0.25 0.0 1.0 0.05
+#pragma parameter MSK_SIZE "   Mask Size" 1.0 0.0 4.0 1.0
 #pragma parameter fade "   Mask/Scanlines Fade" 0.3 0.0 1.0 0.05
 #pragma parameter PRESERVE "Protect Bright Colors" 0.4 0.0 1.0 0.01
 #pragma parameter WP "Color Temperature shift" 0.00 -0.25 0.25 0.01
-#pragma parameter GAMMA "Gamma Adjust" 1.0 0.0 1.5 0.01
-#pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
+#pragma parameter GAMMA "Gamma Adjust" 0.75 0.0 1.0 0.01
+#pragma parameter sat "Saturation" 1.3 0.0 2.0 0.05
 
 #define pi  3.141592654
 
@@ -68,7 +68,8 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
-    omega = vec2(pi * OutputSize.x*MSK_SIZE, pi * SourceSize.y/SCALE);
+    float ratio = SourceSize.x/InputSize.x;
+    omega = vec2(pi * OutputSize.x*ratio/MSK_SIZE, pi * SourceSize.y/SCALE);
 }
 
 #elif defined(FRAGMENT)
@@ -139,39 +140,44 @@ uniform COMPAT_PRECISION float fade;
 void main()
 {
 
-// HERMITE FILTER 
+// CATMULL FILTER 
    vec2 ps = SourceSize.zw;
    vec2 dx = vec2(ps.x, 0.0);
    vec2 OGL2Pos = vTexCoord.xy*SourceSize.xy; 
-   vec2 tc = (floor(OGL2Pos) + vec2(0.49999)) / SourceSize.xy;  
+   vec2 tc = (floor(OGL2Pos) + vec2(0.5)) / SourceSize.xy;  
    vec2 fp =  fract(OGL2Pos);
-   
-   vec3 c   = COMPAT_TEXTURE(Source, tc           ).xyz;
-   vec3 cl  = COMPAT_TEXTURE(Source, tc +       dx).xyz;
+
+   vec3 c10 = COMPAT_TEXTURE(Source, tc -       dx).xyz;
+   vec3 c11 = COMPAT_TEXTURE(Source, tc           ).xyz;
+   vec3 c12 = COMPAT_TEXTURE(Source, tc +       dx).xyz;
+   vec3 c13 = COMPAT_TEXTURE(Source, tc + 2.0 * dx).xyz;
     
-   vec4 lobes = vec4(fp.x*fp.x*fp.x, fp.x*fp.x, fp.x, 1.0); 
+   vec4 lobes = vec4(fp.x*fp.x*fp.x, fp.x*fp.x, fp.x, 1.0);
 
    vec4 InvX = vec4(0.0);
-        InvX.y = dot(vec4(  2.0,-3.0,  0.0, 1.0), lobes); 
-        InvX.z = dot(vec4( -2.0, 3.0,  0.0, 0.0), lobes); 
+// Horizontal cubic filter
+    InvX.x = dot(vec4( -0.5, 1.0, -0.5, 0.0), lobes);
+    InvX.y = dot(vec4(  1.5,-2.5,  0.0, 1.0), lobes);
+    InvX.z = dot(vec4( -1.5, 2.0,  0.5, 0.0), lobes);
+    InvX.w = dot(vec4(  0.5,-0.5,  0.0, 0.0), lobes);
     
-    vec3  color;
-          color+= InvX.y*c;
-          color+= InvX.z*cl;
+    vec3 color = InvX.x*c10.xyz;
+         color+= InvX.y*c11.xyz;
+         color+= InvX.z*c12.xyz;
+         color+= InvX.w*c13.xyz;
 /////////////////////
-
-    vec3 lumweight=vec3(0.213,0.715,0.072);
-    float lum = dot(color,lumweight);
-
-//FAKE GAMMA
-       if (GAMMA != 1.0)  {color *= mix(GAMMA, 1.0, lum);}
     
+    vec3 lumweight=vec3(0.213,0.715,0.072);
+    float lum = max(max(color.r,color.g),color.b);
+
 //APPLY MASK 
          float MSK  = mix(MSK1,MSK2,lum);       
-         float mask = mix((1.0-MSK)*abs(sin(vTexCoord.x*omega.x))+MSK, 1.0, lum*PRESERVE);
+         float mask = mix(MSK*sin(vTexCoord.x*omega.x)+1.0-MSK, 1.0, lum*PRESERVE);
 
          float scan = 1.0;
          float SCANLINE = mix(SCANLINE1,SCANLINE2,lum);
+
+         color = pow(color,vec3(GAMMA));
 //INTERLACING MODE FIX SCANLINES
     if (INTERLACE > 0.0 && InputSize.y > 400.0 ) scan; else
          scan= (1.0 - SCANLINE)*abs(sin(vTexCoord.y* omega.y)) + SCANLINE;
@@ -182,9 +188,9 @@ void main()
        if (WP != 0.0) { color *= vec3(1.0+WP,1.0,1.0-WP);}
     
 //FAST SATURATION CONTROL
-        if(sat !=1.0)
+       if(sat !=1.0)
         {
-        vec3 gray = vec3(lum);
+        vec3 gray = vec3(dot(lumweight,color));
         color = vec3(mix(gray, color, sat));
         }
 
