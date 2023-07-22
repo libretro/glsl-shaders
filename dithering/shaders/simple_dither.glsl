@@ -117,32 +117,40 @@ void main()
 {
 vec2 pos = vTexCoord;
 
+/*
+                * o Pix o *
+        
+                   *      
+                   Pix
+                   *      
+                  =Pix
 
-//          --------same---------
-//          |                   | 
-//       lleft left res right rright
-//               |        |   
-//               ---same---
-//        
-//        = there is a dither pattern
-
+        = there is a dither pattern
+*/
 
 vec3 res   = COMPAT_TEXTURE(Source,pos).rgb;
+
 vec3 left  = COMPAT_TEXTURE(Source,pos + vec2(SourceSize.z, 0.0)).rgb; 
 vec3 right = COMPAT_TEXTURE(Source,pos - vec2(SourceSize.z, 0.0)).rgb;
-vec3 lleft = COMPAT_TEXTURE(Source,pos + vec2(SourceSize.z*2.0, 0.0)).rgb;
-vec3 rright= COMPAT_TEXTURE(Source,pos - vec2(SourceSize.z*2.0, 0.0)).rgb;
+vec3 left2 = COMPAT_TEXTURE(Source,pos + vec2(SourceSize.z*2.0, 0.0)).rgb;
+vec3 right2= COMPAT_TEXTURE(Source,pos - vec2(SourceSize.z*2.0, 0.0)).rgb;
 
-float cond1 = lleft == rright  ? 1.0 :0.0;
-float cond2 = left == right  ? 1.0 :0.0;
+vec3 up = COMPAT_TEXTURE (Source,pos -vec2(0.0,SourceSize.w)).rgb;
+vec3 up2 = COMPAT_TEXTURE (Source,pos -vec2(0.0,SourceSize.w*2.0)).rgb;
+vec3 d = COMPAT_TEXTURE (Source,pos +vec2(0.0,SourceSize.w)).rgb;
+vec3 d2 = COMPAT_TEXTURE (Source,pos +vec2(0.0,SourceSize.w*2.0)).rgb;
 
-float lumres = dot(vec3(0.2,0.7,0.1),res);
-float lumright = dot(vec3(0.2,0.7,0.1),right);
-float diff = lumres-lumright;
-res = cond2 == 1.0 && cond1 !=1.0 && diff < 0.0 ? (res*3.0+right)/4.0 : res;
+float cond_vert = (up == d && res == d2 && res != left) ? 1.0 :0.0;
+float cond_hor = (left == right && left2 == right2 && res != up) ? 1.0 :0.0;
+vec3 res2 = cond_vert == 1.0  && up != res ? (res+up)/2.0 : res;
 
-res = cond1 == 1.0 && cond2 == 1.0 && left != lleft ? (res+right)/2.0 : res;
+float diff = 0.0;
+if (mod(vTexCoord.x*SourceSize.x, 2.0) < 2.0)
+{
+    if (res != res2) diff = 1.0; else diff = 0.0; 
+    res2 = (diff == 0.0 && cond_hor == 1.0) ? (res+right)/2.0 : res2;  
+}
 
-FragColor = vec4(res,1.0);
+FragColor = vec4(res2,1.0);
 }
 #endif
