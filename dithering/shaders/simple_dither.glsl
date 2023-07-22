@@ -139,9 +139,9 @@ float cond2 = left == right  ? 1.0 :0.0;
 float lumres = dot(vec3(0.2,0.7,0.1),res);
 float lumright = dot(vec3(0.2,0.7,0.1),right);
 float diff = lumres-lumright;
-res = cond2 == 1.0 && diff < 0.0 ? (res*3.0+right)/4.0 : res;
+res = cond2 == 1.0 && cond1 !=1.0 && diff < 0.0 ? (res*3.0+right)/4.0 : res;
 
-res = cond1 == 1.0 && cond2 == 1.0 ? (res+right)/2.0 : res;
+res = cond1 == 1.0 && cond2 == 1.0 && left != lleft ? (res+right)/2.0 : res;
 
 FragColor = vec4(res,1.0);
 }
