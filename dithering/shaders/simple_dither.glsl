@@ -118,30 +118,34 @@ void main()
 vec2 pos = vTexCoord;
 
 
-//          --------same---------
-//          |                   | 
-//       lleft left res right rright
-//               |        |   
-//               ---same---
-//        
-//        = there is a dither pattern
+//               --------same---------
+//               |                   | 
+//      left3 left2 left res right right2 right3
+//                    |        |   
+//                    ---same---
+//        |           |        |            | 
+//           
+//            = there is a dither pattern
 
 
 vec3 res   = COMPAT_TEXTURE(Source,pos).rgb;
 vec3 left  = COMPAT_TEXTURE(Source,pos + vec2(SourceSize.z, 0.0)).rgb; 
 vec3 right = COMPAT_TEXTURE(Source,pos - vec2(SourceSize.z, 0.0)).rgb;
-vec3 lleft = COMPAT_TEXTURE(Source,pos + vec2(SourceSize.z*2.0, 0.0)).rgb;
-vec3 rright= COMPAT_TEXTURE(Source,pos - vec2(SourceSize.z*2.0, 0.0)).rgb;
+vec3 left2 = COMPAT_TEXTURE(Source,pos + vec2(SourceSize.z*2.0, 0.0)).rgb;
+vec3 left3 = COMPAT_TEXTURE(Source,pos + vec2(SourceSize.z*3.0, 0.0)).rgb;
+vec3 right2= COMPAT_TEXTURE(Source,pos - vec2(SourceSize.z*2.0, 0.0)).rgb;
+vec3 right3= COMPAT_TEXTURE(Source,pos - vec2(SourceSize.z*3.0, 0.0)).rgb;
 
-float cond1 = lleft == rright  ? 1.0 :0.0;
+float cond1 = left2 == right2  ? 1.0 :0.0;
 float cond2 = left == right  ? 1.0 :0.0;
+float cond3 = cond2 == 1.0 && left == left3 || cond2 == 1.0 && right == right3 ? 1.0 : 0.0;
 
 float lumres = dot(vec3(0.2,0.7,0.1),res);
 float lumright = dot(vec3(0.2,0.7,0.1),right);
 float diff = lumres-lumright;
 res = cond2 == 1.0 && cond1 !=1.0 && diff < 0.0 ? (res*3.0+right)/4.0 : res;
-
-res = cond1 == 1.0 && cond2 == 1.0 && left != lleft ? (res+right)/2.0 : res;
+res = cond1 == 1.0 && cond2 == 1.0 && left != left2 ? (res+right)/2.0 : res;
+res = cond3 == 1.0 ? (res+right)/2.0 : res;
 
 FragColor = vec4(res,1.0);
 }
