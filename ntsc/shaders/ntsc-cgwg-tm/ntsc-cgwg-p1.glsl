@@ -10,7 +10,7 @@
     http://board.byuu.org/viewtopic.php?f=10&t=1494
 
     Copyright (C) 2010-2012 cgwg and Themaister
-
+    Port by DariusG 2023
     This program is free software; you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by the Free
     Software Foundation; either version 2 of the License, or (at your option)
@@ -20,6 +20,7 @@
 
 // begin params
 #define PI 3.14159265
+#define PIt 1.04719755
 
 #if defined(VERTEX)
 
@@ -110,25 +111,24 @@ void main()
       {
         vec2 xy = vTexCoord;
         float f = float (FrameCount);
-        vec2 xyp = xy * TextureSize.xy * 4.0 * PI / 3.0;
-        xyp.y = xyp.y / 2.0 + 2.0 * PI / 3.0 * mod(f,2.0);
-
+        vec2 xyp = xy * TextureSize.xy * 4.0 * PIt;
+        xyp.y = xyp.y / 2.0 + ( 2.0 * PIt * mod(f,2.0) );
+        float xypc = dot(xyp,vec2(1.0));
         vec4 rgb = texture2D(Source,xy);
-
-       
 
         vec3 yuv;
         yuv = rgb2yuv * rgb.rgb;
 
-        float dx = PI/3.0;
+        float dx = PIt; float dxto = dx*2.0; float dxtr = PI;
+
         //commented so it works globally
-        //xyp.x = xyp.x * InputSize.x/256.0;
-        float c0 = yuv.x + yuv.y * sin(xyp.x+xyp.y) + yuv.z*cos(xyp.x+xyp.y);
-        float c1 = yuv.x + yuv.y * sin(xyp.x+xyp.y+dx) + yuv.z * cos(xyp.x+xyp.y+dx);
-        rgb = texture2D(Source,xy + vec2(1.0/TextureSize.x * InputSize.x / 512.0, 0.0));
+        //xyp.x = xyp.x * InputSize.x/256.0; 
+        float c0 = yuv.x + ( yuv.y * sin(xypc) ) + ( yuv.z*cos(xypc) );
+        float c1 = yuv.x + yuv.y * sin(xypc+dx) + yuv.z * cos(xypc+dx);
+        rgb = texture2D(Source,xy + vec2(SourceSize.z * InputSize.x / 512.0, 0.0));
         yuv = rgb2yuv * rgb.rgb;
-        float c2 = yuv.x + yuv.y * sin(xyp.x+xyp.y+2.0*dx) + yuv.z * cos(xyp.x+xyp.y+2.0*dx);
-        float c3 = yuv.x + yuv.y * sin(xyp.x+xyp.y+3.0*dx) + yuv.z * cos(xyp.x+xyp.y+3.0*dx);
+        float c2 = yuv.x + yuv.y * sin(xypc+dxto) + yuv.z * cos(xypc+dxto);
+        float c3 = yuv.x + yuv.y * sin(xypc+dxtr) + yuv.z * cos(xypc+dxtr);
 
         FragColor = (vec4(c0,c1,c2,c3)+0.65)/2.3;
 }
