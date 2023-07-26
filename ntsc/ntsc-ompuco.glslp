@@ -1,0 +1,9 @@
+shaders = 1
+
+shader0 = shaders/ntsc-ompuco/ntsc.glsl
+filter_linear0 = false
+
+textures = NOISE
+NOISE = shaders/ntsc-ompuco/gray_noise.png
+NOISE_linear = false
+NOISE_wrap_mode = "repeat"

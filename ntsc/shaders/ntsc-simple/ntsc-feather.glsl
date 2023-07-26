@@ -1,15 +1,20 @@
 #version 110
 
 /*
-   Simple S-video like shader by DariusG 2023
+   Simple Composite-like shader by DariusG 2023
+   This shader was created by observing my Amiga 500 
+   connected to a CRT with A520 composite TV modulator.
+   Not 100% accurate but gets the job done.
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the Free
    Software Foundation; either version 2 of the License, or (at your option)
    any later version.
 */
 
-#define iTime float(FrameCount)
-#define pi 3.141592
+#pragma parameter MASK "Color Subcarrier Artifacts"  0.08 0.0 1.0 0.01
+
+#define PI 3.141592
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -92,45 +97,87 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float GLITCH;
+uniform COMPAT_PRECISION float MASK;
 
 #else
-#define GLITCH 0.1
+#define MASK 0.7
 #endif
 
+mat3 RGBtoYIQ = mat3(
+        0.2989, 0.5870, 0.1140,
+        0.5959, -0.2744, -0.3216,
+        0.2115, -0.5229, 0.3114);
 
-const mat3 rgb2yuv = mat3(0.299,-0.14713, 0.615,
-                           0.587,-0.28886,-0.51499,
-                           0.114, 0.436  ,-0.10001);
+mat3 YIQtoRGB = mat3(
+        1.0, 0.956, 0.6210,
+        1.0, -0.2720, -0.6474,
+        1.0, -1.1060, 1.7046);
 
-const mat3 yuv2rgb = mat3(1.0, 1.0, 1.0,
-                 0.0,-0.39465,2.03211,
-                 1.13983,-0.58060,0.0);
+
+#define Time sin(float(FrameCount))
+#define SC MASK*sin(vTexCoord.x*SourceSize.x*2.0*PI)+1.0-MASK
 
 void main()
 {
-vec2 pos = vTexCoord;
+    
+    vec2 cent = floor(vTexCoord*SourceSize.xy)+0.5;
+    vec2 coords = cent*SourceSize.zw;
+    coords = vec2(mix(vTexCoord.x,coords.x,0.2),coords.y);
 
-vec3 res = texture2D(Source,pos).rgb;
+    vec3 res = COMPAT_TEXTURE(Source,coords).rgb; res *= RGBtoYIQ;
+    
+    vec3 resr = COMPAT_TEXTURE(Source,coords-(vec2(2.0*SourceSize.z,0.0))).rgb; resr *= RGBtoYIQ;
+    vec3 resru = COMPAT_TEXTURE(Source,coords-(vec2(SourceSize.z,0.0))).rgb; resru *= RGBtoYIQ;
+    vec3 resrr = COMPAT_TEXTURE(Source,coords-(vec2(3.0*SourceSize.z,0.0))).rgb; resrr *= RGBtoYIQ;
+    
+    vec3 resl = COMPAT_TEXTURE(Source,coords+(vec2(2.0*SourceSize.z,0.0))).rgb; resl *= RGBtoYIQ;
+    vec3 reslu = COMPAT_TEXTURE(Source,coords+(vec2(SourceSize.z,0.0))).rgb; reslu *= RGBtoYIQ;
+    vec3 resll = COMPAT_TEXTURE(Source,coords+(vec2(3.0*SourceSize.z,0.0))).rgb; resll *= RGBtoYIQ;
+    
+    res.gb += (resr.gb+resl.gb+resrr.gb+resll.gb+reslu.gb+resru.gb); res.gb /= 7.0;
+    res.r += resru.r; res.r /= 2.0;
+        
+    vec3 checker = COMPAT_TEXTURE(Source,vTexCoord - vec2(0.25/InputSize.x,0.0)).rgb;  checker *= RGBtoYIQ;  
+    vec3 checkerl = COMPAT_TEXTURE(Source,vTexCoord + vec2(0.1/InputSize.x,0.0)).rgb;  checkerl *= RGBtoYIQ;  
 
-vec3 leftp = COMPAT_TEXTURE(Source,pos-vec2(SourceSize.z,0.0)).rgb;
-vec3 rightp = COMPAT_TEXTURE(Source,pos+vec2(SourceSize.z,0.0)).rgb;
-vec3 dither = (leftp+rightp)/2.0;
+    float diff = res.g-checker.g;
+    float diffl = res.g-checkerl.g;
+    float ydiff = res.r-checker.r;
+    float ydiffl = res.r-checkerl.r;
 
-res = rgb2yuv*res; dither =rgb2yuv*dither;
-res =dither*0.49+res*0.51; //just keep a tiny evidence of dither
+    float x = mod(floor(vTexCoord.x*640.0),2.0);
+    float y = mod(floor(vTexCoord.y*480.0),2.0);
 
-vec3 check = COMPAT_TEXTURE(Source, pos + vec2(SourceSize.z,0.0)).rgb; 
-check = rgb2yuv*check;
 
-float lum_diff= abs(check.r-res.r); 
-float chr_diff= abs(check.g-res.g); 
+//Color subcarrier pattern
+    if (y == 0.0 && x == 0.0 && Time < 0.0 && diff > 0.0 || y == 0.0 && x == 1.0 && Time > 0.0 && diff > 0.0)
+    
+        res.b *= SC; // ok
+    
+    else if (y == 1.0 && x == 1.0 && Time < 0.0 && diff > 0.0 || y == 1.0 && x == 0.0 && Time > 0.0 && diff > 0.0)
+    
+        res.b *= SC; // ok
+ 
+    else if (y == 0.0 && x == 0.0 && Time < 0.0 && ydiff < 0.0 || y == 0.0 && x == 1.0 && Time > 0.0 && ydiff < 0.0)
+    
+        res.r *= SC; // ok
+    
+    else if (y == 1.0 && x == 1.0 && Time < 0.0 && ydiff < 0.0 || y == 1.0 && x == 0.0 && Time > 0.0 && ydiff < 0.0)
+        res.r *= SC; // ok
+   
+    else if (y == 0.0 && x == 0.0 && Time < 0.0 && ydiffl < 0.0 || y == 0.0 && x == 1.0 && Time > 0.0 && ydiffl < 0.0)
+    
+        res.r *= SC;
+    
+    else if (y == 1.0 && x == 1.0 && Time < 0.0 && ydiffl < 0.0 || y == 1.0 && x == 0.0 && Time > 0.0 && ydiffl < 0.0)
+        res.r *= SC; 
 
-//flicker on luma/chroma difference
-res +=lum_diff*abs(sin(iTime))*0.1;
-res +=chr_diff*abs(sin(iTime))*0.1;
+//for testing
+//if (ydiffl < 0.0) res = vec3(0.0);
 
-res = yuv2rgb*res;
-FragColor = vec4(res,1.0);
+///
+    res *= YIQtoRGB;
+    FragColor = vec4(res,1.0);
 }
+
 #endif

@@ -236,8 +236,13 @@ void main() {
     res = sqrt(res);
     res.rgb = mix( vec3(dot(vec3(0.2126, 0.7152, 0.0722), res.rgb)),res.rgb, saturation);
 
-    #ifdef GL_ES
-    if (coords.x < 0.0001 || coords.y > 0.9999) res.rgb = vec3(0.0);
+   #if defined GL_ES
+    // hacky clamp fix for GLES
+    vec2 bordertest = coords;
+    if ( bordertest.x > 0.0001 && bordertest.x < 0.9999 && bordertest.y > 0.0001 && bordertest.y < 0.9999)
+        res = res;
+    else
+        res = vec4(0.,0.,0.,0.);
     #endif
     FragColor = res;
 }
