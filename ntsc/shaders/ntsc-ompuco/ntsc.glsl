@@ -3,6 +3,7 @@
 //SHADER ORIGINALY CREADED BY "ompuco" ON SHADERTOY
 //MODIFIED AND PORTED TO RETROARCH BY DARIUSG 2023
 //COMPATIBLE WITH GLES 2.0, GLES 3.0
+//https://www.shadertoy.com/view/XlsczN
 
 #pragma parameter blur_amount "Blur Amount"  2.5 0.0 8.0 0.1
 #pragma parameter SIG "Signal_quality - more=worse"  2.0 0.0 50.0 0.1
