@@ -2,8 +2,6 @@ shaders = 1
 
 shader0 = shaders/ntsc-ompuco/ntsc.glsl
 filter_linear0 = false
-scale_type0 = viewport
-scale0 = 1.0
 
 textures = NOISE
 NOISE = shaders/ntsc-ompuco/gray_noise.png
