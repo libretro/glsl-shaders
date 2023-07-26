@@ -4,9 +4,10 @@
 //MODIFIED AND PORTED TO RETROARCH BY DARIUSG 2023
 //COMPATIBLE WITH GLES 2.0, GLES 3.0
 
-#pragma parameter blur_amount "Blur Amount"  3.0 0.0 8.0 0.1
-#pragma parameter SIG "Signal_quality - more=worse"  3.0 0.0 50.0 0.1
+#pragma parameter blur_amount "Blur Amount"  2.5 0.0 8.0 0.1
+#pragma parameter SIG "Signal_quality - more=worse"  2.0 0.0 50.0 0.1
 #pragma parameter bottom_strenth "Bottom Strength"  2.0 0.0 6.0 0.1
+#pragma parameter TEAR "Main Tearing Strength"  50.0 0.0 100.0 1.0
 
 #define PI 3.141592
 #if defined(VERTEX)
@@ -95,11 +96,13 @@ COMPAT_VARYING vec4 TEX0;
 uniform COMPAT_PRECISION float blur_amount;
 uniform COMPAT_PRECISION float SIG;
 uniform COMPAT_PRECISION float bottom_strenth;
+uniform COMPAT_PRECISION float TEAR;
 
 #else
 #define blur_amount 3.0
 #define SIG 2.0
 #define bottom_strenth 3.0
+#define TEAR 50.0
 #endif
 
 
@@ -188,8 +191,8 @@ void main(){
     // Main tearing
     float e = min(0.30, pow(max(0.0, cos(uv.y * 4.0 + 0.3) - 0.75) * (s + 0.5) * 1.0, 3.0)) * 25.0;
     s -= pow(COMPAT_TEXTURE(Source, vec2(0.01 + (uv.y * 32.0) / 32.0, 1.0)).r, 1.0);
-    uv.x += e * abs(s * 3.0);
-    // Bootom tearing
+    uv.x += e * abs(s * 3.0)*TEAR/100.0;
+    // Bootom tearing, showing up, original shader using 0.0 at the bottom??
     float r = COMPAT_TEXTURE(NOISE, vec2(mod(TIME * 10.0, mod(TIME * 10.0, 256.0) * (1.0 / 256.0)), 0.0)).r * (2.0 * s);
     uv.x += abs(r * pow(min(0.003, (uv.y - 0.15)) * bottom_strenth, 2.0));
     
