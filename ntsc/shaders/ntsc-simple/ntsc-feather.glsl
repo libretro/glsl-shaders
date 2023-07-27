@@ -129,12 +129,12 @@ const mat3 NTSC = mat3(
 
 #define Time sin(float(FrameCount))
 
-float phase = InputSize.x<300.0 ? 4.0*PI/15.0 : PI/3.0;
-#define SC MASK*sin(vTexCoord.x*SourceSize.x*phase)+1.0-MASK
 
 void main()
 {
-    
+    float phase = InputSize.x<300.0 ? 4.0*PI/15.0 : PI/3.0;
+    #define SC MASK*sin(vTexCoord.x*SourceSize.x*phase)+1.0-MASK
+
     vec2 cent = floor(vTexCoord*SourceSize.xy)+0.5;
     vec2 coords = cent*SourceSize.zw;
     coords = vec2(mix(vTexCoord.x,coords.x,0.2),coords.y);
