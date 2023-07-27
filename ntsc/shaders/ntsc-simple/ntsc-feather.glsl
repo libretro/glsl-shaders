@@ -13,6 +13,8 @@
 */
 
 #pragma parameter MASK "Color Subcarrier Artifacts"  0.08 0.0 1.0 0.01
+#pragma parameter COMPOSITE_LOWPASS "Composite Lowpass"  0.8 0.0 2.0 0.05
+#pragma parameter COL_BLEED "Chroma Bleed"  1.4 0.0 2.0 0.05
 
 #define PI 3.141592
 #if defined(VERTEX)
@@ -98,9 +100,13 @@ COMPAT_VARYING vec4 TEX0;
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float MASK;
+uniform COMPAT_PRECISION float COMPOSITE_LOWPASS;
+uniform COMPAT_PRECISION float COL_BLEED;
 
 #else
 #define MASK 0.7
+#define COMPOSITE_LOWPASS 1.0
+#define COL_BLEED 1.0
 #endif
 
 mat3 RGBtoYIQ = mat3(
@@ -115,7 +121,9 @@ mat3 YIQtoRGB = mat3(
 
 
 #define Time sin(float(FrameCount))
-#define SC MASK*sin(vTexCoord.x*SourceSize.x*2.0*PI)+1.0-MASK
+
+float phase = InputSize.x<300.0 ? 4.0*PI/15.0 : PI/3.0;
+#define SC MASK*sin(vTexCoord.x*SourceSize.x*phase)+1.0-MASK
 
 void main()
 {
@@ -125,17 +133,20 @@ void main()
     coords = vec2(mix(vTexCoord.x,coords.x,0.2),coords.y);
 
     vec3 res = COMPAT_TEXTURE(Source,coords).rgb; res *= RGBtoYIQ;
+    float onetexel = SourceSize.z*COMPOSITE_LOWPASS;
+    float bleed = SourceSize.z*COL_BLEED;
+    vec3 resr = COMPAT_TEXTURE(Source,coords-(vec2(2.0*bleed,0.0))).rgb; resr *= RGBtoYIQ;
+    vec3 resru = COMPAT_TEXTURE(Source,coords-(vec2(onetexel,0.0))).rgb; resru *= RGBtoYIQ;
+    vec3 resrr = COMPAT_TEXTURE(Source,coords-(vec2(3.0*bleed,0.0))).rgb; resrr *= RGBtoYIQ;
     
-    vec3 resr = COMPAT_TEXTURE(Source,coords-(vec2(2.0*SourceSize.z,0.0))).rgb; resr *= RGBtoYIQ;
-    vec3 resru = COMPAT_TEXTURE(Source,coords-(vec2(SourceSize.z,0.0))).rgb; resru *= RGBtoYIQ;
-    vec3 resrr = COMPAT_TEXTURE(Source,coords-(vec2(3.0*SourceSize.z,0.0))).rgb; resrr *= RGBtoYIQ;
+    vec3 resl = COMPAT_TEXTURE(Source,coords+(vec2(2.0*bleed,0.0))).rgb; resl *= RGBtoYIQ;
+    vec3 reslu = COMPAT_TEXTURE(Source,coords+(vec2(bleed,0.0))).rgb; reslu *= RGBtoYIQ;
+    vec3 resll = COMPAT_TEXTURE(Source,coords+(vec2(3.0*bleed,0.0))).rgb; resll *= RGBtoYIQ;
     
-    vec3 resl = COMPAT_TEXTURE(Source,coords+(vec2(2.0*SourceSize.z,0.0))).rgb; resl *= RGBtoYIQ;
-    vec3 reslu = COMPAT_TEXTURE(Source,coords+(vec2(SourceSize.z,0.0))).rgb; reslu *= RGBtoYIQ;
-    vec3 resll = COMPAT_TEXTURE(Source,coords+(vec2(3.0*SourceSize.z,0.0))).rgb; resll *= RGBtoYIQ;
-    
+    //color bleed
     res.gb += (resr.gb+resl.gb+resrr.gb+resll.gb+reslu.gb+resru.gb); res.gb /= 7.0;
-    res.r += resru.r; res.r /= 2.0;
+    //overall bluriness
+    res.r = (res.r + resru.r)/2.0; 
         
     vec3 checker = COMPAT_TEXTURE(Source,vTexCoord - vec2(0.25/InputSize.x,0.0)).rgb;  checker *= RGBtoYIQ;  
     vec3 checkerl = COMPAT_TEXTURE(Source,vTexCoord + vec2(0.1/InputSize.x,0.0)).rgb;  checkerl *= RGBtoYIQ;  
@@ -145,8 +156,8 @@ void main()
     float ydiff = res.r-checker.r;
     float ydiffl = res.r-checkerl.r;
 
-    float x = mod(floor(vTexCoord.x*640.0),2.0);
-    float y = mod(floor(vTexCoord.y*480.0),2.0);
+    float x = mod(floor(vTexCoord.x*SourceSize.x),2.0);
+    float y = mod(floor(vTexCoord.y*SourceSize.y),2.0);
 
 
 //Color subcarrier pattern
