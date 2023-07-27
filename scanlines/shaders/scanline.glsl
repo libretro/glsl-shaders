@@ -1,7 +1,7 @@
 // Parameter lines go here:
-#pragma parameter SCANLINE_SINE_COMP_A "Grid Strength" 0.0 0.0 1.00 0.05
-#pragma parameter SCANLINE_SINE_COMP_B "Scanline Strength" 0.25 0.0 1.0 0.05
-#pragma parameter size "Grid size"  1.0 1.0 4.0 1.0
+#pragma parameter SCANLINE_SINE_COMP_A "Grid Strength" 0.3 0.0 1.00 0.05
+#pragma parameter SCANLINE_SINE_COMP_B "Scanline Strength" 0.5 0.0 1.0 0.05
+#pragma parameter size "Grid size"  1.0 1.0 2.0 1.0
 #define pi 3.141592654
 
 #if defined(VERTEX)
@@ -43,7 +43,7 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy*1.0001;
-    omega = vec2(pi * size * OutputSize.x, 1.999 * pi * TextureSize.y);
+    omega = vec2( TEX0.x*TextureSize.x/InputSize.x*OutputSize.x/size*pi, pi);
 }
 
 #elif defined(FRAGMENT)
@@ -98,7 +98,11 @@ void main()
 {
    vec2 sine_comp = vec2(SCANLINE_SINE_COMP_A, SCANLINE_SINE_COMP_B);
    vec3 res = COMPAT_TEXTURE(Source, vTexCoord).xyz;
-   vec3 scanline = res * ((1.0-(SCANLINE_SINE_COMP_B + SCANLINE_SINE_COMP_A) *0.5) + dot(sine_comp * sin(vTexCoord * omega), vec2(1.0, 1.0)));
-   FragColor = vec4(scanline, 1.0);
+
+   float scanline = sine_comp.y * sin(fract(vTexCoord.y*TextureSize.y)*omega.y)+1.0-sine_comp.y;
+   float mask  =    sine_comp.x * sin(omega.x)+1.0-sine_comp.x;
+   res *= mix(scanline*mask,1.0,dot(res,vec3(0.2)));
+   
+   FragColor = vec4(res, 1.0);
 } 
 #endif
