@@ -15,6 +15,7 @@
 #pragma parameter MASK "Color Subcarrier Artifacts"  0.08 0.0 1.0 0.01
 #pragma parameter COMPOSITE_LOWPASS "Composite Lowpass"  0.8 0.0 2.0 0.05
 #pragma parameter COL_BLEED "Chroma Bleed"  1.4 0.0 2.0 0.05
+#pragma parameter NTSC_COL "NTSC Colors "  0.0 0.0 1.0 1.0
 
 #define PI 3.141592
 #if defined(VERTEX)
@@ -102,11 +103,13 @@ COMPAT_VARYING vec4 TEX0;
 uniform COMPAT_PRECISION float MASK;
 uniform COMPAT_PRECISION float COMPOSITE_LOWPASS;
 uniform COMPAT_PRECISION float COL_BLEED;
+uniform COMPAT_PRECISION float NTSC_COL;
 
 #else
 #define MASK 0.7
 #define COMPOSITE_LOWPASS 1.0
 #define COL_BLEED 1.0
+#define NTSC_COL 0.0
 #endif
 
 mat3 RGBtoYIQ = mat3(
@@ -119,6 +122,10 @@ mat3 YIQtoRGB = mat3(
         1.0, -0.2720, -0.6474,
         1.0, -1.1060, 1.7046);
 
+const mat3 NTSC = mat3(
+    1.8088923,   -0.6480268,  -0.0833558,
+   0.4062922 ,  0.6175271,   -0.0038849,
+  -0.0025872,  -0.103848 ,  1.182318);
 
 #define Time sin(float(FrameCount))
 
@@ -188,6 +195,7 @@ void main()
 
 ///
     res *= YIQtoRGB;
+    if (NTSC_COL == 1.0)res *= NTSC;
     FragColor = vec4(res,1.0);
 }
 
