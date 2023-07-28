@@ -17,7 +17,7 @@
 #pragma parameter COL_BLEED "Chroma Bleed"  1.4 0.0 2.0 0.05
 #pragma parameter NTSC_COL "NTSC Colors "  0.0 0.0 1.0 1.0
 #pragma parameter BRIGHTNESS "Brightness"  1.0 0.0 2.0 0.01
-#pragma parameter SATURATION "Saturation"  1.3 0.0 2.0 0.01
+#pragma parameter SATURATION "Saturation"  2.0 0.0 2.0 0.01
 #pragma parameter FRINGING "Fringing "  0.4 0.0 1.0 0.01
 #pragma parameter ARTIFACTS "Artifacts "  0.4 0.0 1.0 0.01
 
