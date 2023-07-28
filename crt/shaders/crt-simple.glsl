@@ -208,6 +208,16 @@ void main()
 
                 mul_res *= dotMaskWeights;
 
+
+#if  defined GL_ES
+	// hacky clamp fix for GLES
+    vec2 bordertest = (xy);
+    if ( bordertest.x > 0.0001 && bordertest.x < 0.9999 && bordertest.y > 0.0001 && bordertest.y < 0.9999)
+        mul_res = mul_res;
+    else
+        mul_res = vec3(0.,0.,0.);
+#endif
+
                 FragColor = vec4(vec3(pow(mul_res, vec3(outgamma))), 1.0);
         }
 
