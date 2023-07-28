@@ -165,6 +165,8 @@ void main()
          color+= InvX.y*c11.xyz;
          color+= InvX.z*c12.xyz;
          color+= InvX.w*c13.xyz;
+//gles fix black bars
+color = clamp (color, 0.0,1.0);
 /////////////////////
     
     vec3 lumweight=vec3(0.213,0.715,0.072);
