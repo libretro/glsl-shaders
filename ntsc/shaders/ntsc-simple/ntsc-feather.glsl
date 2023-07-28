@@ -12,10 +12,14 @@
    any later version.
 */
 
-#pragma parameter MASK "Color Subcarrier Artifacts"  0.08 0.0 1.0 0.01
+#pragma parameter MASK "Color Subcarrier Artifacts"  0.2 0.0 1.0 0.01
 #pragma parameter COMPOSITE_LOWPASS "Composite Lowpass"  0.8 0.0 2.0 0.05
 #pragma parameter COL_BLEED "Chroma Bleed"  1.4 0.0 2.0 0.05
 #pragma parameter NTSC_COL "NTSC Colors "  0.0 0.0 1.0 1.0
+#pragma parameter BRIGHTNESS "Brightness"  1.0 0.0 2.0 0.01
+#pragma parameter SATURATION "Saturation"  1.3 0.0 2.0 0.01
+#pragma parameter FRINGING "Fringing "  0.4 0.0 1.0 0.01
+#pragma parameter ARTIFACTS "Artifacts "  0.4 0.0 1.0 0.01
 
 #define PI 3.141592
 #if defined(VERTEX)
@@ -104,12 +108,20 @@ uniform COMPAT_PRECISION float MASK;
 uniform COMPAT_PRECISION float COMPOSITE_LOWPASS;
 uniform COMPAT_PRECISION float COL_BLEED;
 uniform COMPAT_PRECISION float NTSC_COL;
+uniform COMPAT_PRECISION float BRIGHTNESS;
+uniform COMPAT_PRECISION float SATURATION;
+uniform COMPAT_PRECISION float FRINGING;
+uniform COMPAT_PRECISION float ARTIFACTS;
 
 #else
 #define MASK 0.7
 #define COMPOSITE_LOWPASS 1.0
 #define COL_BLEED 1.0
 #define NTSC_COL 0.0
+#define BRIGHTNESS 1.0
+#define SATURATION 1.0
+#define FRINGING 0.0
+#define ARTIFACTS 0.0
 #endif
 
 mat3 RGBtoYIQ = mat3(
@@ -127,13 +139,23 @@ const mat3 NTSC = mat3(
    0.4062922 ,  0.6175271,   -0.0038849,
   -0.0025872,  -0.103848 ,  1.182318);
 
-#define Time sin(float(FrameCount))
+mat3 mix_mat = mat3(
+    BRIGHTNESS, FRINGING, FRINGING,
+    ARTIFACTS, 1.0, 0.0,
+    ARTIFACTS, 0.0, 1.0
+);
 
+mat3 original = mat3(
+    1.0, 0., 0.,
+    0., 1.0, 0.0,
+    0., 0.0, 1.0
+);
+
+#define Time sin(float(FrameCount))
 
 void main()
 {
-    float phase = InputSize.x<300.0 ? 4.0*PI/15.0 : PI/3.0;
-    #define SC MASK*sin(vTexCoord.x*SourceSize.x*phase)+1.0-MASK
+   
 
     vec2 cent = floor(vTexCoord*SourceSize.xy)+0.5;
     vec2 coords = cent*SourceSize.zw;
@@ -146,6 +168,14 @@ void main()
     vec3 resru = COMPAT_TEXTURE(Source,coords-(vec2(onetexel,0.0))).rgb; resru *= RGBtoYIQ;
     vec3 resrr = COMPAT_TEXTURE(Source,coords-(vec2(3.0*bleed,0.0))).rgb; resrr *= RGBtoYIQ;
     
+    vec3 checker = COMPAT_TEXTURE(Source,vTexCoord - vec2(0.5*SourceSize.z,0.0)).rgb;  checker *= RGBtoYIQ;  
+    vec3 checkerl = COMPAT_TEXTURE(Source,vTexCoord + vec2(0.5*SourceSize.z,0.0)).rgb;  checkerl *= RGBtoYIQ;  
+
+    float diff = res.b-checker.b;
+    float diffl = res.b-checkerl.b;
+    float ydiff = res.r-checker.r;
+    float ydiffl = res.r-checkerl.r;
+
     vec3 resl = COMPAT_TEXTURE(Source,coords+(vec2(2.0*bleed,0.0))).rgb; resl *= RGBtoYIQ;
     vec3 reslu = COMPAT_TEXTURE(Source,coords+(vec2(bleed,0.0))).rgb; reslu *= RGBtoYIQ;
     vec3 resll = COMPAT_TEXTURE(Source,coords+(vec2(3.0*bleed,0.0))).rgb; resll *= RGBtoYIQ;
@@ -155,47 +185,23 @@ void main()
     //overall bluriness
     res.r = (res.r + resru.r)/2.0; 
         
-    vec3 checker = COMPAT_TEXTURE(Source,vTexCoord - vec2(0.25/InputSize.x,0.0)).rgb;  checker *= RGBtoYIQ;  
-    vec3 checkerl = COMPAT_TEXTURE(Source,vTexCoord + vec2(0.1/InputSize.x,0.0)).rgb;  checkerl *= RGBtoYIQ;  
+    float chroma_phase = 0.6667 * PI * (mod(vTexCoord.y*OutputSize.y/2.0*SourceSize.y/InputSize.y, 3.0) + Time);
+    float mod_phase = chroma_phase + vTexCoord.x*OutputSize.x/2.0*SourceSize.x/InputSize.x*PI/3.0;
+    float i_mod = cos(mod_phase);
+    float q_mod = sin(mod_phase);
 
-    float diff = res.g-checker.g;
-    float diffl = res.g-checkerl.g;
-    float ydiff = res.r-checker.r;
-    float ydiffl = res.r-checkerl.r;
-
-    float x = mod(floor(vTexCoord.x*SourceSize.x),2.0);
-    float y = mod(floor(vTexCoord.y*SourceSize.y),2.0);
-
-
-//Color subcarrier pattern
-    if (y == 0.0 && x == 0.0 && Time < 0.0 && diff > 0.0 || y == 0.0 && x == 1.0 && Time > 0.0 && diff > 0.0)
-    
-        res.b *= SC; // ok
-    
-    else if (y == 1.0 && x == 1.0 && Time < 0.0 && diff > 0.0 || y == 1.0 && x == 0.0 && Time > 0.0 && diff > 0.0)
-    
-        res.b *= SC; // ok
- 
-    else if (y == 0.0 && x == 0.0 && Time < 0.0 && ydiff < 0.0 || y == 0.0 && x == 1.0 && Time > 0.0 && ydiff < 0.0)
-    
-        res.r *= SC; // ok
-    
-    else if (y == 1.0 && x == 1.0 && Time < 0.0 && ydiff < 0.0 || y == 1.0 && x == 0.0 && Time > 0.0 && ydiff < 0.0)
-        res.r *= SC; // ok
-   
-    else if (y == 0.0 && x == 0.0 && Time < 0.0 && ydiffl < 0.0 || y == 0.0 && x == 1.0 && Time > 0.0 && ydiffl < 0.0)
-    
-        res.r *= SC;
-    
-    else if (y == 1.0 && x == 1.0 && Time < 0.0 && ydiffl < 0.0 || y == 1.0 && x == 0.0 && Time > 0.0 && ydiffl < 0.0)
-        res.r *= SC; 
+        res.yz *= vec2(i_mod,q_mod);
+        if (ydiff < 0.0 || diff < 0.0 || ydiffl <0.0 || diffl < 0.0) res = mix(res*original,res*mix_mat,MASK);
+        res.yz *= vec2(i_mod,q_mod);
 
 //for testing
-//if (ydiffl < 0.0) res = vec3(0.0);
+//if (diff < 0.0) res = vec3(0.0);
 
 ///
     res *= YIQtoRGB;
     if (NTSC_COL == 1.0)res *= NTSC;
+    float gray = dot(vec3(0.30,0.59,0.11),res);
+    res = mix(vec3(gray),res,SATURATION);
     FragColor = vec4(res,1.0);
 }
 
