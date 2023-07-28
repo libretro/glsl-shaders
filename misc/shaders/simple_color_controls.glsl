@@ -190,7 +190,7 @@ vec3 colorize(vec3 grayscale, vec3 color)
 
 void main()
 {
-   vec3 col = texture2D(Source,vTexCoord).rgb;
+   vec3 col = COMPAT_TEXTURE(Source,vTexCoord).rgb;
    col *= BRIGHTNESS;
    col = (contrastMatrix(contrast) * vec4(col,1.0)).rgb;  
 //color temperature  

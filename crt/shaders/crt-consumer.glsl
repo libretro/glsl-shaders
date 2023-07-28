@@ -585,6 +585,8 @@ if (bleed == 1.0){
 
     color.rgb = (color.rgb)*0.5 + (YUV2RGB(yuv) * 1.0)*0.5;
 
+// fix for gles half screen turning black
+color =clamp(color, 0.0,1.0);
 //end of color bleeding
 } 
     //COLOR TEMPERATURE FROM GUEST.R-DR.VENOM
