@@ -13,13 +13,13 @@
 */
 
 #pragma parameter MASK "Color Subcarrier Artifacts"  0.2 0.0 1.0 0.01
-#pragma parameter COMPOSITE_LOWPASS "Composite Lowpass"  0.8 0.0 2.0 0.05
-#pragma parameter COL_BLEED "Chroma Bleed"  1.4 0.0 2.0 0.05
+#pragma parameter COMPOSITE_LOWPASS "Composite Lowpass"  0.95 0.0 4.0 0.05
+#pragma parameter COL_BLEED "Chroma Bleed"  0.25 0.0 2.0 0.05
 #pragma parameter NTSC_COL "NTSC Colors "  0.0 0.0 1.0 1.0
-#pragma parameter BRIGHTNESS "Brightness"  1.0 0.0 2.0 0.01
-#pragma parameter SATURATION "Saturation"  2.0 0.0 2.0 0.01
-#pragma parameter FRINGING "Fringing "  0.4 0.0 1.0 0.01
-#pragma parameter ARTIFACTS "Artifacts "  0.4 0.0 1.0 0.01
+#pragma parameter BRIGHTNESS "Brightness"  1.0 0.0 2.0 0.05
+#pragma parameter SATURATION "Saturation"  2.0 0.0 2.0 0.05
+#pragma parameter FRINGING "Fringing "  0.25 0.0 1.0 0.01
+#pragma parameter ARTIFACTS "Artifacts "  0.25 0.0 1.0 0.01
 
 #define PI 3.141592
 #if defined(VERTEX)
@@ -146,9 +146,9 @@ mat3 mix_mat = mat3(
 );
 
 mat3 original = mat3(
-    1.0, 0., 0.,
-    0., 1.0, 0.0,
-    0., 0.0, 1.0
+    1.0, 0.0, 0.0,
+    0.0, 1.0, 0.0,
+    0.0, 0.0, 1.0
 );
 
 #define Time sin(float(FrameCount))
@@ -162,45 +162,43 @@ void main()
     coords = vec2(mix(vTexCoord.x,coords.x,0.2),coords.y);
 
     vec3 res = COMPAT_TEXTURE(Source,coords).rgb; res *= RGBtoYIQ;
+    vec3 initial = COMPAT_TEXTURE(Source,coords-vec2(SourceSize.z,0.0)).rgb; initial *= RGBtoYIQ;
     float onetexel = SourceSize.z*COMPOSITE_LOWPASS;
     float bleed = SourceSize.z*COL_BLEED;
+
     vec3 resr = COMPAT_TEXTURE(Source,coords-(vec2(2.0*bleed,0.0))).rgb; resr *= RGBtoYIQ;
     vec3 resru = COMPAT_TEXTURE(Source,coords-(vec2(onetexel,0.0))).rgb; resru *= RGBtoYIQ;
     vec3 resrr = COMPAT_TEXTURE(Source,coords-(vec2(3.0*bleed,0.0))).rgb; resrr *= RGBtoYIQ;
     
-    vec3 checker = COMPAT_TEXTURE(Source,vTexCoord - vec2(0.5*SourceSize.z,0.0)).rgb;  checker *= RGBtoYIQ;  
-    vec3 checkerl = COMPAT_TEXTURE(Source,vTexCoord + vec2(0.5*SourceSize.z,0.0)).rgb;  checkerl *= RGBtoYIQ;  
-
-    float diff = res.b-checker.b;
-    float diffl = res.b-checkerl.b;
-    float ydiff = res.r-checker.r;
-    float ydiffl = res.r-checkerl.r;
-
     vec3 resl = COMPAT_TEXTURE(Source,coords+(vec2(2.0*bleed,0.0))).rgb; resl *= RGBtoYIQ;
     vec3 reslu = COMPAT_TEXTURE(Source,coords+(vec2(bleed,0.0))).rgb; reslu *= RGBtoYIQ;
     vec3 resll = COMPAT_TEXTURE(Source,coords+(vec2(3.0*bleed,0.0))).rgb; resll *= RGBtoYIQ;
-    
+
+
     //color bleed
     res.gb += (resr.gb+resl.gb+resrr.gb+resll.gb+reslu.gb+resru.gb); res.gb /= 7.0;
     //overall bluriness
     res.r = (res.r + resru.r)/2.0; 
-        
-    float chroma_phase = 0.6667 * PI * (mod(vTexCoord.y*OutputSize.y/2.0*SourceSize.y/InputSize.y, 3.0) + Time);
-    float mod_phase = chroma_phase + vTexCoord.x*OutputSize.x/2.0*SourceSize.x/InputSize.x*PI/3.0;
+    vec3 lumweight = vec3(0.3,0.6,0.1);
+    float ydiff = dot(lumweight,initial)-dot(lumweight,resr);
+    float ydiffl = dot(lumweight,initial)-dot(lumweight,resrr);
+   
+    float chroma_phase = 0.6667 * PI * (mod(vTexCoord.y*SourceSize.y, 3.0) + Time);
+    float mod_phase = chroma_phase + vTexCoord.x*OutputSize.x*4.0*PI/3.0;
     float i_mod = cos(mod_phase);
     float q_mod = sin(mod_phase);
 
-        res.yz *= vec2(i_mod,q_mod);
-        if (ydiff < 0.0 || diff < 0.0 || ydiffl <0.0 || diffl < 0.0) res = mix(res*original,res*mix_mat,MASK);
-        res.yz *= vec2(i_mod,q_mod);
 
+         res.yz *= vec2(i_mod,q_mod);
+        if (ydiff < 0.001 || ydiff < 0.01  ) res = mix(res*original,res*mix_mat,MASK);
+         res.yz *= vec2(i_mod,q_mod);
 //for testing
-//if (diff < 0.0) res = vec3(0.0);
+//if (ydiff < -0.001  ) res = vec3(.0,0.0,1.0);
 
 ///
     res *= YIQtoRGB;
     if (NTSC_COL == 1.0)res *= NTSC;
-    float gray = dot(vec3(0.30,0.59,0.11),res);
+    float gray = dot(lumweight,res);
     res = mix(vec3(gray),res,SATURATION);
     FragColor = vec4(res,1.0);
 }
