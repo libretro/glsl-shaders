@@ -1,4 +1,4 @@
-#version 130
+#version 110
 
 // NTSC-Adaptive
 // based on Themaister's NTSC shader
@@ -190,10 +190,11 @@ void main()
 
    float mod1 = 2.0;
    float mod2 = 3.0; 
+   float frame = float (FrameCount);
 
 if (MERGE > 0.5)
 {
-   float chroma_phase2 = (phase < 2.5) ? PI * (mod(pix_no.y, mod1) + mod(FrameCount+1, 2.)) : 0.6667 * PI * (mod(pix_no.y, mod2) + mod(FrameCount+1, 2.));
+   float chroma_phase2 = (phase < 2.5) ? PI * (mod(pix_no.y, mod1) + mod(frame+1., 2.)) : 0.6667 * PI * (mod(pix_no.y, mod2) + mod(frame+1.0, 2.));
    float mod_phase2 = chroma_phase2 + pix_no.x * CHROMA_MOD_FREQ;
    float i_mod2 = cos(mod_phase2);
    float q_mod2 = sin(mod_phase2);
@@ -202,7 +203,7 @@ if (MERGE > 0.5)
    yiq2.yz *= vec2(i_mod2, q_mod2); // Demodulate.   
 }
    
-   float chroma_phase = (phase < 2.5) ? PI * (mod(pix_no.y, mod1) + mod(FrameCount, 2.)) : 0.6667 * PI * (mod(pix_no.y, mod2) + mod(FrameCount, 2.));
+   float chroma_phase = (phase < 2.5) ? PI * (mod(pix_no.y, mod1) + mod(frame, 2.)) : 0.6667 * PI * (mod(pix_no.y, mod2) + mod(frame, 2.));
    float mod_phase = chroma_phase + pix_no.x * CHROMA_MOD_FREQ;
 
    float i_mod = cos(mod_phase);
