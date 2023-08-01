@@ -139,11 +139,7 @@ const mat3 NTSC = mat3(
    0.4062922 ,  0.6175271,   -0.0038849,
   -0.0025872,  -0.103848 ,  1.182318);
 
-mat3 mix_mat = mat3(
-    BRIGHTNESS, FRINGING, FRINGING,
-    ARTIFACTS, 1.0, 0.0,
-    ARTIFACTS, 0.0, 1.0
-);
+
 
 mat3 original = mat3(
     1.0, 0.0, 0.0,
@@ -151,11 +147,17 @@ mat3 original = mat3(
     0.0, 0.0, 1.0
 );
 
-#define Time sin(float(FrameCount))
+#define Time sin(float(FrameCount/2))
 
 void main()
 {
-   
+
+   // GLES error if mat out of main, considered a const not accepting variables? 
+   mat3 mix_mat = mat3(
+    BRIGHTNESS, FRINGING, FRINGING,
+    ARTIFACTS, 1.0, 0.0,
+    ARTIFACTS, 0.0, 1.0
+);
 
     vec2 cent = floor(vTexCoord*SourceSize.xy)+0.5;
     vec2 coords = cent*SourceSize.zw;
@@ -180,20 +182,20 @@ void main()
     //overall bluriness
     res.r = (res.r + resru.r)/2.0; 
     vec3 lumweight = vec3(0.3,0.6,0.1);
-    float ydiff = dot(lumweight,initial)-dot(lumweight,resr);
+    float ydiff = dot(lumweight.gb,initial.gb)-dot(lumweight.gb,resr.gb);
     float ydiffl = dot(lumweight,initial)-dot(lumweight,resrr);
    
     float chroma_phase = 0.6667 * PI * (mod(vTexCoord.y*SourceSize.y, 3.0) + Time);
-    float mod_phase = chroma_phase + vTexCoord.x*OutputSize.x*4.0*PI/3.0;
+    float mod_phase = chroma_phase + vTexCoord.x*SourceSize.x*2.0*PI/3.0;
     float i_mod = cos(mod_phase);
     float q_mod = sin(mod_phase);
 
 
          res.yz *= vec2(i_mod,q_mod);
-        if (ydiff < 0.001 || ydiff < 0.01  ) res = mix(res*original,res*mix_mat,MASK);
+        if (ydiff < 0.0  ) res = mix(res*original,res*mix_mat,MASK);
          res.yz *= vec2(i_mod,q_mod);
 //for testing
-//if (ydiff < -0.001  ) res = vec3(.0,0.0,1.0);
+//if (ydiff < 0.00  ) res = vec3(0.0,1.0,1.0);
 
 ///
     res *= YIQtoRGB;
