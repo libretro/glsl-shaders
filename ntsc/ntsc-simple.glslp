@@ -1,5 +1,5 @@
 shaders = 1
 shader0 = shaders/ntsc-simple/ntsc-simple.glsl
 
-filter_linear0 = true 
+filter_linear0 = false 
 

@@ -23,13 +23,13 @@
 #pragma parameter Curvature "Curvature" 1.0 0.0 1.0 1.0
 #pragma parameter blurx "Convergence X-Axis" 0.85 -2.0 2.0 0.05
 #pragma parameter blury "Convergence Y-Axis" -0.10 -2.0 2.0 0.05
-#pragma parameter HIGHSCANAMOUNT1 "Scanline Amount (Dark)" 0.4 0.0 1.0 0.05
-#pragma parameter HIGHSCANAMOUNT2 "Scanline Amount (Bright)" 0.3 0.0 1.0 0.05
+#pragma parameter HIGHSCANAMOUNT1 "Scanline Amount (Dark)" 0.40 0.0 1.0 0.05
+#pragma parameter HIGHSCANAMOUNT2 "Scanline Amount (Bright)" 0.25 0.0 1.0 0.05
 #pragma parameter TYPE "Mask Type" 0.0 0.0 1.0 1.0
 #pragma parameter MASK_DARK "Mask Effect Amount" 0.3 0.0 1.0 0.05
 #pragma parameter MASK_FADE "Mask/Scanline Fade" 0.7 0.0 1.0 0.05
 #pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
-#pragma parameter FLICK "Flicker" 6.0 0.0 50.0 1.0
+#pragma parameter ntsc "NTSC Colors" 0.0 0.0 1.0 1.0
 
 #define pi 3.14159
 #define scale vec4(TextureSize/InputSize,InputSize/TextureSize)
@@ -43,7 +43,7 @@ uniform COMPAT_PRECISION float HIGHSCANAMOUNT2;
 uniform COMPAT_PRECISION float MASK_DARK;
 uniform COMPAT_PRECISION float MASK_FADE;
 uniform COMPAT_PRECISION float sat;
-uniform COMPAT_PRECISION float FLICK;
+uniform COMPAT_PRECISION float ntsc;
 uniform COMPAT_PRECISION float Curvature;
 uniform COMPAT_PRECISION float TYPE;
 
@@ -56,7 +56,7 @@ uniform COMPAT_PRECISION float TYPE;
 #define MASK_DARK 0.3
 #define MASK_FADE 0.8
 #define sat 1.0
-#define FLICK 0.0
+#define ntsc 0.0
 #define Curvature 1.0
 #define TYPE 0.0
 #endif
@@ -86,7 +86,6 @@ COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 // out variables go here as COMPAT_VARYING whatever
 COMPAT_VARYING float maskFade;
-COMPAT_VARYING float omega;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -106,7 +105,6 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
     maskFade = 0.3333*MASK_FADE;
-    omega = 2.0*pi*TextureSize.y;
 }
 
 #elif defined(FRAGMENT)
@@ -142,7 +140,6 @@ COMPAT_VARYING vec4 TEX0;
 
 // in variables go here as COMPAT_VARYING whatever
 COMPAT_VARYING float maskFade;
-COMPAT_VARYING float omega;
 
 // compatibility #defines
 #define Source Texture
@@ -153,8 +150,6 @@ COMPAT_VARYING float omega;
 
 #define blur_y blury/(TextureSize.y*2.0)
 #define blur_x blurx/(TextureSize.x*2.0)
-#define iTimer (float(FrameCount)*2.0)
-#define flicker FLICK/1000.0
 
 
 // Distortion of scanlines, and end of screen alpha.
@@ -165,6 +160,12 @@ vec2 Warp(vec2 pos)
     
     return pos*0.5 + 0.5;
 }
+
+// NTSC to sRGB matrix, used in linear space
+const mat3 NTSC = mat3(1.5073,  -0.3725, -0.0832, 
+                    -0.0275, 0.9350,  0.0670,
+                     -0.0272, -0.0401, 1.1677);
+
 
 void main()
 {
@@ -187,14 +188,13 @@ void main()
 	 
 	
 
-	 vec3 sample1 = sin(iTimer)*flicker + COMPAT_TEXTURE(Source,vec2(pos.x + blur_x, pos.y - blur_y)).rgb;
-	 vec3 sample2 =                0.5*COMPAT_TEXTURE(Source,pos).rgb;
-	 vec3 sample3 = sin(iTimer)*flicker + COMPAT_TEXTURE(Source,vec2(pos.x - blur_x, pos.y + blur_y)).rgb;
+	 vec3 sample1 =  COMPAT_TEXTURE(Source,vec2(pos.x + blur_x, pos.y - blur_y)).rgb;
+	 vec3 sample2 =  0.5*COMPAT_TEXTURE(Source,pos).rgb;
+	 vec3 sample3 =  COMPAT_TEXTURE(Source,vec2(pos.x - blur_x, pos.y + blur_y)).rgb;
 	
 	 vec3 colour = vec3 (sample1.r*0.5  + sample2.r, 
 		                 sample1.g*0.25 + sample2.g + sample3.g*0.25, 
 		                                  sample2.b + sample3.b*0.5);
-     vec3 interl = colour;
      vec3 lumweight=vec3(0.22,0.71,0.07);
      float lumsat = dot(colour,lumweight);
    
@@ -202,8 +202,9 @@ void main()
      colour = vec3(mix(graycolour,colour.rgb,sat));
 
      float SCANAMOUNT = mix(HIGHSCANAMOUNT1,HIGHSCANAMOUNT2,max(max(colour.r,colour.g),colour.b));
-		 
-
+	    
+    colour.rgb *= colour.rgb;
+	 
 	if (InputSize.y > 400.0) {
     colour ;
 	} 
@@ -217,11 +218,16 @@ else {
 	 float whichmask = fract(gl_FragCoord.x*steps);
 	 float mask = 1.0 + float(whichmask < steps) * -MASK_DARK;
 
+
 	colour.rgb = mix(mask*colour, colour, dot(colour.rgb,vec3(maskFade)));
+    
+    if (ntsc == 1.0) {colour.rgb *= NTSC; colour.rgb = clamp(colour.rgb,0.0,1.0);}
+    
+    colour.rgb = sqrt(colour.rgb);
 
     if (Curvature == 1.0 && corn.y < corn.x || Curvature == 1.0 && corn.x < 0.00001 )
     colour = vec3(0.0); 
-
+    
 	FragColor.rgb = colour.rgb;
 } 
 #endif
