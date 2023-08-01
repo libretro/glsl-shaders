@@ -61,7 +61,7 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
-    TEX0.xy = TexCoord.xy;
+    TEX0.xy = TexCoord.xy*1.0001;
 }
 
 #elif defined(FRAGMENT)
@@ -111,11 +111,9 @@ void main()
         vec2 xy = vTexCoord;
         float f = float (FrameCount);
         vec2 xyp = xy * TextureSize.xy * 4.0 * PI / 3.0;
-        xyp.y = xyp.y / 2.0 + 2.0 * PI / 3.0 * mod(f,2.0);
+        xyp.y = xyp.y / 2.0 + 2.0 * PI / 3.0 * mod(f,3.0);
 
         vec4 rgb = texture2D(Source,xy);
-
-       
 
         vec3 yuv;
         yuv = rgb2yuv * rgb.rgb;
