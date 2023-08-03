@@ -1,22 +1,21 @@
-// A very fast CRT shader that uses sine calculations for mask/scanlines effects
-// and some tricks in the book to offer a pleasant experience.
-// by DariusG @2023
+#version 110
 
-///////////////////////  Runtime Parameters  ///////////////////////
-#pragma parameter SCANLINE1 "Scanline Brightness Dark" 0.4 0.0 1.0 0.05
-#pragma parameter SCANLINE2 "Scanline Brightness Bright" 0.7 0.0 1.0 0.05
-#pragma parameter INTERLACE "Interlace Mode" 1.0 0.0 1.0 1.0
-#pragma parameter SCALE "Scanlines downscale"  1.0 1.0 4.0 1.0
-#pragma parameter MSK1 "   Mask Strength Dark" 0.5 0.0 1.0 0.05
-#pragma parameter MSK2 "   Mask Strength Bright" 0.25 0.0 1.0 0.05
-#pragma parameter MSK_SIZE "   Mask Size" 1.0 0.0 4.0 1.0
-#pragma parameter fade "   Mask/Scanlines Fade" 0.3 0.0 1.0 0.05
-#pragma parameter PRESERVE "Protect Bright Colors" 0.4 0.0 1.0 0.01
-#pragma parameter WP "Color Temperature shift" 0.00 -0.25 0.25 0.01
-#pragma parameter GAMMA "Gamma Adjust" 0.75 0.0 1.0 0.01
-#pragma parameter sat "Saturation" 1.3 0.0 2.0 0.05
+/* 
+  work by DariusG 2023, some ideas borrowed from Dogway's zfast_crt_geo
+*/
 
-#define pi  3.141592654
+#pragma parameter curv "Curvature"  1.0 0.0 1.0 1.0
+#pragma parameter blur "Interpolation: 0.0 nearest,0.25 bilinear" 0.15 0.05 0.25 0.01
+#pragma parameter slotx "  Slot Size x" 3.0 2.0 3.0 1.0
+#pragma parameter width "  Mask Width 3.0/2.0 " 0.67 0.67 1.0 0.333
+#pragma parameter mask "  Mask Strength" 0.4 0.0 1.0 0.05
+#pragma parameter ssize "Scanline Size" 1.0 1.0 2.0 1.0
+#pragma parameter scan "Scanline Strength" 0.4 0.0 1.0 0.05
+#pragma parameter thresh "Effect Threshold on brights" 0.2 0.0 0.33 0.01
+#pragma parameter colors "  Colors: 0.0 RGB, 1.0 P22D93, 2.0:NTSC" 0.0 0.0 2.0 1.0
+#pragma parameter sat "  Saturation" 1.0 0.0 2.0 0.01
+#pragma parameter wp "  White Point" 0.0 -0.2 0.2 0.01
+#pragma parameter potato "Potato Boost" 0.0 0.0 1.0 1.0
 
 #if defined(VERTEX)
 
@@ -41,7 +40,9 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 omega;
+COMPAT_VARYING vec2 scaleS;
+COMPAT_VARYING vec2 scaleO;
+COMPAT_VARYING vec2 warpos;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -50,26 +51,17 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
-uniform COMPAT_PRECISION float SCALE;
-uniform COMPAT_PRECISION float MSK_SIZE;
 
 // compatibility #defines
 #define vTexCoord TEX0.xy
-#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutSize vec4(OutputSize, 1.0 / OutputSize)
-
-#ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float WHATEVER;
-#else
-#define WHATEVER 0.0
-#endif
 
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
-    float ratio = SourceSize.x/InputSize.x;
-    omega = vec2(pi * OutputSize.x*ratio/MSK_SIZE, pi * SourceSize.y/SCALE);
+    scaleS = TextureSize.xy/InputSize.xy;
+    scaleO = OutputSize.xy/InputSize.xy;
+    warpos = TEX0.xy*scaleS;
 }
 
 #elif defined(FRAGMENT)
@@ -102,7 +94,9 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 omega;
+COMPAT_VARYING vec2 scaleS;
+COMPAT_VARYING vec2 scaleO;
+COMPAT_VARYING vec2 warpos;
 
 // compatibility #defines
 #define Source Texture
@@ -112,90 +106,129 @@ COMPAT_VARYING vec2 omega;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float SCANLINE1;
-uniform COMPAT_PRECISION float SCANLINE2;
-uniform COMPAT_PRECISION float MSK1;
-uniform COMPAT_PRECISION float MSK2;
-uniform COMPAT_PRECISION float WP;
-uniform COMPAT_PRECISION float GAMMA;
-uniform COMPAT_PRECISION float PRESERVE;
+uniform COMPAT_PRECISION float blur;
+uniform COMPAT_PRECISION float width;
+uniform COMPAT_PRECISION float slotx;
+uniform COMPAT_PRECISION float mask;
+uniform COMPAT_PRECISION float ssize;
+uniform COMPAT_PRECISION float scan;
+uniform COMPAT_PRECISION float curv;
+uniform COMPAT_PRECISION float thresh;
+uniform COMPAT_PRECISION float colors;
 uniform COMPAT_PRECISION float sat;
-uniform COMPAT_PRECISION float INTERLACE;
-uniform COMPAT_PRECISION float fade;
+uniform COMPAT_PRECISION float wp;
+uniform COMPAT_PRECISION float potato;
+
 #else
-#define SCANLINE1 0.3
-#define SCANLINE1 0.6
-#define MSK1 0.4
-#define MSK2 0.7
-#define WP 0.0
-#define PRESERVE 0.9
-#define GAMMA 0.8
+#define blur 1.0
+#define width 1.0
+#define slotx 1.0
+#define mask 0.5
+#define ssize 1.0
+#define scan 0.4
+#define curv 1.0
+#define thresh 0.2
+#define colors 0.0
 #define sat 1.0
-#define INTERLACE 1.0
-#define fade 0.8
+#define wp 0.0
+#define potato 0.0
 #endif
 
+#define PI 3.1415926    
+#define pwr vec3(1.0/((-0.5*scan+1.0)*(-0.5*mask+1.0))-1.25)
+
+vec2 Warp(vec2 pos)
+{
+    pos  = pos*2.0-1.0;
+    pos *= vec2(1.0 + (pos.y*pos.y)*0.0276, 1.0 + (pos.x*pos.x)*0.0414);
+    return pos*0.5 + 0.5;
+}
+
+const mat3 P22D93 = mat3(
+     1.00000, 0.00000, -0.06173,
+     0.07111, 0.96887, -0.01136,
+     0.00000, 0.08197,  1.07280);
+
+// NTSC to sRGB matrix, used in linear space
+const mat3 NTSC = mat3(1.5073,  -0.3725, -0.0832, 
+                    -0.0275, 0.9350,  0.0670,
+                     -0.0272, -0.0401, 1.1677);
+
+// Returns gamma corrected output, compensated for scanline+mask embedded gamma
+vec3 inv_gamma(vec3 col, vec3 power)
+{
+    vec3 cir  = col-1.0;
+         cir *= cir;
+         col  = mix(sqrt(col),sqrt(1.0-cir),power);
+    return col;
+}
+
+float saturate(float v) { 
+    return clamp(v, 0.0, 1.0);       
+}
 
 
 void main()
 {
+     vec2 pos,corn;
+    if (curv == 1.0) { 
+        pos = Warp(warpos); 
+        pos /= scaleS;
+        } 
+    else pos = vTexCoord;
 
-// CATMULL FILTER 
-   vec2 ps = SourceSize.zw;
-   vec2 dx = vec2(ps.x, 0.0);
-   vec2 OGL2Pos = vTexCoord.xy*SourceSize.xy; 
-   vec2 tc = (floor(OGL2Pos) + vec2(0.5)) / SourceSize.xy;  
-   vec2 fp =  fract(OGL2Pos);
+    vec2 textureCoords = pos*SourceSize.xy;
+    vec2 screenCoords = vTexCoord*SourceSize.xy*scaleO;
+    float scaley = scaleO.y*blur;
+    vec2 tex_pos = fract(textureCoords);
 
-   vec3 c10 = COMPAT_TEXTURE(Source, tc -       dx).xyz;
-   vec3 c11 = COMPAT_TEXTURE(Source, tc           ).xyz;
-   vec3 c12 = COMPAT_TEXTURE(Source, tc +       dx).xyz;
-   vec3 c13 = COMPAT_TEXTURE(Source, tc + 2.0 * dx).xyz;
+ //Interpolation: https://colececil.io/blog/2017/scaling-pixel-art-without-destroying-it/
+ //If blur is 0.5 on an axis, then the color will not be interpolated on that axis. 
+ //If it’s 0 or 1, then it will have maximum interpolation, with 0 being on one side of the texel 
+ //and 1 being on the other. Anything between those values will cause interpolation somewhere 
+ //between the minimum and maximum. 
+
+    vec2 blur = clamp(tex_pos / scaley, 0.0,0.5) + clamp((tex_pos - 1.0) / scaley + 0.5, 0.0, 0.5);
+
+//At this point, our texture coordinates are still in the range [0, texture size], 
+//but we need to get them back into the range [0, 1] before we can use them to grab the color. 
+//To do so, we simply divide by the texture width and height
+
+    vec2 coords = (floor(textureCoords) + blur) * SourceSize.zw;
+    vec4 res;
+     res = COMPAT_TEXTURE(Source,coords);
+
+        vec2 c = warpos;
+        corn   = min(c, 1.0-c);    // This is used to mask the rounded
+        corn.x = 0.0003333/corn.x; // corners later on
+
+    res *= res;
+    // similar mask to Lottes 1, done with sins, option for wide 2.0
+    float oddx = mod(screenCoords.x,slotx*2.0) < slotx ? 1.0 : 0.0;
+    res *= mix(((1.0-mask+1.0-scan)/2.0  
+                    + mask*sin(screenCoords.x*width*PI) 
+                    + mask*sin((screenCoords.y+oddx)*PI) 
+                    + scan*sin(textureCoords.y*2.0/ssize*PI)), 1.0,dot(res.rgb,vec3(thresh)));
     
-   vec4 lobes = vec4(fp.x*fp.x*fp.x, fp.x*fp.x, fp.x, 1.0);
+    if (colors == 2.0) res.rgb *= NTSC;  else 
+    if (colors == 1.0) res.rgb *= P22D93; else
+    res.rgb;
+    res = clamp(res,0.0,1.0);
 
-   vec4 InvX = vec4(0.0);
-// Horizontal cubic filter
-    InvX.x = dot(vec4( -0.5, 1.0, -0.5, 0.0), lobes);
-    InvX.y = dot(vec4(  1.5,-2.5,  0.0, 1.0), lobes);
-    InvX.z = dot(vec4( -1.5, 2.0,  0.5, 0.0), lobes);
-    InvX.w = dot(vec4(  0.5,-0.5,  0.0, 0.0), lobes);
+    //CHEAP TEMPERATURE CONTROL     
+       if (wp != 0.0) { res.rgb *= vec3(1.0+wp,1.0,1.0-wp);}
     
-    vec3 color = InvX.x*c10.xyz;
-         color+= InvX.y*c11.xyz;
-         color+= InvX.z*c12.xyz;
-         color+= InvX.w*c13.xyz;
-//gles fix black bars
-color = clamp (color, 0.0,1.0);
-/////////////////////
-    
-    vec3 lumweight=vec3(0.213,0.715,0.072);
-    float lum = max(max(color.r,color.g),color.b);
+    if (potato == 1.0) res = sqrt(res);
+    else res.rgb = inv_gamma(res.rgb,pwr);
 
-//APPLY MASK 
-         float MSK  = mix(MSK1,MSK2,lum);       
-         float mask = mix(MSK*sin(vTexCoord.x*omega.x)+1.0-MSK, 1.0, lum*PRESERVE);
+    //saturation
+    vec3 lumweight = vec3(0.29,0.6,0.11);
+    vec3 grays = vec3(dot(lumweight, res.rgb));
+    res.rgb = mix(grays, res.rgb, sat);
 
-         float scan = 1.0;
-         float SCANLINE = mix(SCANLINE1,SCANLINE2,lum);
-
-         color = pow(color,vec3(GAMMA));
-//INTERLACING MODE FIX SCANLINES
-    if (INTERLACE > 0.0 && InputSize.y > 400.0 ) scan; else
-         scan= (1.0 - SCANLINE)*abs(sin(vTexCoord.y* omega.y)) + SCANLINE;
-         
-         color *=mix(scan*mask, scan, dot(color, vec3(fade)));
-    
-//CHEAP TEMPERATURE CONTROL     
-       if (WP != 0.0) { color *= vec3(1.0+WP,1.0,1.0-WP);}
-    
-//FAST SATURATION CONTROL
-       if(sat !=1.0)
-        {
-        vec3 gray = vec3(dot(lumweight,color));
-        color = vec3(mix(gray, color, sat));
-        }
-
-    FragColor = vec4(color,1.0);
+    if (corn.y <= corn.x && curv == 1.0 || corn.x < 0.0001 && curv ==1.0 )
+    res = vec4(0.0);
+    FragColor = res;
 }
+
 #endif
