@@ -11,10 +11,10 @@
  *
  */
 
-#pragma parameter DISTORTION "Distortion" 0.12 0.0 0.30 0.01
-#pragma parameter SCANLINE "Scanline Weight" 0.3 0.2 0.6 0.05
-#pragma parameter MASK "Mask Brightness" 0.6 0.0 1.0 0.05
-#pragma parameter SIZE "Mask Size" 1.0 0.75 1.0 0.25
+#pragma parameter DISTORTION "CRT-Geom Distortion" 0.12 0.0 0.30 0.01
+#pragma parameter SCANLINE "CRT-Geom Scanline Weight" 0.3 0.2 0.6 0.05
+#pragma parameter MASK "CRT-Geom Mask Brightness" 0.6 0.0 1.0 0.05
+#pragma parameter SIZE "CRT-Geom Mask Size" 1.0 0.75 1.0 0.25
 
 // Uncomment to enable curvature (ugly)
 #define CURVATURE        
