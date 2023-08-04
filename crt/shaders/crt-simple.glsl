@@ -15,8 +15,8 @@
 #pragma parameter SCANLINE "Scanline Weight" 0.3 0.2 0.6 0.05
 #pragma parameter INPUTGAMMA "Input Gamma" 2.4 0.0 4.0 0.05
 #pragma parameter OUTPUTGAMMA "Output Gamma" 2.2 0.0 4.0 0.05
-#pragma parameter MASK "Mask Brightness" 0.7 0.0 1.0 0.05
-#pragma parameter SIZE "Mask Size" 1.0 1.0 2.0 1.0
+#pragma parameter MASK "Mask Brightness" 0.6 0.0 1.0 0.05
+#pragma parameter SIZE "Mask Size" 1.0 0.75 1.0 0.25
 
 // Uncomment to enable curvature (ugly)
 #define CURVATURE        
@@ -58,7 +58,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 void main()
 {  
     gl_Position = MVPMatrix * VertexCoord;    
-    TEX0.xy = TexCoord.xy*1.00001;
+    TEX0.xy = TexCoord.xy*1.0001;
     scale = TextureSize.xy/InputSize.xy;
 }
 
@@ -122,36 +122,48 @@ uniform COMPAT_PRECISION float MASK;
 #endif
 
 
-     
-
+#define pwr vec3(1.0/((-0.25*SCANLINE+1.0)*(-0.5*MASK+1.0))-1.25)
+  
+// Returns gamma corrected output, compensated for scanline+mask embedded gamma
+vec3 inv_gamma(vec3 col, vec3 power)
+{
+    vec3 cir  = col-1.0;
+         cir *= cir;
+         col  = mix(sqrt(col),sqrt(1.0-cir),power);
+    return col;
+}
         // Calculate the influence of a scanline on the current pixel.
         //
-        // 'distance' is the distance in texture coordinates from the current
+        // 'pos_y' is the distance in texture coordinates from the current
         // pixel to the scanline in question.
         // 'color' is the colour of the scanline at the horizontal location of
         // the current pixel.
-        vec4 scanlineWeights(float distance, vec4 color)
+        vec4 scanlineWeights(float pos_y, vec4 color)
         {
                 // The "width" of the scanline beam is set as 2*(1 + x^4) for
                 // each RGB channel.
-                vec4 wid = 2.0 + 2.0 * pow(color, vec4(4.0));
+                float widt = dot(sqrt(color.rgb),vec3(1.0));
+                vec4 wid = vec4 (widt)+1.0;
+                //wid.r is min 0.0, max 4.0   
 
                 // The "weights" lines basically specify the formula that gives
                 // you the profile of the beam, i.e. the intensity as
-                // a function of distance from the vertical center of the
+                // a function of pos_y from the vertical center of the
                 // scanline. In this case, it is gaussian if width=2, and
                 // becomes nongaussian for larger widths. Ideally this should
                 // be normalized so that the integral across the beam is
                 // independent of its width. That is, for a narrower beam
                 // "weights" should have a higher peak at the center of the
                 // scanline than for a wider beam.
-                vec4 weights = vec4(distance / SCANLINE);
-                return 1.4 * exp(-pow(weights * inversesqrt(0.5 * wid), wid)) / (0.6 + 0.2 * wid);
+                vec4 weights = vec4(pos_y / SCANLINE);
+                return 1.4 * exp(-pow(weights * inversesqrt(0.5 * wid), wid)) / 
+                                        (0.6 + 0.2 * wid);
         }
 
 
 vec2 Distort(vec2 coord)
 {
+        //crt-pi
         vec2 CURVATURE_DISTORTION = vec2(DISTORTION, DISTORTION*1.5);
         // Barrel distortion shrinks the display area a bit, this will allow us to counteract that.
         vec2 barrelScale = 1.0 - (0.23 * CURVATURE_DISTORTION);
@@ -177,7 +189,7 @@ void main()
         vec2 xy;
 
         #ifdef CURVATURE
-                xy = Distort(TEX0.xy); float xblur = xy.x;
+                xy = Distort(TEX0.xy); float xblur = xy.x; float yblur = xy.y;
         #else
                 xy = TEX0.xy;
         #endif
@@ -192,9 +204,9 @@ void main()
                 // Calculate the effective colour of the current and next
                 // scanlines at the horizontal location of the current pixel.
                 vec4 col  = COMPAT_TEXTURE(Source,xy); 
-                col=pow(col,vec4(INPUTGAMMA));
+                col *= col;
                 vec4 col2 = COMPAT_TEXTURE(Source,xy + vec2(0.0, SourceSize.w)); 
-                col2=pow(col2,vec4(INPUTGAMMA));
+                col2 *= col2;
 
                 // Calculate the influence of the current and next scanlines on
                 // the current pixel.
@@ -204,7 +216,7 @@ void main()
                 vec3 mul_res  = (col * weights + col2 * weights2).rgb;
                 
                 // dot-mask emulation:
-                vec3 dotMaskWeights = mix(vec3(MASK), vec3(1.0),fract(gl_FragCoord.x*0.5/SIZE));
+                float dotMaskWeights = mix(MASK, 1.0, sin(vTexCoord.x*OutputSize.x*scale.x/SIZE*3.1415926)*0.5+0.5);
 
                 mul_res *= dotMaskWeights;
 
@@ -217,8 +229,8 @@ void main()
     else
         mul_res = vec3(0.,0.,0.);
 #endif
-
-                FragColor = vec4(vec3(pow(mul_res, vec3(outgamma))), 1.0);
+        mul_res.rgb = inv_gamma(mul_res,pwr);
+        FragColor = vec4(mul_res, 1.0);
         }
 
 #endif
