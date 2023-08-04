@@ -248,13 +248,17 @@ vec3 BlurY(vec2 uv, float f, float d, float iTime){
     return  vec3(clr.xyz)*b;
 }
 
+
+
+void main(){
+
+// moved due to GLES fix. 
 mat3 mix_mat = mat3(
     1.0, 0.0, 0.0,
     IHUE, SAT, 0.0,
     QHUE, 0.0, SAT
 );
 
-void main(){
     float d = 0.1  / 50.0;
     vec2 uv = vTexCoord;
 
