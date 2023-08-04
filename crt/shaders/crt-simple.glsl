@@ -13,8 +13,6 @@
 
 #pragma parameter DISTORTION "Distortion" 0.12 0.0 0.30 0.01
 #pragma parameter SCANLINE "Scanline Weight" 0.3 0.2 0.6 0.05
-#pragma parameter INPUTGAMMA "Input Gamma" 2.4 0.0 4.0 0.05
-#pragma parameter OUTPUTGAMMA "Output Gamma" 2.2 0.0 4.0 0.05
 #pragma parameter MASK "Mask Brightness" 0.6 0.0 1.0 0.05
 #pragma parameter SIZE "Mask Size" 1.0 0.75 1.0 0.25
 
@@ -104,8 +102,6 @@ COMPAT_VARYING vec2 scale;
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
 uniform COMPAT_PRECISION float DISTORTION;
-uniform COMPAT_PRECISION float INPUTGAMMA;
-uniform COMPAT_PRECISION float OUTPUTGAMMA;
 uniform COMPAT_PRECISION float SIZE;
 uniform COMPAT_PRECISION float CURVATURE;
 uniform COMPAT_PRECISION float SCANLINE;
@@ -113,8 +109,6 @@ uniform COMPAT_PRECISION float MASK;
 
 #else
 #define DISTORTION 0.05
-#define INPUTGAMMA 2.4
-#define OUTPUTGAMMA 2.2
 #define SIZE 1.0
 #define CURVATURE 0.0
 #define SCANLINE 0.3
