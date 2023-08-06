@@ -17,7 +17,7 @@
     any later version.
 */
 
-
+#pragma parameter crawl "Chroma Crawl" 3.0 2.0 4.0 1.0
 // begin params
 #define PI 3.14159265
 
@@ -102,6 +102,16 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float crawl;
+
+#else
+
+#define crawl
+
+#endif
+
+
  const mat3 rgb2yuv = mat3(0.299,-0.14713, 0.615,
                            0.587,-0.28886,-0.51499,
                            0.114, 0.436  ,-0.10001);
@@ -111,7 +121,7 @@ void main()
         vec2 xy = vTexCoord;
         float f = float (FrameCount);
         vec2 xyp = xy * TextureSize.xy * 4.0 * PI / 3.0;
-        xyp.y = xyp.y / 2.0 + 2.0 * PI / 3.0 * mod(f,3.0);
+        xyp.y = xyp.y / 2.0 + 2.0 * PI / 3.0 * mod(f,crawl);
 
         vec4 rgb = texture2D(Source,xy);
 
