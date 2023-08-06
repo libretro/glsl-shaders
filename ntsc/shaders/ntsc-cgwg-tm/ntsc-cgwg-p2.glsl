@@ -104,11 +104,11 @@ COMPAT_VARYING vec4 TEX0;
 
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float xres;
+uniform COMPAT_PRECISION float crawl;
 
 #else
 
-#define xres 54.0
+#define crawl
 
 #endif
 
@@ -127,6 +127,9 @@ const mat3 yuv2rgb = mat3(1.0, 1.0, 1.0,
                  1.13983,-0.58060,0.0);
 
 
+const mat3 NTSC = mat3(1.5073,  -0.3725, -0.0832, 
+                    -0.0275, 0.9350,  0.0670,
+                     -0.0272, -0.0401, 1.1677);
 
 
       void main()
@@ -137,7 +140,7 @@ const mat3 yuv2rgb = mat3(1.0, 1.0, 1.0,
         vec2 xyp = floor(xy * SourceSize.xy)+vec2(0.5);
         xy = xyp / SourceSize.xy;
         float f = float (FrameCount);
-        float offs = mod(f,3.0)/2.0;
+        float offs = mod(f,crawl)/2.0;
         vec4 phases  = (vec4(0.0,0.25,0.5,0.75) + vec4(     xyp.x+xyp.y/2.0+offs)) *4.0*PI/3.0;
         vec4 phasesl = (vec4(0.0,0.25,0.5,0.75) + vec4(-1.0+xyp.x+xyp.y/2.0+offs)) *4.0*PI/3.0;
         vec4 phasesr = (vec4(0.0,0.25,0.5,0.75) + vec4( 1.0+xyp.x+xyp.y/2.0+offs)) *4.0*PI/3.0;
@@ -154,7 +157,7 @@ const mat3 yuv2rgb = mat3(1.0, 1.0, 1.0,
         vec4 c = TEX2D(xy)*2.3-0.65;
         vec4 cl= TEX2D(xy + vec2(-one.x,0.0))*2.3-0.65;
         vec4 cr= TEX2D(xy + vec2( one.x,0.0))*2.3-0.65;
-
+        
         vec3 yuva = vec3((dot(cl.zw,phone.zw)+dot(c.xyz,phone.xyz)+0.5*(cl.y+c.w))/6.0, (dot(cl.zw,phsinl.zw)+dot(c.xyz,phsin.xyz)+0.5*(cl.y*phsinl.y+c.w*phsin.w))/3.0, (dot(cl.zw,phcosl.zw)+dot(c.xyz,phcos.xyz)+0.5*(cl.y*phcosl.y+c.w*phcos.w))/3.0);
 
         vec3 yuvb = vec3((cl.w*phone.w+dot(c.xyzw,phone.xyzw)+0.5*(cl.z+cr.x))/6.0, (cl.w*phsinl.w+dot(c.xyzw,phsin.xyzw)+0.5*(cl.z*phsinl.z+cr.x*phsinr.x))/3.0, (cl.w*phcosl.w+dot(c.xyzw,phcos.xyzw)+0.5*(cl.z*phcosl.z+cr.x*phcosr.x))/3.0);
@@ -162,8 +165,8 @@ const mat3 yuv2rgb = mat3(1.0, 1.0, 1.0,
         vec3 yuvc = vec3((cr.x*phone.x+dot(c.xyzw,phone.xyzw)+0.5*(cl.w+cr.y))/6.0, (cr.x*phsinr.x+dot(c.xyzw,phsin.xyzw)+0.5*(cl.w*phsinl.w+cr.y*phsinr.y))/3.0, (cr.x*phcosr.x+dot(c.xyzw,phcos.xyzw)+0.5*(cl.w*phcosl.w+cr.y*phcosr.y))/3.0);
 
         vec3 yuvd = vec3((dot(cr.xy,phone.xy)+dot(c.yzw,phone.yzw)+0.5*(c.x+cr.z))/6.0, (dot(cr.xy,phsinr.xy)+dot(c.yzw,phsin.yzw)+0.5*(c.x*phsin.x+cr.z*phsinr.z))/3.0, (dot(cr.xy,phcosr.xy)+dot(c.yzw,phcos.yzw)+0.5*(c.x*phcos.x+cr.z*phcosr.z))/3.0);
-
-
+        
+        
         if (xyf.x < 0.25)
           FragColor = vec4(yuv2rgb*yuva, 0.0);
         else if (xyf.x < 0.5)
