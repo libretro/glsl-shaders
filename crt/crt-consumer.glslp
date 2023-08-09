@@ -1,9 +1,7 @@
-shaders = "1"
-shader0 = "shaders/crt-consumer.glsl"
-filter_linear0 = "true"
-wrap_mode0 = "clamp_to_border"
-mipmap_input0 = "false"
-alias0 = ""
-float_framebuffer0 = "false"
-srgb_framebuffer0 = "false"
-
+shaders = "3"
+shader0 = shaders/crt-consumer/glow_x.glsl
+filter_linear0 = "false"
+shader1 = shaders/crt-consumer/glow_y.glsl
+filter_linear1 = "false"
+shader2 = shaders/crt-consumer/crt-consumer.glsl
+filter_linear2 = "true"
