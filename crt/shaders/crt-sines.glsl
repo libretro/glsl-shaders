@@ -228,6 +228,16 @@ void main()
 
     if (corn.y <= corn.x && curv == 1.0 || corn.x < 0.0001 && curv ==1.0 )
     res = vec4(0.0);
+
+#if defined GL_ES
+    // hacky clamp fix for GLES
+    vec2 bordertest = coords;
+    if ( bordertest.x > 0.0001 && bordertest.x < 0.9999 && bordertest.y > 0.0001 && bordertest.y < 0.9999)
+        res = res;
+    else
+        res = vec4(0.,0.,0.,0.);
+#endif
+
     FragColor = res;
 }
 
