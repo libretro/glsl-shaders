@@ -20,13 +20,9 @@
 #pragma parameter slotwidth "   Slot Mask Width" 2.0 1.0 6.0 0.5
 #pragma parameter double_slot "   Slot Mask Height: 2x1 or 4x1" 1.0 1.0 2.0 1.0
 #pragma parameter slotms "   Slot Mask Size" 1.0 1.0 2.0 1.0
-#pragma parameter GAMMA_IN "Gamma In" 2.4 0.0 4.0 0.1
 #pragma parameter GAMMA_OUT "Gamma Out" 2.2 0.0 4.0 0.1
 #pragma parameter brightboost1 "Bright boost dark pixels" 1.3 0.0 3.0 0.05
 #pragma parameter brightboost2 "Bright boost bright pixels" 1.05 0.0 3.0 0.05
-#pragma parameter glow "Glow Strength" 0.08 0.0 1.5 0.01
-#pragma parameter Size "Glow Size" 2.0 1.0 4.0 1.0
-#pragma parameter quality "Glow quality" 1.5 0.5 4.0 0.25
 #pragma parameter sat "Saturation" 1.1 0.0 2.0 0.05
 #pragma parameter contrast "Contrast, 1.0:Off" 1.0 0.00 2.00 0.05
 #pragma parameter nois "Noise" 0.0 0.0 1.0 0.01
@@ -142,11 +138,7 @@ uniform COMPAT_PRECISION float slotmask;
 uniform COMPAT_PRECISION float slotwidth;
 uniform COMPAT_PRECISION float double_slot;
 uniform COMPAT_PRECISION float slotms;
-uniform COMPAT_PRECISION float GAMMA_IN;
 uniform COMPAT_PRECISION float GAMMA_OUT;
-uniform COMPAT_PRECISION float glow;
-uniform COMPAT_PRECISION float Size;
-uniform COMPAT_PRECISION float quality;
 uniform COMPAT_PRECISION float sat;
 uniform COMPAT_PRECISION float contrast;
 uniform COMPAT_PRECISION float nois;
@@ -182,11 +174,7 @@ uniform COMPAT_PRECISION float bleed;
 #define slotwidth    2.00     // Slot Mask Width
 #define double_slot  1.00     // Slot Mask Height
 #define slotms       1.00     // Slot Mask Size 
-#define GAMMA_IN 2.4
 #define GAMMA_OUT 2.2
-#define glow 0.0 
-#define Size 0.4
-#define quality 1.0
 #define sat 1.0 
 #define contrast  1.0   
 #define nois 0.0
@@ -416,35 +404,6 @@ vec3 saturation (vec3 Color, float l, vec3 lweight)
     return res;
 }
 
-vec3 glow0 (vec2 texcoord)
-{
-
-   // the more quality, the smaller the offset and better quality, less visible glow too
-     vec2 size = SourceSize.zw/quality;
-     
-     vec3 c01;
-     vec3 sum = vec3(0.0);
-   
-
-    for (float x = - Size; x <= Size; x = x+1.0)
-     {
-
-   // multiply texture, the more far away the less pronounced
-        float factor = 1.0/Size;
-        for (float y = -Size; y <= Size; y = y+1.0)
-        {
-
-        vec2 offset = vec2(x, y) * size;
-
-         c01 = COMPAT_TEXTURE(Source, texcoord + offset).rgb*factor; c01 = c01*c01;
-          
-                sum += c01;
-        }
-    }
-  
-    return glow * sum / Size  ;
-}
-
 
 float noise(vec2 co)
 {
@@ -602,7 +561,6 @@ color =clamp(color, 0.0,1.0);
     color = vec3(mix(color, comp, m));
     }
 
-    color=pow(color,vec3(GAMMA_IN));
 
     vec3 lumWeighting = vec3(0.22,0.7,0.08);
 	float lum=dot(color,lumWeighting);
@@ -618,7 +576,6 @@ color =clamp(color, 0.0,1.0);
 
     color=pow(color,vec3(1.0/GAMMA_OUT));
 
-    if (glow !=0.0) color+=glow0(pC4);
     if (sat != 1.0) color = saturation(color, lum, lumWeighting);
     
     if (corner!=0.0) color*= corner0(pC4);
