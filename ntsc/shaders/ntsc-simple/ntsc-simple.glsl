@@ -15,7 +15,7 @@
 #pragma parameter brightness "NTSC Brightness" 1.0 0.0 2.0 0.05
 #pragma parameter contrast "NTSC Contrast" 1.0 0.0 2.0 0.05
 #pragma parameter sat "NTSC Saturation" 1.0 0.0 2.0 0.05
-#pragma parameter NTSC "NTSC Colors" 1.0 0.0 2.0 0.05
+#pragma parameter NTSC "NTSC Colors" 1.0 0.0 1.0 1.0
 
 #if defined(VERTEX)
 
