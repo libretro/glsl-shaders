@@ -1,7 +1,7 @@
 #version 110
 
 /*
-    zfast_crt_geo_svideo - A simple, fast CRT shader.
+    zfast_crt_nogeo_svideo - A simple, fast CRT shader.
 
     Copyright (C) 2017 Greg Hogan (SoltanGris42)
     Copyright (C) 2023 Jose Linares (Dogway)
@@ -20,7 +20,7 @@ Notes:  This shader does scaling with a weighted linear filter
         This shader runs at ~60fps on the Chromecast HD (10GFlops) on a 1080p display.
         (https://forums.libretro.com/t/android-googletv-compatible-shaders-nitpicky)
 
-Dogway: Same as zfast_crt_geo but with extra blurring based on zfast_crt_composite and some desaturation for an S-Video effect.
+Dogway: Same as zfast_crt_nogeo but with extra blurring based on zfast_crt_composite and some desaturation for an S-Video effect.
 
 */
 
@@ -54,7 +54,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 scale;
 
 vec4 _oPosition1;
 uniform mat4 MVPMatrix;
@@ -120,7 +119,6 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define scale vec2(TextureSize.xy/InputSize.xy)
 #define blur_xy vec2(vec2(blurx,blury)/(TextureSize*2.0))
 
 #ifdef PARAMETER_UNIFORM
@@ -163,6 +161,7 @@ const mat3 P22D93SAT95 = mat3(
      0.013233962468802929, 0.11829412728548050,  1.023241996765136700);
 
 
+
 // Returns gamma corrected output, compensated for scanline+mask embedded gamma
 vec3 inv_gamma(vec3 col, vec3 power)
 {
@@ -172,34 +171,14 @@ vec3 inv_gamma(vec3 col, vec3 power)
     return col;
 }
 
-vec2 Warp(vec2 pos)
-{
-    pos  = pos*2.0-1.0;
-    pos *= vec2(1.0 + (pos.y*pos.y)*0.0276, 1.0 + (pos.x*pos.x)*0.0414);
-    return pos*0.5 + 0.5;
-}
-
 
 void main()
 {
-    vec2 vpos   = vTexCoord*scale;
-    vec2 xy     = Warp(vpos);
-
-    vec2 corn   = min(xy,1.0-xy); // This is used to mask the rounded
-         corn.x = 0.0001/corn.x;  // corners later on
-
-         xy    /= scale;
-
-
-    COMPAT_PRECISION vec2 sample1 = COMPAT_TEXTURE(Source,vec2(xy.x + blur_xy.x, xy.y - blur_xy.y)).rg;
-    COMPAT_PRECISION vec3 sample2 = COMPAT_TEXTURE(Source,     xy).rgb;
-    COMPAT_PRECISION vec2 sample3 = COMPAT_TEXTURE(Source,vec2(xy.x - blur_xy.x, xy.y + blur_xy.y)).gb;
+    COMPAT_PRECISION vec2 sample1 = COMPAT_TEXTURE(Source,vec2(vTexCoord.x + blur_xy.x, vTexCoord.y - blur_xy.y)).rg;
+    COMPAT_PRECISION vec3 sample2 = COMPAT_TEXTURE(Source,     vTexCoord).rgb;
+    COMPAT_PRECISION vec2 sample3 = COMPAT_TEXTURE(Source,vec2(vTexCoord.x - blur_xy.x, vTexCoord.y + blur_xy.y)).gb;
 
     vec3 colour =    vec3(sample1.r*0.50, sample1.g*0.25 + sample3.r*0.25, sample3.g*0.50) + 0.5 * sample2;
-
-    vpos  *= (1.0 - vpos.xy);
-    float vig = vpos.x * vpos.y * 46.0;
-          vig = min(sqrt(vig), 1.0);
 
 
     // Of all the pixels that are mapped onto the texel we are
@@ -213,12 +192,9 @@ void main()
     COMPAT_PRECISION float whichmask = floor(vTexCoord.x*4.0*OutputSize.x)*-MSCL;
     COMPAT_PRECISION float mask = 1.0 + float(fract(whichmask) < MSCL)    *-MASK_DARK;
 
-    colour = max((colour*colour) * (P22D93SAT95 * vig), 0.0);
+    colour = max((colour*colour) * P22D93SAT95, 0.0);
 
     COMPAT_PRECISION float scanLineWeight = (1.5 - SCANLINE_WEIGHT*(Y - Y*Y));
-
-    if (corn.y <= corn.x || corn.x < 0.0001)
-    colour = vec3(0.0);
 
     FragColor.rgba = vec4(inv_gamma(colour.rgb*mix(scanLineWeight*mask, 1.0, colour.r*0.26667+colour.g*0.26667+colour.b*0.26667),pwr),1.0);
 
