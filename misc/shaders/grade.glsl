@@ -21,7 +21,7 @@
 
 
 /*
-   Grade (17-07-2023)
+   Grade (13-08-2023)
    > See settings decriptions at: https://forums.libretro.com/t/dogways-grading-shader-slang/27148/442
 
    > Ubershader grouping some monolithic color related shaders:
@@ -81,9 +81,14 @@
 #pragma parameter g_vstr         "Vignette Strength"          50.0   0.0  50.0  1.0
 #pragma parameter g_vpower       "Vignette Power"             0.50   0.0   0.5  0.01
 
+// Sega related fixes
+#pragma parameter g_sfixes       "// SEGA FIXES //"           0.0  0.0 1.0 1.0
+#pragma parameter g_lum_fix      "Sega Luma Fix"              0.0  0.0 1.0 1.0
+#pragma parameter g_MD_Pal       "MD Palette"                 0.0  0.0 1.0 1.0
+#pragma parameter g_SMS_bl       "SMS Blue Lift"              0.0  0.0 1.0 1.0
+
 // Digital controls
 #pragma parameter g_digital      "// DIGITAL CONTROLS //"     0.0  0.0 1.0 1.0
-#pragma parameter g_lum_fix      "Sega Luma Fix"              0.0  0.0 1.0 1.0
 #pragma parameter g_lum          "Brightness"                 0.0 -0.5 1.0 0.01
 #pragma parameter g_cntrst       "Contrast"                   0.0 -1.0 1.0 0.05
 #pragma parameter g_mid          "Contrast Pivot"             0.5  0.0 1.0 0.01
@@ -106,9 +111,9 @@
 #pragma parameter br             "Blue-Red Tint"              0.0 -1.0 1.0 0.005
 #pragma parameter bg             "Blue-Green Tint"            0.0 -1.0 1.0 0.005
 #pragma parameter LUT_Size1      "LUT Size 1"                 32.0 8.0 64.0 16.0
-#pragma parameter LUT1_toggle    "LUT 1 Toggle"               0.0  0.0  1.0  1.0
+#pragma parameter LUT1_toggle    "LUT 1 Toggle"               0.0  0.0 1.0 1.0
 #pragma parameter LUT_Size2      "LUT Size 2"                 64.0 0.0 64.0 16.0
-#pragma parameter LUT2_toggle    "LUT 2 Toggle"               0.0  0.0  1.0  1.0
+#pragma parameter LUT2_toggle    "LUT 2 Toggle"               0.0  0.0 1.0 1.0
 
 
 
@@ -188,7 +193,7 @@ COMPAT_VARYING vec4 TEX0;
 
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float g_signal_type, g_crtgamut, g_space_out, g_Dark_to_Dim, g_GCompress, g_hue_degrees, g_U_SHIFT, g_V_SHIFT, g_U_MUL, g_V_MUL, g_CRT_l, g_CRT_b, g_CRT_c, g_CRT_br, g_CRT_bg, g_CRT_bb, g_CRT_rf, g_CRT_sl, g_vignette, g_vstr, g_vpower, g_lum_fix, g_lum, g_cntrst, g_mid, wp_temperature, g_sat, g_vibr, g_satr, g_satg, g_satb, g_lift, blr, blg, blb, wlr, wlg, wlb, rg, rb, gr, gb, br, bg, LUT_Size1, LUT1_toggle, LUT_Size2, LUT2_toggle;
+uniform COMPAT_PRECISION float g_signal_type, g_crtgamut, g_space_out, g_Dark_to_Dim, g_GCompress, g_hue_degrees, g_U_SHIFT, g_V_SHIFT, g_U_MUL, g_V_MUL, g_CRT_l, g_CRT_b, g_CRT_c, g_CRT_br, g_CRT_bg, g_CRT_bb, g_CRT_rf, g_CRT_sl, g_vignette, g_vstr, g_vpower, g_lum_fix, g_MD_Pal, g_SMS_bl, g_lum, g_cntrst, g_mid, wp_temperature, g_sat, g_vibr, g_satr, g_satg, g_satb, g_lift, blr, blg, blb, wlr, wlg, wlb, rg, rb, gr, gb, br, bg, LUT_Size1, LUT1_toggle, LUT_Size2, LUT2_toggle;
 #else
 #define g_signal_type 1.0
 #define g_crtgamut 2.0
@@ -212,6 +217,8 @@ uniform COMPAT_PRECISION float g_signal_type, g_crtgamut, g_space_out, g_Dark_to
 #define g_vstr 50.0
 #define g_vpower 0.50
 #define g_lum_fix 0.0
+#define g_MD_Pal 0.0
+#define g_SMS_bl 0.0
 #define g_lum 0.0
 #define g_cntrst 0.0
 #define g_mid 0.5
@@ -240,8 +247,8 @@ uniform COMPAT_PRECISION float g_signal_type, g_crtgamut, g_space_out, g_Dark_to
 #define LUT2_toggle 0.0
 #endif
 
-#define RW vec3(0.950457397565471, 1.0, 1.089436035930324)
-#define M_PI 3.1415926535897932384626433832795/180.0
+#define M_PI 3.1415926535897932384626433832795/180.0        // 1º (one degree) in radians
+#define RW vec3(0.950457397565471, 1.0, 1.089436035930324)  // D65 Reference White
 #define g_bl -(100000.*log((72981.-500000./(3.*max(2.3,g_CRT_l)))/9058.))/945461.
 
 
@@ -510,7 +517,7 @@ vec3 GamutCompression (vec3 rgb, float grey) {
     vec3  sat  = max(vec3(0.0),vec3(g_satg,  (g_satb  +g_satr  )/2.,(g_satr  +g_satg)  /2.)+1.);   // center at 1
     float temp = max(0.0,abs(wp_temperature-7000.)-1000.)/825.+1.;                                 // center at 1
     vec3  WPD  = wp_temperature < 7000. ? vec3(1.,temp,(temp-1.)/2.+1.) : vec3((temp-1.)/2.+1.,temp,1.);
-          sat  = max(0.0,g_sat+1.)*(sat*beam) * WPD;
+          sat  = max(0.0,g_sat+1.0)*(sat*beam) * WPD;
 
     mat2x3 LimThres =      mat2x3( 0.100000,0.100000,0.100000,
                                    0.125000,0.125000,0.125000);
@@ -772,6 +779,14 @@ void main()
 
     vec3 src = COMPAT_TEXTURE(Source, vTexCoord).rgb * lum_exp;
 
+// Adding Sega Master System 1 non-linear blue "lift": https://github.com/ekeeke/Genesis-Plus-GX/issues/345#issuecomment-820885780
+         src = g_SMS_bl > 0.0 ? pow(src, vec3(1.0,1.0,1.0/1.16)) : src;
+
+// Reproduce the Sega MegaDrive palette (same as the BlastEm core output so don't use in this core): https://github.com/ekeeke/Genesis-Plus-GX/issues/345
+         src = g_MD_Pal > 0.0 ? vec3(contrast_sigmoid_inv(src.r,2.578419881,0.520674), \
+                                     contrast_sigmoid_inv(src.g,2.578419881,0.520674), \
+                                     contrast_sigmoid_inv(src.b,2.578419881,0.520674)) : src;
+
 // Clipping Logic / Gamut Limiting
     bool NTSC_U = g_crtgamut < 2.0;
 
@@ -786,7 +801,7 @@ void main()
 
 // YUV Analogue Color Controls (HUE + Color Shift + Color Burst)
     float hue_radians = g_hue_degrees * M_PI;
-    float hue = atan(col.z, col.y) + hue_radians;
+    float hue         =   hue_radians + (col.z==0.0 && col.y==0.0 ? 0.0 : atan(col.z, col.y));
     float chroma = sqrt(col.z * col.z + col.y * col.y);  // Euclidean Distance
 
     col.y    = (mod((chroma * cos(hue) + 1.0) + g_U_SHIFT, 2.0) - 1.0) * g_U_MUL;
@@ -935,7 +950,6 @@ void main()
     vec3 TRC  = (g_space_out == 3.0) ?     clamp(pow(src_h, vec3(1./ (563./256.))),        0., 1.) : \
                 (g_space_out == 0.0) ? moncurve_r_f3(src_h,           2.20 + 0.20,         0.0550) : \
                                        clamp(pow(    src_h, vec3(1./((2.20 + 0.20)*DtD))), 0., 1.) ;
-
 
 // External Flare for Surround Illuminant 2700K (Soft White) at F0 (Lambertian reflectance); defines offset thus also black lift
     vec3 Flare = 0.01 * (g_CRT_rf/5.0)*(0.049433*g_CRT_sl - 0.188367) * vec3(0.459993/0.410702,1.0,0.129305/0.410702);
