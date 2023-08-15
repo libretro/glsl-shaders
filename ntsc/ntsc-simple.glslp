@@ -2,4 +2,8 @@ shaders = 1
 shader0 = shaders/ntsc-simple/ntsc-simple.glsl
 
 filter_linear0 = false 
+scale_type_x0 = "source"
+scale_x0 = "1.000000"
+scale_type_y0 = "source"
+scale_y0 = "1.000000"
 
