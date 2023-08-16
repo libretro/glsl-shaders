@@ -1,7 +1,6 @@
 #version 130
-#pragma parameter gammain "Gamma In" 2.5 1.0 4.0 0.05
-#pragma parameter glow "Glow Strength" 0.4 0.0 1.0 0.05
-#pragma parameter sizex "Glow Size X" 1.0 0.0 1.25 0.05
+#pragma parameter glow "Glow Strength" 0.15 0.0 1.0 0.01
+#pragma parameter sizex "Glow Size X" 1.0 0.0 2.0 0.05
 
 #if defined(VERTEX)
 
@@ -109,8 +108,7 @@ void main()
     {
     sum += COMPAT_TEXTURE(Source,(pos + i*dx)*tex).rgb * k[int(i) + 3];
     }
-    res = (res + sum*glow)/(1.0+glow);
-    res = pow(res,vec3(gammain));
+    res = (res + sum*glow);
     FragColor = vec4(res,1.0);
 
 }
