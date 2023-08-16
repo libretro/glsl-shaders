@@ -1,5 +1,5 @@
 #version 130
-#pragma parameter sizey "Glow Size Y" 0.25 0.0 1.0 0.05
+#pragma parameter sizey "Glow Size Y" 0.5 0.0 1.0 0.05
 
 #if defined(VERTEX)
 
@@ -106,7 +106,7 @@ void main()
     {
     sum += COMPAT_TEXTURE(Source,(pos + i*dy)*tex).rgb * k[int(i) + 3];
     }
-    res = (res+sum*glow)/(1.0+glow);
+    res = (res+sum*glow);
     FragColor = vec4(res,1.0);
 
 }
