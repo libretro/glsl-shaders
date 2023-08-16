@@ -1,4 +1,4 @@
-
+#version 110
 // Parameter lines go here:
 #pragma parameter blurx "Convergence X" 0.25 -2.0 2.0 0.05
 #pragma parameter blury "Convergence Y" -0.15 -2.0 2.0 0.05
@@ -33,6 +33,7 @@
 #pragma parameter vstr "  Vignette strength" 45.0 0.0 50.0 1.0
 #pragma parameter sawtooth "  Sawtooth Effect" 1.0 0.0 1.0 1.0
 #pragma parameter bleed "  Color Bleed Effect" 1.0 0.0 1.0 1.0
+#pragma parameter bl_size "  Color Bleed Size" 0.75 0.1 2.0 0.05
 #pragma parameter alloff "  Switch off shader" 0.0 0.0 1.0 1.0
 #define pi 6.28318
 
@@ -151,6 +152,7 @@ uniform COMPAT_PRECISION float alloff;
 uniform COMPAT_PRECISION float GLOW_LINE;
 uniform COMPAT_PRECISION float sawtooth;
 uniform COMPAT_PRECISION float bleed;
+uniform COMPAT_PRECISION float bl_size;
 
 #else
 #define blurx  0.0    
@@ -187,6 +189,7 @@ uniform COMPAT_PRECISION float bleed;
 #define GLOW_LINE 0.0
 #define sawtooth 0.0
 #define bleed 0.0
+#define bl_size 1.0
 #endif
 
 
@@ -505,8 +508,9 @@ void main()
     
     vec4 res = vec4(1.0);
     
-    if (alloff == 1.0) res= COMPAT_TEXTURE(Source,pC4); 
-
+    if (alloff == 1.0) {res= COMPAT_TEXTURE(Source,pC4); 
+        res = pow(res,vec4(1.0/GAMMA_OUT));
+}
         else
             {
 	       vec3 sample1 = COMPAT_TEXTURE(Source,vec2(pC4.x + blurx*0.001, pC4.y - blury*0.001)).rgb;
@@ -532,9 +536,9 @@ if (bleed == 1.0){
     vec3 yuv = vec3(0.0);
     float px = 0.0;
     for( int x = -2; x <= 2; x++ ) {
-        px = float(x) * SourceSize.z - SourceSize.w * 0.5;
-        yuv.g += RGB2U( texture2D( Source, pC4 + vec2(px, 0.0)).rgb ) * a_kernel[x + 2];
-        yuv.b += RGB2V( texture2D( Source, pC4 + vec2(px, 0.0)).rgb ) * a_kernel[x + 2];
+        px = float(x)/bl_size * SourceSize.z - SourceSize.w * 0.5;
+        yuv.g += RGB2U( COMPAT_TEXTURE( Source, pC4 + vec2(px, 0.0)).rgb ) * a_kernel[x + 2];
+        yuv.b += RGB2V( COMPAT_TEXTURE( Source, pC4 + vec2(px, 0.0)).rgb ) * a_kernel[x + 2];
     }
     
     yuv.r = RGB2Y(color.rgb);

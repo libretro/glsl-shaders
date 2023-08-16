@@ -1,0 +1,4 @@
+shaders = "1"
+feedback_pass = "0"
+shader0 = "shaders/a520.glsl"
+filter_linear0 = "true"

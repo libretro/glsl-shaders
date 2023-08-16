@@ -1,5 +1,5 @@
-#version 130
-#pragma parameter sizey "Glow Size Y" 0.5 0.0 1.0 0.05
+#version 110
+#pragma parameter gammain "Gamma In" 2.6 1.0 4.0 0.05
 
 #if defined(VERTEX)
 
@@ -83,31 +83,21 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float sizey;
+uniform COMPAT_PRECISION float sizex;
 uniform COMPAT_PRECISION float glow;
-uniform COMPAT_PRECISION float SCANLINE;
+uniform COMPAT_PRECISION float gammain;
 
 #else
-#define sizey 1.0
-#define SCANLINE 0.3
+#define sizex 1.0
+#define glow 1.0
+#define gammain 2.5
 #endif
 
-const float k[7] = float[7](0.05, 0.15, 0.30, 0.0, 0.30, 0.15, 0.05);
 
 void main()
 {   
-    vec2 tex = SourceSize.zw;
-    vec2 pos = vTexCoord*SourceSize.xy;
-    vec2 dy = vec2(0.0,sizey);
-
-    vec3 res = COMPAT_TEXTURE(Source,(pos)*tex).rgb;
-    vec3 sum = vec3(0.0);
-    for (float i=-3.0; i<=3.0; i++)
-    {
-    sum += COMPAT_TEXTURE(Source,(pos + i*dy)*tex).rgb * k[int(i) + 3];
-    }
-    res = (res+sum*glow);
-    FragColor = vec4(res,1.0);
-
+    vec4 res = COMPAT_TEXTURE(Source,vTexCoord);
+    res = pow(res,vec4(gammain,gammain,gammain,1.0));
+    FragColor = res;
 }
 #endif

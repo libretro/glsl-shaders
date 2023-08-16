@@ -1,5 +1,4 @@
 #version 110
-
 /*
    Simple S-video like shader by DariusG 2023
    This program is free software; you can redistribute it and/or modify it
@@ -7,16 +6,15 @@
    Software Foundation; either version 2 of the License, or (at your option)
    any later version.
 */
-#pragma parameter distortion "Overall Distortion" 0.25 0.0 1.0 0.01 
-#pragma parameter artifacts "Artifacts Strength" 0.01 0.0 1.0 0.01
-#pragma parameter fringing "Fringing Strength" 0.06 0.0 1.0 0.01
-#pragma parameter bleed "Color Bleed Strength" 0.25 0.0 1.0 0.01
-#pragma parameter rad "Color Bleed Radius" 1.0 0.0 3.0 0.05
-#pragma parameter brightness "NTSC Brightness" 1.0 0.0 2.0 0.05
-#pragma parameter contrast "NTSC Contrast" 1.0 0.0 2.0 0.05
-#pragma parameter sat "NTSC Saturation" 1.0 0.0 2.0 0.05
-#pragma parameter NTSC "NTSC Colors" 1.0 0.0 1.0 1.0
 
+#pragma parameter CHR_BLUR "CHROMA RESOLUTION" 1.5 1.0 10.0 0.1
+#pragma parameter L_BLUR "LUMA RESOLUTION" 8.0 2.0 10.0 0.25
+#pragma parameter CHROMA_SATURATION "CHROMA SATURATION" 5.0 0.0 15.0 0.1
+#pragma parameter BRIGHTNESS "LUMA BRIGHTNESS" 0.55 0.0 2.0 0.01
+#pragma parameter IHUE "I SHIFT (blue to orange)" 0.0 -1.0 1.0 0.01
+#pragma parameter QHUE "Q SHIFT (green to purple)" 0.0 -1.0 1.0 0.01
+
+// https://www.shadertoy.com/view/wlBcWG
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -54,10 +52,16 @@ uniform COMPAT_PRECISION vec2 InputSize;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float WHATEVER;
+#else
+#define WHATEVER 0.0
+#endif
+
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    TEX0.xy = TexCoord.xy;
+    TEX0.xy = TexCoord.xy*1.0001;
 }
 
 #elif defined(FRAGMENT)
@@ -99,153 +103,96 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float distortion;
-uniform COMPAT_PRECISION float artifacts;
-uniform COMPAT_PRECISION float fringing;
-uniform COMPAT_PRECISION float bleed;
-uniform COMPAT_PRECISION float rad;
-uniform COMPAT_PRECISION float contrast;
-uniform COMPAT_PRECISION float brightness;
-uniform COMPAT_PRECISION float sat;
-uniform COMPAT_PRECISION float NTSC;
+uniform COMPAT_PRECISION float CHR_BLUR;
+uniform COMPAT_PRECISION float L_BLUR;
+uniform COMPAT_PRECISION float CHROMA_SATURATION;
+uniform COMPAT_PRECISION float BRIGHTNESS;
+uniform COMPAT_PRECISION float IHUE;
+uniform COMPAT_PRECISION float QHUE;
+
 
 #else
-#define distortion  0.25
-#define artifacts 0.01
-#define fringing 0.06 
-#define bleed   0.5  
-#define rad 2.0
-#define contrast 1.0
-#define brightness 1.0
-#define sat 1.0
-#define NTSC 1.0
-
+#define CHR_BLUR 4.0
+#define L_BLUR 12.0
+#define CHROMA_SATURATION 7.0
+#define BRIGHTNESS 10.0
+#define IHUE 0.0
+#define QHUE 0.0
 #endif
 
-#define PI 3.14159265
-#define time float (FrameCount)
+#define PI   3.14159265358979323846
+#define TAU  6.28318530717958647693
+#define FSC  3.57945*4.0
 
+// Size of the decoding FIR filter
+#define FIR_SIZE 20
 
-float RGB2Y(vec3 _rgb) {
-    return dot(_rgb, vec3(0.29900, 0.58700, 0.11400));
+// YIQ to RGB matrices
+const mat3 yiq_to_rgb = mat3(1.000, 1.000, 1.000,
+                             0.956,-0.272,-1.106,
+                             0.621,-0.647, 1.703);
+
+const mat3 rgb_to_yiq = mat3(0.299, 0.596, 0.211,
+                             0.587,-0.274,-0.523,
+                             0.114,-0.322, 0.312);
+
+float blackman(float n, float N) {
+    float a0 = (1.0 - 0.16) / 2.0;
+    float a1 = 1.0 / 2.0;
+    float a2 = 0.16 / 2.0;
+    
+    return a0 - (a1 * cos((2.0 * PI * n) / N)) + (a2 * cos((4.0 * PI * n) / N));
 }
-
-float RGB2U(vec3 _rgb) {
-   return dot(_rgb, vec3(-0.14713, -0.28886, 0.43600));
-}
-
-float RGB2V(vec3 _rgb) {
-   return dot(_rgb, vec3(0.61500, -0.51499, -0.10001));
-}
-
-float YUV2R(vec3 _yuv) {
-   return dot(_yuv, vec3(1, 0.00000, 1.13983));
-}
-
-float YUV2G(vec3 _yuv) {
-   return dot(_yuv, vec3(1.0, -0.39465, -0.58060));
-}
-
-float YUV2B(vec3 _yuv) {
-    return dot(_yuv, vec3(1.0, 2.03211, 0.00000));
-}
-
-vec3 YUV2RGB(vec3 _yuv) {
-    vec3 _rgb;
-    _rgb.r = YUV2R(_yuv);
-    _rgb.g = YUV2G(_yuv);
-    _rgb.b = YUV2B(_yuv);
-
-   return _rgb;
-}
-
-vec3 RGB2YUV(vec3 _rgb) {
-    vec3 _yuv;
-    _yuv.r = RGB2Y(_rgb);
-    _yuv.g = RGB2U(_rgb);
-    _yuv.b = RGB2V(_rgb);
-
-   return _yuv;
-}
-
-
-float Overlay(float col, float M) {
-    col += 0.5;
-    M += 0.5;
-    return (col * (col + (2.0 * M)*(1.0 - col))) -0.5;
-}
-
-
-//non linear approximate (but not exact)
-const mat3 ntsc  = mat3 (
-1.5164, -0.4945,    -0.02,
--0.0372,    0.9571, 0.0802,
--0.0192,    -0.0309,    1.0500
-);
-
 
 void main() {
+// moved due to GLES fix. 
+mat3 mix_mat = mat3(
+    1.0, 0.0, 0.0,
+    IHUE, 1.0, 0.0,
+    QHUE, 0.0, 1.0
+);
 
-    float kernel[3];
-    kernel[0] = 0.2; 
-    kernel[1] = 0.5; 
-    kernel[2] = 0.3; 
+    // Chroma decoder oscillator frequency
+    float fc = SourceSize.x*TAU;
 
-    float kernelb[5];
-    kernelb[0] = 2.0*bleed; 
-    kernelb[1] = 4.0*bleed; 
-    kernelb[2] = 1.0; 
-    kernelb[3] = 4.0*bleed; 
-    kernelb[4] = 2.0*bleed; 
-        
-    float odd = mod(abs(vTexCoord.x*SourceSize.x + vTexCoord.y*SourceSize.y) + 0.5, 2.0);
-    float distort = SourceSize.z* odd * distortion;
+    float counter = 0.0;
+    vec3 yiq = vec3(0.0);
 
-// UV distortion
-    vec4 color_out = COMPAT_TEXTURE( Source, vTexCoord );
-    color_out += COMPAT_TEXTURE( Source, vTexCoord + vec2( distort, 0.0 ) );
-    color_out += COMPAT_TEXTURE( Source, vTexCoord - vec2( distort, 0.0 ) );
-    
-    vec3 YUV = RGB2YUV(color_out.rgb*0.3333);
+for (int d = -FIR_SIZE; d < FIR_SIZE; d++) {
+        //luma encode/decode
+        vec2 pos = vec2((vTexCoord.x + (float(d)/2.0/L_BLUR)*SourceSize.z), vTexCoord.y);
+        vec3 s = COMPAT_TEXTURE(Source, pos).rgb; 
+        s = rgb_to_yiq*s;
+        // encode end
+        // decode
+        // Apply Blackman window for smoother colors
+        float window = blackman(float(d/2 + 5), float(FIR_SIZE/2)); 
 
-// Y distortion for fringing/artifacts   
-    vec3 Ycol = vec3(0.0);
-    Ycol += COMPAT_TEXTURE( Source, vTexCoord  - vec2( SourceSize.x * distort, 0.0) ).rgb * kernel[0];
-    Ycol += COMPAT_TEXTURE( Source, vTexCoord  + vec2( distort, 0.0 )               ).rgb * kernel[1];
-    Ycol += COMPAT_TEXTURE( Source, vTexCoord  + vec2( SourceSize.x * distort, 0.0) ).rgb * kernel[2];
-    
-    float Y = RGB2Y(Ycol);
-    if( floor(odd) == 0.0 ) Y = -Y;
-    
-// Color Bleeding    
-        float px;
- for(int x = -2; x <= 2; x++ ) {
-        px = float(x) * SourceSize.z - SourceSize.w * 0.5;
-        float T = floor(mod(time,2.0));
-        YUV.g += RGB2U (COMPAT_TEXTURE( Source, vTexCoord + vec2(px*rad, 0.0) ).rgb) * kernelb[x+2]; 
-        YUV.g += RGB2U (COMPAT_TEXTURE( Source, vTexCoord - vec2(px*rad, 0.0) ).rgb) * kernelb[x+2]; 
-        YUV.b += RGB2V (COMPAT_TEXTURE( Source, vTexCoord + vec2(px*rad, 0.0) ).rgb) * kernelb[x+2];
-        YUV.b += RGB2V (COMPAT_TEXTURE( Source, vTexCoord - vec2(px*rad, 0.0) ).rgb) * kernelb[x+2];
+        yiq.r += s.r * BRIGHTNESS * window;
+
+        // chroma encode/decode
+        pos = vec2(vTexCoord.x + (float(d)/CHR_BLUR)*SourceSize.z, vTexCoord.y);
+        s = COMPAT_TEXTURE(Source, pos).rgb;
+        s = rgb_to_yiq*s;
+
+        s.yz *= vec2(cos(fc*vTexCoord.x+11.0*PI/60.0),sin(fc*vTexCoord.x+11.0*PI/60.0)); 
+        // encode end
+        float wt = fc * (vTexCoord.x - float(d)*SourceSize.z);
+        // decode
+        // Apply Blackman window for smoother colors
+        window = blackman(float(d + FIR_SIZE), float(FIR_SIZE * 2 + 1)); 
+
+        yiq.yz += s.yz * vec2(cos(wt+11.0*PI/60.0), sin(wt+11.0*PI/60.0)) * window;
+
+        counter++;
     }
-    YUV.g /= 3.0+24.0*bleed;
-    YUV.b /= 3.0+24.0*bleed;
 
-// fringing-artifacts
+    yiq.yz /= counter;
+    yiq.r /= counter/4.0;
 
-    float artifact =  Y * artifacts;
-    float fringing =  Y * fringing;
-    YUV.r = Overlay(YUV.r, artifact);
-    YUV.g = Overlay(YUV.g, fringing);  
-    YUV.b = Overlay(YUV.b, fringing); 
-
-/////////    
-    YUV.r *= brightness;
-    color_out.rgb = contrast * (YUV2RGB( YUV )-vec3(0.5)) + vec3(0.5);
-    color_out.rgb = mix(vec3(dot(vec3(0.3,0.6,0.1),color_out.rgb)),color_out.rgb,sat);
-    if (NTSC == 1.0) color_out.rgb = color_out.rgb*ntsc;
-    color_out - clamp(color_out,0.0,1.0);
-
-    FragColor = color_out;
+    // Saturate chroma (IQ)
+    yiq.yz *= CHROMA_SATURATION;
+    yiq *= mix_mat;
+    FragColor = vec4((yiq_to_rgb * yiq), 1.0);
 }
-
 #endif
