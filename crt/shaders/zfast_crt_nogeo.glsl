@@ -25,15 +25,10 @@ Dogway: This is the same as zfast_crt_geo but without the screen curvature for e
 
 */
 
-//For testing compilation
-//#define FRAGMENT
-//#define VERTEX
 
 // Parameter lines go here:
 #pragma parameter SCANLINE_WEIGHT "Scanline Amount"     9.0 0.0 15.0 0.5
-#pragma parameter MASK_DARK       "Mask Effect Amount"  0.1 0.0 1.0 0.05
-#pragma parameter g_vstr          "Vignette Strength"   50.0 0.0 50.0 1.0
-#pragma parameter g_vpower        "Vignette Power"      0.30 0.0 0.5 0.01
+#pragma parameter MASK_DARK       "Mask Effect Amount"  0.4 0.0 1.0 0.05
 
 #if defined(VERTEX)
 
@@ -76,13 +71,9 @@ uniform COMPAT_PRECISION vec2 InputSize;
 // All parameter floats need to have COMPAT_PRECISION in front of them
 uniform COMPAT_PRECISION float SCANLINE_WEIGHT;
 uniform COMPAT_PRECISION float MASK_DARK;
-uniform COMPAT_PRECISION float g_vstr;
-uniform COMPAT_PRECISION float g_vpower;
 #else
-#define SCANLINE_WEIGHT 7.0
-#define MASK_DARK 0.5
-#define g_vstr 50.0
-#define g_vpower 0.40
+#define SCANLINE_WEIGHT 9.0
+#define MASK_DARK 0.4
 #endif
 
 void main()
@@ -134,14 +125,15 @@ COMPAT_VARYING vec2 invDims;
 // All parameter floats need to have COMPAT_PRECISION in front of them
 uniform COMPAT_PRECISION float SCANLINE_WEIGHT;
 uniform COMPAT_PRECISION float MASK_DARK;
-uniform COMPAT_PRECISION float g_vstr;
-uniform COMPAT_PRECISION float g_vpower;
 #else
-#define SCANLINE_WEIGHT 7.0
-#define MASK_DARK 0.5
-#define g_vstr 50.0
-#define g_vpower 0.40
+#define SCANLINE_WEIGHT 9.0
+#define MASK_DARK 0.4
 #endif
+
+#define MSCL (OutputSize.y > 1499.0 ? 0.30 : 0.5)
+// This compensates the scanline+mask embedded gamma from the beam dynamics
+#define pwr vec3(1.0/((-0.0325*SCANLINE_WEIGHT+1.0)*(-0.311*MASK_DARK+1.0))-1.2)
+
 
 
 // NTSC-J (D93) -> Rec709 D65 Joint Matrix (with D93 simulation)
@@ -152,17 +144,24 @@ const mat3 P22D93 = mat3(
      0.00000, 0.08197,  1.07280);
 
 
+// Returns gamma corrected output, compensated for scanline+mask embedded gamma
+vec3 inv_gamma(vec3 col, vec3 power)
+{
+    vec3 cir  = col-1.0;
+         cir *= cir;
+         col  = mix(sqrt(col),sqrt(1.0-cir),power);
+    return col;
+}
+
+
 void main()
 {
-    vec2 vpos = vTexCoord*scale;
+    vec2 vpos   = vTexCoord*scale;
 
-    vec2 corn = min(vpos,vec2(1.0)-vpos); // This is used to mask the rounded
-    corn.x = 0.0001/corn.x;               // corners later on
+    vpos  *= (1.0 - vpos.xy);
+    float vig = vpos.x * vpos.y * 46.0;
+          vig = min(sqrt(vig), 1.0);
 
-    vpos *= (1.0 - vpos.xy);
-    float vig = vpos.x * vpos.y * g_vstr;
-    vig = min(pow(vig, g_vpower), 1.0);
-    vig = vig >= 0.5 ? smoothstep(0.0,1.0,vig) : vig;
 
     // This is just like "Quilez Scaling" but sharper
     COMPAT_PRECISION float p = vTexCoord.y * TextureSize.y;
@@ -172,21 +171,15 @@ void main()
     COMPAT_PRECISION float Y = f*f;
     p = (i + 4.0*Y*f)*invDims.y;
 
-    vec2 MSCL = OutputSize.y > 1499.0 ? vec2(0.30) : vec2(0.499999, 0.5);
-
-    COMPAT_PRECISION float whichmask = floor(vTexCoord.x*4.0*OutputSize.x)*-MSCL.x;
-    COMPAT_PRECISION float mask = 1.0 + float(fract(whichmask) < MSCL.y) * -MASK_DARK;
+    COMPAT_PRECISION float whichmask = floor(vTexCoord.x*4.0*OutputSize.x)*-MSCL;
+    COMPAT_PRECISION float mask = 1.0 + float(fract(whichmask) < MSCL)    *-MASK_DARK;
     COMPAT_PRECISION vec3 colour = COMPAT_TEXTURE(Source, vec2(vTexCoord.x,p)).rgb;
 
-    vec3 P22 = ((colour*colour) * P22D93) * vig;
-    colour = max(vec3(0.0),P22);
+    colour = max((colour*colour) * (P22D93 * vig), 0.0);
 
     COMPAT_PRECISION float scanLineWeight = (1.5 - SCANLINE_WEIGHT*(Y - Y*Y));
 
-    if (corn.y <= corn.x)
-    colour = vec3(0.0);
-
-    FragColor.rgba = vec4(sqrt(colour.rgb*(mix(scanLineWeight*mask, 1.0, dot(colour.rgb,vec3(0.26667))))),1.0);
+    FragColor.rgba = vec4(inv_gamma(colour.rgb*mix(scanLineWeight*mask, 1.0, colour.r*0.26667+colour.g*0.26667+colour.b*0.26667),pwr),1.0);
 
 }
 #endif
