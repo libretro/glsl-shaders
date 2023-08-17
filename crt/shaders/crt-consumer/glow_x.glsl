@@ -1,5 +1,5 @@
 #version 130
-#pragma parameter glow "Glow Strength" 0.15 0.0 1.0 0.01
+#pragma parameter glow "Glow Strength" 0.08 0.0 1.0 0.01
 #pragma parameter sizex "Glow Size X" 1.0 0.0 2.0 0.05
 
 #if defined(VERTEX)
