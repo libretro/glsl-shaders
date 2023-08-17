@@ -1,5 +1,5 @@
 #version 110
-#pragma parameter gammain "Gamma In" 2.6 1.0 4.0 0.05
+#pragma parameter gammain "Gamma In" 2.5 1.0 4.0 0.05
 
 #if defined(VERTEX)
 
