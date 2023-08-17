@@ -1,7 +1,7 @@
 #version 110
 // Parameter lines go here:
 #pragma parameter blurx "Convergence X" 0.25 -2.0 2.0 0.05
-#pragma parameter blury "Convergence Y" -0.15 -2.0 2.0 0.05
+#pragma parameter blury "Convergence Y" -0.10 -2.0 2.0 0.05
 #pragma parameter warpx "  Curvature X" 0.03 0.0 0.12 0.01
 #pragma parameter warpy "  Curvature Y" 0.04 0.0 0.12 0.01
 #pragma parameter corner "  Corner size" 0.01 0.0 0.10 0.01
@@ -20,10 +20,10 @@
 #pragma parameter slotwidth "   Slot Mask Width" 2.0 1.0 6.0 0.5
 #pragma parameter double_slot "   Slot Mask Height: 2x1 or 4x1" 1.0 1.0 2.0 1.0
 #pragma parameter slotms "   Slot Mask Size" 1.0 1.0 2.0 1.0
-#pragma parameter GAMMA_OUT "Gamma Out" 2.2 0.0 4.0 0.1
+#pragma parameter GAMMA_OUT "Gamma Out" 2.2 0.0 4.0 0.05
 #pragma parameter brightboost1 "Bright boost dark pixels" 1.3 0.0 3.0 0.05
 #pragma parameter brightboost2 "Bright boost bright pixels" 1.05 0.0 3.0 0.05
-#pragma parameter sat "Saturation" 1.1 0.0 2.0 0.05
+#pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
 #pragma parameter contrast "Contrast, 1.0:Off" 1.0 0.00 2.00 0.05
 #pragma parameter nois "Noise" 0.0 0.0 1.0 0.01
 #pragma parameter GLOW_LINE "Glowing line" 0.006 0.00 0.20 0.001
@@ -33,7 +33,7 @@
 #pragma parameter vstr "  Vignette strength" 45.0 0.0 50.0 1.0
 #pragma parameter sawtooth "  Sawtooth Effect" 1.0 0.0 1.0 1.0
 #pragma parameter bleed "  Color Bleed Effect" 1.0 0.0 1.0 1.0
-#pragma parameter bl_size "  Color Bleed Size" 0.75 0.1 2.0 0.05
+#pragma parameter bl_size "  Color Bleed Size" 2.0 0.1 4.0 0.05
 #pragma parameter alloff "  Switch off shader" 0.0 0.0 1.0 1.0
 #define pi 6.28318
 
