@@ -7,8 +7,8 @@
    any later version.
 */
 
-#pragma parameter CHR_BLUR "CHROMA RESOLUTION" 1.5 1.0 10.0 0.1
-#pragma parameter L_BLUR "LUMA RESOLUTION" 8.0 2.0 10.0 0.25
+#pragma parameter CHR_BLUR "CHROMA RESOLUTION" 2.3 1.0 10.0 0.1
+#pragma parameter L_BLUR "LUMA RESOLUTION" 10.5 10.0 20.0 0.5
 #pragma parameter CHROMA_SATURATION "CHROMA SATURATION" 5.0 0.0 15.0 0.1
 #pragma parameter BRIGHTNESS "LUMA BRIGHTNESS" 0.55 0.0 2.0 0.01
 #pragma parameter IHUE "I SHIFT (blue to orange)" 0.0 -1.0 1.0 0.01
@@ -122,7 +122,7 @@ uniform COMPAT_PRECISION float QHUE;
 
 #define PI   3.14159265358979323846
 #define TAU  6.28318530717958647693
-#define FSC  3.57945*4.0
+#define FSC  3.57945
 
 // Size of the decoding FIR filter
 #define FIR_SIZE 20
@@ -136,21 +136,22 @@ const mat3 rgb_to_yiq = mat3(0.299, 0.596, 0.211,
                              0.587,-0.274,-0.523,
                              0.114,-0.322, 0.312);
 
-float blackman(float n, float N) {
-    float a0 = (1.0 - 0.16) / 2.0;
-    float a1 = 1.0 / 2.0;
-    float a2 = 0.16 / 2.0;
+float blackman(float pos, float FIR) {
+    float a0 = 0.42;
+    float a1 = 0.50;
+    float a2 = 0.08;
     
-    return a0 - (a1 * cos((2.0 * PI * n) / N)) + (a2 * cos((4.0 * PI * n) / N));
+    return a0 - (a1 * cos((2.0 * PI * pos) / FIR)) + (a2 * cos((4.0 * PI * pos) / FIR));
 }
 
 void main() {
+
 // moved due to GLES fix. 
-mat3 mix_mat = mat3(
-    1.0, 0.0, 0.0,
-    IHUE, 1.0, 0.0,
-    QHUE, 0.0, 1.0
-);
+    mat3 mix_mat = mat3(
+        1.0, 0.0, 0.0,
+        IHUE, 1.0, 0.0,
+        QHUE, 0.0, 1.0
+        );
 
     // Chroma decoder oscillator frequency
     float fc = SourceSize.x*TAU;
@@ -159,30 +160,36 @@ mat3 mix_mat = mat3(
     vec3 yiq = vec3(0.0);
 
 for (int d = -FIR_SIZE; d < FIR_SIZE; d++) {
-        //luma encode/decode
-        vec2 pos = vec2((vTexCoord.x + (float(d)/2.0/L_BLUR)*SourceSize.z), vTexCoord.y);
+        float odd = mod(vTexCoord.y*SourceSize.y,2.0)*SourceSize.z*0.25;
+        float offset = float(d);
+        float phase = fc*vTexCoord.x+11.0*PI/60.0;
+        // LUMA encode
+        vec2 pos = vec2((vTexCoord.x + (offset/2.0/L_BLUR)*SourceSize.z)+odd, vTexCoord.y);
         vec3 s = COMPAT_TEXTURE(Source, pos).rgb; 
         s = rgb_to_yiq*s;
-        // encode end
-        // decode
-        // Apply Blackman window for smoother colors
-        float window = blackman(float(d/2 + 5), float(FIR_SIZE/2)); 
+        // LUMA encode end
 
+        // LUMA decode
+        // Apply Blackman window for smoother colors
+        float window = blackman((offset/2.0 + 10.0), float(FIR_SIZE/2)); 
         yiq.r += s.r * BRIGHTNESS * window;
+        // LUMA decode end!
 
-        // chroma encode/decode
-        pos = vec2(vTexCoord.x + (float(d)/CHR_BLUR)*SourceSize.z, vTexCoord.y);
+        // CHROMA encode
+        pos = vec2(vTexCoord.x + (offset/CHR_BLUR)*SourceSize.z+odd, vTexCoord.y);
         s = COMPAT_TEXTURE(Source, pos).rgb;
+        
         s = rgb_to_yiq*s;
+        s.yz *= vec2(cos(phase),sin(phase)); 
+        // CHROMA encode end
 
-        s.yz *= vec2(cos(fc*vTexCoord.x+11.0*PI/60.0),sin(fc*vTexCoord.x+11.0*PI/60.0)); 
-        // encode end
-        float wt = fc * (vTexCoord.x - float(d)*SourceSize.z);
-        // decode
+        // CHROMA decode
         // Apply Blackman window for smoother colors
-        window = blackman(float(d + FIR_SIZE), float(FIR_SIZE * 2 + 1)); 
+        window = blackman( offset + float(FIR_SIZE), float(FIR_SIZE * 2 + 1)); 
+        float wt = fc*(vTexCoord.x + offset*SourceSize.z)+11.0*PI/60.0;
 
-        yiq.yz += s.yz * vec2(cos(wt+11.0*PI/60.0), sin(wt+11.0*PI/60.0)) * window;
+        yiq.yz += s.yz * vec2(cos(wt), sin(wt)) * window;
+        // CHROMA decode end!
 
         counter++;
     }
@@ -192,7 +199,9 @@ for (int d = -FIR_SIZE; d < FIR_SIZE; d++) {
 
     // Saturate chroma (IQ)
     yiq.yz *= CHROMA_SATURATION;
+    // Control CHROMA Hue
     yiq *= mix_mat;
+    // return to RGB
     FragColor = vec4((yiq_to_rgb * yiq), 1.0);
 }
 #endif
