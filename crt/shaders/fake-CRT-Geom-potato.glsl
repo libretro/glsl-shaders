@@ -2,7 +2,7 @@
 // written on an old netbook with 9 gflops
 // and runs 60-65 fps on 720p
 
-#pragma parameter SEVTWO "1080/720p Scanlines" 1.0 1.0 1.3333 0.3333
+#pragma parameter SEVTWO "1080/720p Scanlines" 2.0 1.3333 2.0 0.6666
 
 #define pi 3.1415926
 
