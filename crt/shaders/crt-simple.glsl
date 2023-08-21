@@ -145,7 +145,7 @@ uniform COMPAT_PRECISION float MASK;
                 vec4 weights = vec4(pos_y / SCANLINE);
                 vec4 wsc = weights/sqc;
                 wsc = wsc*wsc*wsc; 
-                return 1.4 * exp(-wsc) / (1.0 + 0.2 * wid);
+                return 1.4 * exp(-wsc) / (1.2 + 0.2 * wid);
         }
 
 vec2 Distort(vec2 coord)
