@@ -1,13 +1,10 @@
-// Simple scanlines and mask effect
-// original by hunterk, edit by DariusG
+// Simple scanlines and mask effect by DariusG
+// written on an old netbook with 9 gflops
+// and runs 60-65 fps on 720p
 
-///////////////////////  Runtime Parameters  ///////////////////////
-#pragma parameter SCANLINE "Scanline Intensity" 0.30 0.0 1.0 0.05
-#pragma parameter MSK "Mask Brightness" 0.7 0.0 1.0 0.05
+#pragma parameter SEVTWO "1080/720p Scanlines" 2.0 1.3333 2.0 0.6666
 
-
-
-#define pi 3.141592
+#define pi 3.1415926
 
 #if defined(VERTEX)
 
@@ -33,6 +30,8 @@ COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING float fragpos;
+COMPAT_VARYING float scanpos;
+COMPAT_VARYING float cent;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -41,6 +40,7 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION float SEVTWO;
 
 // compatibility #defines
 #define vTexCoord TEX0.xy
@@ -57,7 +57,10 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
-    fragpos=TEX0.x*OutputSize.x*TextureSize.x/InputSize.x;
+    fragpos = TEX0.x*OutputSize.x*TextureSize.x/InputSize.x*pi;
+	float y = TEX0.y*SourceSize.y;
+	scanpos = y*pi*SEVTWO;
+	cent = (floor(y)+0.5)/SourceSize.y;
 }
 
 #elif defined(FRAGMENT)
@@ -91,6 +94,8 @@ uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING float fragpos;
+COMPAT_VARYING float scanpos;
+COMPAT_VARYING float cent;
 
 // compatibility #defines
 #define Source Texture
@@ -111,29 +116,17 @@ uniform COMPAT_PRECISION float MSK;
 
 #endif
 
-// MSK mask calculation
-     
-      float Mask(float pos)
-      {
-      float mf = fract(pos * 0.5);
-
-      if (mf < 0.5) return (MSK);
-      else return (1.0);
-  
-      }
-
 void main()
 {
-    float OGL2Pos = vTexCoord.y*SourceSize.y;
-    float cent = floor(OGL2Pos)+0.5;
-    float ycoord = cent*SourceSize.w; 
-
-   vec3 res = texture2D(Source, vec2(vTexCoord.x, ycoord)).rgb;
-
-     res *= SCANLINE*sin(fract(vTexCoord.y*SourceSize.y)*pi)+1.0-SCANLINE ; 
-
-     res *= Mask(fragpos);
-
+    float ycoord = cent ; 
+    vec3 res = COMPAT_TEXTURE(Source, vec2(vTexCoord.x, ycoord)).rgb;
+	vec3 origin = res;
+	float lum = dot(vec3(0.3), res);
+	
+     res *= 0.4*sin(scanpos)+0.6 ; 
+     res *= 0.3*sin(fragpos)+0.7;
+	 res = mix(res, origin, lum);
+	 res *= mix(1.45,1.05,lum);
     FragColor = vec4(res,1.0);
 } 
 #endif

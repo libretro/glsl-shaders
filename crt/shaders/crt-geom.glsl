@@ -21,6 +21,7 @@
 */
 
 #pragma parameter CRTgamma "CRTGeom Target Gamma" 2.4 0.1 5.0 0.1
+#pragma parameter INV "Inverse Gamma/CRT-Geom Gamma out" 1.0 0.0 1.0 1.0
 #pragma parameter monitorgamma "CRTGeom Monitor Gamma" 2.2 0.1 5.0 0.1
 #pragma parameter d "CRTGeom Distance" 1.6 0.1 3.0 0.1
 #pragma parameter CURVATURE "CRTGeom Curvature Toggle" 1.0 0.0 1.0 1.0
@@ -56,6 +57,7 @@
 #define lum 0.0
 #define interlace_detect 1.0
 #define SATURATION 1.0
+#define INV 1.0
 #endif
 
 #if defined(VERTEX)
@@ -304,6 +306,7 @@ uniform COMPAT_PRECISION float scanline_weight;
 uniform COMPAT_PRECISION float lum;
 uniform COMPAT_PRECISION float interlace_detect;
 uniform COMPAT_PRECISION float SATURATION;
+uniform COMPAT_PRECISION float INV;
 #endif
 
 float intersect(vec2 xy)
@@ -392,6 +395,17 @@ vec3 saturation (vec3 textureColor)
     return res;
 }
 
+#define pwr vec3(1.0/((-0.7*(1.0-scanline_weight)+1.0)*(-0.5*DOTMASK+1.0))-1.25)
+
+
+// Returns gamma corrected output, compensated for scanline+mask embedded gamma
+vec3 inv_gamma(vec3 col, vec3 power)
+{
+    vec3 cir  = col-1.0;
+         cir *= cir;
+         col  = mix(sqrt(col),sqrt(1.0-cir),power);
+    return col;
+}
 
 void main()
 {
@@ -494,8 +508,12 @@ vec3 dotMaskWeights = mix(
 	mul_res *= dotMaskWeights;
 
 // Convert the image gamma for display on our output device.
-	mul_res = pow(mul_res, vec3(1.0 / monitorgamma));
+if (INV == 1.0){ mul_res = inv_gamma(mul_res,pwr);} 
+	else mul_res = pow(mul_res, vec3(1.0/monitorgamma));
+        
         mul_res = saturation(mul_res);
+
+
 
 // Color the texel.
     output_dummy _OUT;
