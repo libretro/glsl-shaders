@@ -395,7 +395,7 @@ vec3 saturation (vec3 textureColor)
     return res;
 }
 
-#define pwr vec3(1.0/((-0.8*(1.0-scanline_weight)+1.0)*(-0.5*DOTMASK+1.0))-1.25)
+#define pwr vec3(1.0/((-0.7*(1.0-scanline_weight)+1.0)*(-0.5*DOTMASK+1.0))-1.25)
 
 
 // Returns gamma corrected output, compensated for scanline+mask embedded gamma
