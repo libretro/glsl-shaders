@@ -12,7 +12,7 @@
  */
 
 #pragma parameter DISTORTION "CRT-Geom Distortion" 0.12 0.0 0.30 0.01
-#pragma parameter SCANLINE "CRT-Geom Scanline Weight" 0.3 0.2 0.6 0.05
+#pragma parameter SCANLINE "CRT-Geom Scanline Weight" 0.25 0.2 0.6 0.05
 #pragma parameter MASK "CRT-Geom Mask Brightness" 0.6 0.0 1.0 0.05
 #pragma parameter SIZE "CRT-Geom Mask Size" 1.0 0.75 1.0 0.25
 
@@ -44,6 +44,7 @@ COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 scale;
+COMPAT_VARYING float fragpos;
 
 
 uniform mat4 MVPMatrix;
@@ -58,6 +59,7 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;    
     TEX0.xy = TexCoord.xy*1.0001;
     scale = TextureSize.xy/InputSize.xy;
+    fragpos = TEX0.x*OutputSize.x*scale.x*PI;
 }
 
 #elif defined(FRAGMENT)
@@ -98,6 +100,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 scale;
+COMPAT_VARYING float fragpos;
 
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
@@ -116,16 +119,6 @@ uniform COMPAT_PRECISION float MASK;
 #endif
 
 
-#define pwr vec3(1.0/((-0.25*SCANLINE+1.0)*(-0.5*MASK+1.0))-1.25)
-  
-// Returns gamma corrected output, compensated for scanline+mask embedded gamma
-vec3 inv_gamma(vec3 col, vec3 power)
-{
-    vec3 cir  = col-1.0;
-         cir *= cir;
-         col  = mix(sqrt(col),sqrt(1.0-cir),power);
-    return col;
-}
         // Calculate the influence of a scanline on the current pixel.
         //
         // 'pos_y' is the distance in texture coordinates from the current
@@ -136,10 +129,10 @@ vec3 inv_gamma(vec3 col, vec3 power)
         {
                 // The "width" of the scanline beam is set as 2*(1 + x^4) for
                 // each RGB channel.
-                float widt = dot(sqrt(color.rgb),vec3(1.0));
-                vec4 wid = vec4 (widt)+1.0;
+                float widt = dot(sqrt(color.rgb),vec3(0.6666));
+                vec4 wid = vec4 (widt); // 2.0 to 4.0
                 //wid.r is min 0.0, max 4.0   
-
+                float sqc = mix(1.0,1.41, widt);
                 // The "weights" lines basically specify the formula that gives
                 // you the profile of the beam, i.e. the intensity as
                 // a function of pos_y from the vertical center of the
@@ -150,10 +143,10 @@ vec3 inv_gamma(vec3 col, vec3 power)
                 // "weights" should have a higher peak at the center of the
                 // scanline than for a wider beam.
                 vec4 weights = vec4(pos_y / SCANLINE);
-                return 1.4 * exp(-pow(weights * inversesqrt(0.5 * wid), wid)) / 
-                                        (0.6 + 0.2 * wid);
+                vec4 wsc = weights/sqc;
+                wsc = wsc*wsc*wsc; 
+                return 1.4 * exp(-wsc) / (1.0 + 0.2 * wid);
         }
-
 
 vec2 Distort(vec2 coord)
 {
@@ -161,7 +154,7 @@ vec2 Distort(vec2 coord)
         vec2 CURVATURE_DISTORTION = vec2(DISTORTION, DISTORTION*1.5);
         // Barrel distortion shrinks the display area a bit, this will allow us to counteract that.
         vec2 barrelScale = 1.0 - (0.23 * CURVATURE_DISTORTION);
-        coord *= TextureSize/InputSize;
+        coord *= scale;
         coord -= vec2(0.5);
         float rsq = coord.x * coord.x + coord.y * coord.y;
         coord += coord * (CURVATURE_DISTORTION * rsq);
@@ -178,12 +171,11 @@ vec2 Distort(vec2 coord)
 }
 void main()
 {
-        // Texture coordinates of the texel containing the active pixel.
-              vec2 abspos = TEX0.xy*SourceSize.xy*scale;
         vec2 xy;
 
         #ifdef CURVATURE
-                xy = Distort(TEX0.xy); float xblur = xy.x; float yblur = xy.y;
+                xy = Distort(TEX0.xy); 
+                float xblur = xy.x; 
         #else
                 xy = TEX0.xy;
         #endif
@@ -209,8 +201,8 @@ void main()
 
                 vec3 mul_res  = (col * weights + col2 * weights2).rgb;
                 
-                // dot-mask emulation:
-                float dotMaskWeights = mix(MASK, 1.0, sin(vTexCoord.x*OutputSize.x*scale.x/SIZE*3.1415926)*0.5+0.5);
+// dot-mask emulation:
+                float dotMaskWeights = mix(MASK, 1.0, 0.5*sin(fragpos/SIZE)+0.5);
 
                 mul_res *= dotMaskWeights;
 
@@ -223,7 +215,9 @@ void main()
     else
         mul_res = vec3(0.,0.,0.);
 #endif
-        mul_res.rgb = inv_gamma(mul_res,pwr);
+        mul_res = sqrt(mul_res);
+        mul_res.rgb *= mix(1.45,1.05, dot(mul_res.rgb, vec3(0.3,0.6,0.1)));
+
         FragColor = vec4(mul_res, 1.0);
         }
 
