@@ -2,19 +2,21 @@
 
 /* 
   work by DariusG 2023, some ideas borrowed from Dogway's zfast_crt_geo
+  v1.2: improved mask/scanlines
   v1.1: switched to lanczos4 taps filter
 */
 
 #pragma parameter curv "Curvature"  1.0 0.0 1.0 1.0
+#pragma parameter ssize "Scanline Size" 1.0 1.0 2.0 1.0
+#pragma parameter scanB "Scanline Strength High" 0.5 0.0 1.0 0.05
+#pragma parameter scanL "Scanline Strength Low" 0.65 0.0 1.0 0.05
 #pragma parameter Shadowmask "  Mask Type " 0.0 -1.0 2.0 1.0
+#pragma parameter maskmove "mask move" 1.0 0.0 1000.0 1.0
 #pragma parameter slotx "  Slot Size x" 3.0 2.0 3.0 1.0
 #pragma parameter width "  Mask Width 3.0/2.0 " 0.67 0.67 1.0 0.333
-#pragma parameter mask "  Mask Strength" 0.25 0.0 1.0 0.05
-#pragma parameter ssize "Scanline Size" 1.0 1.0 2.0 1.0
-#pragma parameter scan "Scanline Strength" 0.8 0.0 1.0 0.05
-#pragma parameter thresh "Effect Threshold on brights" 0.12 0.0 0.33 0.01
+#pragma parameter mask "  Mask Strength" 0.4 0.0 1.0 0.05
 #pragma parameter colors "  Colors: 0.0 RGB, 1.0 P22D93, 2.0:NTSC" 0.0 0.0 2.0 1.0
-#pragma parameter sat "  Saturation" 1.15 0.0 2.0 0.01
+#pragma parameter sat "  Saturation" 1.0 0.0 2.0 0.01
 #pragma parameter wp "  White Point" -0.05 -0.2 0.2 0.01
 
 #if defined(VERTEX)
@@ -114,12 +116,14 @@ uniform COMPAT_PRECISION float slotx;
 uniform COMPAT_PRECISION float mask;
 uniform COMPAT_PRECISION float Shadowmask;
 uniform COMPAT_PRECISION float ssize;
-uniform COMPAT_PRECISION float scan;
+uniform COMPAT_PRECISION float scanL;
+uniform COMPAT_PRECISION float scanB;
 uniform COMPAT_PRECISION float curv;
 uniform COMPAT_PRECISION float thresh;
 uniform COMPAT_PRECISION float colors;
 uniform COMPAT_PRECISION float sat;
 uniform COMPAT_PRECISION float wp;
+uniform COMPAT_PRECISION float maskmove;
 
 #else
 #define width 1.0
@@ -127,14 +131,17 @@ uniform COMPAT_PRECISION float wp;
 #define Shadowmask 0.0
 #define mask 0.5
 #define ssize 1.0
-#define scan 1.0
+#define scanL 0.6
+#define scanB 0.4
 #define curv 1.0
 #define thresh 0.2
 #define colors 0.0
 #define sat 1.0
 #define wp 0.0
+#define maskmove 0.0
 #endif
 
+#define maskmov maskmove/1000.0
 #define PI 3.1415926    
 #define FIX(c) max(abs(c), 0.000001);
 
@@ -178,12 +185,12 @@ float Mask (vec2 pos)
         float oddx = mod(fragpos.x,slotx*2.0) < slotx ? 1.0 : 0.0;
 
         return        mask*sin(fragpos.x*width*PI) 
-                    + mask*sin((fragpos.y+oddx)*PI)+1.0-mask ;
+                    + mask*sin((fragpos.y+oddx)*PI)+2.0-mask*2.0 ;
     }
 
     if (Shadowmask == 2.0)
     {
-        return mask*sin(fract(fragpos.x*0.333)*PI)+1.0-mask;
+        return mask*sin(fract(fragpos.x*0.3333*2.0)*PI)+1.0-mask;
     }
 
  else return 1.0;
@@ -239,37 +246,42 @@ void main()
                 line(xystart.y + one_pix.y * 2.0, xpos, linetaps),
                 line(xystart.y + one_pix.y * 3.0, xpos, linetaps)) * columntaps;
                
+       
+    //pos.y *= 0.995 ;
+    float OGL2Pos = fract((pos.y*SourceSize.y)/ssize);
+    float lum = dot(vec3(0.333), res.rgb);
+    float scan = mix (scanL, scanB, lum);
+    
+    res.rgb *= res.rgb;
+    
     if (colors == 2.0) res.rgb *= NTSC;  else 
     if (colors == 1.0) res.rgb *= P22D93; else
-    res.rgb;
-
-    res = clamp(res,0.0,1.0);
+    res.rgb; res = clamp(res, 0.0,1.0);
     
-    pos.y -= 0.01 ;
-    float OGL2Pos = fract((pos.y*SourceSize.y)/ssize);
-    float lum = dot(vec3(thresh), res.rgb);
+    float scanline = scan*sin(OGL2Pos*PI*2.0)+1.0-scan+scan*sin(1.0-OGL2Pos*PI*2.0)+1.0-scan;
+    res *= scanline*Mask(vTexCoord);
     
-    //res.rgb *= res.rgb;
-    float scanline = scan*sin(OGL2Pos*PI)+1.0-scan;
-    res *= mix(scanline*Mask(vTexCoord),1.0, lum);
-    //res.rgb = sqrt(res.rgb);
+    res.rgb = sqrt(res.rgb);
 
-        vec2 c = warpos;
-        corn   = min(c, 1.0-c);    // This is used to mask the rounded
-        corn.x = 0.0003333/corn.x; // corners later on
 
     //CHEAP TEMPERATURE CONTROL     
     if (wp != 0.0) { res.rgb *= vec3(1.0+wp,1.0,1.0-wp);}
-     //saturation
+    
+    //SATURATION
     vec3 lumweight = vec3(0.29,0.6,0.11);
     vec3 grays = vec3(dot(lumweight, res.rgb));
     res.rgb = mix(grays, res.rgb, sat);
-    res.rgb *= mix(1.25,1.35, grays.x);
+    
+    // CORNERS
+    vec2 c = warpos;
+    corn   = min(c, 1.0-c);    // This is used to mask the rounded
+    corn.x = 0.0003333/corn.x; // corners later on
+
     if (corn.y <= corn.x && curv == 1.0 || corn.x < 0.0001 && curv ==1.0 )
     res = vec4(0.0);
 
+// GLES FIX
 #if defined GL_ES
-    // hacky clamp fix for GLES
     vec2 bordertest = pos;
     if ( bordertest.x > 0.0001 && bordertest.x < 0.9999 && bordertest.y > 0.0001 && bordertest.y < 0.9999)
         res = res;
