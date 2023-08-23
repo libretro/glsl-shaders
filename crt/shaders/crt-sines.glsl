@@ -177,7 +177,7 @@ float Mask (vec2 pos)
 {
     if (Shadowmask == 0.0)
     {
-        return mask*sin(fract(fragpos.x*0.5)*PI)+1.0-mask;
+        return mask*sin(fragpos.x*PI)+1.0-mask;
     }
 
     if (Shadowmask == 1.0)
