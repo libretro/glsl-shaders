@@ -14,7 +14,7 @@
 #pragma parameter DISTORTION "CRT-Geom Distortion" 0.12 0.0 0.30 0.01
 #pragma parameter SCANLINE "CRT-Geom Scanline Weight" 0.25 0.2 0.6 0.05
 #pragma parameter MASK "CRT-Geom Mask Brightness" 0.6 0.0 1.0 0.05
-#pragma parameter SIZE "CRT-Geom Mask Size" 1.0 0.75 1.0 0.25
+#pragma parameter SIZE "CRT-Geom Mask Size" 1.0 0.666 1.0 0.333
 
 // Uncomment to enable curvature (ugly)
 #define CURVATURE        
@@ -145,7 +145,7 @@ uniform COMPAT_PRECISION float MASK;
                 vec4 weights = vec4(pos_y / SCANLINE);
                 vec4 wsc = weights/sqc;
                 wsc = wsc*wsc*wsc; 
-                return 1.4 * exp(-wsc) / (1.2 + 0.2 * wid);
+                return 1.2 * exp(-wsc) / (1.2 + 0.2 * wid);
         }
 
 vec2 Distort(vec2 coord)
@@ -202,7 +202,7 @@ void main()
                 vec3 mul_res  = (col * weights + col2 * weights2).rgb;
                 
 // dot-mask emulation:
-                float dotMaskWeights = mix(MASK, 1.0, 0.5*sin(fragpos/SIZE)+0.5);
+                float dotMaskWeights = mix(MASK, 1.0, 0.5*sin(fragpos*SIZE)+0.5);
 
                 mul_res *= dotMaskWeights;
 

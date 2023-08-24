@@ -2,6 +2,8 @@
 
 /* 
   work by DariusG 2023, some ideas borrowed from Dogway's zfast_crt_geo
+
+  v1.2b: Lanczos4 --> Lanczos2 for performance. mask 0 improved
   v1.2: improved mask/scanlines
   v1.1: switched to lanczos4 taps filter
 */
@@ -11,13 +13,12 @@
 #pragma parameter scanB "Scanline Strength High" 0.5 0.0 1.0 0.05
 #pragma parameter scanL "Scanline Strength Low" 0.65 0.0 1.0 0.05
 #pragma parameter Shadowmask "  Mask Type " 0.0 -1.0 2.0 1.0
-#pragma parameter maskmove "mask move" 1.0 0.0 1000.0 1.0
 #pragma parameter slotx "  Slot Size x" 3.0 2.0 3.0 1.0
-#pragma parameter width "  Mask Width 3.0/2.0 " 0.67 0.67 1.0 0.333
+#pragma parameter width "  Mask Width 3.0/2.0 " 0.6666 0.6666 1.0 0.3333
 #pragma parameter mask "  Mask Strength" 0.4 0.0 1.0 0.05
-#pragma parameter colors "  Colors: 0.0 RGB, 1.0 P22D93, 2.0:NTSC" 0.0 0.0 2.0 1.0
-#pragma parameter sat "  Saturation" 1.0 0.0 2.0 0.01
-#pragma parameter wp "  White Point" -0.05 -0.2 0.2 0.01
+#pragma parameter colors "Colors: 0.0 RGB, 1.0 P22D93, 2.0:NTSC" 0.0 0.0 2.0 1.0
+#pragma parameter sat "Saturation" 1.0 0.0 2.0 0.01
+#pragma parameter wp "White Point" 0.0 -0.25 0.25 0.01
 
 #if defined(VERTEX)
 
@@ -144,53 +145,53 @@ uniform COMPAT_PRECISION float maskmove;
 #define maskmov maskmove/1000.0
 #define PI 3.1415926    
 #define FIX(c) max(abs(c), 0.000001);
+#define back 1.0-mask
 
-vec4 weight4(float x)
+vec2 weight2(float x)
         {
             const float radius = 2.0;
-            vec4 smpl = FIX(PI * vec4(1.0 + x, x, 1.0 - x, 2.0 - x));
+            vec2 smpl = FIX(PI * vec2(1.0 - x, x));
 
             // Lanczos2. Note: we normalize below, so no point in multiplying by radius.
-            vec4 ret = /*radius **/ sin(smpl) * sin(smpl / radius) / (smpl * smpl);
+            vec2 ret = sin(smpl) * sin(smpl / radius) / (smpl * smpl);
 
             // Normalize
-            return ret / dot(ret, vec4(1.0));
+            return ret / dot(ret, vec2(1.0));
         }
 
-vec4 pixel(float xpos, float ypos)
+vec3 pixel(float xpos, float ypos)
         {
 
-            return COMPAT_TEXTURE(Source, vec2(xpos, ypos));
+            return COMPAT_TEXTURE(Source, vec2(xpos, ypos)).rgb;
         }
 
-vec4 line(float ypos, vec4 xpos, vec4 linetaps)
+vec3 line(float ypos, vec2 xpos, vec2 linetaps)
         {
-            return mat4(
-                pixel(xpos.x, ypos),
-                pixel(xpos.y, ypos),
-                pixel(xpos.z, ypos),
-                pixel(xpos.w, ypos)) * linetaps;
+            return (pixel(xpos.x, ypos) * linetaps.x +
+                    pixel(xpos.y, ypos) * linetaps.y) ;
         }
 
 
-float Mask (vec2 pos)
+
+
+float Mask (vec2 pos, float l)
 {
     if (Shadowmask == 0.0)
     {
-        return mask*sin(fragpos.x*PI)+1.0-mask;
+        return mask*(0.5*sin(fragpos.x*PI)+0.5)+back;
     }
 
-    if (Shadowmask == 1.0)
+    else if (Shadowmask == 1.0)
     {
         float oddx = mod(fragpos.x,slotx*2.0) < slotx ? 1.0 : 0.0;
 
-        return        mask*sin(fragpos.x*width*PI) 
-                    + mask*sin((fragpos.y+oddx)*PI)+2.0-mask*2.0 ;
+        return        (0.5*mask*sin(fragpos.x*width*PI)+0.5) 
+                    + (0.5*mask*sin((fragpos.y+oddx)*PI)+0.5) ;
     }
 
-    if (Shadowmask == 2.0)
+    else if (Shadowmask == 2.0)
     {
-        return mask*sin(fract(fragpos.x*0.3333*2.0)*PI)+1.0-mask;
+        return mask*(0.5*sin(fragpos.x*PI*0.666)+0.5)+1.0-mask*1.0001;
     }
 
  else return 1.0;
@@ -224,28 +225,26 @@ void main()
         } 
     else pos = vTexCoord;
     
-// LANCZOS 4 taps
+// LANCZOS 2 taps
             vec2 one_pix = SourceSize.zw;
-            pos = pos + one_pix*0.5;
+            pos = pos + one_pix*2.5;
             vec2 f = fract(pos * SourceSize.xy);
 
-            vec4 linetaps   = weight4(f.x);
-            vec4 columntaps = weight4(f.y);
+            vec2 linetaps   = weight2(f.x);
+            vec2 columntaps = weight2(f.y);
 
             vec2 xystart = pos - one_pix*(f + 1.5);
-            vec4 xpos = vec4(
+            vec2 xpos = vec2(
                 xystart.x,
-                xystart.x + one_pix.x,
-                xystart.x + one_pix.x * 2.0,
-                xystart.x + one_pix.x * 3.0);
+                xystart.x - one_pix.x 
+              );
 
-
-        vec4 res = mat4(
-                line(xystart.y                  , xpos, linetaps),
-                line(xystart.y + one_pix.y      , xpos, linetaps),
-                line(xystart.y + one_pix.y * 2.0, xpos, linetaps),
-                line(xystart.y + one_pix.y * 3.0, xpos, linetaps)) * columntaps;
+        vec3 res = 
+                line(xystart.y                  , xpos, linetaps)* columntaps.x +
+                line(xystart.y - one_pix.y      , xpos, linetaps)* columntaps.y
+                 ;
                
+                              
        
     //pos.y *= 0.995 ;
     float OGL2Pos = fract((pos.y*SourceSize.y)/ssize);
@@ -259,8 +258,8 @@ void main()
     res.rgb; res = clamp(res, 0.0,1.0);
     
     float scanline = scan*sin(OGL2Pos*PI*2.0)+1.0-scan+scan*sin(1.0-OGL2Pos*PI*2.0)+1.0-scan;
-    res *= scanline*Mask(vTexCoord);
-    
+    res *= scanline;
+    res *= Mask(vTexCoord, lum);
     res.rgb = sqrt(res.rgb);
 
 
@@ -278,7 +277,7 @@ void main()
     corn.x = 0.0003333/corn.x; // corners later on
 
     if (corn.y <= corn.x && curv == 1.0 || corn.x < 0.0001 && curv ==1.0 )
-    res = vec4(0.0);
+    res = vec3(0.0);
 
 // GLES FIX
 #if defined GL_ES
@@ -286,10 +285,10 @@ void main()
     if ( bordertest.x > 0.0001 && bordertest.x < 0.9999 && bordertest.y > 0.0001 && bordertest.y < 0.9999)
         res = res;
     else
-        res = vec4(0.0);
+        res = vec3(0.0);
 #endif
 
-    FragColor = res;
+    FragColor = vec4(res,1.0);
 }
 
 #endif
