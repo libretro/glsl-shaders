@@ -3,7 +3,7 @@
 /* 
   work by DariusG 2023, some ideas borrowed from Dogway's zfast_crt_geo
 
-  v1.2b: Lanczos4 --> Lanczos3 for performance. mask 0 improved
+  v1.2b: Lanczos4 --> Lanczos2 for performance. mask 0 improved
   v1.2: improved mask/scanlines
   v1.1: switched to lanczos4 taps filter
 */
@@ -147,16 +147,16 @@ uniform COMPAT_PRECISION float maskmove;
 #define FIX(c) max(abs(c), 0.000001);
 #define back 1.0-mask
 
-vec3 weight3(float x)
+vec2 weight2(float x)
         {
             const float radius = 2.0;
-            vec3 smpl = FIX(PI * vec3(1.0 + x, x, 1.0 - x));
+            vec2 smpl = FIX(PI * vec2(1.0 - x, x));
 
             // Lanczos2. Note: we normalize below, so no point in multiplying by radius.
-            vec3 ret = sin(smpl) * sin(smpl / radius) / (smpl * smpl);
+            vec2 ret = sin(smpl) * sin(smpl / radius) / (smpl * smpl);
 
             // Normalize
-            return ret / dot(ret, vec3(1.0));
+            return ret / dot(ret, vec2(1.0));
         }
 
 vec3 pixel(float xpos, float ypos)
@@ -165,13 +165,13 @@ vec3 pixel(float xpos, float ypos)
             return COMPAT_TEXTURE(Source, vec2(xpos, ypos)).rgb;
         }
 
-vec3 line(float ypos, vec3 xpos, vec3 linetaps)
+vec3 line(float ypos, vec2 xpos, vec2 linetaps)
         {
-            return mat3(
-                pixel(xpos.x, ypos),
-                pixel(xpos.y, ypos),
-                pixel(xpos.z, ypos)) * linetaps;
+            return (pixel(xpos.x, ypos) * linetaps.x +
+                    pixel(xpos.y, ypos) * linetaps.y) ;
         }
+
+
 
 
 float Mask (vec2 pos)
@@ -225,28 +225,25 @@ void main()
         } 
     else pos = vTexCoord;
     
-// LANCZOS 3 taps
+// LANCZOS 2 taps
             vec2 one_pix = SourceSize.zw;
-            pos = pos + one_pix*0.5;
+            pos = pos + one_pix*2.5;
             vec2 f = fract(pos * SourceSize.xy);
 
-            
-            vec3 linetaps   = weight3(f.x);
-            vec3 columntaps = weight3(f.y);
+            vec2 linetaps   = weight2(f.x);
+            vec2 columntaps = weight2(f.y);
 
             vec2 xystart = pos - one_pix*(f + 1.5);
-            vec3 xpos = vec3(
+            vec2 xpos = vec2(
                 xystart.x,
-                xystart.x + one_pix.x,
-                xystart.x + one_pix.x * 2.0
+                xystart.x - one_pix.x 
               );
 
-
-        vec3 res = mat3(
-                line(xystart.y                  , xpos, linetaps),
-                line(xystart.y + one_pix.y      , xpos, linetaps),
-                line(xystart.y + one_pix.y * 2.0, xpos, linetaps)
-                ) * columntaps;
+        vec3 res = 
+                line(xystart.y                  , xpos, linetaps)* columntaps.x +
+                line(xystart.y - one_pix.y      , xpos, linetaps)* columntaps.y
+                 ;
+               
                               
        
     //pos.y *= 0.995 ;
