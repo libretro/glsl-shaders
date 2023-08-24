@@ -18,7 +18,7 @@
 #pragma parameter mask "  Mask Strength" 0.4 0.0 1.0 0.05
 #pragma parameter colors "Colors: 0.0 RGB, 1.0 P22D93, 2.0:NTSC" 0.0 0.0 2.0 1.0
 #pragma parameter sat "Saturation" 1.0 0.0 2.0 0.01
-#pragma parameter wp "White Point" -0.05 -0.2 0.2 0.01
+#pragma parameter wp "White Point" 0.0 -0.25 0.25 0.01
 
 #if defined(VERTEX)
 
@@ -174,7 +174,7 @@ vec3 line(float ypos, vec2 xpos, vec2 linetaps)
 
 
 
-float Mask (vec2 pos)
+float Mask (vec2 pos, float l)
 {
     if (Shadowmask == 0.0)
     {
@@ -185,8 +185,8 @@ float Mask (vec2 pos)
     {
         float oddx = mod(fragpos.x,slotx*2.0) < slotx ? 1.0 : 0.0;
 
-        return        mask*sin(fragpos.x*width*PI) 
-                    + mask*sin((fragpos.y+oddx)*PI)+2.0-mask*2.0 ;
+        return        (0.5*mask*sin(fragpos.x*width*PI)+0.5) 
+                    + (0.5*mask*sin((fragpos.y+oddx)*PI)+0.5) ;
     }
 
     else if (Shadowmask == 2.0)
@@ -259,7 +259,7 @@ void main()
     
     float scanline = scan*sin(OGL2Pos*PI*2.0)+1.0-scan+scan*sin(1.0-OGL2Pos*PI*2.0)+1.0-scan;
     res *= scanline;
-    res *= Mask(vTexCoord);
+    res *= Mask(vTexCoord, lum);
     res.rgb = sqrt(res.rgb);
 
 
