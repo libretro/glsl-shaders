@@ -211,7 +211,6 @@ void main()
 else {
 	colour *= SCANAMOUNT * sin(fract(OGL2Pos)*3.14159)+1.0-SCANAMOUNT;
 	colour *= SCANAMOUNT * sin(fract(1.0-OGL2Pos)*3.14159)+1.0-SCANAMOUNT;
-	colour *= SCANAMOUNT * sin(fract(1.0+OGL2Pos)*3.14159)+1.0-SCANAMOUNT;
 	}
 
 	 float steps; if (TYPE == 0.0) steps = 0.5; else steps = 0.3333;
