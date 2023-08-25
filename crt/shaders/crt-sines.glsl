@@ -9,6 +9,7 @@
   v1.1: switched to lanczos4 taps filter
 */
 
+#pragma parameter SHARPNESS "LANCZOS SHARPNESS" 1.66 0.7 2.4 0.01 
 #pragma parameter curv "Curvature"  1.0 0.0 1.0 1.0
 #pragma parameter ssize "Scanline Size" 1.0 1.0 2.0 1.0
 #pragma parameter scanB "Scanline Strength High" 0.6 0.0 1.0 0.05
@@ -114,6 +115,7 @@ COMPAT_VARYING vec2 fragpos;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float SHARPNESS;
 uniform COMPAT_PRECISION float width;
 uniform COMPAT_PRECISION float slotx;
 uniform COMPAT_PRECISION float mask;
@@ -142,6 +144,8 @@ uniform COMPAT_PRECISION float Dx;
 #define sat 1.0
 #define wp 0.0
 #define Dx -1.0
+#define SHARPNESS 1.66
+
 #endif
 
 #define maskmov maskmove/1000.0
@@ -151,7 +155,7 @@ uniform COMPAT_PRECISION float Dx;
 
 vec2 weight2(float x)
         {
-            const float radius = 2.0;
+            float radius = 3.0-SHARPNESS;
             vec2 smpl = FIX(PI * vec2(1.0 - x, x));
 
             // Lanczos2. Note: we normalize below, so no point in multiplying by radius.
