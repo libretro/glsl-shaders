@@ -19,6 +19,7 @@
 
 
 #pragma parameter COLOR_MODE "SRGB,SMPTE C,REC709,BT2020,SMPTE240,NTSC1953,EBU" 0.0 0.0 6.0 1.0   
+#pragma parameter Dx "Color Temp: D50, D55, D65, D75" 2.0 -1.0 3.0 1.0
 
 
 /* 
@@ -81,11 +82,12 @@ uniform vec2 OutputSize;
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float COLOR_MODE;
+uniform COMPAT_PRECISION float Dx;
 
 #else
 
 #define COLOR_MODE 0.0
-#define CS 0.0
+#define Dx 3.0
 #endif
 
 
@@ -177,12 +179,15 @@ CHROMA_C_Y=	0.06;
 	mat3 xyYrgb = mat3(CHROMA_A_X, CHROMA_A_Y, Yrgb.r,
 	                   CHROMA_B_X, CHROMA_B_Y, Yrgb.g,
 	                   CHROMA_C_X, CHROMA_C_Y, Yrgb.b);
+	
 	mat3 XYZrgb = mat3(xyY_to_XYZ(xyYrgb[0]),
 	                   xyY_to_XYZ(xyYrgb[1]),
 	                   xyY_to_XYZ(xyYrgb[2]));
+
 	mat3 RGBrgb = mat3(toRGB * XYZrgb[0],
 	                   toRGB * XYZrgb[1],
 	                   toRGB * XYZrgb[2]);
+	
 	return vec3(dot(W, vec3(RGBrgb[0].r, RGBrgb[1].r, RGBrgb[2].r)),
 	            dot(W, vec3(RGBrgb[0].g, RGBrgb[1].g, RGBrgb[2].g)),
 	            dot(W, vec3(RGBrgb[0].b, RGBrgb[1].b, RGBrgb[2].b)));
@@ -350,6 +355,18 @@ vec3 srgb_gamma(const vec3 x)
 	return vec3(srgb_gamma(x.r), srgb_gamma(x.g), srgb_gamma(x.b));
 }
 
+
+vec3 TEMP ()
+{
+    if (Dx == 0.0) return vec3(0.964,1.0,0.8252);
+    else if (Dx == 1.0) return vec3(0.95682,1.0,0.92149);
+    else if (Dx == 2.0) return vec3(0.95047,1.0,1.0888);
+    else if (Dx == 3.0) return vec3(0.94972,1.0,1.22638);
+    else return vec3(1.0);
+}
+
+
+
 void main()
 {
 	mat3 toRGB = colorspace_rgb();
@@ -359,7 +376,7 @@ void main()
 	vec3 RGB = Yrgb_to_RGB(toRGB, W, Yrgb);
 	
 	RGB = clamp(RGB, 0.0, 1.0);
-	RGB = srgb_gamma(RGB);
+	RGB = srgb_gamma(RGB)*TEMP();
 	FragColor = vec4(RGB, 1.0);
 }
 
