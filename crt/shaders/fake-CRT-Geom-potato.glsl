@@ -121,12 +121,12 @@ void main()
     float ycoord = cent ; 
     vec3 res = COMPAT_TEXTURE(Source, vec2(vTexCoord.x, ycoord)).rgb;
 	vec3 origin = res;
-	float lum = dot(vec3(0.3), res);
+	float lum = dot(vec3(0.2), res);
 	
      res *= 0.4*sin(scanpos)+0.6 ; 
      res *= 0.3*sin(fragpos)+0.7;
 	 res = mix(res, origin, lum);
-	 res *= mix(1.45,1.05,lum);
+	 res *= mix(1.65,1.05,lum);
     FragColor = vec4(res,1.0);
 } 
 #endif
