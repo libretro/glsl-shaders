@@ -3,6 +3,7 @@
 /* 
   work by DariusG 2023, some ideas borrowed from Dogway's zfast_crt_geo
 
+  v1.3 added more color options and Color Temp switch
   v1.2b: Lanczos4 --> Lanczos2 for performance. mask 0 improved
   v1.2: improved mask/scanlines
   v1.1: switched to lanczos4 taps filter
@@ -10,15 +11,16 @@
 
 #pragma parameter curv "Curvature"  1.0 0.0 1.0 1.0
 #pragma parameter ssize "Scanline Size" 1.0 1.0 2.0 1.0
-#pragma parameter scanB "Scanline Strength High" 0.5 0.0 1.0 0.05
-#pragma parameter scanL "Scanline Strength Low" 0.65 0.0 1.0 0.05
+#pragma parameter scanB "Scanline Strength High" 0.6 0.0 1.0 0.05
+#pragma parameter scanL "Scanline Strength Low" 0.8 0.0 1.0 0.05
 #pragma parameter Shadowmask "  Mask Type " 0.0 -1.0 2.0 1.0
 #pragma parameter slotx "  Slot Size x" 3.0 2.0 3.0 1.0
 #pragma parameter width "  Mask Width 3.0/2.0 " 0.6666 0.6666 1.0 0.3333
 #pragma parameter mask "  Mask Strength" 0.4 0.0 1.0 0.05
-#pragma parameter colors "Colors: 0.0 RGB, 1.0 P22D93, 2.0:NTSC" 0.0 0.0 2.0 1.0
 #pragma parameter sat "Saturation" 1.0 0.0 2.0 0.01
-#pragma parameter wp "White Point" 0.0 -0.25 0.25 0.01
+#pragma parameter colors "Colors: 0.0 BestRGB, 1.0 P22D93, 2.0:NTSC" 0.0 -1.0 2.0 1.0
+#pragma parameter wp "White Point Adjust" 0.0 -0.25 0.25 0.01
+#pragma parameter Dx "Color Temp: D50, D55, D65, D75" 3.0 -1.0 3.0 1.0
 
 #if defined(VERTEX)
 
@@ -124,7 +126,7 @@ uniform COMPAT_PRECISION float thresh;
 uniform COMPAT_PRECISION float colors;
 uniform COMPAT_PRECISION float sat;
 uniform COMPAT_PRECISION float wp;
-uniform COMPAT_PRECISION float maskmove;
+uniform COMPAT_PRECISION float Dx;
 
 #else
 #define width 1.0
@@ -139,7 +141,7 @@ uniform COMPAT_PRECISION float maskmove;
 #define colors 0.0
 #define sat 1.0
 #define wp 0.0
-#define maskmove 0.0
+#define Dx -1.0
 #endif
 
 #define maskmov maskmove/1000.0
@@ -208,11 +210,26 @@ const mat3 NTSC = mat3(1.5073,  -0.3725, -0.0832,
                     -0.0275, 0.9350,  0.0670,
                      -0.0272, -0.0401, 1.1677);
 
+const mat3 BestRGB = mat3(
+1.85892969033284,    -0.614661175214, -0.17264295009788,
+0.02751513955392,    1.02513517288247,    -0.0471041506497,
+0.03616629710052,    -0.14857432776786,   0.86276952738936
+);
+
 vec2 Warp(vec2 pos)
 {
     pos  = pos*2.0-1.0;
     pos *= vec2(1.0 + (pos.y*pos.y)*0.0276, 1.0 + (pos.x*pos.x)*0.0414);
     return pos*0.5 + 0.5;
+}
+
+vec3 TEMP ()
+{
+    if (Dx == 0.0) return vec3(0.964,1.0,0.8252);
+    else if (Dx == 1.0) return vec3(0.95682,1.0,0.92149);
+    else if (Dx == 2.0) return vec3(0.95047,1.0,1.0888);
+    else if (Dx == 3.0) return vec3(0.94972,1.0,1.22638);
+    else return vec3(1.0);
 }
 
 void main()
@@ -248,19 +265,20 @@ void main()
        
     //pos.y *= 0.995 ;
     float OGL2Pos = fract((pos.y*SourceSize.y)/ssize);
-    float lum = dot(vec3(0.333), res.rgb);
+    float lum = max(max(res.r,res.g),res.b);
     float scan = mix (scanL, scanB, lum);
     
     res.rgb *= res.rgb;
     
     if (colors == 2.0) res.rgb *= NTSC;  else 
     if (colors == 1.0) res.rgb *= P22D93; else
+    if (colors == 0.0) res.rgb *= BestRGB; else
     res.rgb; res = clamp(res, 0.0,1.0);
     
     float scanline = scan*sin(OGL2Pos*PI*2.0)+1.0-scan+scan*sin(1.0-OGL2Pos*PI*2.0)+1.0-scan;
     res *= scanline;
     res *= Mask(vTexCoord, lum);
-    res.rgb = sqrt(res.rgb);
+    res.rgb = sqrt(res.rgb)*TEMP();
 
 
     //CHEAP TEMPERATURE CONTROL     
@@ -270,7 +288,7 @@ void main()
     vec3 lumweight = vec3(0.29,0.6,0.11);
     vec3 grays = vec3(dot(lumweight, res.rgb));
     res.rgb = mix(grays, res.rgb, sat);
-    
+    res *= mix(1.35,1.1, lum);
     // CORNERS
     vec2 c = warpos;
     corn   = min(c, 1.0-c);    // This is used to mask the rounded
