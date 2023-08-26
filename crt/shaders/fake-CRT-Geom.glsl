@@ -200,7 +200,6 @@ void main()
     float l = max(max(res.r,res.g),res.b);
     res = scanline(pos,res,l);
     res = scanline(1.0-pos,res,l);
-    res = scanline(1.0+pos,res,l);
     res = pow(res,in_gamma);
 
     // apply the mask; looks bad with vert scanlines so make them mutually exclusive

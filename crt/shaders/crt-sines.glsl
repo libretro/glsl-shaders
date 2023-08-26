@@ -148,7 +148,6 @@ uniform COMPAT_PRECISION float Dx;
 
 #endif
 
-#define maskmov maskmove/1000.0
 #define PI 3.1415926    
 #define FIX(c) max(abs(c), 0.000001);
 #define back 1.0-mask

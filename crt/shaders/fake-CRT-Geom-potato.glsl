@@ -2,7 +2,7 @@
 // written on an old netbook with 9 gflops
 // and runs 60-65 fps on 720p
 
-#pragma parameter SEVTWO "1080/720p Scanlines" 2.0 1.3333 2.0 0.6666
+#pragma parameter SEVTWO "Scanline Size" 2.0 1.0 2.0 1.0
 
 #define pi 3.1415926
 
@@ -121,12 +121,12 @@ void main()
     float ycoord = cent ; 
     vec3 res = COMPAT_TEXTURE(Source, vec2(vTexCoord.x, ycoord)).rgb;
 	vec3 origin = res;
-	float lum = dot(vec3(0.3), res);
+	float lum = dot(vec3(0.2), res);
 	
      res *= 0.4*sin(scanpos)+0.6 ; 
      res *= 0.3*sin(fragpos)+0.7;
 	 res = mix(res, origin, lum);
-	 res *= mix(1.45,1.05,lum);
+	 res *= mix(1.65,1.05,lum);
     FragColor = vec4(res,1.0);
 } 
 #endif
