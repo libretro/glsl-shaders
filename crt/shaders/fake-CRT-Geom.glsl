@@ -2,12 +2,14 @@
 // original by hunterk, edit by DariusG
 
 ///////////////////////  Runtime Parameters  ///////////////////////
-
+#pragma parameter sharpx "Horizontal Sharpness" 2.5 1.0 5.0 0.05
+#pragma parameter sharpy "Vertical Sharpness" 3.0 1.0 5.0 0.05
 #pragma parameter SCANLINE_SINE_COMP_B "Scanline Intensity" 0.3 0.0 1.0 0.05
 #pragma parameter SIZE "Scanline size" 1.0 0.5 2.0 0.5
 #pragma parameter warpX "warpX" 0.03 0.0 0.125 0.01
 #pragma parameter warpY "warpY" 0.05 0.0 0.125 0.01
 #pragma parameter corner_round "Corner Roundness" 0.030 0.005 0.100 0.005
+#pragma parameter MSIZE "Mask Type" 1.0 0.666 1.0 0.3333
 #pragma parameter cgwg "CGWG mask brightness" 0.7 0.0 1.0 0.1
 #pragma parameter crt_gamma "CRT Gamma" 2.4 1.0 4.0 0.05
 #pragma parameter monitor_gamma "Monitor Gamma" 2.25 1.0 4.0 0.05
@@ -43,6 +45,7 @@ COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING float omega;
+COMPAT_VARYING float fragpos;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -68,6 +71,7 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
     omega =  2.0 * pi * TextureSize.y;
+    fragpos = TEX0.x*OutputSize.x*scale.x*pi;
 
 }
 
@@ -102,6 +106,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING float omega;
+COMPAT_VARYING float fragpos;
 
 // compatibility #defines
 #define Source Texture
@@ -112,23 +117,29 @@ COMPAT_VARYING float omega;
 #define iTimer (float(FrameCount)*60.0)
 
 #ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float sharpx;
+uniform COMPAT_PRECISION float sharpy;
 uniform COMPAT_PRECISION float SCANLINE_SINE_COMP_B;
 uniform COMPAT_PRECISION float SIZE;
 uniform COMPAT_PRECISION float warpX;
 uniform COMPAT_PRECISION float warpY;
 uniform COMPAT_PRECISION float corner_round;
 uniform COMPAT_PRECISION float cgwg;
+uniform COMPAT_PRECISION float MSIZE;
 uniform COMPAT_PRECISION float crt_gamma;
 uniform COMPAT_PRECISION float monitor_gamma;
 uniform COMPAT_PRECISION float boost;
 uniform COMPAT_PRECISION float GLOW_LINE;
 #else
+#define sharpx     1.0 
+#define sharpy     1.0
 #define SCANLINE_SINE_COMP_B 0.40
 #define SIZE 1.0
 #define warpX 0.031
 #define warpY 0.041
 #define corner_round 0.030
 #define cgwg 0.4
+#define MSIZE 1.0
 #define crt_gamma 2.2
 #define monitor_gamma 2.4
 #define boost 0.00
@@ -166,48 +177,48 @@ float corner(vec2 coord)
 }  
 
 
-// mask calculation
-    // cgwg mask.
-    vec4 Mask(vec2 pos)
-    {
-      vec3 mask = vec3(1.0);
-    
-      float m = fract(pos.x*0.5);
-      if (m<0.5) return vec4(cgwg,cgwg,cgwg,1.0);
-      else return vec4(mask,1.0);
- 
-    }
-
  float randomPass(vec2 coords)
  {
     return fract(smoothstep(-120.0, 0.0, coords.y - (TextureSize.y + 120.0) * fract(iTimer * 0.00015)));
 }
 
+#define tex SourceSize.zw
+
+vec3 BilinearSharp (vec2 pos)
+{
+    vec2 uv = pos * SourceSize.x + 0.5;
+    
+    vec2 frac = fract(uv);
+    uv = (floor(uv) / SourceSize.x) - vec2(tex*0.5);
+
+    vec3 C11 = COMPAT_TEXTURE(Source, uv + vec2( 0.0          , 0.0)).rgb;
+    vec3 C21 = COMPAT_TEXTURE(Source, uv + vec2( tex.x , 0.0)).rgb;
+    vec3 C12 = COMPAT_TEXTURE(Source, uv + vec2( 0.0          , tex.y)).rgb;
+    vec3 C22 = COMPAT_TEXTURE(Source, uv + vec2( tex.x , tex.y)).rgb;
+
+    float x = frac.x;
+    float y = frac.y;
+    vec3 up = mix(C11, C21, pow(x, sharpx));
+    vec3 dw = mix(C12, C22, pow(x, sharpx));
+    return mix(up, dw, pow(y, sharpy));
+}
 
 void main()
 {
-
     vec2 pos = Warp(TEX0.xy*(scale.xy))*scale.zw;
+    vec4 res = vec4(BilinearSharp(pos),1.0);
 
-//borrowed from CRT-Pi
-        vec2 OGL2Pos = pos * TextureSize;
-        vec2 pC4 = floor(OGL2Pos) + 0.5;
-        vec2 coord = pC4 / TextureSize;
-
-        vec2 tc = vec2(pos.x, coord.y);
-
-    vec4 res = COMPAT_TEXTURE(Texture, tc);
     float l = max(max(res.r,res.g),res.b);
     res = scanline(pos,res,l);
     res = scanline(1.0-pos,res,l);
     res = pow(res,in_gamma);
 
     // apply the mask; looks bad with vert scanlines so make them mutually exclusive
-    res *= Mask(gl_FragCoord.xy * 1.0001);
-
+    float dotMaskWeights = mix(cgwg, 1.0, 0.5*sin(fragpos*MSIZE)+0.5);
+    res *= dotMaskWeights;
 #if defined GL_ES
     // hacky clamp fix for GLES
-    vec2 bordertest = (tc);
+    vec2 bordertest = (pos);
     if ( bordertest.x > 0.0001 && bordertest.x < 0.9999 && bordertest.y > 0.0001 && bordertest.y < 0.9999)
         res = res;
     else
@@ -218,8 +229,8 @@ void main()
     // re-apply the gamma curve for the mask path
     color = pow(color, out_gamma);
     color += boost*color;
-    color += randomPass(tc * TextureSize) * GLOW_LINE;
-    FragColor = color*corner(tc);
+    color += randomPass(pos * TextureSize) * GLOW_LINE;
+    FragColor = color*corner(pos);
 
 } 
 #endif
