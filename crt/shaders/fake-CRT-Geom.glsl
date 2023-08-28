@@ -3,7 +3,7 @@
 
 ///////////////////////  Runtime Parameters  ///////////////////////
 #pragma parameter sharpx "Horizontal Sharpness" 2.5 1.0 5.0 0.05
-#pragma parameter sharpy "Vertical Sharpness" 3.0 1.0 5.0 0.05
+#pragma parameter sharpy "Vertical Sharpness" 1.25 1.0 5.0 0.05
 #pragma parameter SCANLINE_SINE_COMP_B "Scanline Intensity" 0.3 0.0 1.0 0.05
 #pragma parameter SIZE "Scanline size" 1.0 0.5 2.0 0.5
 #pragma parameter warpX "warpX" 0.03 0.0 0.125 0.01
