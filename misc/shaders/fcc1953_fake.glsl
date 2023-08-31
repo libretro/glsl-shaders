@@ -3,6 +3,7 @@
 
 */
 
+#pragma parameter bogus " [ PAL: 0.23  0.52  0.10 ] " 0.0 0.0 0.0 0.0
 #pragma parameter R "Red Channel" 0.21 0.0 1.0 0.01
 #pragma parameter G "Green Channel" 0.71 0.0 1.0 0.01
 #pragma parameter B "Blue Channel" 0.09 0.0 1.0 0.01
