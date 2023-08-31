@@ -94,7 +94,7 @@ uniform COMPAT_PRECISION float gammain;
 #define gammain 2.5
 #endif
 
-const float k[7] = float[7](0.05, 0.15, 0.30, 0.0, 0.30, 0.15, 0.05);
+const float k[9] = float[9](0.015, 0.05, 0.12,0.19, 0.22,0.19, 0.12, 0.05, 0.015);
 
 void main()
 {   
@@ -104,9 +104,9 @@ void main()
 
     vec3 res = COMPAT_TEXTURE(Source,(pos)*tex).rgb;
     vec3 sum = vec3(0.0);
-    for (float i=-3.0; i<=3.0; i++)
+    for (float i=-4.0; i<=4.0; i++)
     {
-    sum += COMPAT_TEXTURE(Source,(pos + i*dx)*tex).rgb * k[int(i) + 3];
+    sum += COMPAT_TEXTURE(Source,(pos + i*dx)*tex).rgb * k[int(i) + 4];
     }
     res = (res + sum*glow);
     FragColor = vec4(res,1.0);

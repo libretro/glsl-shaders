@@ -3,9 +3,9 @@
 
 */
 
-#pragma parameter R "Red Channel" 1.0 0.0 2.0 0.01
-#pragma parameter G "Green Channel" 0.93 0.0 2.0 0.01
-#pragma parameter B "Blue Channel" 1.07 0.0 2.0 0.01
+#pragma parameter R "Red Channel" 0.21 0.0 1.0 0.01
+#pragma parameter G "Green Channel" 0.71 0.0 1.0 0.01
+#pragma parameter B "Blue Channel" 0.09 0.0 1.0 0.01
 
 #define pi 3.14159
 
@@ -69,7 +69,8 @@ uniform COMPAT_PRECISION float B;
 void main()
 {
 	vec3 res = texture2D(Source, vTexCoord).rgb;
-  res *= vec3(1.1,1.0,1.1)*vec3(R,G,B);
+	res /= vec3(R,G,B);
+  	res *= vec3(0.29,0.60,0.11);
 	FragColor = vec4(res, 1.0);
 }
 #endif
