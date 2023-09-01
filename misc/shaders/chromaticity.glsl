@@ -20,6 +20,7 @@
 
 #pragma parameter COLOR_MODE "Custom,SRGB,SMPTE C,REC709,BT2020,SMPTE240,NTSC1953,EBU" 0.0 -1.0 6.0 1.0   
 #pragma parameter Dx "Color Temp: D50, D55, D65, D75" 2.0 -1.0 3.0 1.0
+#pragma parameter bogus " [ Default Custom: Real PAL ] " 0.0 0.0 0.0 0.0
 #pragma parameter rx "Custom Rx" 0.56 0.0 1.0 0.005
 #pragma parameter ry "Custom Ry" 0.34 0.0 1.0 0.005
 #pragma parameter gx "Custom Gx" 0.25 0.0 1.0 0.005
@@ -151,8 +152,8 @@ CHROMA_A_X = rx;
 CHROMA_A_Y = ry;
 CHROMA_B_X = gx;
 CHROMA_B_Y = gy;
-CHROMA_C_X =	bx;
-CHROMA_C_Y =	by;
+CHROMA_C_X = bx;
+CHROMA_C_Y = by;
 	}
 
 else if (COLOR_MODE == 0.0 || COLOR_MODE == 2.0 ) 
