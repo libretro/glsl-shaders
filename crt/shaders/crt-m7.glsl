@@ -13,6 +13,7 @@
 
 #pragma parameter scanline "Scanline Strength" 0.75 0.0 1.0 0.05
 #pragma parameter SIZE "Mask Type" 1.0 0.666 1.0 0.3333
+#pragma parameter cspace "Color Space: RGB, NTSC" 0.0 0.0 1.0 1.0
 
 #define PI 3.1415926535897932384626433
 
@@ -127,10 +128,12 @@ COMPAT_VARYING float omega;
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float scanline;
+uniform COMPAT_PRECISION float cspace;
 
 #else
 #define scanline  0.75      
-  
+#define cspace  0.0
+
 #endif
 
 vec2 Warp(vec2 pos)
@@ -181,8 +184,11 @@ void main()
     res *= 0.4+(scan*sin(pos.y*omega)+1.0-scan)/(0.8+0.15*lum);
     
     res *= 0.4+(0.3*sin(fragpos)+0.7)/(0.8+0.15*lum);
-    res *= NTSC;
-
+    
+    if (cspace !=0.0)
+    {
+     res *= NTSC;
+    }   
 // Corners cut
     vec2 c = warpp;
     vec2 corn   = min(c, warppm);    
