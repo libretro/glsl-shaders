@@ -18,9 +18,15 @@
    */
 
 
-#pragma parameter COLOR_MODE "SRGB,SMPTE C,REC709,BT2020,SMPTE240,NTSC1953,EBU" 0.0 0.0 6.0 1.0   
+#pragma parameter COLOR_MODE "Custom,SRGB,SMPTE C,REC709,BT2020,SMPTE240,NTSC1953,EBU" 0.0 -1.0 6.0 1.0   
 #pragma parameter Dx "Color Temp: D50, D55, D65, D75" 2.0 -1.0 3.0 1.0
-
+#pragma parameter bogus " [ Default Custom: Real PAL ] " 0.0 0.0 0.0 0.0
+#pragma parameter rx "Custom Rx" 0.56 0.0 1.0 0.005
+#pragma parameter ry "Custom Ry" 0.34 0.0 1.0 0.005
+#pragma parameter gx "Custom Gx" 0.25 0.0 1.0 0.005
+#pragma parameter gy "Custom Gy" 0.60 0.0 1.0 0.005
+#pragma parameter bx "Custom Bx" 0.17 0.0 1.0 0.005
+#pragma parameter by "Custom By" 0.06 0.0 1.0 0.005
 
 /* 
 SRGB         used by most webcams and computer graphics. ***NOTE***: Gamma 2.4
@@ -83,11 +89,23 @@ uniform vec2 OutputSize;
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float COLOR_MODE;
 uniform COMPAT_PRECISION float Dx;
+uniform COMPAT_PRECISION float rx;
+uniform COMPAT_PRECISION float ry;
+uniform COMPAT_PRECISION float gx;
+uniform COMPAT_PRECISION float gy;
+uniform COMPAT_PRECISION float bx;
+uniform COMPAT_PRECISION float by;
 
 #else
 
 #define COLOR_MODE 0.0
 #define Dx 3.0
+#define rx 0.2
+#define ry 0.2
+#define gx 0.2
+#define gy 0.2
+#define bx 0.2
+#define by 0.2
 #endif
 
 
@@ -127,7 +145,18 @@ vec3 Yrgb_to_RGB(mat3 toRGB, vec3 W, vec3 Yrgb)
 //6 EBU      0.640 0.330 / 0.290 0.600 / 0.150   0.060 --
 
 float CHROMA_A_X, CHROMA_A_Y,CHROMA_B_X, CHROMA_B_Y, CHROMA_C_X, CHROMA_C_Y;
-	if (COLOR_MODE == 0.0 || COLOR_MODE == 2.0 ) 
+
+	if (COLOR_MODE == -1.0) 
+	{
+CHROMA_A_X = rx;
+CHROMA_A_Y = ry;
+CHROMA_B_X = gx;
+CHROMA_B_Y = gy;
+CHROMA_C_X = bx;
+CHROMA_C_Y = by;
+	}
+
+else if (COLOR_MODE == 0.0 || COLOR_MODE == 2.0 ) 
 	{
 CHROMA_A_X=0.64;
 CHROMA_A_Y=0.33;
@@ -205,7 +234,7 @@ vec3 luminance()
 
  float CHROMA_A_WEIGHT, CHROMA_B_WEIGHT, CHROMA_C_WEIGHT;
  if (COLOR_MODE == 0.0 || COLOR_MODE == 1.0 || 
- 	  COLOR_MODE == 5.0 || COLOR_MODE == 6.0)
+ 	  COLOR_MODE == 5.0 || COLOR_MODE == 6.0 || COLOR_MODE == -1.0)
 {
 	CHROMA_A_WEIGHT = 0.299;
 	CHROMA_B_WEIGHT = 0.587;
@@ -255,7 +284,7 @@ if (COLOR_MODE == 0.0)
 	GAMMAIN = 2.4;
 }
 
-else if (COLOR_MODE == 1.0 || COLOR_MODE == 2.0)
+else if (COLOR_MODE == 1.0 || COLOR_MODE == 2.0 || COLOR_MODE == -1.0)
 {
 	CRT_TR1 = 0.081;
 	CRT_TR2 = 0.099;

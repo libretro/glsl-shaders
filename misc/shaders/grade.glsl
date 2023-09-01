@@ -1,3 +1,4 @@
+#version 140
 /*
    Grade - CRT emulation and color manipulation shader
 
@@ -159,7 +160,7 @@ void main()
 #if __VERSION__ >= 130
 #define COMPAT_VARYING in
 #define COMPAT_TEXTURE texture
-out COMPAT_PRECISION vec4 FragColor;
+out vec4 FragColor;
 #else
 #define COMPAT_VARYING varying
 #define FragColor gl_FragColor
