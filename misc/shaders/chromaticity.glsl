@@ -20,12 +20,12 @@
 
 #pragma parameter COLOR_MODE "Custom,SRGB,SMPTE C,REC709,BT2020,SMPTE240,NTSC1953,EBU" 0.0 -1.0 6.0 1.0   
 #pragma parameter Dx "Color Temp: D50, D55, D65, D75" 2.0 -1.0 3.0 1.0
-#pragma parameter rx "Custom Rx" 0.63 0.0 1.0 0.005
+#pragma parameter rx "Custom Rx" 0.56 0.0 1.0 0.005
 #pragma parameter ry "Custom Ry" 0.34 0.0 1.0 0.005
-#pragma parameter gx "Custom Gx" 0.31 0.0 1.0 0.005
-#pragma parameter gy "Custom Gy" 0.595 0.0 1.0 0.005
-#pragma parameter bx "Custom Bx" 0.155 0.0 1.0 0.005
-#pragma parameter by "Custom By" 0.07 0.0 1.0 0.005
+#pragma parameter gx "Custom Gx" 0.25 0.0 1.0 0.005
+#pragma parameter gy "Custom Gy" 0.60 0.0 1.0 0.005
+#pragma parameter bx "Custom Bx" 0.17 0.0 1.0 0.005
+#pragma parameter by "Custom By" 0.06 0.0 1.0 0.005
 
 /* 
 SRGB         used by most webcams and computer graphics. ***NOTE***: Gamma 2.4
