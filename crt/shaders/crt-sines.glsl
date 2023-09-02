@@ -274,7 +274,7 @@ void main()
     //CHEAP TEMPERATURE CONTROL     
     if (wp != 0.0) { res.rgb *= vec3(1.0 + 0.08*wp,1.0,1.0-0.8*wp);
                    if(wp > 0.0)  res.rgb += vec3(0.15*wp,0.0,0.0);
-                   if(wp < 0.0)  res.rgb += vec3(0.0,0.0,0.15*wp);
+                   if(wp < 0.0)  res.rgb += vec3(0.0,0.0,-0.15*wp);
                      res = clamp(res, 0.0,1.0);
     
     }
