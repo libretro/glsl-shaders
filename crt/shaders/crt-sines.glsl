@@ -13,8 +13,7 @@
 #pragma parameter SHARPNESS "LANCZOS SHARPNESS" 1.66 0.7 2.4 0.01 
 #pragma parameter curv "Curvature"  1.0 0.0 1.0 1.0
 #pragma parameter ssize "Scanline Size" 1.0 1.0 2.0 1.0
-#pragma parameter scanB "Scanline Strength High" 0.5 0.0 1.0 0.05
-#pragma parameter scanL "Scanline Strength Low" 0.8 0.0 1.0 0.05
+#pragma parameter scanL "Scanline Weight" 0.8 0.0 1.0 0.05
 #pragma parameter Shadowmask "  Mask Type " 0.0 -1.0 2.0 1.0
 #pragma parameter slotx "  Slot Size x" 3.0 2.0 3.0 1.0
 #pragma parameter width "  Mask Width 3.0/2.0 " 0.6666 0.6666 1.0 0.3333
@@ -122,7 +121,6 @@ uniform COMPAT_PRECISION float mask;
 uniform COMPAT_PRECISION float Shadowmask;
 uniform COMPAT_PRECISION float ssize;
 uniform COMPAT_PRECISION float scanL;
-uniform COMPAT_PRECISION float scanB;
 uniform COMPAT_PRECISION float curv;
 uniform COMPAT_PRECISION float thresh;
 uniform COMPAT_PRECISION float colors;
@@ -136,7 +134,6 @@ uniform COMPAT_PRECISION float wp;
 #define mask 0.5
 #define ssize 1.0
 #define scanL 0.6
-#define scanB 0.4
 #define curv 1.0
 #define thresh 0.2
 #define colors 0.0
@@ -177,7 +174,7 @@ vec3 line(float ypos, vec2 xpos, vec2 linetaps)
 
 
 
-float Mask (vec2 pos, float l)
+float Mask (vec2 pos)
 {
     if (Shadowmask == 0.0)
     {
@@ -258,8 +255,9 @@ void main()
        
    
     float OGL2Pos = fract((pos.y*SourceSize.y)/ssize);
-    float lum = max(max(res.r,res.g),res.b);
-    float scan = mix (scanL, scanB, lum);
+    float lum = 2.0+dot(vec3(0.666), res);
+
+    float scan = pow(scanL, lum);
     
     
     if (colors == 2.0) res.rgb *= NTSC;  else 
@@ -267,15 +265,17 @@ void main()
     if (colors == 0.0) res.rgb *= SMPTE_C; else
     res.rgb; res = clamp(res, 0.0,1.0);
     
-    float scanline = scan*sin(OGL2Pos*PI*2.0)+1.0-scan + scan*sin(1.0-OGL2Pos*PI*2.0)+1.0-scan;
-    res *= scanline;
-    res *= Mask(vTexCoord, lum);
+    res *= res;
 
+// That 0.4 plus and divide, on a raised luminance dependent 'scanline', removes moire, in crt-Geom style.
+    float scanline = 0.4+(scan*sin(OGL2Pos*PI*2.0)+1.0-scan)/(0.8+0.15*lum);
+    res *= scanline;
+    res *= Mask(vTexCoord);
+    res = sqrt(res);
     //CHEAP TEMPERATURE CONTROL     
     if (wp != 0.0) { res.rgb *= vec3(1.0 + 0.08*wp,1.0,1.0-0.8*wp);
                    if(wp > 0.0)  res.rgb += vec3(0.15*wp,0.0,0.0);
                    if(wp < 0.0)  res.rgb += vec3(0.0,0.0,-0.15*wp);
-                     res = clamp(res, 0.0,1.0);
     
     }
     
