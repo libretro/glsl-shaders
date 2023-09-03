@@ -2,7 +2,7 @@
 
 /* 
   work by DariusG 2023, some ideas borrowed from Dogway's zfast_crt_geo
-
+  
   v1.4b added some system specific tweaks
   v1.4 removed junk, optimized white point a bit
   v1.3 added more color options and Color Temp switch
@@ -13,8 +13,8 @@
 
 #pragma parameter SHARPNESS "LANCZOS SHARPNESS" 1.66 0.7 2.4 0.01 
 #pragma parameter curv "Curvature"  1.0 0.0 1.0 1.0
-#pragma parameter ssize "Scanline Size" 1.0 1.0 2.0 1.0
 #pragma parameter scanL "Scanline Weight" 0.8 0.0 1.0 0.05
+#pragma parameter interlacing "Interlacing On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter Shadowmask "  Mask Type " 0.0 -1.0 2.0 1.0
 #pragma parameter slotx "  Slot Size x" 3.0 2.0 3.0 1.0
 #pragma parameter width "  Mask Width 3.0/2.0 " 0.6666 0.6666 1.0 0.3333
@@ -124,7 +124,6 @@ uniform COMPAT_PRECISION float width;
 uniform COMPAT_PRECISION float slotx;
 uniform COMPAT_PRECISION float mask;
 uniform COMPAT_PRECISION float Shadowmask;
-uniform COMPAT_PRECISION float ssize;
 uniform COMPAT_PRECISION float scanL;
 uniform COMPAT_PRECISION float curv;
 uniform COMPAT_PRECISION float thresh;
@@ -134,13 +133,13 @@ uniform COMPAT_PRECISION float sat;
 uniform COMPAT_PRECISION float wp;
 uniform COMPAT_PRECISION float NTSC_asp;
 uniform COMPAT_PRECISION float sega;
+uniform COMPAT_PRECISION float interlacing;
 
 #else
 #define width 1.0
 #define slotx 1.0
 #define Shadowmask 0.0
 #define mask 0.5
-#define ssize 1.0
 #define scanL 0.6
 #define curv 1.0
 #define thresh 0.2
@@ -151,6 +150,7 @@ uniform COMPAT_PRECISION float sega;
 #define SHARPNESS 1.66
 #define NTSC_asp 0.0
 #define sega 0.0
+#define interlacing 1.0
 
 #endif
 
@@ -264,9 +264,14 @@ void main()
                  ;
                
                               
-       
-   
+    float ssize = 1.0;   
+    if (InputSize.y > 400.0) ssize = 2.0;
+
     float OGL2Pos = fract((pos.y*SourceSize.y)/ssize);
+
+    if (interlacing == 1.0 && InputSize.y > 400.0)
+    OGL2Pos = mod(float(FrameCount),2.0) < 1.0? 1.0-OGL2Pos : OGL2Pos;
+    
     float lum = 2.0+dot(vec3(0.666), res);
 
     float scan = pow(scanL, lum);
