@@ -286,7 +286,7 @@ void main()
 
     float scan = pow(scanL, lum);
     
-    res *= res;
+   
 // Some color tweaks
     if (colors == 3.0) res.rgb *= TRIN; else    
     if (colors == 2.0) res.rgb *= NTSC;  else 
@@ -297,7 +297,7 @@ void main()
     if (lum>2.0)  res.rb += vec2(push_r,push_r/3.0);
     if (sega == 1.0) res *= 1.06;
     if (sega == 2.0) res *= 2.0;
-
+   res *= res;
 // That 0.4 plus and divide, on a raised luminance dependent 'scanline', removes moire, in crt-Geom style.
     float scanline = 0.4+(scan*sin(OGL2Pos*PI*2.0)+1.0-scan)/(0.8+0.15*lum);
     res *= scanline;
