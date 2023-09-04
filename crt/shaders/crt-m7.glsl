@@ -13,7 +13,7 @@
 
 #pragma parameter scanline "Scanline Strength" 0.75 0.0 1.0 0.05
 #pragma parameter SIZE "Mask Type" 1.0 0.666 1.0 0.3333
-#pragma parameter cspace "Color Space: RGB, NTSC" 0.0 0.0 1.0 1.0
+#pragma parameter cspace "Color Space: RGB, Trinitron PAL" 0.0 0.0 1.0 1.0
 
 #define PI 3.1415926535897932384626433
 
@@ -145,19 +145,18 @@ vec2 Warp(vec2 pos)
     return pos;
 }
 
-//non linear approximate NTSC matrix
-const mat3 NTSC  = mat3 (
- 1.5164, -0.4945, -0.02,
--0.0372,  0.9571,  0.0802,
--0.0192, -0.0309,  1.0500
+const mat3 TRIN = mat3(
+1.17870044,  -0.1317718,  -0.00688924,
+0.04251778,  0.97897526,  -0.0177807,
+0.0312456 ,  0.05239924,  1.01142244
 );
 
-float vign(float l)
+float vign()
 {
     vec2 vpos = warpp;
     vpos *= warppm;    
     float vig = vpos.x * vpos.y * 50.0;
-    vig = min(sqrt(vig*5.0), 1.0); 
+    vig = min(sqrt(vig), 1.0); 
    
     return vig;
 }
@@ -187,7 +186,7 @@ void main()
     
     if (cspace !=0.0)
     {
-     res *= NTSC;
+    res *= TRIN;
     }   
 // Corners cut
     vec2 c = warpp;
@@ -206,7 +205,7 @@ void main()
         res = vec3(0.0);
 #endif
 
-    res *= vign(lum);
+    res *= vign();
     // Output to screen
     FragColor = vec4(res,1.0);
 }
