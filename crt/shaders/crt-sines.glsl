@@ -3,6 +3,8 @@
 /* 
   work by DariusG 2023, some ideas borrowed from Dogway's zfast_crt_geo
   
+
+  v1.4c added real Trinitron color profile as default, with real measured primaries
   v1.4b added some system specific tweaks
   v1.4 removed junk, optimized white point a bit
   v1.3 added more color options and Color Temp switch
@@ -20,7 +22,8 @@
 #pragma parameter width "  Mask Width 3.0/2.0 " 0.6666 0.6666 1.0 0.3333
 #pragma parameter mask "  Mask Strength" 0.4 0.0 1.0 0.05
 #pragma parameter sat "Saturation" 1.0 0.0 2.0 0.01
-#pragma parameter colors "Colors: 0.0 SMPTE-C, 1.0 Sony P22, 2.0:NTSC" 1.0 -1.0 2.0 1.0
+#pragma parameter boostd "Boost Dark Colors" 1.3 1.0 2.0 0.05
+#pragma parameter colors "Colors: 0.0 SMPTE-C, 1.0 Sony P22, 2.0:NTSC, 3.0 Trinitron PAL" 3.0 -1.0 3.0 1.0
 #pragma parameter wp "White Point Adjust" 0.0 -0.25 0.25 0.01
 #pragma parameter bogus " [ System Tweaks ] " 0.0 0.0 0.0 0.0
 #pragma parameter push_r "PAL Push Red" 0.0 0.0 0.15 0.01
@@ -134,6 +137,7 @@ uniform COMPAT_PRECISION float wp;
 uniform COMPAT_PRECISION float NTSC_asp;
 uniform COMPAT_PRECISION float sega;
 uniform COMPAT_PRECISION float interlacing;
+uniform COMPAT_PRECISION float boostd;
 
 #else
 #define width 1.0
@@ -151,6 +155,7 @@ uniform COMPAT_PRECISION float interlacing;
 #define NTSC_asp 0.0
 #define sega 0.0
 #define interlacing 1.0
+#define boostd 1.35
 
 #endif
 
@@ -225,6 +230,12 @@ const mat3 SMPTE_C = mat3(
 0.005551435508 , -0.01431194472 , 1.00829538798
 );
 
+const mat3 TRIN = mat3(
+1.17870044,  -0.1317718,  -0.00688924,
+0.04251778,  0.97897526,  -0.0177807,
+0.0312456 ,  0.05239924,  1.01142244
+);
+
 vec2 Warp(vec2 pos)
 {
     pos  = pos*2.0-1.0;
@@ -243,7 +254,6 @@ void main()
         } 
     else pos = vTexCoord;
     if(NTSC_asp == 1.0) { pos.y *= 200.0/240.0; pos.y += 0.004;}
-
 // LANCZOS 2 taps
             vec2 one_pix = SourceSize.zw;
             pos = pos + one_pix*2.5;
@@ -267,7 +277,7 @@ void main()
     float ssize = 1.0;   
     if (InputSize.y > 400.0) ssize = 2.0;
 
-    float OGL2Pos = fract((pos.y*SourceSize.y)/ssize);
+    float OGL2Pos = fract((pos.y*SourceSize.y*1.005)/ssize);
 
     if (interlacing == 1.0 && InputSize.y > 400.0)
     OGL2Pos = mod(float(FrameCount),2.0) < 1.0? 1.0-OGL2Pos : OGL2Pos;
@@ -276,8 +286,9 @@ void main()
 
     float scan = pow(scanL, lum);
     
-
-// Some color tweaks    
+   
+// Some color tweaks
+    if (colors == 3.0) res.rgb *= TRIN; else    
     if (colors == 2.0) res.rgb *= NTSC;  else 
     if (colors == 1.0) res.rgb *= SonyP22; else
     if (colors == 0.0) res.rgb *= SMPTE_C; else
@@ -286,8 +297,7 @@ void main()
     if (lum>2.0)  res.rb += vec2(push_r,push_r/3.0);
     if (sega == 1.0) res *= 1.06;
     if (sega == 2.0) res *= 2.0;
-    res *= res;
-
+   res *= res;
 // That 0.4 plus and divide, on a raised luminance dependent 'scanline', removes moire, in crt-Geom style.
     float scanline = 0.4+(scan*sin(OGL2Pos*PI*2.0)+1.0-scan)/(0.8+0.15*lum);
     res *= scanline;
@@ -304,6 +314,9 @@ void main()
     vec3 lumweight = vec3(0.29,0.6,0.11);
     vec3 grays = vec3(dot(lumweight, res.rgb));
     res.rgb = mix(grays, res.rgb, sat);
+
+    res *= mix(boostd,1.0, grays.x); 
+
     // CORNERS
     vec2 c = warpos;
     corn   = min(c, 1.0-c);    // This is used to mask the rounded
