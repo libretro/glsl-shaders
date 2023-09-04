@@ -254,7 +254,6 @@ void main()
         } 
     else pos = vTexCoord;
     if(NTSC_asp == 1.0) { pos.y *= 200.0/240.0; pos.y += 0.004;}
-    pos.x /=1.115; pos.x += 0.009;
 // LANCZOS 2 taps
             vec2 one_pix = SourceSize.zw;
             pos = pos + one_pix*2.5;
