@@ -177,11 +177,12 @@ void main()
 
 // crt-Geom-like pixel luminance influence on scanline
     float lum = 2.0+dot(vec3(0.666),res);
+    
+    res *= res;
     float scan = pow(scanline,lum); // 2 + lum (max 2), more 'lum' leads to less 'scan'.
     
     if (InputSize.x < 400.0)
     res *= 0.4+(scan*sin(pos.y*omega)+1.0-scan)/(0.8+0.15*lum);
-    
     res *= 0.4+(0.3*sin(fragpos)+0.7)/(0.8+0.15*lum);
     
     if (cspace !=0.0)
@@ -191,8 +192,11 @@ void main()
 // Corners cut
     vec2 c = warpp;
     vec2 corn   = min(c, warppm);    
-    corn.x = 0.000333/corn.x;          
-   
+    corn.x = 0.0005/corn.x;          
+  
+   res *= vign();
+   res = sqrt(res);
+
    if (corn.y <= corn.x || corn.x < 0.0001)
     res = vec3(0.0);
 
@@ -204,8 +208,8 @@ void main()
     else
         res = vec3(0.0);
 #endif
-
-    res *= vign();
+    
+ 
     // Output to screen
     FragColor = vec4(res,1.0);
 }
