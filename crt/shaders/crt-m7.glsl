@@ -13,7 +13,7 @@
 
 #pragma parameter scanline "Scanline Strength" 0.75 0.0 1.0 0.05
 #pragma parameter SIZE "Mask Type" 1.0 0.666 1.0 0.3333
-#pragma parameter cspace "Color Space: RGB, Trinitron PAL" 0.0 0.0 1.0 1.0
+#pragma parameter cspace "Color Space: RGB, PAL,SMPTE-C,NTSC-J" 3.0 0.0 3.0 1.0
 
 #define PI 3.1415926535897932384626433
 
@@ -145,10 +145,25 @@ vec2 Warp(vec2 pos)
     return pos;
 }
 
-const mat3 TRIN = mat3(
-1.17870044,  -0.1317718,  -0.00688924,
-0.04251778,  0.97897526,  -0.0177807,
-0.0312456 ,  0.05239924,  1.01142244
+const mat3 PAL = mat3(
+0.9792,  -0.0141, 0.0305,
+-0.0139, 0.9992,  0.0129,
+-0.0054, -0.0042, 1.1353
+
+);
+
+const mat3 SMPTE = mat3(
+0.8641,  0.0716,  0.0528,
+-0.0248, 0.9911,  0.0298,
+0.0074,  -0.0321, 1.1125
+
+);
+
+const mat3 NTSC = mat3(
+0.7203,  0.1344 , 0.1233,
+-0.1051, 1.0305,  0.0637,
+0.0127 , -0.0743, 1.3545
+
 );
 
 float vign()
@@ -185,10 +200,11 @@ void main()
     res *= 0.4+(scan*sin(pos.y*omega)+1.0-scan)/(0.8+0.15*lum);
     res *= 0.4+(0.3*sin(fragpos)+0.7)/(0.8+0.15*lum);
     
-    if (cspace !=0.0)
-    {
-    res *= TRIN;
-    }   
+    if (cspace == 1.0) res *= PAL; 
+    if (cspace == 2.0) res *= SMPTE; 
+    if (cspace == 3.0) res *= NTSC; 
+
+    if (cspace != 0.0) res = clamp(res,0.0,1.0);
 // Corners cut
     vec2 c = warpp;
     vec2 corn   = min(c, warppm);    
