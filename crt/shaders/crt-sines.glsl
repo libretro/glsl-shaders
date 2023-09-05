@@ -23,7 +23,7 @@
 #pragma parameter mask "  Mask Strength" 0.4 0.0 1.0 0.05
 #pragma parameter sat "Saturation" 1.0 0.0 2.0 0.01
 #pragma parameter boostd "Boost Dark Colors" 1.3 1.0 2.0 0.05
-#pragma parameter colors "Colors: 0.0 SMPTE-C, 1.0 Sony P22, 2.0:NTSC, 3.0 Trinitron PAL" 3.0 -1.0 3.0 1.0
+#pragma parameter colors "0.0:SMPTE-C,1.0:Sony P22,2.0:NTSC,3.0:Trinitron PAL" 3.0 -1.0 3.0 1.0
 #pragma parameter wp "White Point Adjust" 0.0 -0.25 0.25 0.01
 #pragma parameter bogus " [ System Tweaks ] " 0.0 0.0 0.0 0.0
 #pragma parameter push_r "PAL Push Red" 0.0 0.0 0.15 0.01
@@ -220,20 +220,22 @@ const mat3 SonyP22 = mat3(
 0.02295649,  -0.00169611, 0.98164123);
 
 // NTSC to sRGB matrix, used in linear space
-const mat3 NTSC = mat3(1.5073,  -0.3725, -0.0832, 
-                    -0.0275, 0.9350,  0.0670,
-                     -0.0272, -0.0401, 1.1677);
+const mat3 NTSC = mat3(
+    1.5073,  -0.3725, -0.0832, 
+    -0.0275, 0.9350,  0.0670,
+    -0.0272, -0.0401, 1.1677
+    );
 
 const mat3 SMPTE_C = mat3(
-0.93202665669,   0.04110980761,   0.02156250279,
-0.01362929932 ,  0.97099824432 ,  0.01473191244,
-0.005551435508 , -0.01431194472 , 1.00829538798
+0.8641,  0.0716,  0.0528,
+-0.0248, 0.9911,  0.0298,
+0.0074,  -0.0321, 1.1125
 );
 
 const mat3 TRIN = mat3(
-1.17870044,  -0.1317718,  -0.00688924,
-0.04251778,  0.97897526,  -0.0177807,
-0.0312456 ,  0.05239924,  1.01142244
+0.9792,  -0.0141, 0.0305,
+-0.0139, 0.9992,  0.0129,
+-0.0054, -0.0042, 1.1353
 );
 
 vec2 Warp(vec2 pos)
@@ -254,6 +256,7 @@ void main()
         } 
     else pos = vTexCoord;
     if(NTSC_asp == 1.0) { pos.y *= 200.0/240.0; pos.y += 0.004;}
+    //pos.x = pos.x*1.33/1.36;
 // LANCZOS 2 taps
             vec2 one_pix = SourceSize.zw;
             pos = pos + one_pix*2.5;
@@ -286,7 +289,6 @@ void main()
 
     float scan = pow(scanL, lum);
     
-   
 // Some color tweaks
     if (colors == 3.0) res.rgb *= TRIN; else    
     if (colors == 2.0) res.rgb *= NTSC;  else 
@@ -297,7 +299,8 @@ void main()
     if (lum>2.0)  res.rb += vec2(push_r,push_r/3.0);
     if (sega == 1.0) res *= 1.06;
     if (sega == 2.0) res *= 2.0;
-   res *= res;
+    res *= res;
+
 // That 0.4 plus and divide, on a raised luminance dependent 'scanline', removes moire, in crt-Geom style.
     float scanline = 0.4+(scan*sin(OGL2Pos*PI*2.0)+1.0-scan)/(0.8+0.15*lum);
     res *= scanline;
