@@ -1,11 +1,12 @@
-/*
-  FCC 1953 - look alike colors
 
-*/
+#pragma parameter R "Red Channel" 1.1 0.0 2.0 0.01
+#pragma parameter G "Green Channel" 1.05 0.0 2.0 0.01
+#pragma parameter B "Blue Channel" 1.2 0.0 2.0 0.01
+#pragma parameter gamma "Gamma" 0.9 0.0 2.0 0.01
+#pragma parameter sat "Saturation" 0.83 0.0 2.0 0.01
+#pragma parameter bright "Brightness" 1.06 0.0 2.0 0.01
+#pragma parameter BLACK  "Black Level" 0.06 -0.20 0.20 0.01 
 
-#pragma parameter R "Red Channel" 0.25 0.0 1.0 0.01
-#pragma parameter G "Green Channel" 0.66 0.0 1.0 0.01
-#pragma parameter B "Blue Channel" 0.09 0.0 1.0 0.01
 
 #define pi 3.14159
 
@@ -57,20 +58,35 @@ uniform sampler2D Texture;
 uniform COMPAT_PRECISION float R;
 uniform COMPAT_PRECISION float G;
 uniform COMPAT_PRECISION float B;
-
+uniform COMPAT_PRECISION float gamma;
+uniform COMPAT_PRECISION float sat;
+uniform COMPAT_PRECISION float bright;
+uniform COMPAT_PRECISION float BLACK; 
 
 #else
 #define R 1.0
-#define G 0.93
+#define G 1.0
 #define B 1.0
+#define gamma 1.1
+#define res 1.0
+#define BLACK 0.0
+#define bright 1.0
+#define sat 1.0
 
 #endif
 
 void main()
 {
 	vec3 res = texture2D(Source, vTexCoord).rgb;
-	res /= vec3(R,G,B);
-  	res *= vec3(0.29,0.60,0.11);
+	res *= bright;
+	res = pow(res,vec3(gamma));
+	res *= vec3(R,G,B);
+		vec3 lumweight = vec3(0.29,0.6,0.11);
+		float l = dot(lumweight, res);
+		vec3 grays = vec3(l);
+		res = mix(grays,res,sat);
+  	res -= vec3(BLACK);
+        res *= vec3(1.0)/vec3(1.0-BLACK);
 	FragColor = vec4(res, 1.0);
 }
 #endif
