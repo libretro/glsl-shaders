@@ -4,15 +4,15 @@
 ///////////////////////  Runtime Parameters  ///////////////////////
 #pragma parameter sharpx "Horizontal Sharpness" 2.5 1.0 5.0 0.05
 #pragma parameter sharpy "Vertical Sharpness" 1.25 1.0 5.0 0.05
-#pragma parameter SCANLINE_SINE_COMP_B "Scanline Intensity" 0.3 0.0 1.0 0.05
+#pragma parameter SCANLINE_SINE_COMP_B "Scanline Intensity" 0.5 0.0 1.0 0.05
 #pragma parameter SIZE "Scanline size" 1.0 0.5 2.0 0.5
 #pragma parameter warpX "warpX" 0.03 0.0 0.125 0.01
 #pragma parameter warpY "warpY" 0.05 0.0 0.125 0.01
 #pragma parameter corner_round "Corner Roundness" 0.030 0.005 0.100 0.005
-#pragma parameter MSIZE "Mask Type" 1.0 0.666 1.0 0.3333
-#pragma parameter cgwg "CGWG mask brightness" 0.7 0.0 1.0 0.1
-#pragma parameter crt_gamma "CRT Gamma" 2.4 1.0 4.0 0.05
-#pragma parameter monitor_gamma "Monitor Gamma" 2.25 1.0 4.0 0.05
+#pragma parameter MSIZE "Mask Type: Coarse-Fine" 1.0 0.666 1.0 0.3333
+#pragma parameter cgwg "Mask Brightness" 0.7 0.0 1.0 0.1
+#pragma parameter crt_gamma "CRT Gamma (In)" 2.4 1.0 4.0 0.05
+#pragma parameter monitor_gamma "Monitor Gamma (Out)" 2.25 1.0 4.0 0.05
 #pragma parameter boost "Bright boost " 0.20 0.00 1.00 0.02
 #pragma parameter GLOW_LINE "Glowing line" 0.006 0.00 0.20 0.001
 
@@ -46,6 +46,7 @@ COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING float omega;
 COMPAT_VARYING float fragpos;
+COMPAT_VARYING float aspect;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -72,7 +73,7 @@ void main()
     TEX0.xy = TexCoord.xy*1.0001;
     omega =  2.0 * pi * TextureSize.y;
     fragpos = TEX0.x*OutputSize.x*scale.x*pi;
-
+    aspect = InputSize.y/InputSize.x;
 }
 
 #elif defined(FRAGMENT)
@@ -107,6 +108,7 @@ uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING float omega;
 COMPAT_VARYING float fragpos;
+COMPAT_VARYING float aspect;
 
 // compatibility #defines
 #define Source Texture
@@ -146,13 +148,12 @@ uniform COMPAT_PRECISION float GLOW_LINE;
 #define GLOW_LINE 0.00
 #endif
 
-vec4 scanline(vec2 coord, vec4 frame, float l)
+float scanline(vec2 coord, float l)
 {
     float SCANLINE_SINE_COMP = mix(SCANLINE_SINE_COMP_B*1.5,SCANLINE_SINE_COMP_B,l);
-    vec3 res = frame.xyz;
-    vec3 scanline = res * (SCANLINE_SINE_COMP*sin(fract(coord.y*SIZE*TextureSize.y)*pi)+1.0- SCANLINE_SINE_COMP);
+    float scanline = (SCANLINE_SINE_COMP*sin(fract(coord.y*SIZE*TextureSize.y)*pi)+1.0- SCANLINE_SINE_COMP);
 
-    return vec4(scanline, 1.0);
+    return scanline;
 }
 
 
@@ -169,7 +170,7 @@ float corner(vec2 coord)
 {
                 coord *= scale.xy;
                 coord = (coord - vec2(0.5)) * 1.0 + vec2(0.5);
-                coord = min(coord, vec2(1.0)-coord) * vec2(1.0, InputSize.y/InputSize.x);
+                coord = min(coord, vec2(1.0)-coord) * vec2(1.0, aspect);
                 vec2 cdist = vec2(corner_round);
                 coord = (cdist - min(coord,cdist));
                 float dist = sqrt(dot(coord,coord));
@@ -189,17 +190,18 @@ vec3 BilinearSharp (vec2 pos)
     vec2 uv = pos * SourceSize.x + 0.5;
     
     vec2 frac = fract(uv);
-    uv = (floor(uv) / SourceSize.x) - vec2(tex*0.5);
+    uv = (floor(uv) / SourceSize.x) - vec2(tex);
 
-    vec3 C11 = COMPAT_TEXTURE(Source, uv + vec2( 0.0          , 0.0)).rgb;
+    vec3 C11 = COMPAT_TEXTURE(Source, uv + vec2( 0.0   , 0.0)).rgb;
     vec3 C21 = COMPAT_TEXTURE(Source, uv + vec2( tex.x , 0.0)).rgb;
-    vec3 C12 = COMPAT_TEXTURE(Source, uv + vec2( 0.0          , tex.y)).rgb;
+    vec3 C12 = COMPAT_TEXTURE(Source, uv + vec2( 0.0 , tex.y)).rgb;
     vec3 C22 = COMPAT_TEXTURE(Source, uv + vec2( tex.x , tex.y)).rgb;
 
     float x = frac.x;
     float y = frac.y;
-    vec3 up = mix(C11, C21, pow(x, sharpx));
-    vec3 dw = mix(C12, C22, pow(x, sharpx));
+    float sharp = pow(x,sharpx);
+    vec3 up = mix(C11, C21, sharp);
+    vec3 dw = mix(C12, C22, sharp);
     return mix(up, dw, pow(y, sharpy));
 }
 
@@ -208,14 +210,15 @@ void main()
     vec2 pos = Warp(TEX0.xy*(scale.xy))*scale.zw;
     vec4 res = vec4(BilinearSharp(pos),1.0);
 
-    float l = max(max(res.r,res.g),res.b);
-    res = scanline(pos,res,l);
-    res = scanline(1.0-pos,res,l);
     res = pow(res,in_gamma);
 
+    float l = max(max(res.r,res.g),res.b);
+    res *= scanline(pos,l);
+    res *= scanline(1.0-pos,l);
     // apply the mask; looks bad with vert scanlines so make them mutually exclusive
     float dotMaskWeights = mix(cgwg, 1.0, 0.5*sin(fragpos*MSIZE)+0.5);
     res *= dotMaskWeights;
+
 #if defined GL_ES
     // hacky clamp fix for GLES
     vec2 bordertest = (pos);
@@ -226,10 +229,13 @@ void main()
 #endif
     vec4 color = res;
 
+    color.rgb += boost*color.rgb;
+
     // re-apply the gamma curve for the mask path
     color = pow(color, out_gamma);
-    color += boost*color;
+
     color += randomPass(pos * TextureSize) * GLOW_LINE;
+
     FragColor = color*corner(pos);
 
 } 
