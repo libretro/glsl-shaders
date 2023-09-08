@@ -11,7 +11,7 @@
 // any later version.
 
 
-#pragma parameter scanline "Scanline Strength" 0.85 0.0 1.0 0.05
+#pragma parameter scanline "Scanline Strength" 0.8 0.0 1.0 0.05
 #pragma parameter SIZE "Mask Type: Coarse/Fine" 1.0 0.666 1.0 0.3333
 #pragma parameter cspace "Color Space: RGB, PAL,NTSC-U,NTSC-J" 2.0 0.0 3.0 1.0
 
@@ -193,10 +193,10 @@ void main()
     float wid = 2.0+dot(vec3(0.666),res);
     
     res *= res;
-    float scan = scanline/wid; // 2 + wid (max 2), more 'wid' leads to less 'scan'.
+    float scan = pow(scanline,wid); // 2 + wid (max 2), more 'wid' leads to less 'scan'.
     
     if (InputSize.y < 400.0)
-    res *= 1.4*(scan*sin(pos.y*omega)+1.0-scan)/(0.8+0.15*wid);
+    res *= 0.4+(scan*sin(pos.y*omega)+1.0-scan)/(0.8+0.15*wid);
     
     res *= 0.4+(0.4*sin(fragpos)+0.6)/(0.8+0.15*wid);
     
