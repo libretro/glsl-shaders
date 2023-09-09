@@ -1,12 +1,14 @@
 
-#pragma parameter R "Red Channel" 1.1 0.0 2.0 0.01
-#pragma parameter G "Green Channel" 1.05 0.0 2.0 0.01
-#pragma parameter B "Blue Channel" 1.2 0.0 2.0 0.01
-#pragma parameter gamma "Gamma" 0.9 0.0 2.0 0.01
-#pragma parameter sat "Saturation" 0.83 0.0 2.0 0.01
-#pragma parameter bright "Brightness" 1.06 0.0 2.0 0.01
-#pragma parameter BLACK  "Black Level" 0.06 -0.20 0.20 0.01 
-
+#pragma parameter R "Red Channel" 1.0 0.0 2.0 0.01
+#pragma parameter G "Green Channel" 1.0 0.0 2.0 0.01
+#pragma parameter B "Blue Channel" 1.0 0.0 2.0 0.01
+#pragma parameter gamma "Gamma" 1.0 0.0 2.0 0.01
+#pragma parameter sat "Saturation" 1.0 0.0 2.0 0.01
+#pragma parameter bright "Brightness" 1.0 0.0 2.0 0.01
+#pragma parameter BLACK  "Black Level" 0.0 -0.20 0.20 0.01 
+#pragma parameter RG "Red <-> Green Hue" 0.0 -0.25 0.25 0.01
+#pragma parameter RB "Red <-> Blue Hue"  0.0 -0.25 0.25 0.01
+#pragma parameter GB "Green <-> Blue Hue" 0.0 -0.25 0.25 0.01
 
 #define pi 3.14159
 
@@ -62,7 +64,9 @@ uniform COMPAT_PRECISION float gamma;
 uniform COMPAT_PRECISION float sat;
 uniform COMPAT_PRECISION float bright;
 uniform COMPAT_PRECISION float BLACK; 
-
+uniform COMPAT_PRECISION float RG;
+uniform COMPAT_PRECISION float RB;
+uniform COMPAT_PRECISION float GB;
 #else
 #define R 1.0
 #define G 1.0
@@ -72,11 +76,19 @@ uniform COMPAT_PRECISION float BLACK;
 #define BLACK 0.0
 #define bright 1.0
 #define sat 1.0
-
+#define RG 0.0   
+#define RB 0.0   
+#define GB 0.0  
 #endif
 
 void main()
 {
+mat3 hue = mat3(
+    1.0, -RG, -RB,
+    RG, 1.0, -GB,
+    RB, GB, 1.0
+);
+
 	vec3 res = texture2D(Source, vTexCoord).rgb;
 	res *= bright;
 	res = pow(res,vec3(gamma));
@@ -85,8 +97,9 @@ void main()
 		float l = dot(lumweight, res);
 		vec3 grays = vec3(l);
 		res = mix(grays,res,sat);
+  	   res *= hue;
   	res -= vec3(BLACK);
-        res *= vec3(1.0)/vec3(1.0-BLACK);
+   res *= vec3(1.0)/vec3(1.0-BLACK);
 	FragColor = vec4(res, 1.0);
 }
 #endif

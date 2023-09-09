@@ -11,9 +11,9 @@
 // any later version.
 
 
-#pragma parameter scanline "Scanline Strength" 0.75 0.0 1.0 0.05
-#pragma parameter SIZE "Mask Type" 1.0 0.666 1.0 0.3333
-#pragma parameter cspace "Color Space: RGB, PAL,SMPTE-C,NTSC-J" 3.0 0.0 3.0 1.0
+#pragma parameter scanline "Scanline Strength" 0.8 0.0 1.0 0.05
+#pragma parameter SIZE "Mask Type: Coarse/Fine" 1.0 0.666 1.0 0.3333
+#pragma parameter cspace "Color Space: RGB, PAL,NTSC-U,NTSC-J" 2.0 0.0 3.0 1.0
 
 #define PI 3.1415926535897932384626433
 
@@ -138,7 +138,6 @@ uniform COMPAT_PRECISION float cspace;
 
 vec2 Warp(vec2 pos)
 {
-    
     pos *= vec2 (1.0 + pos.y*pos.y*0.0275, 
                  1.0 + pos.x*pos.x*0.045 );
     pos = pos * 0.5 +0.5;
@@ -152,14 +151,14 @@ const mat3 PAL = mat3(
 
 );
 
-const mat3 SMPTE = mat3(
-0.8641,  0.0716,  0.0528,
--0.0248, 0.9911,  0.0298,
-0.0074,  -0.0321, 1.1125
+const mat3 NTSC = mat3(
+0.8870,  0.0451,  0.0566,
+-0.0800, 1.0368,  0.0361,
+0.0053,  -0.1196, 1.2320
 
 );
 
-const mat3 NTSC = mat3(
+const mat3 NTSC_J = mat3(
 0.7203,  0.1344 , 0.1233,
 -0.1051, 1.0305,  0.0637,
 0.0127 , -0.0743, 1.3545
@@ -179,30 +178,31 @@ float vign()
 
 void main()
 {
-    vec2 pos = Warp(warp)/scale;
+    vec2 pos = Warp(warp)/scale; 
 
 // Quilez Scaling
      vec2 p = pos * TextureSize;
      vec2 i = floor(p) + 0.5;
      vec2 f = p - i;
     p = (i + 4.0*f*f*f)*SourceSize.zw;
-    p.x = mix( p.x , vTexCoord.x, 0.4);
+    p.y = mix(p.y , i.y*SourceSize.z, 0.2);
 
     vec3 res = COMPAT_TEXTURE(Source,p).rgb;
 
 // crt-Geom-like pixel luminance influence on scanline
-    float lum = 2.0+dot(vec3(0.666),res);
+    float wid = 2.0+dot(vec3(0.666),res);
     
     res *= res;
-    float scan = pow(scanline,lum); // 2 + lum (max 2), more 'lum' leads to less 'scan'.
+    float scan = pow(scanline,wid); // 2 + wid (max 2), more 'wid' leads to less 'scan'.
     
-    if (InputSize.x < 400.0)
-    res *= 0.4+(scan*sin(pos.y*omega)+1.0-scan)/(0.8+0.15*lum);
-    res *= 0.4+(0.3*sin(fragpos)+0.7)/(0.8+0.15*lum);
+    if (InputSize.y < 400.0)
+    res *= 0.4+(scan*sin(pos.y*omega)+1.0-scan)/(0.8+0.15*wid);
+    
+    res *= 0.4+(0.4*sin(fragpos)+0.6)/(0.8+0.15*wid);
     
     if (cspace == 1.0) res *= PAL; 
-    if (cspace == 2.0) res *= SMPTE; 
-    if (cspace == 3.0) res *= NTSC; 
+    if (cspace == 2.0) res *= NTSC; 
+    if (cspace == 3.0) res *= NTSC_J; 
 
     if (cspace != 0.0) res = clamp(res,0.0,1.0);
 // Corners cut
@@ -225,7 +225,6 @@ void main()
         res = vec3(0.0);
 #endif
     
- 
     // Output to screen
     FragColor = vec4(res,1.0);
 }
