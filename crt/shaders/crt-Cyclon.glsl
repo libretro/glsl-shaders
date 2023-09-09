@@ -12,7 +12,7 @@ A super-fast shader based on the magnificent crt-Geom, optimized for full speed
 on a Xiaomi Note 3 Pro cellphone (around 170(?) gflops gpu or so)
 
 This shader uses parts from:
-ctr-Geom (scanlines)
+crt-Geom (scanlines)
 Quillez (main filter)
 Grade (some primaries)
 Dogway's inverse Gamma
