@@ -108,15 +108,12 @@ float sw(float y, float l)
 
 void main()
 {       
-        vec2 OGL2Pos = vTexCoord * SourceSize.xy;
-        float y = fract(OGL2Pos.y);
-        vec2 pC4 = floor(OGL2Pos) * SourceSize.zw + 0.5*SourceSize.zw;
-        pC4.x = vTexCoord.x;
+        vec2 pC4 = vTexCoord;
         vec3 res1 = texture2D(Source,pC4).rgb;
         vec3 res2 = texture2D(Source,pC4 + vec2(0.0,SourceSize.w)).rgb;
 
         float lum = dot(vec3(0.3,0.6,0.1),res1);
-        
+        float y = fract(pC4.y*SourceSize.y);
         vec3 res = res1*sw(y,lum) + res2*sw(1.0-y,lum);
 
         FragColor = vec4(res, 1.0);
