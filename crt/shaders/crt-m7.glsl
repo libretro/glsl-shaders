@@ -169,8 +169,12 @@ float vign()
 {
     vec2 vpos = warpp;
     vpos *= warppm;    
-    float vig = vpos.x * vpos.y * 50.0;
-    vig = min(sqrt(vig), 1.0); 
+    float vig = vpos.x * vpos.y * 45.0;
+
+    // desmos calc. equal to pow(vig,0.2)
+    // remove expensive pow functions for speed up
+
+    vig = min(0.52+sqrt(vig*0.2544), 1.0); 
    
     return vig;
 }
