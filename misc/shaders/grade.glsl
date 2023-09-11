@@ -1,4 +1,5 @@
 #version 140
+
 /*
    Grade - CRT emulation and color manipulation shader
 
@@ -22,7 +23,7 @@
 
 
 /*
-   Grade (13-08-2023)
+   Grade (11-09-2023)
    > See settings decriptions at: https://forums.libretro.com/t/dogways-grading-shader-slang/27148/442
 
    > Ubershader grouping some monolithic color related shaders:
@@ -65,14 +66,14 @@
 // Analogue controls
 #pragma parameter g_analog       "// ANALOG CONTROLS //"      0.0    0.0   1.0  1.0
 #pragma parameter wp_temperature "White Point"                8504.0 5004.0 12004.0 100.0
+#pragma parameter g_CRT_l        "CRT Gamma"                  2.50   2.30  2.60 0.01
+#pragma parameter g_CRT_b        "CRT Brightness"            50.0    0.0 100.0  1.0
+#pragma parameter g_CRT_c        "CRT Contrast"              50.0    0.0 100.0  1.0
 #pragma parameter g_hue_degrees  "CRT Hue"                    0.0 -180.0 180.0  1.0
 #pragma parameter g_U_SHIFT      "CRT U Shift"                0.0   -0.2   0.2  0.01
 #pragma parameter g_V_SHIFT      "CRT V Shift"                0.0   -0.2   0.2  0.01
 #pragma parameter g_U_MUL        "CRT U Multiplier"           1.0    0.0   2.0  0.01
 #pragma parameter g_V_MUL        "CRT V Multiplier"           1.0    0.0   2.0  0.01
-#pragma parameter g_CRT_l        "CRT Gamma"                  2.50   2.30  2.60 0.01
-#pragma parameter g_CRT_b        "CRT Brightness"            50.0    0.0 100.0  1.0
-#pragma parameter g_CRT_c        "CRT Contrast"              50.0    0.0 100.0  1.0
 #pragma parameter g_CRT_br       "CRT Beam Red"               1.0    0.0   1.2  0.01
 #pragma parameter g_CRT_bg       "CRT Beam Green"             1.0    0.0   1.2  0.01
 #pragma parameter g_CRT_bb       "CRT Beam Blue"              1.0    0.0   1.2  0.01
@@ -98,7 +99,7 @@
 #pragma parameter g_satr         "Hue vs Sat Red"             0.0 -1.0 1.0 0.01
 #pragma parameter g_satg         "Hue vs Sat Green"           0.0 -1.0 1.0 0.01
 #pragma parameter g_satb         "Hue vs Sat Blue"            0.0 -1.0 1.0 0.01
-#pragma parameter g_lift         "Black Level"                0.0 -0.5 0.5 0.01
+#pragma parameter g_lift         "Black Level"                0.0 -15.0 15.0 1.0
 #pragma parameter blr            "Black-Red Tint"             0.0  0.0 1.0 0.01
 #pragma parameter blg            "Black-Green Tint"           0.0  0.0 1.0 0.01
 #pragma parameter blb            "Black-Blue Tint"            0.0  0.0 1.0 0.01
@@ -248,6 +249,9 @@ uniform COMPAT_PRECISION float g_signal_type, g_crtgamut, g_space_out, g_Dark_to
 #define LUT2_toggle 0.0
 #endif
 
+// lift goes from -15 to 15 points on an 8-bit scale (0-255)
+#define lift (g_space_out==0.0 ? moncurve_f(abs(g_lift)/255.0,2.4,0.055) : pow(abs(g_lift)/255.0,g_space_out==3.0?2.199:2.4)) * sign(g_lift)
+
 #define M_PI 3.1415926535897932384626433832795/180.0        // 1º (one degree) in radians
 #define RW vec3(0.950457397565471, 1.0, 1.089436035930324)  // D65 Reference White
 #define g_bl -(100000.*log((72981.-500000./(3.*max(2.3,g_CRT_l)))/9058.))/945461.
@@ -374,6 +378,12 @@ float EOTF_1886a(float color, float bl, float brightness, float contrast) {
           float sl = k * pow(Vc + Lb, a1-a2);        // Slope for knee gamma
 
     color = color >= Vc ? k * pow(color + Lb, a1 ) : sl * pow(color + Lb, a2 );
+
+    // Black lift compensation
+    float bc = 0.00446395*pow(bl,1.23486);
+    color    = min(max(color-bc,0.0)*(1.0/(1.0-bc)), 1.0);  // Undo Lift
+    color    = pow(color,1.0-0.00843283*pow(bl,1.22744));   // Restore Gamma from 'Undo Lift'
+
     return color;
  }
 
@@ -783,7 +793,7 @@ void main()
 // Adding Sega Master System 1 non-linear blue "lift": https://github.com/ekeeke/Genesis-Plus-GX/issues/345#issuecomment-820885780
          src = g_SMS_bl > 0.0 ? pow(src, vec3(1.0,1.0,1.0/1.16)) : src;
 
-// Reproduce the Sega MegaDrive palette (same as the BlastEm core output so don't use in this core): https://github.com/ekeeke/Genesis-Plus-GX/issues/345
+// Reproduce the Sega MegaDrive palette (same as the BlastEm core output so don't use for this core): https://github.com/ekeeke/Genesis-Plus-GX/issues/345
          src = g_MD_Pal > 0.0 ? vec3(contrast_sigmoid_inv(src.r,2.578419881,0.520674), \
                                      contrast_sigmoid_inv(src.g,2.578419881,0.520674), \
                                      contrast_sigmoid_inv(src.b,2.578419881,0.520674)) : src;
@@ -866,7 +876,8 @@ void main()
 
 
 // White Point Mapping
-    col = wp_adjust(screen.rgb, wp_temperature, m_in, m_ou);
+    col = (g_signal_type==0.0) && (m_in==m_ou) && (6499. < wp_temperature) && (wp_temperature < 6505.) ? screen.rgb : \
+                                   wp_adjust(screen.rgb,   wp_temperature,   m_in,   m_ou);
 
 
 //  SAT + HUE vs SAT (in IPT space)
@@ -930,7 +941,7 @@ void main()
 
 // Lift + Gain -PP Digital Controls- (Could do in Yxy but performance reasons)
     src_h = clamp(rolled_gain_v3(contrast, clamp(g_lum, -0.49, 0.99)), 0.0, 1.0);
-    src_h += (g_lift / 20.0) * (1.0 - contrast);
+    src_h += lift * (1.0 - contrast);
 
 
 // Vignetting (in linear space, so after EOTF^-1 it's power shaped; 0.5 thres converts to ~0.75)
