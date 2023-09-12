@@ -2,18 +2,17 @@
 // original by hunterk, edit by DariusG
 
 ///////////////////////  Runtime Parameters  ///////////////////////
-#pragma parameter sharpx "Horizontal Sharpness" 2.5 1.0 5.0 0.05
-#pragma parameter sharpy "Vertical Sharpness" 1.25 1.0 5.0 0.05
-#pragma parameter SCANLINE_SINE_COMP_B "Scanline Intensity" 0.5 0.0 1.0 0.05
-#pragma parameter SIZE "Scanline size" 1.0 0.5 2.0 0.5
+#pragma parameter sharpx "Horizontal Sharpness" 1.8 1.0 5.0 0.05
+#pragma parameter sharpy "Vertical Sharpness" 3.0 1.0 5.0 0.05
+#pragma parameter SCANLINE_SINE_COMP_B "Scanline Intensity" 0.25 0.1 0.6 0.05
+#pragma parameter SIZE "Scanline size" 1.0 0.5 1.0 0.5
 #pragma parameter warpX "warpX" 0.03 0.0 0.125 0.01
 #pragma parameter warpY "warpY" 0.05 0.0 0.125 0.01
 #pragma parameter corner_round "Corner Roundness" 0.030 0.005 0.100 0.005
 #pragma parameter MSIZE "Mask Type: Coarse-Fine" 1.0 0.666 1.0 0.3333
 #pragma parameter cgwg "Mask Brightness" 0.7 0.0 1.0 0.1
-#pragma parameter crt_gamma "CRT Gamma (In)" 2.4 1.0 4.0 0.05
-#pragma parameter monitor_gamma "Monitor Gamma (Out)" 2.25 1.0 4.0 0.05
-#pragma parameter boost "Bright boost " 0.20 0.00 1.00 0.02
+#pragma parameter monitor_gamma "Monitor Gamma (Out)" 2.2 1.0 4.0 0.05
+#pragma parameter boost "Bright boost " 0.0 0.00 1.00 0.02
 #pragma parameter GLOW_LINE "Glowing line" 0.006 0.00 0.20 0.001
 
 #define pi 3.141592
@@ -128,33 +127,24 @@ uniform COMPAT_PRECISION float warpY;
 uniform COMPAT_PRECISION float corner_round;
 uniform COMPAT_PRECISION float cgwg;
 uniform COMPAT_PRECISION float MSIZE;
-uniform COMPAT_PRECISION float crt_gamma;
 uniform COMPAT_PRECISION float monitor_gamma;
 uniform COMPAT_PRECISION float boost;
 uniform COMPAT_PRECISION float GLOW_LINE;
 #else
-#define sharpx     1.0 
-#define sharpy     1.0
-#define SCANLINE_SINE_COMP_B 0.40
+#define sharpx     2.0 
+#define sharpy     4.0
+#define SCANLINE_SINE_COMP_B 0.25
 #define SIZE 1.0
 #define warpX 0.031
 #define warpY 0.041
 #define corner_round 0.030
 #define cgwg 0.4
 #define MSIZE 1.0
-#define crt_gamma 2.2
 #define monitor_gamma 2.4
 #define boost 0.00
 #define GLOW_LINE 0.00
 #endif
 
-float scanline(vec2 coord, float l)
-{
-    float SCANLINE_SINE_COMP = mix(SCANLINE_SINE_COMP_B*1.5,SCANLINE_SINE_COMP_B,l);
-    float scanline = (SCANLINE_SINE_COMP*sin(fract(coord.y*SIZE*TextureSize.y)*pi)+1.0- SCANLINE_SINE_COMP);
-
-    return scanline;
-}
 
 
 // Distortion of scanlines, and end of screen alpha.
@@ -205,19 +195,38 @@ vec3 BilinearSharp (vec2 pos)
     return mix(up, dw, pow(y, sharpy));
 }
 
+float scan(float pos, vec3 color)
+    {
+    float wid = SCANLINE_SINE_COMP_B + 0.1 * dot(color, vec3(0.333))*0.8;
+    float weight = pos / wid;
+    return  boost + (0.1 + SCANLINE_SINE_COMP_B) * exp(-weight*weight ) / wid;
+    }
+
+
 void main()
 {
     vec2 pos = Warp(TEX0.xy*(scale.xy))*scale.zw;
+    
     vec4 res = vec4(BilinearSharp(pos),1.0);
 
-    res = pow(res,in_gamma);
+    res *= res; 
 
-    float l = max(max(res.r,res.g),res.b);
-    res *= scanline(pos,l);
-    res *= scanline(1.0-pos,l);
-    // apply the mask; looks bad with vert scanlines so make them mutually exclusive
+    //crt-Geom scanlines
+    float f = fract(pos.y*SourceSize.y*SIZE);
+    res *= scan(f, res.rgb) +scan(1.0-f, res.rgb) ;
+
+    // apply the mask
     float dotMaskWeights = mix(cgwg, 1.0, 0.5*sin(fragpos*MSIZE)+0.5);
     res *= dotMaskWeights;
+
+    vec4 color = res;
+
+    color.rgb += boost*color.rgb;
+
+    // re-apply the gamma curve for the mask path
+    color = pow(color, out_gamma);
+
+    color += randomPass(pos * TextureSize) * GLOW_LINE;
 
 #if defined GL_ES
     // hacky clamp fix for GLES
@@ -227,14 +236,6 @@ void main()
     else
         res = vec4(0.,0.,0.,0.);
 #endif
-    vec4 color = res;
-
-    color.rgb += boost*color.rgb;
-
-    // re-apply the gamma curve for the mask path
-    color = pow(color, out_gamma);
-
-    color += randomPass(pos * TextureSize) * GLOW_LINE;
 
     FragColor = color*corner(pos);
 
