@@ -6,9 +6,9 @@
 #pragma parameter sat "Saturation" 1.0 0.0 2.0 0.01
 #pragma parameter bright "Brightness" 1.0 0.0 2.0 0.01
 #pragma parameter BLACK  "Black Level" 0.0 -0.20 0.20 0.01 
-#pragma parameter RG "Red <-> Green Hue" 0.0 -0.25 0.25 0.01
-#pragma parameter RB "Red <-> Blue Hue"  0.0 -0.25 0.25 0.01
-#pragma parameter GB "Green <-> Blue Hue" 0.0 -0.25 0.25 0.01
+#pragma parameter RG "Green <-to-> Red Hue" 0.0 -0.25 0.25 0.01
+#pragma parameter RB "Blue <-to-> Red Hue"  0.0 -0.25 0.25 0.01
+#pragma parameter GB "Blue <-to-> Green Hue" 0.0 -0.25 0.25 0.01
 
 #define pi 3.14159
 
