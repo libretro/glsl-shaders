@@ -14,7 +14,7 @@
 */
 
 #pragma parameter SHARPX "Sharpness Horiz." 0.1 0.0 1.0 0.05
-#pragma parameter SHARPY "Sharpness Vert." 0.8 0.0 1.0 0.05
+#pragma parameter SHARPY "Sharpness Vert." 0.4 0.0 1.0 0.05
 
 #pragma parameter CURV "Curvature On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter NTSC_asp "Amiga NTSC-PAL,eg Monkey Island" 0.0 0.0 01.0 1.0
