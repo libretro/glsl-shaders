@@ -190,12 +190,11 @@ vec3 BilinearSharp (vec2 pos)
     float s = pow(x,sharpx);
     float s2 = pow(xx,sharpx);
 
-    float t = pow(y,sharpy);    
-    float t2 = pow(1.0-y,sharpy);    
+    float t = pow(y,1.5);    
 
     vec3 up = (C11*s2 + C21*s)/(s+s2); 
     vec3 dw = (C12*s2 + C22*s)/(s+s2); 
-    return (up*t2 + dw*t)/(t+t2);
+    return mix(up, dw, t);
 }
 
 float scan(float pos, vec3 color)
