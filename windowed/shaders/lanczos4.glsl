@@ -132,13 +132,14 @@ void main()
         {
             
 // LANCZOS 4 taps
+            vec2 v = vTexCoord - 0.002;
             vec2 one_pix = SourceSize.zw;
-            vec2 f = fract(vTexCoord * SourceSize.xy);
+            vec2 f = fract(v * SourceSize.xy);
 
             vec4 linetaps   = weight4(f.x);
             vec4 columntaps = weight4(f.y);
 
-            vec2 xystart = vTexCoord - one_pix;
+            vec2 xystart = v - one_pix;
             vec4 xpos = vec4(
                 xystart.x,
                 xystart.x + one_pix.x,
