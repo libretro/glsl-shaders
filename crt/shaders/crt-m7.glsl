@@ -189,7 +189,7 @@ void main()
      vec2 i = floor(p) + 0.5;
      vec2 f = p - i;
     p = (i + 4.0*f*f*f)*SourceSize.zw;
-    p.y = mix(p.y , i.y*SourceSize.z, 0.2);
+    p.x = mix(p.x, pos.x, 0.2);
 
     vec3 res = COMPAT_TEXTURE(Source,p).rgb;
 
@@ -200,7 +200,7 @@ void main()
     float scan = pow(scanline,wid); // 2 + wid (max 2), more 'wid' leads to less 'scan'.
     
     if (InputSize.y < 400.0)
-    res *= 0.4+(scan*sin(pos.y*omega)+1.0-scan)/(0.8+0.15*wid);
+    res *= 0.4+(scan*sin(pos.y*omega-1.5)+1.0-scan)/(0.8+0.15*wid);
     
     res *= 0.4+(0.4*sin(fragpos)+0.6)/(0.8+0.15*wid);
     
