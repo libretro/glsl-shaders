@@ -272,7 +272,7 @@ vec3 scanlineWeights(float distance, vec3 color)
 
     }
 
-#define pwr vec3(1.0/((-0.8*SCANLINE+1.0)*(-0.8*(1.0-CGWG)+1.0))-1.2)
+#define pwr vec3(1.0/((-0.8*SCANLINE+1.0)*(-0.8*CGWG+1.0))-1.2)
 // Returns gamma corrected output, compensated for scanline+mask embedded gamma
 vec3 inv_gamma(vec3 col, vec3 power)
 {

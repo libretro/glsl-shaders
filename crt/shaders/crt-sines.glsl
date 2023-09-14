@@ -3,7 +3,7 @@
 /* 
   work by DariusG 2023, some ideas borrowed from Dogway's zfast_crt_geo
   
-
+  v1.5  re-worked version with better colors (real Trinitron)
   v1.4c added real Trinitron color profile as default, with real measured primaries
   v1.4b added some system specific tweaks
   v1.4 removed junk, optimized white point a bit
@@ -13,22 +13,39 @@
   v1.1: switched to lanczos4 taps filter
 */
 
-#pragma parameter SHARPNESS "LANCZOS SHARPNESS" 1.66 0.7 2.4 0.01 
-#pragma parameter curv "Curvature"  1.0 0.0 1.0 1.0
-#pragma parameter scanL "Scanline Weight" 0.8 0.0 1.0 0.05
+#pragma parameter SHARPX "Sharpness Horiz." 0.1 0.0 1.0 0.05
+#pragma parameter SHARPY "Sharpness Vert." 0.4 0.0 1.0 0.05
+
+#pragma parameter CURV "Curvature On/Off" 1.0 0.0 1.0 1.0
+#pragma parameter NTSC_asp "Amiga NTSC-PAL,eg Monkey Island" 0.0 0.0 01.0 1.0
+
+#pragma parameter bogus_ms " [ SCANLINES/MASK ] " 0.0 0.0 1.0 0.0
 #pragma parameter interlacing "Interlacing On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter Shadowmask "  Mask Type " 0.0 -1.0 2.0 1.0
-#pragma parameter slotx "  Slot Size x" 3.0 2.0 3.0 1.0
-#pragma parameter width "  Mask Width 3.0/2.0 " 0.6666 0.6666 1.0 0.3333
-#pragma parameter mask "  Mask Strength" 0.4 0.0 1.0 0.05
-#pragma parameter sat "Saturation" 1.0 0.0 2.0 0.01
-#pragma parameter boostd "Boost Dark Colors" 1.3 1.0 2.0 0.05
-#pragma parameter colors "0.0:SMPTE-C,1.0:Sony P22,2.0:NTSC,3.0:Trinitron PAL" 3.0 -1.0 3.0 1.0
-#pragma parameter wp "White Point Adjust" 0.0 -0.25 0.25 0.01
-#pragma parameter bogus " [ System Tweaks ] " 0.0 0.0 0.0 0.0
-#pragma parameter push_r "PAL Push Red" 0.0 0.0 0.15 0.01
-#pragma parameter NTSC_asp "Amiga NTSC Aspect, eg Monkey Island" 0.0 0.0 01.0 1.0
-#pragma parameter sega "Luminance Fix: Sega, Amiga dark ST colors" 0.0 0.0 2.0 1.0
+
+#pragma parameter SCANLOW "Scanline Low" 0.6 0.0 1.0 0.05
+#pragma parameter SCANHIGH "Scanline High" 0.3 0.0 1.0 0.05
+
+#pragma parameter mask "Mask type: 1-Dotmask, 2-RGB, 3-SlotMask" 1.0 0.0 3.0 1.0
+#pragma parameter m_str "Mask Strength" 0.25 0.0 1.0 0.05
+#pragma parameter slotx "Slot Mask Size x" 3.0 2.0 3.0 1.0
+#pragma parameter width "Slot Mask Width 3.0/2.0 " 0.6666 0.6666 1.0 0.3333
+#pragma parameter bogus_conv " [ CONVERGENCE ] " 0.0 0.0 1.0 0.0
+#pragma parameter RX "Red Convergence Horiz." 0.0 -1.0 1.0 0.01
+#pragma parameter RY "Red Convergence Vert." 0.0 -1.0 1.0 0.01
+
+#pragma parameter GX "Green Convergence Horiz." 0.0 -1.0 1.0 0.01
+#pragma parameter GY "Green Convergence Vert." 0.0 -1.0 1.0 0.01
+
+#pragma parameter BX "Blue Convergence Horiz." 0.0 -1.0 1.0 0.01
+#pragma parameter BY "Blue Convergence Vert." 0.0 -1.0 1.0 0.01
+#pragma parameter bogus_col " [ COLORS ] " 0.0 0.0 1.0 0.0
+
+#pragma parameter BOOST "Bright Boost" 0.2 0.0 0.5 0.01
+#pragma parameter SAT "Saturation" 1.2 0.0 2.0 0.01
+#pragma parameter CRT "Trinitron Colors" 1.0 0.0 1.0 1.0
+
+
+#define pi 3.1415926535897932384626433
 
 #if defined(VERTEX)
 
@@ -53,10 +70,9 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 scaleS;
-COMPAT_VARYING vec2 scaleO;
-COMPAT_VARYING vec2 warpos;
-COMPAT_VARYING vec2 fragpos;
+COMPAT_VARYING vec2 scale;
+COMPAT_VARYING vec2 maskpos;
+
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -68,15 +84,23 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 // compatibility #defines
 #define vTexCoord TEX0.xy
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
+#define OutSize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float SIZE;
+
+#else
+#define SIZE     1.0      
+   
+#endif
 
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    TEX0.xy = TexCoord.xy*1.0001;
-    scaleS = TextureSize.xy/InputSize.xy;
-    fragpos = TEX0.xy*OutputSize.xy*scaleS;
-    scaleO = OutputSize.xy/InputSize.xy;
-    warpos = TEX0.xy*scaleS;
+    TEX0.xy = TexCoord.xy;
+    scale = SourceSize.xy/InputSize.xy;
+    maskpos = TEX0.xy*OutputSize.xy*SourceSize.xy/InputSize.xy;
 }
 
 #elif defined(FRAGMENT)
@@ -109,10 +133,9 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 scaleS;
-COMPAT_VARYING vec2 scaleO;
-COMPAT_VARYING vec2 warpos;
-COMPAT_VARYING vec2 fragpos;
+COMPAT_VARYING vec2 scale;
+COMPAT_VARYING vec2 maskpos;
+
 
 // compatibility #defines
 #define Source Texture
@@ -122,222 +145,145 @@ COMPAT_VARYING vec2 fragpos;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float SHARPNESS;
-uniform COMPAT_PRECISION float width;
-uniform COMPAT_PRECISION float slotx;
+uniform COMPAT_PRECISION float SCANLOW;
+uniform COMPAT_PRECISION float SCANHIGH;
+uniform COMPAT_PRECISION float SHARPX;
+uniform COMPAT_PRECISION float SHARPY;
 uniform COMPAT_PRECISION float mask;
-uniform COMPAT_PRECISION float Shadowmask;
-uniform COMPAT_PRECISION float scanL;
-uniform COMPAT_PRECISION float curv;
-uniform COMPAT_PRECISION float thresh;
-uniform COMPAT_PRECISION float colors;
-uniform COMPAT_PRECISION float push_r;
-uniform COMPAT_PRECISION float sat;
-uniform COMPAT_PRECISION float wp;
+uniform COMPAT_PRECISION float m_str;
+uniform COMPAT_PRECISION float RX;
+uniform COMPAT_PRECISION float RY;
+uniform COMPAT_PRECISION float GX;
+uniform COMPAT_PRECISION float GY;
+uniform COMPAT_PRECISION float BX;
+uniform COMPAT_PRECISION float BY;
+uniform COMPAT_PRECISION float BOOST;
+uniform COMPAT_PRECISION float SAT;
+uniform COMPAT_PRECISION float CRT;
+uniform COMPAT_PRECISION float CURV;
 uniform COMPAT_PRECISION float NTSC_asp;
-uniform COMPAT_PRECISION float sega;
+uniform COMPAT_PRECISION float slotx;
+uniform COMPAT_PRECISION float width;
 uniform COMPAT_PRECISION float interlacing;
-uniform COMPAT_PRECISION float boostd;
 
 #else
 #define width 1.0
 #define slotx 1.0
-#define Shadowmask 0.0
-#define mask 0.5
-#define scanL 0.6
-#define curv 1.0
-#define thresh 0.2
-#define colors 0.0
-#define push_r 0.0
-#define sat 1.0
-#define wp 0.0
-#define SHARPNESS 1.66
-#define NTSC_asp 0.0
-#define sega 0.0
-#define interlacing 1.0
-#define boostd 1.35
-
+#define SCANLOW 0.5
+#define SCANHIGH 0.3
+#define SHARPX 0.3
+#define SHARPY 0.7
+#define mask 1.0          
+#define m_str 0.3          
+#define RX 0.0     
+#define RY 0.0     
+#define GX 0.0     
+#define GY 0.0     
+#define BX 0.0     
+#define BY 0.0     
+#define BOOST 0.0     
+#define SAT 1.3     
+#define CRT 1.0     
+#define CURV 1.0     
+#define NTSC_asp 0.0     
+#define interlacing 1.0     
 #endif
 
-#define PI 3.1415926    
-#define FIX(c) max(abs(c), 0.000001);
-#define back 1.0-mask
 
-vec2 weight2(float x)
-        {
-            float radius = 3.0-SHARPNESS;
-            vec2 smpl = FIX(PI * vec2(1.0 - x, x));
-
-            // Lanczos2. Note: we normalize below, so no point in multiplying by radius.
-            vec2 ret = sin(smpl) * sin(smpl / radius) / (smpl * smpl);
-
-            // Normalize
-            return ret / dot(ret, vec2(1.0));
-        }
-
-vec3 pixel(float xpos, float ypos)
-        {
-
-            return COMPAT_TEXTURE(Source, vec2(xpos, ypos)).rgb;
-        }
-
-vec3 line(float ypos, vec2 xpos, vec2 linetaps)
-        {
-            return (pixel(xpos.x, ypos) * linetaps.x +
-                    pixel(xpos.y, ypos) * linetaps.y) ;
-        }
-
-
-
-
-float Mask (vec2 pos)
+float Mask()
 {
-    if (Shadowmask == 0.0)
+    float size = 1.0;
+    float oddx = 0.0;
+    if (mask == 2.0) size = 0.6667;
+    vec2 pos = maskpos*size;
+if (mask == 1.0 || mask == 2.0) return m_str*sin(pos.x*pi)+1.0-m_str;
+  
+if (mask == 3.0)
     {
-        return mask*(0.5*sin(fragpos.x*PI)+0.5)+back;
+        oddx = mod(maskpos.x,slotx*2.0) < slotx ? 1.0 : 0.0;
+
+        return        (0.5*m_str*sin(pos.x*width*pi)+0.5) 
+                    + (0.5*m_str*sin((pos.y+oddx)*pi)+0.5) ;
     }
 
-    else if (Shadowmask == 1.0)
-    {
-        float oddx = mod(fragpos.x,slotx*2.0) < slotx ? 1.0 : 0.0;
-
-        return        (0.5*mask*sin(fragpos.x*width*PI)+0.5) 
-                    + (0.5*mask*sin((fragpos.y+oddx)*PI)+0.5) ;
-    }
-
-    else if (Shadowmask == 2.0)
-    {
-        return mask*(0.5*sin(fragpos.x*PI*0.666)+0.5)+1.0-mask*1.0001;
-    }
-
- else return 1.0;
+if (mask == 0.0) return 1.0;
 }
-
-
-const mat3 SonyP22 = mat3(
-1.10544112,  -0.09467967, -0.00547813,
-0.12322469,  0.88445481,  -0.00151429,
-0.02295649,  -0.00169611, 0.98164123);
-
-// NTSC to sRGB matrix, used in linear space
-const mat3 NTSC = mat3(
-    1.5073,  -0.3725, -0.0832, 
-    -0.0275, 0.9350,  0.0670,
-    -0.0272, -0.0401, 1.1677
-    );
-
-const mat3 SMPTE_C = mat3(
-0.8641,  0.0716,  0.0528,
--0.0248, 0.9911,  0.0298,
-0.0074,  -0.0321, 1.1125
-);
-
-const mat3 TRIN = mat3(
-0.9792,  -0.0141, 0.0305,
--0.0139, 0.9992,  0.0129,
--0.0054, -0.0042, 1.1353
-);
 
 vec2 Warp(vec2 pos)
 {
-    pos  = pos*2.0-1.0;
-    pos *= vec2(1.0 + (pos.y*pos.y)/32.0, 1.0 + (pos.x*pos.x)/24.0);
-    return pos*0.5 + 0.5;
+    pos = pos*2.0 - 1.0;
+    pos *= vec2(1.0+pos.y*pos.y*0.031, 1.0 + pos.x*pos.x*0.042);
+    pos = pos*0.5 + 0.5;
+    return pos;
 }
+
+mat3 hue = mat3(
+    1.2,  0.0, 0.15,
+    0.05, 1.2, -0.15,
+    0.1, 0.3, 1.1
+);
 
 
 void main()
 {
-
-    vec2 pos,corn;
-    if (curv == 1.0) { 
-        pos = Warp(warpos); 
-        pos /= scaleS;
-        } 
-    else pos = vTexCoord;
-    if(NTSC_asp == 1.0) { pos.y *= 200.0/240.0; pos.y += 0.004;}
-    //pos.x = pos.x*1.33/1.36;
-// LANCZOS 2 taps
-            vec2 one_pix = SourceSize.zw;
-            pos = pos + one_pix*2.5;
-            vec2 f = fract(pos * SourceSize.xy);
-
-            vec2 linetaps   = weight2(f.x);
-            vec2 columntaps = weight2(f.y);
-
-            vec2 xystart = pos - one_pix*(f + 1.5);
-            vec2 xpos = vec2(
-                xystart.x,
-                xystart.x - one_pix.x 
-              );
-
-        vec3 res = 
-                line(xystart.y                  , xpos, linetaps)* columntaps.x +
-                line(xystart.y - one_pix.y      , xpos, linetaps)* columntaps.y
-                 ;
-               
-                              
-    float ssize = 1.0;   
-    if (InputSize.y > 400.0) ssize = 2.0;
-
-    float OGL2Pos = fract((pos.y*SourceSize.y*1.005)/ssize);
-
-    if (interlacing == 1.0 && InputSize.y > 400.0)
-    OGL2Pos = mod(float(FrameCount),2.0) < 1.0? 1.0-OGL2Pos : OGL2Pos;
-    
-    float lum = 2.0+dot(vec3(0.666), res);
-
-    float scan = pow(scanL, lum);
-    
-// Some color tweaks
-    if (colors == 3.0) res.rgb *= TRIN; else    
-    if (colors == 2.0) res.rgb *= NTSC;  else 
-    if (colors == 1.0) res.rgb *= SonyP22; else
-    if (colors == 0.0) res.rgb *= SMPTE_C; else
-    res.rgb; res = clamp(res, 0.0,1.0);
-
-    if (lum>2.0)  res.rb += vec2(push_r,push_r/3.0);
-    if (sega == 1.0) res *= 1.06;
-    if (sega == 2.0) res *= 2.0;
-    res *= res;
-
-// That 0.4 plus and divide, on a raised luminance dependent 'scanline', removes moire, in crt-Geom style.
-    float scanline = 0.4+(scan*sin(OGL2Pos*PI*2.0)+1.0-scan)/(0.8+0.15*lum);
-    res *= scanline;
-    res *= Mask(vTexCoord);
-    res = sqrt(res);
-    //CHEAP TEMPERATURE CONTROL     
-    if (wp != 0.0) { res.rgb *= vec3(1.0 + 0.08*wp,1.0,1.0-0.8*wp);
-                   if(wp > 0.0)  res.rgb += vec3(0.15*wp,0.0,0.0);
-                   if(wp < 0.0)  res.rgb += vec3(0.0,0.0,-0.15*wp);
-    
-    }
-    
-    //SATURATION
-    vec3 lumweight = vec3(0.29,0.6,0.11);
-    vec3 grays = vec3(dot(lumweight, res.rgb));
-    res.rgb = mix(grays, res.rgb, sat);
-
-    res *= mix(boostd,1.0, grays.x); 
-
-    // CORNERS
-    vec2 c = warpos;
+  vec2 pos,c,corn;
+  if (CURV == 1.0)  
+  {pos = Warp(vTexCoord*scale);
+     // CORNERS
+    c = pos;
     corn   = min(c, 1.0-c);    // This is used to mask the rounded
-    corn.x = 0.00038/corn.x; // corners later on
+    corn.x = 0.000333/corn.x; // corners later on
+  pos /= scale;
+  }
+  else pos = vTexCoord;  
+    
+  if(NTSC_asp == 1.0) { pos.y *= 200.0/240.0; 
+                        pos.y += 0.005;}
 
-    if (corn.y <= corn.x && curv == 1.0 || corn.x < 0.0001 && curv ==1.0 )
-    res = vec3(0.0);
+  vec2 bpos = pos;
 
-// GLES FIX
-#if defined GL_ES
-    vec2 bordertest = pos;
-    if ( bordertest.x > 0.0001 && bordertest.x < 0.9999 && bordertest.y > 0.0001 && bordertest.y < 0.9999)
-        res = res;
-    else
-        res = vec3(0.0);
-#endif
+  vec2 dx = vec2(SourceSize.z,0.0);
+  vec2 dy = vec2(0.0,SourceSize.w);
+  
+  vec2 cent = floor(pos*SourceSize.xy) + 0.5;
+  cent = cent * SourceSize.zw;
 
-    FragColor = vec4(res,1.0);
+  pos.y = mix(pos.y,cent.y,SHARPY);
+  pos.x = mix(pos.x,cent.x,SHARPX);
+
+  vec3 res = COMPAT_TEXTURE(Source,pos).rgb;
+  float r =  COMPAT_TEXTURE(Source,pos + dx*RX + dy*RY).r;
+  float g =  COMPAT_TEXTURE(Source,pos + dx*GX + dy*GY).g;
+  float b =  COMPAT_TEXTURE(Source,pos + dx*BX + dy*BY).b;
+
+  vec3 conv = vec3(r,g,b);
+
+  res = res*0.5 + conv*0.5;
+
+  res *= res;
+  float l = max(max(res.r,res.g),res.b);
+
+  float SCAN = mix(SCANLOW,SCANHIGH,l);
+
+  float size = 1.0;
+  if (InputSize.y > 400.0) size = 0.5;
+  float yy = bpos.y*SourceSize.y*1.996*size;
+// interlacing
+  if (interlacing == 1.0 && InputSize.y > 400.0) 
+  {yy =  mod(float(FrameCount),2.0) < 1.0? 1.0+yy : yy;} 
+  
+  res *= BOOST+(SCAN * sin(yy*pi)+1.0-SCAN)/(1.0+BOOST*l);
+
+  res *= Mask();
+  res = sqrt(res);
+  
+  if(CRT == 1.0) res *= hue;
+  
+  vec3 lumweight = vec3(0.29,0.6,0.11);
+  float lum = dot(lumweight,res);
+
+  res = mix(vec3(lum),res, SAT);
+  if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.0001 && CURV ==1.0 )res = vec3(0.0);
+  FragColor.rgb = res;
 }
-
 #endif
