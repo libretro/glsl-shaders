@@ -9,6 +9,7 @@
 #pragma parameter RG "Green <-to-> Red Hue" 0.0 -0.25 0.25 0.01
 #pragma parameter RB "Blue <-to-> Red Hue"  0.0 -0.25 0.25 0.01
 #pragma parameter GB "Blue <-to-> Green Hue" 0.0 -0.25 0.25 0.01
+#pragma parameter CS "Color Space: sRGB,PAL,NTSC-U,NTSC-J" 0.0 0.0 3.0 1.0
 
 #define pi 3.14159
 
@@ -67,6 +68,7 @@ uniform COMPAT_PRECISION float BLACK;
 uniform COMPAT_PRECISION float RG;
 uniform COMPAT_PRECISION float RB;
 uniform COMPAT_PRECISION float GB;
+uniform COMPAT_PRECISION float CS;
 #else
 #define R 1.0
 #define G 1.0
@@ -79,7 +81,31 @@ uniform COMPAT_PRECISION float GB;
 #define RG 0.0   
 #define RB 0.0   
 #define GB 0.0  
+#define CS 0.0  
 #endif
+
+
+
+const mat3 PAL = mat3(
+0.9792,  -0.0141, 0.0305,
+-0.0139, 0.9992,  0.0129,
+-0.0054, -0.0042, 1.1353
+
+);
+
+const mat3 NTSC = mat3(
+0.8870,  0.0451,  0.0566,
+-0.0800, 1.0368,  0.0361,
+0.0053,  -0.1196, 1.2320
+
+);
+
+const mat3 NTSC_J = mat3(
+0.7203,  0.1344 , 0.1233,
+-0.1051, 1.0305,  0.0637,
+0.0127 , -0.0743, 1.3545
+
+);
 
 void main()
 {
@@ -92,6 +118,12 @@ mat3 hue = mat3(
 	vec3 res = texture2D(Source, vTexCoord).rgb;
 	res *= bright;
 	res = pow(res,vec3(gamma));
+
+if (CS != 0.0){
+	if (CS == 1.0) res *= PAL;
+	if (CS == 2.0) res *= NTSC;
+	if (CS == 3.0) res *= NTSC_J;
+}
 	res *= vec3(R,G,B);
 		vec3 lumweight = vec3(0.29,0.6,0.11);
 		float l = dot(lumweight, res);
