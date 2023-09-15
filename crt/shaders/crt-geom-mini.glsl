@@ -54,24 +54,20 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 // compatibility #defines
 #define vTexCoord TEX0.xy
-#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutSize vec4(OutputSize, 1.0 / OutputSize)
-
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float SIZE;
 
 #else
-#define SIZE     1.0      
-   
+#define SIZE     1.0         
 #endif
 
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy;
-    scale = SourceSize.xy/InputSize.xy;
-    fragpos = TEX0.x*OutputSize.x*scale.x*PI;
+    scale = TextureSize.xy/InputSize.xy;
     warpp = TEX0.xy*scale;   
+    fragpos = warpp.x*OutputSize.x*PI;
     warp = warpp*2.0-1.0;   
 }
 
@@ -158,8 +154,10 @@ void main()
     vec2 pos;
     if (CURV == 1.0) pos = Warp(warpp);
     else pos = vTexCoord;
+
     vec2 corn   = min(pos,1.0-pos); // This is used to mask the rounded
          corn.x = 0.0001/corn.x;  // corners later on
+
     if (CURV == 1.0) pos /= scale;
 
 
@@ -207,13 +205,16 @@ void main()
     {
     fp = mod(float(FrameCount),2.0) <1.0 ? 0.5+fp:fp;
     }
+
     res *= res;
     res *= scan(fp,res) + scan(1.0-fp,res);
     res *= MASK*sin(fragpos)+1.0-MASK;
     res = sqrt(res);
-    float l = dot(vec3(0.3,0.6,0.1), res);
-    res *= mix(1.0,1.1,l);
+
+    float l = dot(vec3(0.3, 0.6, 0.1), res);
+    res *= mix(1.0, 1.1, l);
     res = mix(vec3(l), res, SAT);
+
 if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.0001 && CURV == 1.0 )res = vec3(0.0);
 
     FragColor = vec4(res,1.0);
