@@ -2,8 +2,8 @@
 // original by hunterk, edit by DariusG
 
 ///////////////////////  Runtime Parameters  ///////////////////////
-#pragma parameter sharpx "Horizontal Sharpness" 1.8 1.0 5.0 0.05
-#pragma parameter sharpy "Vertical Sharpness" 3.0 1.0 5.0 0.05
+#pragma parameter sharpx "Horizontal Sharpness" 1.5 1.0 5.0 0.05
+#pragma parameter sharpy "Vertical Sharpness" 1.5 1.0 5.0 0.05
 #pragma parameter SCANLINE_SINE_COMP_B "Scanline Intensity" 0.25 0.1 0.6 0.05
 #pragma parameter SIZE "Scanline size" 1.0 0.5 1.0 0.5
 #pragma parameter warpX "warpX" 0.03 0.0 0.125 0.01
@@ -11,13 +11,12 @@
 #pragma parameter corner_round "Corner Roundness" 0.030 0.005 0.100 0.005
 #pragma parameter MSIZE "Mask Type: Coarse-Fine" 1.0 0.666 1.0 0.3333
 #pragma parameter cgwg "Mask Brightness" 0.7 0.0 1.0 0.1
-#pragma parameter monitor_gamma "Monitor Gamma (Out)" 2.2 1.0 4.0 0.05
-#pragma parameter boost "Bright boost " 0.0 0.00 1.00 0.02
+#pragma parameter monitor_gamma "Monitor Gamma (Out)" 2.0 1.0 4.0 0.05
+#pragma parameter boost "Bright boost " 0.08 0.00 1.00 0.02
 #pragma parameter GLOW_LINE "Glowing line" 0.006 0.00 0.20 0.001
 
 #define pi 3.141592
-#define in_gamma  vec4(crt_gamma, crt_gamma, crt_gamma, 1.0)
-#define out_gamma  vec4(1.0 / monitor_gamma, 1.0 / monitor_gamma, 1.0 / monitor_gamma, 1.0)
+#define out_gamma  vec4(vec3(1.0 / monitor_gamma), 1.0)
 #define scale vec4(TextureSize/InputSize,InputSize/TextureSize)
 
 #if defined(VERTEX)
@@ -43,7 +42,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING float omega;
 COMPAT_VARYING float fragpos;
 COMPAT_VARYING float aspect;
 
@@ -70,7 +68,6 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
-    omega =  2.0 * pi * TextureSize.y;
     fragpos = TEX0.x*OutputSize.x*scale.x*pi;
     aspect = InputSize.y/InputSize.x;
 }
@@ -105,7 +102,6 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING float omega;
 COMPAT_VARYING float fragpos;
 COMPAT_VARYING float aspect;
 
@@ -188,11 +184,17 @@ vec3 BilinearSharp (vec2 pos)
     vec3 C22 = COMPAT_TEXTURE(Source, uv + vec2( tex.x , tex.y)).rgb;
 
     float x = frac.x;
+    float xx = 1.0-frac.x;
     float y = frac.y;
-    float sharp = pow(x,sharpx);
-    vec3 up = mix(C11, C21, sharp);
-    vec3 dw = mix(C12, C22, sharp);
-    return mix(up, dw, pow(y, sharpy));
+
+    float s = pow(x,sharpx);
+    float s2 = pow(xx,sharpx);
+
+    float t = pow(y,1.5);    
+
+    vec3 up = (C11*s2 + C21*s)/(s+s2); 
+    vec3 dw = (C12*s2 + C22*s)/(s+s2); 
+    return mix(up, dw, t);
 }
 
 float scan(float pos, vec3 color)
@@ -212,7 +214,7 @@ void main()
     res *= res; 
 
     //crt-Geom scanlines
-    float f = fract(pos.y*SourceSize.y*SIZE);
+    float f = fract(pos.y*SourceSize.y*SIZE-0.5);
     res *= scan(f, res.rgb) +scan(1.0-f, res.rgb) ;
 
     // apply the mask
