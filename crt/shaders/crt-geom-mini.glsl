@@ -6,9 +6,9 @@
 // any later version.
 
 #pragma parameter CURV "CRT-Geom Curvature" 1.0 0.0 1.0 1.0
-#pragma parameter SCAN "CRT-Geom Scanline Weight" 0.25 0.2 0.6 0.05
-#pragma parameter MASK "CRT-Geom Dotmask Strength" 0.25 0.0 1.0 0.05
-#pragma parameter LUM "CRT-Geom Luminance" 0.12 0.0 0.5 0.01
+#pragma parameter SCAN "CRT-Geom Scanline Weight" 0.2 0.2 0.6 0.05
+#pragma parameter MASK "CRT-Geom Dotmask Strength" 0.2 0.0 1.0 0.05
+#pragma parameter LUM "CRT-Geom Luminance" 0.05 0.0 0.5 0.01
 #pragma parameter INTERL "CRT-Geom Interlacing Simulation" 1.0 0.0 1.0 1.0
 #pragma parameter SAT "CRT-Geom Saturation" 1.1 0.0 2.0 0.01
 
@@ -130,13 +130,11 @@ uniform COMPAT_PRECISION float INTERL;
 #define LUM 0.0
 #define SAT 1.0
 #define INTERL 1.0
-
 #endif
-
 
 float scan(float pos, vec3 color)
     {
-    float wid = SCAN + 0.1 * dot(color, vec3(0.333))*0.8;
+    float wid = SCAN + 0.1 * max(max(color.r,color.g),color.b);
     float weight = pos / wid;
     return  LUM + (0.1 + SCAN) * exp(-weight * weight ) / wid;
     }
@@ -210,7 +208,7 @@ void main()
     res *= sqrt(scn*msk);
 
     float l = dot(vec3(0.29, 0.6, 0.11), res);
-    res *= mix(1.0, 1.1, l);
+    res *= mix(1.0, 1.2, l);
     res  = mix(vec3(l), res, SAT);
 
 if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.0001 && CURV == 1.0 ) res = vec3(0.0);
