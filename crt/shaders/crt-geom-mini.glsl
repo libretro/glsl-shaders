@@ -11,6 +11,7 @@
 #pragma parameter LUM "CRT-Geom Luminance" 0.05 0.0 0.5 0.01
 #pragma parameter INTERL "CRT-Geom Interlacing Simulation" 1.0 0.0 1.0 1.0
 #pragma parameter SAT "CRT-Geom Saturation" 1.1 0.0 2.0 0.01
+#pragma parameter LANC "Filter profile: Accurate/Fast" 0.0 0.0 1.0 1.0
 
 #define PI 3.1415926535897932384626433
 
@@ -122,6 +123,7 @@ uniform COMPAT_PRECISION float CURV;
 uniform COMPAT_PRECISION float LUM;
 uniform COMPAT_PRECISION float SAT;
 uniform COMPAT_PRECISION float INTERL;
+uniform COMPAT_PRECISION float LANC;
 
 #else
 #define SCAN  0.3      
@@ -130,6 +132,7 @@ uniform COMPAT_PRECISION float INTERL;
 #define LUM 0.0
 #define SAT 1.0
 #define INTERL 1.0
+#define LANC 0.0
 #endif
 
 float scan(float pos, vec3 color)
@@ -170,8 +173,12 @@ void main()
     // Calculate weights in x and y in parallel.
     // These polynomials are piecewise approximation of Lanczos kernel
     // Calculator here: https://gist.github.com/going-digital/752271db735a07da7617079482394543
-    vec4 l2_w0_o3 = (-1.1828) * f + 1.1298;
-    vec4 l2_w1_o3 = (0.0858) * f - 0.0792;
+    vec4 l2_w0_o3, l2_w1_o3;
+    if (LANC == 0.0)
+     {l2_w0_o3 = (((1.5672) * f - 2.6445) * f + 0.0837) * f + 0.9976;
+      l2_w1_o3 = (((-0.7389) * f + 1.3652) * f - 0.6295) * f - 0.0004;}
+    else  {l2_w0_o3 = (-1.1828) * f + 1.1298;
+           l2_w1_o3 = (0.0858) * f - 0.0792;}
 
     vec4 w1_2  = l2_w0_o3;
     vec2 w12   = w1_2.xy + w1_2.zw;
