@@ -229,29 +229,33 @@ mat3 hue = mat3(
 
    vec3 col = COMPAT_TEXTURE(Source,vTexCoord).rgb;
    col *= BRIGHTNESS;
-   col = (contrastMatrix(contrast) * vec4(col,1.0)).rgb;  
+   
 //color temperature  
    col *= ColorTemp(TEMP);
 
-//saturation
-   float l = dot(col, vec3(0.3,0.6,0.1));
-   col = mix(vec3(l), col, SAT); 
    col = pow(col, vec3(gamma_in));
-//black level    
+
    
 if (CS != 0.0){
     if (CS == 1.0) col *= PAL;
     if (CS == 2.0) col *= NTSC;
     if (CS == 3.0) col *= NTSC_J;
+col = clamp(col,0.0,1.0);
 }
    if (SEGA == 1.0) col *= 1.0625;
-    col *= mix(1.0,postbr,l);
+
+
     col = pow(col, vec3(1.0/gamma_out_red,1.0,1.0));
     col = pow(col, vec3(1.0,1.0/gamma_out_green,1.0));
     col = pow(col, vec3(1.0,1.0,1.0/gamma_out_blue));
     col -= vec3(BLACK);
     col*= vec3(1.0)/vec3(1.0-BLACK);
     
+//saturation
+   
+float l = dot(col, vec3(0.3,0.6,0.1));
+    
+   col = mix(vec3(l), col, SAT); 
     if (mono == 1.0)
     {
     vec3 col1 = toGrayscale (col);
@@ -259,6 +263,9 @@ if (CS != 0.0){
     col = colorize (col1, c);
     }
    col *= hue;
+
+col *= mix(1.0,postbr,l);
+col = (contrastMatrix(contrast) * vec4(col,1.0)).rgb;  
    FragColor = vec4(col,1.0);
 }
 #endif
