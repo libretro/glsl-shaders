@@ -1,12 +1,16 @@
 
-#pragma parameter TEMP "Color Temperature in Kelvins"  9311.0 1031.0 12047.0 72.0
-#pragma parameter SAT "Saturation" 1.0 0.0 2.0 0.01
+#pragma parameter CS "Color Space: sRGB,PAL,NTSC-U,NTSC-J" 0.0 0.0 3.0 1.0
+#pragma parameter TEMP "Color Temperature in Kelvins"  6503.0 1031.0 12047.0 72.0
+#pragma parameter gamma_in "Gamma In" 2.4 1.0 4.0 0.05
+#pragma parameter RG "Green <-to-> Red Hue" 0.0 -0.25 0.25 0.01
+#pragma parameter RB "Blue <-to-> Red Hue"  0.0 -0.25 0.25 0.01
+#pragma parameter GB "Blue <-to-> Green Hue" 0.0 -0.25 0.25 0.01
 #pragma parameter BRIGHTNESS "Brightness" 1.0 0.0 2.0 0.01
 #pragma parameter contrast "Contrast" 1.0 0.00 2.00 0.01
+#pragma parameter SAT "Saturation" 1.0 0.0 2.0 0.01
 #pragma parameter BLACK  "Black Level" 0.0 -0.20 0.20 0.01 
 #pragma parameter SEGA "SEGA Lum Fix" 0.0 0.0 1.0 1.0
 #pragma parameter postbr "Post Brightness" 1.0 0.0 2.5 0.01
-#pragma parameter gamma_in "Gamma In" 2.4 1.0 4.0 0.05
 #pragma parameter gamma_out_red "Gamma out Red" 2.2 1.0 4.0 0.05
 #pragma parameter gamma_out_green "Gamma out Green" 2.2 1.0 4.0 0.05
 #pragma parameter gamma_out_blue "Gamma out Blue" 2.2 1.0 4.0 0.05
@@ -110,8 +114,10 @@ uniform COMPAT_PRECISION float gamma_out_blue;
 uniform COMPAT_PRECISION float gamma_out_green; 
 uniform COMPAT_PRECISION float gamma_out_red; 
 uniform COMPAT_PRECISION float BLACK; 
-
-
+uniform COMPAT_PRECISION float RG;
+uniform COMPAT_PRECISION float RB;
+uniform COMPAT_PRECISION float GB;
+uniform COMPAT_PRECISION float CS;
 
 #else
 #define R 1.0
@@ -129,8 +135,33 @@ uniform COMPAT_PRECISION float BLACK;
 #define gamma_out_red 2.2
 #define gamma_in 2.4
 #define BLACK 0.0
-
+#define RG 0.0   
+#define RB 0.0   
+#define GB 0.0  
+#define CS 0.0 
 #endif
+
+const mat3 PAL = mat3(
+0.9792,  -0.0141, 0.0305,
+-0.0139, 0.9992,  0.0129,
+-0.0054, -0.0042, 1.1353
+
+);
+
+const mat3 NTSC = mat3(
+0.8870,  0.0451,  0.0566,
+-0.0800, 1.0368,  0.0361,
+0.0053,  -0.1196, 1.2320
+
+);
+
+const mat3 NTSC_J = mat3(
+0.7203,  0.1344 , 0.1233,
+-0.1051, 1.0305,  0.0637,
+0.0127 , -0.0743, 1.3545
+
+);
+
 
 float saturate(float v) 
     { 
@@ -190,6 +221,12 @@ vec3 colorize(vec3 grayscale, vec3 color)
 
 void main()
 {
+mat3 hue = mat3(
+    1.0, -RG, -RB,
+    RG, 1.0, -GB,
+    RB, GB, 1.0
+);
+
    vec3 col = COMPAT_TEXTURE(Source,vTexCoord).rgb;
    col *= BRIGHTNESS;
    col = (contrastMatrix(contrast) * vec4(col,1.0)).rgb;  
@@ -202,6 +239,11 @@ void main()
    col = pow(col, vec3(gamma_in));
 //black level    
    
+if (CS != 0.0){
+    if (CS == 1.0) col *= PAL;
+    if (CS == 2.0) col *= NTSC;
+    if (CS == 3.0) col *= NTSC_J;
+}
    if (SEGA == 1.0) col *= 1.0625;
     col *= mix(1.0,postbr,l);
     col = pow(col, vec3(1.0/gamma_out_red,1.0,1.0));
@@ -216,7 +258,7 @@ void main()
     vec3 c = vec3(R, G, B);
     col = colorize (col1, c);
     }
-
+   col *= hue;
    FragColor = vec4(col,1.0);
 }
 #endif

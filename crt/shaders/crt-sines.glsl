@@ -267,7 +267,7 @@ void main()
 
   float size = 1.0;
   if (InputSize.y > 400.0) size = 0.5;
-  float yy = bpos.y*SourceSize.y*1.996*size;
+  float yy = bpos.y*SourceSize.y*2.0*size-0.5;
 // interlacing
   if (interlacing == 1.0 && InputSize.y > 400.0) 
   {yy =  mod(float(FrameCount),2.0) < 1.0? 1.0+yy : yy;} 
