@@ -58,7 +58,7 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
     fragpos = TEX0.x*OutputSize.x*TextureSize.x/InputSize.x*pi;
-	float y = TEX0.y*SourceSize.y;
+	float y = TEX0.y*SourceSize.y+0.25;
 	scanpos = y*pi*SEVTWO;
 	cent = (floor(y)+0.5)/SourceSize.y;
 }
@@ -123,10 +123,10 @@ void main()
 	vec3 origin = res;
 	float lum = dot(vec3(0.2), res);
 	
-     res *= 0.4*sin(scanpos)+0.6 ; 
+     res *= 0.5*sin(scanpos)+0.5 ; 
      res *= 0.3*sin(fragpos)+0.7;
 	 res = mix(res, origin, lum);
-	 res *= mix(1.65,1.05,lum);
+	 res *= mix(1.45,1.0,lum);
     FragColor = vec4(res,1.0);
 } 
 #endif
