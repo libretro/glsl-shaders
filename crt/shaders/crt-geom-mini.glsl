@@ -6,9 +6,9 @@
 // any later version.
 
 #pragma parameter CURV "CRT-Geom Curvature" 1.0 0.0 1.0 1.0
-#pragma parameter SCAN "CRT-Geom Scanline Weight" 0.2 0.2 0.6 0.05
-#pragma parameter MASK "CRT-Geom Dotmask Strength" 0.2 0.0 1.0 0.05
-#pragma parameter LUM "CRT-Geom Luminance" 0.05 0.0 0.5 0.01
+#pragma parameter SCAN "CRT-Geom Scanline Weight" 0.25 0.2 0.6 0.05
+#pragma parameter MASK "CRT-Geom Dotmask Strength" 0.25 0.0 1.0 0.05
+#pragma parameter LUM "CRT-Geom Luminance" 0.1 0.0 0.5 0.01
 #pragma parameter INTERL "CRT-Geom Interlacing Simulation" 1.0 0.0 1.0 1.0
 #pragma parameter SAT "CRT-Geom Saturation" 1.1 0.0 2.0 0.01
 #pragma parameter LANC "Filter profile: Accurate/Fast" 0.0 0.0 1.0 1.0
@@ -215,7 +215,6 @@ void main()
     res *= sqrt(scn*msk);
 
     float l = dot(vec3(0.29, 0.6, 0.11), res);
-    res *= mix(1.0, 1.2, l);
     res  = mix(vec3(l), res, SAT);
 
 if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.0001 && CURV == 1.0 ) res = vec3(0.0);
