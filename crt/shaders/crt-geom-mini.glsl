@@ -7,8 +7,8 @@
 
 #pragma parameter CURV "CRT-Geom Curvature" 1.0 0.0 1.0 1.0
 #pragma parameter SCAN "CRT-Geom Scanline Weight" 0.25 0.2 0.6 0.05
-#pragma parameter MASK "CRT-Geom Dotmask Strength" 0.25 0.0 1.0 0.05
-#pragma parameter LUM "CRT-Geom Luminance" 0.1 0.0 0.5 0.01
+#pragma parameter MASK "CRT-Geom Dotmask Strength" 0.15 0.0 0.5 0.05
+#pragma parameter LUM "CRT-Geom Luminance" 0.05 0.0 0.5 0.01
 #pragma parameter INTERL "CRT-Geom Interlacing Simulation" 1.0 0.0 1.0 1.0
 #pragma parameter SAT "CRT-Geom Saturation" 1.1 0.0 2.0 0.01
 #pragma parameter LANC "Filter profile: Accurate/Fast" 0.0 0.0 1.0 1.0
@@ -139,7 +139,7 @@ float scan(float pos, vec3 color)
     {
     float wid = SCAN + 0.1 * max(max(color.r,color.g),color.b);
     float weight = pos / wid;
-    return  LUM + (0.1 + SCAN) * exp(-weight * weight ) / wid;
+    return  (LUM + (0.1 + SCAN)) * exp(-weight * weight ) / wid;
     }
 
 vec2 Warp(vec2 pos)
@@ -200,7 +200,6 @@ void main()
         COMPAT_TEXTURE(Source, vec2(tc3.x, tc12.y)).rgb * wedge.z +
         COMPAT_TEXTURE(Source, vec2(tc12.x, tc3.y)).rgb * wedge.w
     );
-
 
     float fp = fract(src_pos.y-0.5);
     if (InputSize.y > 400.0) fp = fract(src_pos.y/2.0-0.5);
