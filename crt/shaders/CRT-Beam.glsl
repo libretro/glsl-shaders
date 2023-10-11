@@ -4,10 +4,10 @@
 */
 
 #pragma parameter blur "Horizontal Blur/Beam shape" 0.6 0.0 1.0 0.1
-#pragma parameter Scanline "Scanline thickness" 0.4 0.0 1.0 0.05
-#pragma parameter weightr "  Scanline Red brightness" 0.75 0.0 1.0 0.05
-#pragma parameter weightg "  Scanline Green brightness" 0.75 0.0 1.0 0.05
-#pragma parameter weightb "  Scanline Blue brightness" 0.75 0.0 1.0 0.05
+#pragma parameter Scanline "Scanline thickness" 0.3 0.0 1.0 0.05
+#pragma parameter weightr "  Scanline Red brightness" 0.85 0.0 1.0 0.05
+#pragma parameter weightg "  Scanline Green brightness" 0.85 0.0 1.0 0.05
+#pragma parameter weightb "  Scanline Blue brightness" 0.85 0.0 1.0 0.05
 #pragma parameter mask "Mask 0:CGWG,1-2:Lottes,3-4 Gray,5-6:CGWG slot,7 VGA" 3.0 -1.0 7.0 1.0
 #pragma parameter msk_size "Mask size" 1.0 1.0 2.0 1.0
 #pragma parameter scale "VGA Mask Vertical Scale" 2.0 2.00 10.00 1.0
@@ -16,7 +16,7 @@
 #pragma parameter bright "  Boost bright" 1.35 1.00 2.00 0.02
 #pragma parameter dark "  Boost dark" 1.25 1.00 2.00 0.02
 #pragma parameter glow "  Glow Strength" 0.08 0.0 0.5 0.01
-#pragma parameter sat "  Saturation" 1.15 0.00 2.00 0.05
+#pragma parameter sat "  Saturation" 1.1 0.00 2.00 0.05
 
 #define pi 3.14159
 
