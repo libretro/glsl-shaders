@@ -124,7 +124,7 @@ void main()
 	float lum = dot(vec3(0.2), res);
 	
      res *= 0.5*sin(scanpos)+0.5 ; 
-     res *= 0.3*sin(fragpos)+0.7;
+     res *= 0.15*sin(fragpos)+0.85;
 	 res = mix(res, origin, lum);
 	 res *= mix(1.45,1.0,lum);
     FragColor = vec4(res,1.0);
