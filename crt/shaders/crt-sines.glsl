@@ -13,8 +13,8 @@
   v1.1: switched to lanczos4 taps filter
 */
 
-#pragma parameter SHARPX "Sharpness Horiz." 0.1 0.0 1.0 0.05
-#pragma parameter SHARPY "Sharpness Vert." 0.4 0.0 1.0 0.05
+#pragma parameter SHARPX "Sharpness Horiz." 0.2 0.0 1.0 0.05
+#pragma parameter SHARPY "Sharpness Vert." 0.5 0.0 1.0 0.05
 
 #pragma parameter CURV "Curvature On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter NTSC_asp "Amiga NTSC-PAL,eg Monkey Island" 0.0 0.0 01.0 1.0
@@ -40,8 +40,8 @@
 #pragma parameter BY "Blue Convergence Vert." 0.0 -1.0 1.0 0.01
 #pragma parameter bogus_col " [ COLORS ] " 0.0 0.0 1.0 0.0
 
-#pragma parameter BOOST "Bright Boost" 0.2 0.0 0.5 0.01
-#pragma parameter SAT "Saturation" 1.2 0.0 2.0 0.01
+#pragma parameter BOOST "Bright Boost" 0.1 0.0 0.5 0.01
+#pragma parameter SAT "Saturation" 1.1 0.0 2.0 0.01
 #pragma parameter CRT "Trinitron Colors" 1.0 0.0 1.0 1.0
 
 
