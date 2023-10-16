@@ -30,7 +30,7 @@
 #pragma parameter gamma_out "Gamma out" 0.45 0.2 0.6 0.01
 #pragma parameter shadowMask "CRT Mask: 0:CGWG, 1-4:Lottes, 5-6:'Trinitron'" 0.0 -1.0 10.0 1.0
 #pragma parameter masksize "CRT Mask Size (2.0 is nice in 4k)" 1.0 1.0 2.0 1.0
-#pragma parameter mcut "Mask 5-7-10 cutoff" 0.2 0.0 0.5 0.05
+#pragma parameter mcut "Mask 5-7-10 cutoff" 0.25 0.0 0.5 0.05
 #pragma parameter maskDark "Lottes maskDark" 0.5 0.0 2.0 0.1
 #pragma parameter maskLight "Lottes maskLight" 1.5 0.0 2.0 0.1
 #pragma parameter CGWG "CGWG Mask Str." 0.4 0.0 1.0 0.1
@@ -40,7 +40,7 @@
 #pragma parameter vpower "Vignette Power" 0.15 0.0 1.0 0.01
 #pragma parameter vstr "Vignette strength" 45.0 0.0 50.0 1.0
 
-#define lumweight vec3(0.22,0.7,0.08)
+#define lumweight vec3(0.3,0.6,0.1)
 
 #if defined(VERTEX)
 
@@ -66,7 +66,6 @@ COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 scale;
-COMPAT_VARYING vec2 invscale;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -82,7 +81,6 @@ void main()
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy * 1.00001;
     scale = TextureSize.xy/InputSize.xy;
-    invscale = 1.0/scale;
 }
 
 #elif defined(FRAGMENT)
@@ -116,7 +114,6 @@ uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 scale;
-COMPAT_VARYING vec2 invscale;
 
 // compatibility #defines
 #define Source Texture
@@ -350,7 +347,7 @@ vec3 Mask(vec2 pos, vec3 c)
 	return mask;
 }  
 
-mat3 vign( float l )
+mat3 vign()
 {
     vec2 vpos = vTexCoord * scale;
     vpos *= 1.0 - vpos;    
@@ -390,7 +387,7 @@ vec3 saturation (vec3 Color, float l)
 
 void main()
 {
-	vec2 pos = Warp(TEX0.xy*scale) * invscale;	
+	vec2 pos = Warp(TEX0.xy*scale)/scale;	
 
 	vec2 ps = SourceSize.zw;
 	vec2 OGL2Pos = pos * SourceSize.xy;
@@ -399,7 +396,7 @@ void main()
 	vec2 dy = vec2(0.0, ps.y);
 
 	vec2 pC4 = floor(OGL2Pos) * ps + 0.5*ps;	
-	float f = fp.y; if (InputSize.y > 400.0) f=1.0;
+	float f = fp.y-0.5; if (InputSize.y > 400.0) f=1.0;
 	vec3 color;
 
 	// Reading the texels
@@ -426,7 +423,7 @@ void main()
 
 	color*= mix(1.0,brightboost,lum);
 	color = saturation(color, lum);
-	color*= vign(lum);
+	color*= vign();
 	
 	#if defined GL_ES
 	// hacky clamp fix for GLES
