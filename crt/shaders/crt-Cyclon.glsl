@@ -416,7 +416,7 @@ if (PAL_NTSC != 0.0){
     res *= BRIGHTNESS;
     res *= hue;
     res -= vec3(BLACK);
-    res *= vec3(blck);
+    res *= blck;
     if (CORNER !=0.0) res *= corner(cpos);
     FragColor = vec4(res,1.0);
 }
