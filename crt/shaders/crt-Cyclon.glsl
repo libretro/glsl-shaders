@@ -60,6 +60,7 @@ any later version.
 #pragma parameter POTATO "Potato Boost(Simple Gamma, adjust Mask)" 0.0 0.0 1.0 1.0
 
 #define pi 3.1415926535897932384626433
+#define blck (1.0)/(1.0-BLACK);
 
 #if defined(VERTEX)
 
@@ -85,7 +86,7 @@ COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 scale;
-
+COMPAT_VARYING vec2 ps;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -112,6 +113,7 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy;
     scale = TextureSize.xy/InputSize.xy;
+    ps = 1.0/TextureSize.xy; 
 }
 
 #elif defined(FRAGMENT)
@@ -145,7 +147,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 scale;
-
+COMPAT_VARYING vec2 ps;
 
 // compatibility #defines
 #define Source Texture
@@ -360,23 +362,23 @@ if (PAL_NTSC != 0.0){
     if(PAL_NTSC == 2.0) pos.y /=1.0714; // MD-SNES 240 to 224
     }
     vec2 bpos = pos;
-    vec2 dx = vec2(SourceSize.z,0.0);
-    vec2 dy = vec2(0.0,OutSize.w);
+    vec2 dx = vec2(ps.x,0.0);
+    vec2 dy = vec2(0.0,ps.y);
 
     vec2 ogl2 = pos*SourceSize.xy;
     vec2 i = floor(pos*SourceSize.xy) + 0.5;
     float f = ogl2.y - i.y;
-    pos.y = (i.y + 4.0*f*f*f)*SourceSize.w; // smooth
-    pos.x = mix(pos.x, i.x*SourceSize.z, 0.2);
+    pos.y = (i.y + 4.0*f*f*f)*ps.y; // smooth
+    pos.x = mix(pos.x, i.x*ps.x, 0.2);
 
     vec3 res0 = COMPAT_TEXTURE(Source,pos).rgb;
-    vec3 resr = COMPAT_TEXTURE(Source,pos + dx*CONV_R).rgb;
-    vec3 resb = COMPAT_TEXTURE(Source,pos + dx*CONV_B).rgb;
-    vec3 resg = COMPAT_TEXTURE(Source,pos + dy*CONV_G).rgb;
+    float resr = COMPAT_TEXTURE(Source,pos + dx*CONV_R).r;
+    float resb = COMPAT_TEXTURE(Source,pos + dx*CONV_B).b;
+    float resg = COMPAT_TEXTURE(Source,pos + dy*CONV_G).g;
 
-    vec3 res = vec3(  res0.r*(1.0-C_STR) +  resr.r*C_STR,
-                      res0.g*(1.0-C_STR) +  resg.g*C_STR,
-                      res0.b*(1.0-C_STR) +  resb.b*C_STR 
+    vec3 res = vec3(  res0.r*(1.0-C_STR) +  resr*C_STR,
+                      res0.g*(1.0-C_STR) +  resg*C_STR,
+                      res0.b*(1.0-C_STR) +  resb*C_STR 
                    );
     
     float l = dot(vec3(BR_DEP),res);
@@ -414,7 +416,7 @@ if (PAL_NTSC != 0.0){
     res *= BRIGHTNESS;
     res *= hue;
     res -= vec3(BLACK);
-    res *= vec3(1.0)/vec3(1.0-BLACK);
+    res *= vec3(blck);
     if (CORNER !=0.0) res *= corner(cpos);
     FragColor = vec4(res,1.0);
 }
