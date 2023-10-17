@@ -31,7 +31,6 @@ COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING float fragpos;
 COMPAT_VARYING float scanpos;
-COMPAT_VARYING float cent;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -44,8 +43,6 @@ uniform COMPAT_PRECISION float SEVTWO;
 
 // compatibility #defines
 #define vTexCoord TEX0.xy
-#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float WHATEVER;
@@ -58,9 +55,8 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
     fragpos = TEX0.x*OutputSize.x*TextureSize.x/InputSize.x*pi;
-	float y = TEX0.y*SourceSize.y+0.25;
+	float y = TEX0.y*TextureSize.y-0.25;
 	scanpos = y*pi*SEVTWO;
-	cent = (floor(y)+0.5)/SourceSize.y;
 }
 
 #elif defined(FRAGMENT)
@@ -95,7 +91,6 @@ uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING float fragpos;
 COMPAT_VARYING float scanpos;
-COMPAT_VARYING float cent;
 
 // compatibility #defines
 #define Source Texture
@@ -106,19 +101,17 @@ COMPAT_VARYING float cent;
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float SCANLINE_BASE_BRIGHTNESS;
-uniform COMPAT_PRECISION float SCANLINE;
-uniform COMPAT_PRECISION float MSK;
-
 
 #else
-#define SCANLINE 0.30
-#define MSK 0.70
+#define SCANLINE_BASE_BRIGHTNESS 0.30
 
 #endif
 
 void main()
 {
-    float ycoord = cent ; 
+	float y = TEX0.y*SourceSize.y;
+	float centr = (floor(y)+0.5)/SourceSize.y;
+    float ycoord = mix(centr, vTexCoord.y,0.5); 
     vec3 res = COMPAT_TEXTURE(Source, vec2(vTexCoord.x, ycoord)).rgb;
 	vec3 origin = res;
 	float lum = dot(vec3(0.2), res);
@@ -126,7 +119,7 @@ void main()
      res *= 0.5*sin(scanpos)+0.5 ; 
      res *= 0.15*sin(fragpos)+0.85;
 	 res = mix(res, origin, lum);
-	 res *= mix(1.45,1.0,lum);
+	 res *= mix(1.35,1.0,lum);
     FragColor = vec4(res,1.0);
 } 
 #endif
