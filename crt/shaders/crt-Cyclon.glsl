@@ -243,20 +243,19 @@ if (M_TYPE == 1.0){
     else{
     float m = fract(pos.x*0.3333);
 
-    if (m<0.3333) BGR == 0.0 ? mask.b = 1.0 : mask.r = 1.0;
+    if (m<0.3333) mask.rgb = (BGR == 0.0) ? vec3(mask.r, mask.g, 1.0) : vec3(1.0, mask.g, mask.b);
     else if (m<0.6666)         mask.g = 1.0;
-    else          BGR == 0.0 ? mask.r = 1.0 : mask.b = 1.0;
+    else          mask.rgb = (BGR == 0.0) ? vec3(1.0, mask.g, mask.b) : vec3(mask.r, mask.g, 1.0);
     return mask;
     }
 }
-
     else return vec3(1.0);
 
 }
 
 
 
-vec3 scanlineWeights(float distance, vec3 color)
+float scanlineWeights(float distance, vec3 color)
     {
     // "wid" controls the width of the scanline beam, for each RGB
     // channel The "weights" lines basically specify the formula
@@ -268,8 +267,8 @@ vec3 scanlineWeights(float distance, vec3 color)
     // independent of its width. That is, for a narrower beam
     // "weights" should have a higher peak at the center of the
     // scanline than for a wider beam.
-    vec3 wid = SCANLINE + 0.15 * pow(color, vec3(3.0));
-    vec3 weights = vec3(distance / wid);
+    float wid = SCANLINE + 0.15 * dot(color, vec3(0.25));
+    float weights = distance / wid;
     return 0.4 * exp(-weights * weights ) / wid;
 
     }
@@ -398,8 +397,8 @@ if (PAL_NTSC != 0.0){
         if (INTERLACE == 1.0) s = mod(float(FrameCount),2.0) < 1.0 ? s: s+0.5;
     }
 
-    vec3 weight  = scanlineWeights(s, res);
-    vec3 weight2 = scanlineWeights(1.0-s, res);
+    float weight  = scanlineWeights(s, res);
+    float weight2 = scanlineWeights(1.0-s, res);
 
     res *= weight + weight2;
     vec2 xy = vTexCoord*OutputSize.xy*scale/MSIZE;
