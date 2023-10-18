@@ -3,6 +3,7 @@
 /* 
   work by DariusG 2023, some ideas borrowed from Dogway's zfast_crt_geo
   
+  v1.5b fine-tune colors (real Trinitron)
   v1.5  re-worked version with better colors (real Trinitron)
   v1.4c added real Trinitron color profile as default, with real measured primaries
   v1.4b added some system specific tweaks
@@ -22,11 +23,11 @@
 #pragma parameter bogus_ms " [ SCANLINES/MASK ] " 0.0 0.0 1.0 0.0
 #pragma parameter interlacing "Interlacing On/Off" 1.0 0.0 1.0 1.0
 
-#pragma parameter SCANLOW "Scanline Low" 0.6 0.0 1.0 0.05
-#pragma parameter SCANHIGH "Scanline High" 0.3 0.0 1.0 0.05
+#pragma parameter SCANLOW "Scanline Low" 0.5 0.0 1.0 0.05
+#pragma parameter SCANHIGH "Scanline High" 0.25 0.0 1.0 0.05
 
-#pragma parameter mask "Mask type: 1-Dotmask, 2-RGB, 3-SlotMask" 1.0 0.0 3.0 1.0
-#pragma parameter m_str "Mask Strength" 0.25 0.0 1.0 0.05
+#pragma parameter mask "Mask type: 1-Dotmask, 2-RGB, 3-SlotMask" 2.0 0.0 3.0 1.0
+#pragma parameter m_str "Mask Strength" 0.4 0.0 1.0 0.05
 #pragma parameter slotx "Slot Mask Size x" 3.0 2.0 3.0 1.0
 #pragma parameter width "Slot Mask Width 3.0/2.0 " 0.6666 0.6666 1.0 0.3333
 #pragma parameter bogus_conv " [ CONVERGENCE ] " 0.0 0.0 1.0 0.0
@@ -40,7 +41,7 @@
 #pragma parameter BY "Blue Convergence Vert." 0.0 -1.0 1.0 0.01
 #pragma parameter bogus_col " [ COLORS ] " 0.0 0.0 1.0 0.0
 
-#pragma parameter BOOST "Bright Boost" 0.1 0.0 0.5 0.01
+#pragma parameter BOOST "Bright Boost" 0.5 0.0 1.0 0.01
 #pragma parameter SAT "Saturation" 1.1 0.0 2.0 0.01
 #pragma parameter CRT "Trinitron Colors" 1.0 0.0 1.0 1.0
 
@@ -218,9 +219,9 @@ vec2 Warp(vec2 pos)
 }
 
 mat3 hue = mat3(
-    1.2,  0.0, 0.15,
-    0.05, 1.2, -0.15,
-    0.1, 0.3, 1.1
+    1.15,  -0.05, 0.1,
+    -0.1, 1.3, -0.2,
+    0.15, 0.15, 1.0
 );
 
 
