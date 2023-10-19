@@ -111,12 +111,12 @@ void main()
 {
 	float y = TEX0.y*SourceSize.y;
 	float centr = (floor(y)+0.5)/SourceSize.y;
-    float ycoord = mix(centr, vTexCoord.y,0.5); 
+    float ycoord = mix(centr, vTexCoord.y,0.2); 
     vec3 res = COMPAT_TEXTURE(Source, vec2(vTexCoord.x, ycoord)).rgb;
 	vec3 origin = res;
 	float lum = dot(vec3(0.2), res);
 	
-     res *= 0.5*sin(scanpos)+0.5 ; 
+     res *= 0.4*sin(scanpos)+0.6 ; 
      res *= 0.15*sin(fragpos)+0.85;
 	 res = mix(res, origin, lum);
 	 res *= mix(1.35,1.0,lum);
