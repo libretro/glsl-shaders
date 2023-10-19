@@ -408,7 +408,7 @@ if (PAL_NTSC != 0.0){
     res *= Mask(xy, CGWG);
     if (SLOT == 1.0) res *= mix(slot(xy/2.0),vec3(1.0),CGWG);
     if (POTATO == 0.0) res = inv_gamma(res,pwr);
-    else res = sqrt(res);
+    else {res = sqrt(res); res *= mix(1.3,1.1,l);}
 
     float lum = dot(vec3(0.29,0.60,0.11),res);
     res = mix(vec3(lum),res,SATURATION);
