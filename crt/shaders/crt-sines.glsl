@@ -3,8 +3,7 @@
 /* 
   work by DariusG 2023, some ideas borrowed from Dogway's zfast_crt_geo
   
-  v1.5b fine-tune colors (real Trinitron)
-  v1.5  re-worked version with better colors (real Trinitron)
+  v1.5  re-worked version with better colors (real Trinitron), add Android preset
   v1.4c added real Trinitron color profile as default, with real measured primaries
   v1.4b added some system specific tweaks
   v1.4 removed junk, optimized white point a bit
@@ -43,7 +42,7 @@
 
 #pragma parameter BOOST "Bright Boost" 0.5 0.0 1.0 0.01
 #pragma parameter SAT "Saturation" 1.1 0.0 2.0 0.01
-#pragma parameter CRT "Trinitron Colors" 1.0 0.0 1.0 1.0
+#pragma parameter CRT "Trinitron Colors, 1:PC, 2:Android" 1.0 0.0 2.0 1.0
 
 
 #define pi 3.1415926535897932384626433
@@ -218,10 +217,16 @@ vec2 Warp(vec2 pos)
     return pos;
 }
 
-mat3 hue = mat3(
+mat3 huePC = mat3(
     1.15,  -0.05, 0.1,
     -0.1, 1.3, -0.2,
     0.15, 0.15, 1.0
+);
+
+mat3 hueAnd = mat3(
+    1.0,  -0.03, -0.04,
+    0.03, 1.0, -0.11,
+    0.04, 0.11, 1.05
 );
 
 
@@ -278,7 +283,8 @@ void main()
   res *= Mask();
   res = sqrt(res);
   
-  if(CRT == 1.0) res *= hue;
+  if(CRT == 1.0) res *= huePC;
+  if(CRT == 2.0) res *= hueAnd;
   
   vec3 lumweight = vec3(0.29,0.6,0.11);
   float lum = dot(lumweight,res);

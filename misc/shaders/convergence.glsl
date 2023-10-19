@@ -1,10 +1,19 @@
-// Simple scanlines and mask effect by DariusG
-// written on an old netbook with 9 gflops
-// and runs 60-65 fps on 720p
+#version 110
 
-#pragma parameter SEVTWO "Scanline Size" 2.0 1.0 2.0 1.0
+/*
+convergence pass DariusG 2023. 
+Run in Linear, BEFORE actual shader pass
+*/
 
-#define pi 3.1415926
+#pragma parameter C_STR "Convergence Overall Strength" 0.0 0.0 1.0 0.05
+#pragma parameter Rx "Convergence Red Horiz." 0.0 -5.0 5.0 0.05
+#pragma parameter Ry "Convergence Red Vert." 0.0 -5.0 5.0 0.05
+#pragma parameter Gx "Convergence Green Horiz." 0.0 -5.0 5.0 0.05
+#pragma parameter Gy "Convergence Green Vert." 0.0 -5.0 5.0 0.05
+#pragma parameter Bx "Convergence Blue Horiz." 0.0 -5.0 5.0 0.05
+#pragma parameter By "Convergence Blue Vert." 0.0 -5.0 5.0 0.05
+
+#define pi 3.1415926535897932384626433
 
 #if defined(VERTEX)
 
@@ -29,8 +38,7 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING float fragpos;
-COMPAT_VARYING float scanpos;
+
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -39,24 +47,25 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
-uniform COMPAT_PRECISION float SEVTWO;
 
 // compatibility #defines
 #define vTexCoord TEX0.xy
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
+#define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float WHATEVER;
+uniform COMPAT_PRECISION float SIZE;
+
 #else
-#define WHATEVER 0.0
+#define SIZE     1.0      
+   
 #endif
 
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    TEX0.xy = TexCoord.xy*1.0001;
-    fragpos = TEX0.x*OutputSize.x*TextureSize.x/InputSize.x*pi;
-	float y = TEX0.y*TextureSize.y-0.25;
-	scanpos = y*pi*SEVTWO;
+    TEX0.xy = TexCoord.xy;
+
 }
 
 #elif defined(FRAGMENT)
@@ -89,8 +98,7 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING float fragpos;
-COMPAT_VARYING float scanpos;
+
 
 // compatibility #defines
 #define Source Texture
@@ -100,26 +108,39 @@ COMPAT_VARYING float scanpos;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float SCANLINE_BASE_BRIGHTNESS;
-
+uniform COMPAT_PRECISION float C_STR;
+uniform COMPAT_PRECISION float Rx;
+uniform COMPAT_PRECISION float Ry;
+uniform COMPAT_PRECISION float Gx;
+uniform COMPAT_PRECISION float Gy;
+uniform COMPAT_PRECISION float Bx;
+uniform COMPAT_PRECISION float By;
 #else
-#define SCANLINE_BASE_BRIGHTNESS 0.30
-
+#define C_STR 0.0
+#define Rx  0.0      
+#define Ry  0.0      
+#define Gx  0.0      
+#define Gy  0.0      
+#define Bx  0.0      
+#define By  0.0      
+    
 #endif
+
 
 void main()
 {
-	float y = TEX0.y*SourceSize.y;
-	float centr = (floor(y)+0.5)/SourceSize.y;
-    float ycoord = mix(centr, vTexCoord.y,0.2); 
-    vec3 res = COMPAT_TEXTURE(Source, vec2(vTexCoord.x, ycoord)).rgb;
-	vec3 origin = res;
-	float lum = dot(vec3(0.2), res);
-	
-     res *= 0.4*sin(scanpos)+0.6 ; 
-     res *= 0.15*sin(fragpos)+0.85;
-	 res = mix(res, origin, lum);
-	 res *= mix(1.35,1.0,lum);
-    FragColor = vec4(res,1.0);
-} 
+vec2 dx = vec2(SourceSize.z,0.0);
+vec2 dy = vec2(0.0,SourceSize.w);
+vec2 pos = vTexCoord;
+vec3 res0 = COMPAT_TEXTURE(Source,pos).rgb;
+float resr = COMPAT_TEXTURE(Source,pos + dx*Rx + dy*Ry).r;
+float resg = COMPAT_TEXTURE(Source,pos + dx*Gx + dy*Gy).g;
+float resb = COMPAT_TEXTURE(Source,pos + dx*Bx + dy*By).b;
+
+vec3 res = vec3(  res0.r*(1.0-C_STR) +  resr*C_STR,
+                  res0.g*(1.0-C_STR) +  resg*C_STR,
+                  res0.b*(1.0-C_STR) +  resb*C_STR 
+                   );
+FragColor.rgb = res;    
+}
 #endif

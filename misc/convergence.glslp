@@ -1,0 +1,11 @@
+shaders = "1"
+shader0 = "shaders/convergence.glsl"
+filter_linear0 = "true"
+
+C_STR = "0.400000"
+Rx = "0.400000"
+Ry = "0.200000"
+Gx = "-0.150000"
+Gy = "0.050000"
+Bx = "-0.350000"
+By = "0.200000"
