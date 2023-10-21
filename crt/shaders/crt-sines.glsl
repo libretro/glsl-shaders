@@ -41,8 +41,8 @@
 #pragma parameter bogus_col " [ COLORS ] " 0.0 0.0 1.0 0.0
 
 #pragma parameter BOOST "Bright Boost" 0.5 0.0 1.0 0.01
-#pragma parameter SAT "Saturation" 1.1 0.0 2.0 0.01
-#pragma parameter CRT "Trinitron Colors, 1:PC, 2:Android" 1.0 0.0 2.0 1.0
+#pragma parameter SAT "Saturation" 1.0 0.0 2.0 0.01
+#pragma parameter CRT "Trinitron Colors, 1:PC1, 2:PC2, 3:Android" 1.0 0.0 3.0 1.0
 
 
 #define pi 3.1415926535897932384626433
@@ -222,7 +222,11 @@ mat3 huePC = mat3(
     -0.1, 1.3, -0.2,
     0.15, 0.15, 1.0
 );
-
+mat3 huePC2 = mat3(
+    1.0,  0.0, 0.04,
+    0.06, 1.0, 0.0,
+    0.08, 0.15, 1.0
+);
 mat3 hueAnd = mat3(
     1.0,  -0.03, -0.04,
     0.03, 1.0, -0.11,
@@ -284,7 +288,8 @@ void main()
   res = sqrt(res);
   
   if(CRT == 1.0) res *= huePC;
-  if(CRT == 2.0) res *= hueAnd;
+  if(CRT == 2.0) res *= huePC2;
+  if(CRT == 3.0) res *= hueAnd;
   
   vec3 lumweight = vec3(0.29,0.6,0.11);
   float lum = dot(lumweight,res);
