@@ -22,7 +22,7 @@
 // Parameter lines go here:
 #pragma parameter CRTCGWG_GAMMA "CRTcgwg Gamma" 2.7 0.0 10.0 0.01
 #pragma parameter CGWG "CGWG Mask Brightness" 0.7 0.0 1.0 0.05
-#pragma parameter SIZE "Mask Size" 4.0 1.0 4.0 1.0
+#pragma parameter SIZE "Mask Size" 2.0 1.0 4.0 1.0
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -74,7 +74,7 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
-    TEX0.xy = TexCoord.xy;
+    TEX0.xy = TexCoord.xy*1.0001;
     vec2 delta = SourceSize.zw;
     float dx   = delta.x;
     float dy   = delta.y;
