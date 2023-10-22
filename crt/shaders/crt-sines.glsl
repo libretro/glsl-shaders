@@ -245,7 +245,7 @@ void main()
      // CORNERS
     c = pos;
     corn   = min(c, 1.0-c);    // This is used to mask the rounded
-    corn.x = 0.000333/corn.x; // corners later on
+    corn.x = 0.00015/corn.x; // corners later on
   pos /= scale;
   }
   else pos = vTexCoord;  
@@ -257,6 +257,7 @@ void main()
 
   vec2 dx = vec2(ps.x,0.0);
   vec2 dy = vec2(0.0,ps.y);
+  
   vec2 p = pos*SourceSize.xy ;
   vec2 i = floor(pos*SourceSize.xy) + 0.5;
   vec2 f = p - i;        // -0.5 to 0.5
@@ -273,7 +274,12 @@ void main()
   vec3 conv = vec3(r,g,b);
 
   res = res*0.5 + conv*0.5;
-
+  
+  if(CRT == 1.0) res *= huePC;
+  if(CRT == 2.0) res *= huePC2;
+  if(CRT == 3.0) res *= hueAnd;
+  vec3 clean = res;
+  float w = dot(vec3(BOOST),clean);
   float l = max(max(res.r,res.g),res.b);
 
   float SCAN = mix(SCANLOW,SCANHIGH,l);
@@ -290,13 +296,11 @@ void main()
 
   res *= sqrt(scn*Mask());
 
-  if(CRT == 1.0) res *= huePC;
-  if(CRT == 2.0) res *= huePC2;
-  if(CRT == 3.0) res *= hueAnd;
   
   vec3 lumweight = vec3(0.29,0.6,0.11);
-  float grays = dot(lumweight,res);
 
+  float grays = dot(lumweight,res);
+  res = mix(res,clean,w);
   res = mix(vec3(grays),res, SAT);
   if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.0001 && CURV ==1.0 )res = vec3(0.0);
   FragColor.rgb = res;
