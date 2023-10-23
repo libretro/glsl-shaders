@@ -128,10 +128,10 @@ vec3 Mask(vec2 pos)
          line = maskDark;
 
       pos.x = fract(pos.x/3.0);
-    
-      if      (pos.x < 0.333) (BGR == 1.0) ? mask.b = maskLight : mask.r = maskLight;
-      else if (pos.x < 0.666) mask.g = maskLight;
-      else                    (BGR == 1.0) ? mask.r = maskLight : mask.b = maskLight;
+
+      if (m<0.3333) mask.rgb = (BGR == 1.0) ? vec3(mask.r, mask.g, maskLight) : vec3(maskLight, mask.g, mask.b);
+      else if (m<0.6666)         mask.g = maskLight;
+      else          mask.rgb = (BGR == 1.0) ? vec3(maskLight, mask.g, mask.b) : vec3(mask.r, mask.g, maskLight);
       mask*=line;  
    } 
 
@@ -140,9 +140,9 @@ vec3 Mask(vec2 pos)
    {
       pos.x = fract(pos.x/3.0);
 
-      if      (pos.x < 0.333) (BGR == 1.0) ? mask.b = maskLight : mask.r = maskLight;
-      else if (pos.x < 0.666) mask.g = maskLight;
-      else                    (BGR == 1.0) ? mask.r = maskLight : mask.b = maskLight;
+      if (m<0.3333) mask.rgb = (BGR == 1.0) ? vec3(mask.r, mask.g, maskLight) : vec3(maskLight, mask.g, mask.b);
+      else if (m<0.6666)         mask.g = maskLight;
+      else          mask.rgb = (BGR == 1.0) ? vec3(maskLight, mask.g, mask.b) : vec3(mask.r, mask.g, maskLight);
    } 
 
    // Stretched VGA style shadow mask (same as prior shaders).
@@ -151,9 +151,9 @@ vec3 Mask(vec2 pos)
       pos.x += pos.y*3.0;
       pos.x  = fract(pos.x/6.0);
 
-      if      (pos.x < 0.333) (BGR == 1.0) ? mask.b = maskLight : mask.r = maskLight;
-      else if (pos.x < 0.666) mask.g = maskLight;
-      else                    (BGR == 1.0) ? mask.r = maskLight : mask.b = maskLight;
+      if (m<0.3333) mask.rgb = (BGR == 1.0) ? vec3(mask.r, mask.g, maskLight) : vec3(maskLight, mask.g, mask.b);
+      else if (m<0.6666)         mask.g = maskLight;
+      else          mask.rgb = (BGR == 1.0) ? vec3(maskLight, mask.g, mask.b) : vec3(mask.r, mask.g, maskLight);
    }
 
    // VGA style shadow mask.
@@ -163,9 +163,9 @@ vec3 Mask(vec2 pos)
       pos.x += pos.y*3.0;
       pos.x  = fract(pos.x/6.0);
 
-      if      (pos.x < 0.333) (BGR == 1.0) ? mask.b = maskLight : mask.r = maskLight;
-      else if (pos.x < 0.666) mask.g = maskLight;
-      else                    (BGR == 1.0) ? mask.r = maskLight : mask.b = maskLight;
+      if (m<0.3333) mask.rgb = (BGR == 1.0) ? vec3(mask.r, mask.g, maskLight) : vec3(maskLight, mask.g, mask.b);
+      else if (m<0.6666)         mask.g = maskLight;
+      else          mask.rgb = (BGR == 1.0) ? vec3(maskLight, mask.g, mask.b) : vec3(mask.r, mask.g, maskLight);
    }
 
    return mask;
