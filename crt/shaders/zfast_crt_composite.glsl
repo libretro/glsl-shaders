@@ -192,7 +192,7 @@ void main()
 
 // hermite-like filter (blurrier), fast & cleans juggy edges	
     vec2 OGL2Pos = pos*TextureSize.xy;
-    vec2 p = OGL2Pos + 0.5;
+    vec2 p = OGL2Pos + 0.5; float y = p.y;
     vec2 i = floor( p );
     vec2 f = fract( p );
     p = i + f*f;
@@ -222,7 +222,7 @@ void main()
     colour ;
 	} 
 else {
-	colour *= SCANAMOUNT * sin((OGL2Pos.y*2.0)*3.14159)+1.0-SCANAMOUNT;
+	colour *= SCANAMOUNT * sin((y*2.0)*3.14159)+1.0-SCANAMOUNT;
 	}
 
 //mask
