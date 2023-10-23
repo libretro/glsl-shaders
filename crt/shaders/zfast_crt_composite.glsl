@@ -190,12 +190,12 @@ void main()
 
     else pos = vTexCoord;
 
-// hermite filter (blurrier), fast & cleans juggy edges	
+// hermite-like filter (blurrier), fast & cleans juggy edges	
     vec2 OGL2Pos = pos*TextureSize.xy;
     vec2 p = OGL2Pos + 0.5;
     vec2 i = floor( p );
     vec2 f = fract( p );
-    p = i + f*f*(3.0-2.0*f);
+    p = i + f*f;
     p = (p - 0.5)*SourceSize.zw;
 
 // convergence calculations
