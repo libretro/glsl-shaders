@@ -21,7 +21,7 @@
 #pragma parameter scanl "Scanlines/Mask Low" 0.5 0.0 1.0 0.05
 #pragma parameter scanh "Scanlines/Mask High" 0.25 0.0 1.0 0.05
 #pragma parameter SIZE "Mask Type Coarse/Fine" 0.6667 0.6667 1.0 0.3333
-#pragma parameter glow "Glow Strength" 0.35 0.0 1.0 0.01
+#pragma parameter glow "Glow Strength" 0.25 0.0 1.0 0.01
 #pragma parameter Trin "Trinitron Colors" 1.0 0.0 1.0 1.0
 #pragma parameter sat "Saturation" 1.1 0.0 2.0 0.05
 #pragma parameter bogus_conv " [ CONVERGENCE ] " 0.0 0.0 0.0 0.0
