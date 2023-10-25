@@ -19,11 +19,11 @@
 
 #pragma parameter CURV "Curvature On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter scanl "Scanlines/Mask Low" 0.5 0.0 1.0 0.05
-#pragma parameter scanh "Scanlines/Mask High" 0.2 0.0 1.0 0.05
+#pragma parameter scanh "Scanlines/Mask High" 0.25 0.0 1.0 0.05
 #pragma parameter SIZE "Mask Type Coarse/Fine" 0.6667 0.6667 1.0 0.3333
-#pragma parameter glow "Glow Strength" 0.12 0.0 1.0 0.01
+#pragma parameter glow "Glow Strength" 0.35 0.0 1.0 0.01
 #pragma parameter Trin "Trinitron Colors" 1.0 0.0 1.0 1.0
-#pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
+#pragma parameter sat "Saturation" 1.1 0.0 2.0 0.05
 #pragma parameter bogus_conv " [ CONVERGENCE ] " 0.0 0.0 0.0 0.0
 #pragma parameter RX "Red Convergence Horiz." 0.0 -2.0 2.0 0.05
 #pragma parameter RY "Red Convergence Vert." 0.0 -2.0 2.0 0.05
@@ -221,7 +221,8 @@ vec3 Glow (vec2 pos)
    COMPAT_PRECISION vec3 c04 = COMPAT_TEXTURE(Source,pos-dy).rgb*0.18;
 
    COMPAT_PRECISION vec3 glo = (c00+c01+c02+c03+c04); 
-           glo *= glo;
+    float w = dot (vec3(0.33),glo);
+    glo *= mix(0.25,1.25,w);
     return glo * glow;
 }
 
@@ -264,9 +265,10 @@ COMPAT_PRECISION float scn = scan*sin((ogl2pos.y+0.5)*pi*2.0)+1.0-scan;
 COMPAT_PRECISION float msk = mask*sin(fragpos*pi)+1.0-mask;
 
     res = res*res; 
-    res += Glow(pos);   
     if(Trin == 1.0) {res *= hue; 
     res = clamp(res,0.0,1.0);}
+    res += Glow(pos);   
+
     res *= vign();
        
     res *= scn*msk;
