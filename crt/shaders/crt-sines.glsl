@@ -98,9 +98,9 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy;
-    scale = TextureSize.xy/InputSize.xy;
-    fragpos = TEX0.x*OutputSize.x*scale.x*SIZE;
+    scale = TextureSize.xy/InputSize.xy; 
     warp = TEX0.xy*scale;
+    fragpos = warp.x*OutputSize.x*SIZE;
     warpp = warp*2.0-1.0;
     ps = 1.0/TextureSize.xy;
     dx = ps.x*vec3(RX,GX,BX);
@@ -171,9 +171,6 @@ uniform COMPAT_PRECISION float glow;
 #define CURV  1.0
 #define glow  0.05   
 #endif
-
-#define conv_y convy*(ps.y*2.0)
-#define conv_x convx*(ps.x*2.0)
 
 vec2 Warp(vec2 pos)
 {   
