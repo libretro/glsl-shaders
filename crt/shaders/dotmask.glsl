@@ -129,8 +129,8 @@ vec3 Mask(vec2 pos)
 
       pos.x = fract(pos.x/3.0);
 
-      if (m<0.3333) mask.rgb = (BGR == 1.0) ? vec3(mask.r, mask.g, maskLight) : vec3(maskLight, mask.g, mask.b);
-      else if (m<0.6666)         mask.g = maskLight;
+      if (pos.x<0.3333) mask.rgb = (BGR == 1.0) ? vec3(mask.r, mask.g, maskLight) : vec3(maskLight, mask.g, mask.b);
+      else if (pos.x<0.6666)         mask.g = maskLight;
       else          mask.rgb = (BGR == 1.0) ? vec3(maskLight, mask.g, mask.b) : vec3(mask.r, mask.g, maskLight);
       mask*=line;  
    } 
@@ -140,8 +140,8 @@ vec3 Mask(vec2 pos)
    {
       pos.x = fract(pos.x/3.0);
 
-      if (m<0.3333) mask.rgb = (BGR == 1.0) ? vec3(mask.r, mask.g, maskLight) : vec3(maskLight, mask.g, mask.b);
-      else if (m<0.6666)         mask.g = maskLight;
+      if (pos.x<0.3333) mask.rgb = (BGR == 1.0) ? vec3(mask.r, mask.g, maskLight) : vec3(maskLight, mask.g, mask.b);
+      else if (pos.x<0.6666)         mask.g = maskLight;
       else          mask.rgb = (BGR == 1.0) ? vec3(maskLight, mask.g, mask.b) : vec3(mask.r, mask.g, maskLight);
    } 
 
@@ -151,8 +151,8 @@ vec3 Mask(vec2 pos)
       pos.x += pos.y*3.0;
       pos.x  = fract(pos.x/6.0);
 
-      if (m<0.3333) mask.rgb = (BGR == 1.0) ? vec3(mask.r, mask.g, maskLight) : vec3(maskLight, mask.g, mask.b);
-      else if (m<0.6666)         mask.g = maskLight;
+      if (pos.x<0.3333) mask.rgb = (BGR == 1.0) ? vec3(mask.r, mask.g, maskLight) : vec3(maskLight, mask.g, mask.b);
+      else if (pos.x<0.6666)         mask.g = maskLight;
       else          mask.rgb = (BGR == 1.0) ? vec3(maskLight, mask.g, mask.b) : vec3(mask.r, mask.g, maskLight);
    }
 
@@ -163,8 +163,8 @@ vec3 Mask(vec2 pos)
       pos.x += pos.y*3.0;
       pos.x  = fract(pos.x/6.0);
 
-      if (m<0.3333) mask.rgb = (BGR == 1.0) ? vec3(mask.r, mask.g, maskLight) : vec3(maskLight, mask.g, mask.b);
-      else if (m<0.6666)         mask.g = maskLight;
+      if (pos.x<0.3333) mask.rgb = (BGR == 1.0) ? vec3(mask.r, mask.g, maskLight) : vec3(maskLight, mask.g, mask.b);
+      else if (pos.x<0.6666)         mask.g = maskLight;
       else          mask.rgb = (BGR == 1.0) ? vec3(maskLight, mask.g, mask.b) : vec3(mask.r, mask.g, maskLight);
    }
 
