@@ -193,7 +193,7 @@ COMPAT_PRECISION mat3 hue = mat3(
 mat3 hue = mat3(
     1.05, -0.05, 0.1,
     -0.1, 1.2, -0.2,
-    0.1, 0.15, 1.0
+    0.05, 0.15, 1.0
 );
 #endif
 
