@@ -83,10 +83,10 @@ COMPAT_VARYING vec4 TEX0;
 
 vec4 cmp(vec4 src0, vec4 src1, vec4 src2) {
 	return vec4(
-		src0.x >= 0 ? src1.x : src2.x,
-		src0.y >= 0 ? src1.y : src2.y,
-		src0.z >= 0 ? src1.z : src2.z,
-		src0.w >= 0 ? src1.w : src2.w
+		src0.x >= 0.0 ? src1.x : src2.x,
+		src0.y >= 0.0 ? src1.y : src2.y,
+		src0.z >= 0.0 ? src1.z : src2.z,
+		src0.w >= 0.0 ? src1.w : src2.w
 	);
 }
 
@@ -128,9 +128,9 @@ void main()
 	r0.x = r0.x * c6.x;
 	r0.x = fract(r0.x);
 	r0.xy = (r0.xxxx + c6.yzzw).xy;
-	r1.yz = (r0.y >= 0 ? c7.xxyw : c7.xyxw).yz;
+	r1.yz = (r0.y >= 0.0 ? c7.xxyw : c7.xyxw).yz;
 	r1.x = c6.w;
-	r0.xyz = (r0.x >= 0 ? r1 : c7.yxxw).xyz;
+	r0.xyz = (r0.x >= 0.0 ? r1 : c7.yxxw).xyz;
 	r1.xy = (c1 * v0).xy;
 	r0.w = r1.y * c8.w + c8.w;
 	r0.w = fract(r0.w);
@@ -138,7 +138,7 @@ void main()
 	r2.y = sin(r0.w);
 	r1.zw = (abs(r2).yyyy + c4).zw;
 	r1.z = clamp(r1.z, 0.0, 1.0);
-	r0.w = r1.w >= 0 ? r1.z : c8.w;
+	r0.w = r1.w >= 0.0 ? r1.z : c8.w;
 	r2 = fract(r1.xyxy);
 	r1.xy = (r1 + -r2.zwzw).xy;
 	r2 = r2 + c8.xxyy;
@@ -151,7 +151,7 @@ void main()
 	r4.x = min(r3.x, c3.z);
 	r1.zw = (-abs(r1).wwww + c3).zw;
 	r1.z = clamp(r1.z, 0.0, 1.0);
-	r1.z = r1.w >= 0 ? r1.z : c8.w;
+	r1.z = r1.w >= 0.0 ? r1.z : c8.w;
 	r4.y = r0.w + r1.z;
 	r0.w = r0.w * r4.x;
 	r1.z = r1.z * r4.x;
@@ -172,6 +172,6 @@ void main()
 	r0.xyz = (r0 * r3).xyz;
 	r1.z = c5.z;
 	r0.w = r1.z + -c2.y;
-	FragColor.xyz = (r0.w >= 0 ? r3 : r0).xyz;
+	FragColor.xyz = (r0.w >= 0.0 ? r3 : r0).xyz;
 } 
 #endif
