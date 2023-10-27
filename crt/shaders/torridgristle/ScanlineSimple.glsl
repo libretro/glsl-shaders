@@ -110,7 +110,7 @@ void main()
     Scanline = 1.-abs(Scanline-0.5)*2.;
     Scanline = 1.-pow(1.-Scanline,2.0);
     
-    Scanline = clamp(sqrt(Scanline)-(1-HSBYIQHybrid),0.0,1.0);
+    Scanline = clamp(sqrt(Scanline)-(1.0-HSBYIQHybrid),0.0,1.0);
     Scanline /= HSBYIQHybrid;
 
 
