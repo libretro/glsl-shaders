@@ -144,10 +144,10 @@ void main()
 	r9 = -r0.xxxx + c5;
 	r9 = r9 * r9;
 	r9 = r9 * c4.wwww;
-	r0.z = pow(2, r9.x);
+	r0.z = pow(2.0, r9.x);
 	r6.xyz = (r6 * r0.zzzz).xyz;
 	r6.xyz = (r6 * c3.zzzz).xyz;
-	r0.w = pow(2, r9.z);
+	r0.w = pow(2.0, r9.z);
 	r5.xyz = (r5 * r0.wwww + r6).xyz;
 	r0.w = r0.z + r0.w;
 	r6 = r7.zwzw + c4.zyxx;
@@ -162,15 +162,15 @@ void main()
 	r0.xy = (r0 * r0).xy;
 	r0.xy = (r0 * c6.yyyy).xy;
 	r1.zw = (r1 * c6.xyxy).zw;
-	r1.z = pow(2, r1.z);
-	r1.w = pow(2, r1.w);
+	r1.z = pow(2.0, r1.z);
+	r1.w = pow(2.0, r1.w);
 	r6.xyz = (r6 * r1.zzzz).xyz;
 	r5.xyz = (r6 * c3.zzzz + r5).xyz;
 	r6 = COMPAT_TEXTURE(Source, r3.xy);
 	r3 = COMPAT_TEXTURE(Source, r3.zw);
 	r3.xyz = (r3 * c3.zzzz).xyz;
-	r2.w = pow(2, r9.y);
-	r3.w = pow(2, r9.w);
+	r2.w = pow(2.0, r9.y);
+	r3.w = pow(2.0, r9.w);
 	r6.xyz = (r6 * r2.wwww).xyz;
 	r5.xyz = (r6 * c3.zzzz + r5).xyz;
 	r3.xyz = (r3 * r3.wwww + r5).xyz;
@@ -192,8 +192,8 @@ void main()
 	r5.xyz = (r8 * r0.zzzz + r5).xyz;
 	r2.xyz = (r2 * r2.wwww + r5).xyz;
 	r2.xyz = (r0.wwww * r2).xyz;
-	r0.x = pow(2, r0.x);
-	r0.y = pow(2, r0.y);
+	r0.x = pow(2.0, r0.x);
+	r0.y = pow(2.0, r0.y);
 	r2.xyz = (r2 * r0.xxxx + r3).xyz;
 	r3 = COMPAT_TEXTURE(Source, r7.xy);
 	r5 = COMPAT_TEXTURE(Source, r7.zw);
@@ -210,13 +210,13 @@ void main()
 	r0.w = r0.w * c6.w;
 	r0.w = fract(r0.w);
 	r1.xy = (r0.wwww + c7).xy;
-	r2.yz = (r1.y >= 0 ? c7.xzww : c7.xwzw).yz;
+	r2.yz = (r1.y >= 0.0 ? c7.xzww : c7.xwzw).yz;
 	r2.x = c8.w;
-	r1.xyz = (r1.x >= 0 ? r2 : c7.wzzw).xyz;
+	r1.xyz = (r1.x >= 0.0 ? r2 : c7.wzzw).xyz;
 	r1.xyz = (r0 * r1).xyz;
 	r2.z = c6.z;
 	r0.w = r2.z + -c2.y;
-	FragColor.xyz = (r0.w >= 0 ? r0 : r1).xyz;
+	FragColor.xyz = (r0.w >= 0.0 ? r0 : r1).xyz;
 	FragColor.w = -c3.x;
 } 
 #endif
