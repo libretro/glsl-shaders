@@ -18,12 +18,12 @@
 
 
 #pragma parameter CURV "Curvature On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter scanl "Scanlines/Mask Low" 0.5 0.0 1.0 0.05
-#pragma parameter scanh "Scanlines/Mask High" 0.25 0.0 1.0 0.05
+#pragma parameter scanl "Scanlines/Mask Low" 0.45 0.0 1.0 0.05
+#pragma parameter scanh "Scanlines/Mask High" 0.2 0.0 1.0 0.05
 #pragma parameter SIZE "Mask Type, 2:Fine, 3:Coarse" 3.0 2.0 3.0 1.0
 #pragma parameter glow "Glow Strength" 0.2 0.0 1.0 0.05
 #pragma parameter Trin "Trinitron Colors" 1.0 0.0 1.0 1.0
-#pragma parameter sat "Saturation" 1.1 0.0 2.0 0.05
+#pragma parameter sat "Saturation" 1.15 0.0 2.0 0.05
 #pragma parameter bogus_conv " [ CONVERGENCE ] " 0.0 0.0 0.0 0.0
 #pragma parameter RX "Red Convergence Horiz." 0.0 -2.0 2.0 0.05
 #pragma parameter RY "Red Convergence Vert." 0.0 -2.0 2.0 0.05
@@ -182,10 +182,12 @@ vec2 Warp(vec2 pos)
     0.04, 0.11,  1.05
 );
 #else
+
+// very accurate compared to a PC connected to CRT via RGB scart, and a Linux laptop.
 mat3 hue = mat3(
-     1.05, -0.05, 0.05,
-    -0.05,  1.2, -0.2,
-     0.05,  0.15, 1.0
+     1.0,  0.0, 0.05,
+     -0.1,  1.05, -0.3,
+     0.0,  0.35, 1.15
 );
 #endif
 
