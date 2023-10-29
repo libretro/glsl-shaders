@@ -182,12 +182,10 @@ vec2 Warp(vec2 pos)
     0.04, 0.11,  1.05
 );
 #else
-
-// very accurate compared to a PC connected to CRT via RGB scart, and a Linux laptop.
 mat3 hue = mat3(
      1.0,  0.0, 0.05,
-     -0.1,  1.05, -0.2,
-     0.0,  0.35, 1.15
+     -0.05,  1.0, -0.2,
+     0.0,  0.25, 1.1
 );
 #endif
 
