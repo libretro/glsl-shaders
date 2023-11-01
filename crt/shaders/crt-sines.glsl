@@ -3,6 +3,7 @@
 /* 
   crt-sines, a work by DariusG 2023
   
+  v1.7b minor tweaks here and there.
   v1.7 re-worked from scratch, compacted, faster, better looking and glow added. 
        that is almost the limit of what an HTC One M7 can do. 
   v1.6 speed-up tweaks, corrected some errors (e.g. too bright on slot mask)
@@ -21,9 +22,9 @@
 #pragma parameter scanl "Scanlines/Mask Low" 0.45 0.0 1.0 0.05
 #pragma parameter scanh "Scanlines/Mask High" 0.2 0.0 1.0 0.05
 #pragma parameter SIZE "Mask Type, 2:Fine, 3:Coarse" 3.0 2.0 3.0 1.0
-#pragma parameter glow "Glow Strength" 0.2 0.0 1.0 0.05
+#pragma parameter glow "Glow Strength" 0.08 0.0 1.0 0.02
 #pragma parameter Trin "Trinitron Colors" 1.0 0.0 1.0 1.0
-#pragma parameter sat "Saturation" 1.15 0.0 2.0 0.05
+#pragma parameter sat "Saturation" 1.1 0.0 2.0 0.05
 #pragma parameter bogus_conv " [ CONVERGENCE ] " 0.0 0.0 0.0 0.0
 #pragma parameter RX "Red Convergence Horiz." 0.0 -2.0 2.0 0.05
 #pragma parameter RY "Red Convergence Vert." 0.0 -2.0 2.0 0.05
@@ -170,7 +171,7 @@ uniform COMPAT_PRECISION float glow;
 
 vec2 Warp(vec2 pos)
 {   
-    pos *= vec2(1.0 + pos.y*pos.y*0.03, 1.0 + pos.x*pos.x*0.04);
+    pos *= vec2(1.0 + pos.y*pos.y*0.02, 1.0 + pos.x*pos.x*0.03);
     pos = pos*0.5 + 0.5;
     return pos;
 }
@@ -196,7 +197,7 @@ mat3 hue = mat3(
                       vpos *= 1.0-warp;    
  float vig = vpos.x * vpos.y * 45.0;
 
-    vig = min(pow(vig, 0.15), 1.0); 
+    vig = min(pow(vig, 0.12), 1.0); 
    
     return vig;
 }
@@ -226,12 +227,11 @@ vec2 pos;
  if (CURV == 1.0){
   pos = Warp(warpp);
   corn = min(pos, 1.0-pos);    // This is used to mask the rounded
-  corn.x = 0.0001/corn.x;     // corners later on
+  corn.x = 0.0003/corn.x;     // corners later on
   pos /= scale;
 }
 
 else pos = vTexCoord;
-
 // Hermite
   vec2 ogl2pos = pos*TextureSize.xy;
   vec2 p = ogl2pos+0.5;
@@ -248,9 +248,13 @@ else pos = vTexCoord;
   vec3 conv = vec3(r,g,b);
 
   res = res*0.5 + conv*0.5;
- float w = dot(vec3(0.25),res);
+
+  res += Glow(p,res);   
+  res *= vign();
+
+ float w = dot(vec3(0.28),res);
  float scan = mix(scanl,scanh,w);
- float mask = scan/2.0;
+ float mask = scan*0.666;
 
  float scn = scan*sin((ogl2pos.y+0.5)*pi*2.0)+1.0-scan;
  float msk = mask*sin(fragpos*pi)+1.0-mask;
@@ -258,14 +262,11 @@ else pos = vTexCoord;
     res = res*res; 
     if(Trin == 1.0) {res *= hue; 
     res = clamp(res,0.0,1.0);}
-    res += Glow(p,res);   
 
-    res *= vign();
-       
     res *= scn*msk;
     res = sqrt(res);
- float gray = dot(vec3(0.3,0.6,0.1),res);
-    res  = mix(vec3(gray),res,sat);
+  float gray = dot(vec3(0.3,0.6,0.1),res);
+  res  = mix(vec3(gray),res,sat);
     res *= mix(1.25,1.0,w);
     if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.0001 && CURV == 1.0 )res = vec3(0.0);
 
