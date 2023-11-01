@@ -29,26 +29,26 @@ any later version.
 #pragma parameter SCANLINE "Scanline Weight" 0.25 0.15 0.6 0.05
 #pragma parameter INTERLACE "Interlacing On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter bogus_msk " [ MASK SETTINGS ] " 0.0 0.0 0.0 0.0
-#pragma parameter M_TYPE "Mask Type: -1:None, 0:CGWG, 1:RGB" 0.0 -1.0 1.0 1.0
+#pragma parameter M_TYPE "Mask Type: -1:None, 0:CGWG, 1:RGB" 1.0 -1.0 1.0 1.0
 #pragma parameter MSIZE "Mask Size" 1.0 1.0 2.0 1.0
-#pragma parameter SLOT "Slot Mask On/Off" 0.0 0.0 1.0 1.0
-#pragma parameter SLOTW "Slot Mask Width" 2.0 2.0 3.0 1.0
+#pragma parameter SLOT "Slot Mask On/Off" 1.0 0.0 1.0 1.0
+#pragma parameter SLOTW "Slot Mask Width" 3.0 2.0 3.0 1.0
 #pragma parameter BGR "Subpixels BGR/RGB" 0.0 0.0 1.0 1.0
 #pragma parameter Maskl "Mask Brightness Dark" 0.3 0.0 1.0 0.05
 #pragma parameter Maskh "Mask Brightness Bright" 0.75 0.0 1.0 0.05
 #pragma parameter bogus_con " [ CONVERGENCE SETTINGS ] " 0.0 0.0 0.0 0.0
 #pragma parameter C_STR "Convergence Overall Strength" 0.0 0.0 1.0 0.05
 #pragma parameter CONV_R "Convergence Red X-Axis" 0.0 -1.0 1.0 0.05
-#pragma parameter CONV_G "Convergence Green Y-axis" 0.0 -1.0 1.0 0.05
+#pragma parameter CONV_G "Convergence Green X-axis" 0.0 -1.0 1.0 0.05
 #pragma parameter CONV_B "Convergence Blue X-Axis" 0.0 -1.0 1.0 0.05
 #pragma parameter bogus_geom " [ GEOMETRY SETTINGS ] " 0.0 0.0 0.0 0.0
 #pragma parameter WARPX "Curvature Horizontal" 0.032 0.00 0.25 0.01
 #pragma parameter WARPY "Curvature Vertical" 0.042 0.00 0.25 0.01
-#pragma parameter CORNER "Corner Round" 0.02 0.0 0.25 0.01
-#pragma parameter B_SMOOTH "Border Smoothness" 300.0 100.0 1000.0 25.0
+#pragma parameter CORNER "Corner Round" 0.03 0.0 0.25 0.01
+#pragma parameter B_SMOOTH "Border Smoothness" 400.0 100.0 1000.0 25.0
 #pragma parameter PAL_NTSC "PAL-NTSC Aspect: Amiga,MD-SNES" 0.0 0.0 2.0 1.0
 #pragma parameter bogus_col " [ COLOR SETTINGS ] " 0.0 0.0 0.0 0.0
-#pragma parameter BR_DEP "Scan/Mask Brightness Dependence" 0.266 0.0 0.333 0.01
+#pragma parameter BR_DEP "Scan/Mask Brightness Dependence" 0.333 0.0 0.333 0.01
 #pragma parameter c_space "Color Space: sRGB,PAL,NTSC-U,NTSC-J" 0.0 0.0 3.0 1.0
 #pragma parameter EXT_GAMMA "External Gamma In (Glow etc)" 0.0 0.0 1.0 1.0
 #pragma parameter SATURATION "Saturation" 1.0 0.0 2.0 0.01
@@ -343,6 +343,17 @@ float corner(vec2 coord)
 }  
 
 
+ float vign()
+{
+ vec2 vpos = vTexCoord*scale;
+                      vpos *= 1.0-vTexCoord*scale;    
+ float vig = vpos.x * vpos.y * 45.0;
+
+    vig = min(pow(vig, 0.12), 1.0); 
+   
+    return vig;
+}
+
 void main()
 {   
 
@@ -362,7 +373,6 @@ if (PAL_NTSC != 0.0){
     }
     vec2 bpos = pos;
     vec2 dx = vec2(ps.x,0.0);
-    vec2 dy = vec2(0.0,ps.y);
 
     vec2 ogl2 = pos*SourceSize.xy;
     vec2 i = floor(pos*SourceSize.xy) + 0.5;
@@ -373,13 +383,14 @@ if (PAL_NTSC != 0.0){
     vec3 res0 = COMPAT_TEXTURE(Source,pos).rgb;
     float resr = COMPAT_TEXTURE(Source,pos + dx*CONV_R).r;
     float resb = COMPAT_TEXTURE(Source,pos + dx*CONV_B).b;
-    float resg = COMPAT_TEXTURE(Source,pos + dy*CONV_G).g;
+    float resg = COMPAT_TEXTURE(Source,pos + dx*CONV_G).g;
 
     vec3 res = vec3(  res0.r*(1.0-C_STR) +  resr*C_STR,
                       res0.g*(1.0-C_STR) +  resg*C_STR,
                       res0.b*(1.0-C_STR) +  resb*C_STR 
                    );
-    
+      res *= vign();
+
     float l = dot(vec3(BR_DEP),res);
     
     if(EXT_GAMMA != 1.0) res *= res;
