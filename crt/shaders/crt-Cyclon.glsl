@@ -26,7 +26,7 @@ any later version.
 */
 
 
-#pragma parameter SCANLINE "Scanline Weight" 0.25 0.15 0.6 0.05
+#pragma parameter SCANLINE "Scanline Weight" 0.3 0.2 0.6 0.05
 #pragma parameter INTERLACE "Interlacing On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter bogus_msk " [ MASK SETTINGS ] " 0.0 0.0 0.0 0.0
 #pragma parameter M_TYPE "Mask Type: -1:None, 0:CGWG, 1:RGB" 1.0 -1.0 1.0 1.0
@@ -46,12 +46,11 @@ any later version.
 #pragma parameter WARPY "Curvature Vertical" 0.042 0.00 0.25 0.01
 #pragma parameter CORNER "Corner Round" 0.03 0.0 0.25 0.01
 #pragma parameter B_SMOOTH "Border Smoothness" 400.0 100.0 1000.0 25.0
-#pragma parameter PAL_NTSC "PAL-NTSC Aspect: Amiga,MD-SNES" 0.0 0.0 2.0 1.0
 #pragma parameter bogus_col " [ COLOR SETTINGS ] " 0.0 0.0 0.0 0.0
-#pragma parameter BR_DEP "Scan/Mask Brightness Dependence" 0.333 0.0 0.333 0.01
+#pragma parameter BR_DEP "Scan/Mask Brightness Dependence" 0.2 0.0 0.333 0.01
 #pragma parameter c_space "Color Space: sRGB,PAL,NTSC-U,NTSC-J" 0.0 0.0 3.0 1.0
 #pragma parameter EXT_GAMMA "External Gamma In (Glow etc)" 0.0 0.0 1.0 1.0
-#pragma parameter SATURATION "Saturation" 1.0 0.0 2.0 0.01
+#pragma parameter SATURATION "Saturation" 1.0 0.0 2.0 0.05
 #pragma parameter BRIGHTNESS "Brightness, Sega fix:1.06" 1.0 0.0 2.0 0.01
 #pragma parameter BLACK  "Black Level" 0.0 -0.20 0.20 0.01 
 #pragma parameter RG "Green <-to-> Red Hue" 0.0 -0.25 0.25 0.01
@@ -185,7 +184,6 @@ uniform COMPAT_PRECISION float BLACK;
 uniform COMPAT_PRECISION float BR_DEP; 
 uniform COMPAT_PRECISION float POTATO; 
 uniform COMPAT_PRECISION float EXT_GAMMA; 
-uniform COMPAT_PRECISION float PAL_NTSC; 
 
 #else
 #define M_TYPE 0.0
@@ -217,7 +215,6 @@ uniform COMPAT_PRECISION float PAL_NTSC;
 #define BR_DEP 0.266   
 #define POTATO 0.0   
 #define EXT_GAMMA 0.0   
-#define PAL_NTSC 0.0   
 #endif
 
 vec3 Mask(vec2 pos, float CGWG)
@@ -255,7 +252,7 @@ if (M_TYPE == 1.0){
 
 
 
-float scanlineWeights(float distance, vec3 color)
+float scanlineWeights(float distance, vec3 color, float x)
     {
     // "wid" controls the width of the scanline beam, for each RGB
     // channel The "weights" lines basically specify the formula
@@ -267,13 +264,12 @@ float scanlineWeights(float distance, vec3 color)
     // independent of its width. That is, for a narrower beam
     // "weights" should have a higher peak at the center of the
     // scanline than for a wider beam.
-    float wid = SCANLINE + 0.15 * dot(color, vec3(0.25));
+    float wid = SCANLINE + 0.15 * dot(color, vec3(0.25-x));
     float weights = distance / wid;
     return 0.4 * exp(-weights * weights ) / wid;
-
     }
 
-#define pwr vec3(1.0/((-0.8*SCANLINE+1.0)*(-0.8*CGWG+1.0))-1.2)
+#define pwr vec3(1.0/((-1.0*SCANLINE+1.0)*(-0.8*CGWG+1.0))-1.2)
 // Returns gamma corrected output, compensated for scanline+mask embedded gamma
 vec3 inv_gamma(vec3 col, vec3 power)
 {
@@ -318,10 +314,7 @@ if (odd == 0.0)
 
 else if (odd == 1.0)
     {if (h<0.5) return vec3(1.5); else return vec3(0.5);}
-
-
 }
-
 
 vec2 Warp(vec2 pos)
 {
@@ -343,17 +336,6 @@ float corner(vec2 coord)
 }  
 
 
- float vign()
-{
- vec2 vpos = vTexCoord*scale;
-                      vpos *= 1.0-vTexCoord*scale;    
- float vig = vpos.x * vpos.y * 45.0;
-
-    vig = min(pow(vig, 0.12), 1.0); 
-   
-    return vig;
-}
-
 void main()
 {   
 
@@ -362,15 +344,9 @@ mat3 hue = mat3(
     RG, 1.0, -GB,
     RB, GB, 1.0
 );
-
     vec2 pos = Warp(vTexCoord*scale); vec2 cpos=pos;
     pos /=scale; // blurry
 
-if (PAL_NTSC != 0.0){
-    if(PAL_NTSC == 1.0) pos.y /=1.2; // Amiga 256 to 200
-    pos.y += 0.005; // re-center
-    if(PAL_NTSC == 2.0) pos.y /=1.0714; // MD-SNES 240 to 224
-    }
     vec2 bpos = pos;
     vec2 dx = vec2(ps.x,0.0);
 
@@ -380,7 +356,7 @@ if (PAL_NTSC != 0.0){
     pos.y = (i.y + 4.0*f*f*f)*ps.y; // smooth
     pos.x = mix(pos.x, i.x*ps.x, 0.2);
 
-    vec3 res0 = COMPAT_TEXTURE(Source,pos).rgb;
+    vec3  res0 = COMPAT_TEXTURE(Source,pos).rgb;
     float resr = COMPAT_TEXTURE(Source,pos + dx*CONV_R).r;
     float resb = COMPAT_TEXTURE(Source,pos + dx*CONV_B).b;
     float resg = COMPAT_TEXTURE(Source,pos + dx*CONV_G).g;
@@ -389,8 +365,8 @@ if (PAL_NTSC != 0.0){
                       res0.g*(1.0-C_STR) +  resg*C_STR,
                       res0.b*(1.0-C_STR) +  resb*C_STR 
                    );
-      res *= vign();
-
+    float x = vTexCoord.x*scale.x-0.5;
+    x = x*x;
     float l = dot(vec3(BR_DEP),res);
     
     if(EXT_GAMMA != 1.0) res *= res;
@@ -408,8 +384,8 @@ if (PAL_NTSC != 0.0){
         if (INTERLACE == 1.0) s = mod(float(FrameCount),2.0) < 1.0 ? s: s+0.5;
     }
 
-    float weight  = scanlineWeights(s, res);
-    float weight2 = scanlineWeights(1.0-s, res);
+    float weight  = scanlineWeights(s, res, x);
+    float weight2 = scanlineWeights(1.0-s, res, x);
 
     res *= weight + weight2;
     vec2 xy = vTexCoord*OutputSize.xy*scale/MSIZE;

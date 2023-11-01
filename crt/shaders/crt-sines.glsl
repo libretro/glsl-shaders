@@ -3,6 +3,7 @@
 /* 
   crt-sines, a work by DariusG 2023
   
+  v1.8 replaced fake vignette with CRT accurate one.
   v1.7b minor tweaks here and there.
   v1.7 re-worked from scratch, compacted, faster, better looking and glow added. 
        that is almost the limit of what an HTC One M7 can do. 
@@ -19,7 +20,7 @@
 
 
 #pragma parameter CURV "Curvature On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter scanl "Scanlines/Mask Low" 0.45 0.0 1.0 0.05
+#pragma parameter scanl "Scanlines/Mask Low" 0.4 0.0 1.0 0.05
 #pragma parameter scanh "Scanlines/Mask High" 0.2 0.0 1.0 0.05
 #pragma parameter SIZE "Mask Type, 2:Fine, 3:Coarse" 3.0 2.0 3.0 1.0
 #pragma parameter glow "Glow Strength" 0.08 0.0 1.0 0.02
@@ -191,17 +192,6 @@ mat3 hue = mat3(
 #endif
 
 
- float vign()
-{
- vec2 vpos = warp;
-                      vpos *= 1.0-warp;    
- float vig = vpos.x * vpos.y * 45.0;
-
-    vig = min(pow(vig, 0.12), 1.0); 
-   
-    return vig;
-}
-
 vec3 Glow (vec2 pos, vec3 frame)
 {
     vec2 x = vec2(psg.x,0.0);
@@ -244,19 +234,19 @@ else pos = vTexCoord;
   float r =  COMPAT_TEXTURE(Source,p + vec2(dx.r,dy.r)).r;
   float g =  COMPAT_TEXTURE(Source,p + vec2(dx.g,dy.g)).g;
   float b =  COMPAT_TEXTURE(Source,p + vec2(dx.b,dy.b)).b;
-
+  float x = (warp.x-0.5);
+  x = x*x;
   vec3 conv = vec3(r,g,b);
 
   res = res*0.5 + conv*0.5;
 
   res += Glow(p,res);   
-  res *= vign();
 
  float w = dot(vec3(0.28),res);
  float scan = mix(scanl,scanh,w);
  float mask = scan*0.666;
 
- float scn = scan*sin((ogl2pos.y+0.5)*pi*2.0)+1.0-scan;
+ float scn = (scan+x)*sin((ogl2pos.y+0.5)*pi*2.0)+1.0-(scan+x);
  float msk = mask*sin(fragpos*pi)+1.0-mask;
 
     res = res*res; 
