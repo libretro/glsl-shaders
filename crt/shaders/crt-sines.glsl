@@ -23,7 +23,7 @@
 #pragma parameter scanl "Scanlines/Mask Low" 0.4 0.0 1.0 0.05
 #pragma parameter scanh "Scanlines/Mask High" 0.2 0.0 1.0 0.05
 #pragma parameter SIZE "Mask Type, 2:Fine, 3:Coarse" 3.0 2.0 3.0 1.0
-#pragma parameter glow "Glow Strength" 0.08 0.0 1.0 0.02
+#pragma parameter glow "Glow Strength" 0.16 0.0 1.0 0.02
 #pragma parameter Trin "Trinitron Colors" 1.0 0.0 1.0 1.0
 #pragma parameter sat "Saturation" 1.1 0.0 2.0 0.05
 #pragma parameter bogus_conv " [ CONVERGENCE ] " 0.0 0.0 0.0 0.0
@@ -106,7 +106,7 @@ void main()
     warp = TEX0.xy*scale;
     warpp = warp*2.0-1.0;
     ps = 1.0/TextureSize.xy;
-    psg = vec2(1.5,1.33)/TextureSize.xy;
+    psg = vec2(1.5)/TextureSize.xy;
     dx = ps.x*vec3(RX,GX,BX);
     dy = ps.y*vec3(RY,GY,BY);
 }   
@@ -228,35 +228,41 @@ else pos = vTexCoord;
   vec2 i = floor(p);
   vec2 f = p - i;        // -0.5 to 0.5
        f = f*f*f*(3.0-2.0*f);
+       f.y *= f.y;
        p = (i + f-0.5)*ps;
 // Convergence
   vec3 res = COMPAT_TEXTURE(Source,p).rgb;
   float r =  COMPAT_TEXTURE(Source,p + vec2(dx.r,dy.r)).r;
   float g =  COMPAT_TEXTURE(Source,p + vec2(dx.g,dy.g)).g;
   float b =  COMPAT_TEXTURE(Source,p + vec2(dx.b,dy.b)).b;
-  float x = (warp.x-0.5);
-  x = x*x;
-  vec3 conv = vec3(r,g,b);
 
+// vignette  
+  float x = (warp.x-0.5);  // range -0.5 to 0.5, 0.0 being center of screen
+  x = x*x;    // curved response: higher values (more far from center) get higher results.
+
+  vec3 conv = vec3(r,g,b);
   res = res*0.5 + conv*0.5;
 
+// Glow, the more costly, costed ~15 fps and removal of slotmask to be able to handle all.
   res += Glow(p,res);   
 
  float w = dot(vec3(0.28),res);
  float scan = mix(scanl,scanh,w);
  float mask = scan*0.666;
 
+// apply vignette here
  float scn = (scan+x)*sin((ogl2pos.y+0.5)*pi*2.0)+1.0-(scan+x);
  float msk = mask*sin(fragpos*pi)+1.0-mask;
 
     res = res*res; 
+
     if(Trin == 1.0) {res *= hue; 
     res = clamp(res,0.0,1.0);}
 
     res *= scn*msk;
     res = sqrt(res);
   float gray = dot(vec3(0.3,0.6,0.1),res);
-  res  = mix(vec3(gray),res,sat);
+    res  = mix(vec3(gray),res,sat);
     res *= mix(1.25,1.0,w);
     if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.0001 && CURV == 1.0 )res = vec3(0.0);
 
