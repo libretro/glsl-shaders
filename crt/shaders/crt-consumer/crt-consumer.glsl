@@ -1,7 +1,18 @@
 #version 110
+
+/* 
+crt-consumer by DariusG 2022-2023
+
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2 of the License, or (at your option)
+any later version.
+*/
+
 // Parameter lines go here:
-#pragma parameter blurx "Convergence X" 0.25 -2.0 2.0 0.05
-#pragma parameter blury "Convergence Y" -0.10 -2.0 2.0 0.05
+#pragma parameter blurx "Deconvergence X" 0.25 -2.0 2.0 0.05
+#pragma parameter blury "Deconvergence Y" -0.10 -2.0 2.0 0.05
 #pragma parameter warpx "  Curvature X" 0.03 0.0 0.12 0.01
 #pragma parameter warpy "  Curvature Y" 0.04 0.0 0.12 0.01
 #pragma parameter corner "  Corner size" 0.01 0.0 0.10 0.01
@@ -11,7 +22,7 @@
 #pragma parameter inter "Interlacing Toggle" 1.0 0.0 1.0 1.0
 #pragma parameter scan_type "Scanline Type, pronounced/soft"  2.0 1.0 3.0 1.0 
 #pragma parameter beamlow "Scanlines dark" 1.35 0.5 2.5 0.05 
-#pragma parameter beamhigh "Scanlines bright" 1.05 0.5 2.5 0.05 
+#pragma parameter beamhigh "Scanlines bright" 0.9 0.5 2.5 0.05 
 #pragma parameter Shadowmask "  Mask Type" 0.0 -1.0 8.0 1.0 
 #pragma parameter masksize "  Mask Size" 1.0 1.0 2.0 1.0
 #pragma parameter MaskDark "  Mask dark" 0.5 0.0 2.0 0.1
@@ -26,14 +37,11 @@
 #pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
 #pragma parameter contrast "Contrast, 1.0:Off" 1.0 0.00 2.00 0.05
 #pragma parameter nois "Noise" 0.0 0.0 1.0 0.01
-#pragma parameter GLOW_LINE "Glowing line" 0.006 0.00 0.20 0.001
 #pragma parameter WP "Color Temperature %" 0.0 -100.0 100.0 5.0 
 #pragma parameter vignette "  Vignette On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter vpower "  Vignette Power" 0.15 0.0 1.0 0.01
-#pragma parameter vstr "  Vignette strength" 45.0 0.0 50.0 1.0
 #pragma parameter sawtooth "  Sawtooth Effect" 1.0 0.0 1.0 1.0
 #pragma parameter bleed "  Color Bleed Effect" 1.0 0.0 1.0 1.0
-#pragma parameter bl_size "  Color Bleed Size" 2.0 0.1 4.0 0.05
+#pragma parameter bl_size "  Color Bleed Size, less is more" 1.5 0.1 4.0 0.05
 #pragma parameter alloff "  Switch off shader" 0.0 0.0 1.0 1.0
 #define pi 6.28318
 
@@ -146,10 +154,7 @@ uniform COMPAT_PRECISION float nois;
 uniform COMPAT_PRECISION float WP;
 uniform COMPAT_PRECISION float inter;
 uniform COMPAT_PRECISION float vignette;
-uniform COMPAT_PRECISION float vpower;
-uniform COMPAT_PRECISION float vstr;
 uniform COMPAT_PRECISION float alloff;
-uniform COMPAT_PRECISION float GLOW_LINE;
 uniform COMPAT_PRECISION float sawtooth;
 uniform COMPAT_PRECISION float bleed;
 uniform COMPAT_PRECISION float bl_size;
@@ -183,10 +188,7 @@ uniform COMPAT_PRECISION float bl_size;
 #define WP  0.0
 #define inter 1.0
 #define vignette 1.0
-#define vpower 0.2
-#define vstr 40.0
 #define alloff 0.0
-#define GLOW_LINE 0.0
 #define sawtooth 0.0
 #define bleed 0.0
 #define bl_size 1.0
@@ -201,11 +203,11 @@ vec2 Warp(vec2 pos)
 } 
 
 
-float sw (float y,float l)
+float sw (float y,float l, float x)
 {
     float scan = mix(scanlow,scanhigh,y);
     float beam = mix(beamlow,beamhigh,l);
-    float ex = y*beam;
+    float ex = y*(beam+x);
     return exp2(-scan*pow(ex,scan_type));
 }
 
@@ -380,20 +382,6 @@ mat4 contrastMatrix( float contrast )
 }
 
 
-mat3 vign( float l )
-{
-    vec2 vpos = vTexCoord * (TextureSize.xy / InputSize.xy);
-    vpos *= 1.0 - vpos.xy;
-    float vig = vpos.x * vpos.y * vstr;
-    vig = min(pow(vig, vpower), 1.0); 
-    if (vignette == 0.0) vig=1.0;
-   
-    return mat3(vig, 0, 0,
-                 0,   vig, 0,
-                 0,    0, vig);
-
-}
-
 vec3 saturation (vec3 Color, float l, vec3 lweight)
 {
     float lum=l;
@@ -443,12 +431,6 @@ const mat3 XYZ_to_D50 = mat3 (
            2.9603944, -0.9787684,  0.0844874,
           -1.4678519,  1.9161415, -0.2545973,
           -0.4685105,  0.0334540,  1.4216174);         
-
-// code from cool retro term, https://github.com/Swordfish90/cool-retro-term
- float randomPass(vec2 coords)
- {
-    return fract(smoothstep(-120.0, 0.0, coords.y - (TextureSize.y + 120.0) * fract(Timer * 0.00015)));
-}
 
 float RGB2Y(vec3 _rgb) {
     return dot(_rgb, vec3(0.29900, 0.58700, 0.11400));
@@ -521,12 +503,12 @@ void main()
                       (sample1.g + sample3.g)*0.25 + sample2.g*0.5, 
                       (sample2.b+ sample3.b)*0.5);
    //sawtooth effect
-  
+float t = sin(float(FrameCount));  
 if (sawtooth == 1.0){
-    if( mod( floor(pC4.y*SourceSize.y), 2.0 ) == 0.0 ) {
-        color += COMPAT_TEXTURE( Source, pC4 + vec2(SourceSize.z*0.2, 0.0) ).rgb;
+    if( mod( floor(pC4.y*SourceSize.y*1.0), 2.0 ) == 0.0 ) {
+        color += COMPAT_TEXTURE( Source, pC4 + vec2(SourceSize.z*0.2*t, 0.0) ).rgb;
     } else {
-        color += COMPAT_TEXTURE( Source, pC4 - vec2(SourceSize.z*0.2, 0.0) ).rgb;
+        color += COMPAT_TEXTURE( Source, pC4 - vec2(SourceSize.z*0.2*t, 0.0) ).rgb;
     }
     color /= 2.0;}
 //end of sawtooth
@@ -570,8 +552,13 @@ color =clamp(color, 0.0,1.0);
 	float lum=dot(color,lumWeighting);
 	
     float f = fp.y;
-    
-    color = color*sw(f,lum) + color*sw(1.0-f,lum);
+    float x=0.0;
+ if ( vignette == 1.0)   
+  {  // vignette  
+  x = (vTexCoord.x*SourceSize.x/InputSize.x-0.5);  // range -0.5 to 0.5, 0.0 being center of screen
+  x = x*x*1.5;    // curved response: higher values (more far from center) get higher results.
+}
+    color = color*sw(f,lum,x) + color*sw(1.0-f,lum,x);
     
     color*=mix(mask(gl_FragCoord.xy*1.0001,color,lum), vec3(1.0),lum*0.9);
     if (slotmask !=0.0) color*=SlotMask(gl_FragCoord.xy*1.0001,color);
@@ -588,7 +575,6 @@ color =clamp(color, 0.0,1.0);
 	res = vec4(color,1.0);
 	if (contrast !=1.0) res = contrastMatrix(contrast)*res;
     if (inter >0.5 && InputSize.y >400.0 && fract(iTime)<0.5) res=res*0.95; else res;
-    res.rgb*= vign(lum);
 }
 #if defined GL_ES
     // hacky clamp fix for GLES
@@ -598,7 +584,6 @@ color =clamp(color, 0.0,1.0);
     else
         res = vec4(0.0);
 #endif
-    res += randomPass(pC4 * TextureSize) * GLOW_LINE;
 
     FragColor = res;
 } 
