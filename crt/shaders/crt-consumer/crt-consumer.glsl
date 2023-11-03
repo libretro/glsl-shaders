@@ -555,7 +555,7 @@ color =clamp(color, 0.0,1.0);
     float x=0.0;
  if ( vignette == 1.0)   
   {  // vignette  
-  x = (vTexCoord.x*4.0-0.5);  // range -0.5 to 0.5, 0.0 being center of screen
+  x = (vTexCoord.x*SourceSize.x/InputSize.x-0.5);  // range -0.5 to 0.5, 0.0 being center of screen
   x = x*x*1.5;    // curved response: higher values (more far from center) get higher results.
 }
     color = color*sw(f,lum,x) + color*sw(1.0-f,lum,x);
