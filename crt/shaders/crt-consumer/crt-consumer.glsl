@@ -11,12 +11,14 @@ any later version.
 */
 
 // Parameter lines go here:
-#pragma parameter blurx "Deconvergence X" 0.25 -2.0 2.0 0.05
-#pragma parameter blury "Deconvergence Y" -0.10 -2.0 2.0 0.05
+#pragma parameter sharpx "Sharpness Horizontal" 2.0 1.0 5.0 0.1
+#pragma parameter sharpy "Sharpness Vertical" 3.0 1.0 5.0 0.1
+#pragma parameter blurx "Deconvergence X" 0.5 -2.0 2.0 0.05
+#pragma parameter blury "Deconvergence Y" -0.1 -2.0 2.0 0.05
 #pragma parameter warpx "  Curvature X" 0.03 0.0 0.12 0.01
 #pragma parameter warpy "  Curvature Y" 0.04 0.0 0.12 0.01
-#pragma parameter corner "  Corner size" 0.01 0.0 0.10 0.01
-#pragma parameter smoothness "  Border Smoothness" 400.0 25.0 600.0 5.0
+#pragma parameter corner "  Corner size" 0.03 0.0 0.10 0.01
+#pragma parameter smoothness "  Border Smoothness" 600.0 25.0 600.0 5.0
 #pragma parameter scanlow "Beam low" 6.0 1.0 15.0 1.0
 #pragma parameter scanhigh "Beam high" 8.0 1.0 15.0 1.0
 #pragma parameter inter "Interlacing Toggle" 1.0 0.0 1.0 1.0
@@ -67,6 +69,8 @@ COMPAT_ATTRIBUTE vec4 VertexCoord;
 COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec2 TEX0;
+COMPAT_VARYING vec2 scale;
+COMPAT_VARYING vec2 maskpos;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -80,6 +84,8 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy * 1.0001;
+    scale = TextureSize.xy/InputSize.xy;
+    maskpos = TEX0.xy*OutputSize.xy*scale;
 }
 
 #elif defined(FRAGMENT)
@@ -112,6 +118,8 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec2 TEX0;
+COMPAT_VARYING vec2 scale;
+COMPAT_VARYING vec2 maskpos;
 
 // compatibility #defines
 #define Source Texture
@@ -158,6 +166,8 @@ uniform COMPAT_PRECISION float alloff;
 uniform COMPAT_PRECISION float sawtooth;
 uniform COMPAT_PRECISION float bleed;
 uniform COMPAT_PRECISION float bl_size;
+uniform COMPAT_PRECISION float sharpx;
+uniform COMPAT_PRECISION float sharpy;
 
 #else
 #define blurx  0.0    
@@ -192,6 +202,8 @@ uniform COMPAT_PRECISION float bl_size;
 #define sawtooth 0.0
 #define bleed 0.0
 #define bl_size 1.0
+#define sharpx 2.0
+#define sharpy 3.0
 #endif
 
 
@@ -478,12 +490,19 @@ void main()
     a_kernel[3] = 4.0; 
     a_kernel[4] = 2.0; 
     
-	vec2 pos = Warp(TEX0.xy*(TextureSize.xy/InputSize.xy))*(InputSize.xy/TextureSize.xy);
+	vec2 pos = Warp(vTexCoord.xy*scale)/scale;
     vec2 tex_size = SourceSize.xy;	
     
     if (inter < 0.5 && InputSize.y >400.0) tex_size*=0.5;
-
-	vec2 pC4 = (pos + 0.5/tex_size.xy);
+  vec2 ogl2pos = pos*TextureSize.xy;
+  vec2 p = ogl2pos+0.5;
+  vec2 i = floor(p);
+  vec2 f = p - i;        // -0.5 to 0.5
+       f.x = pow(f.x,sharpx);
+       f.y = pow(f.y,sharpy);
+       
+       p = (i + f-0.5)*SourceSize.zw;
+	vec2 pC4 = p;
 	vec2 fp = fract(pos*tex_size.xy);
     
     if (inter >0.5 && InputSize.y >400.0) fp.y=1.0; 
@@ -547,12 +566,12 @@ color =clamp(color, 0.0,1.0);
     color = vec3(mix(color, comp, m));
     }
 
-
     vec3 lumWeighting = vec3(0.22,0.7,0.08);
 	float lum=dot(color,lumWeighting);
 	
     float f = fp.y;
     float x=0.0;
+
  if ( vignette == 1.0)   
   {  // vignette  
   x = (vTexCoord.x*SourceSize.x/InputSize.x-0.5);  // range -0.5 to 0.5, 0.0 being center of screen
@@ -560,8 +579,8 @@ color =clamp(color, 0.0,1.0);
 }
     color = color*sw(f,lum,x) + color*sw(1.0-f,lum,x);
     
-    color*=mix(mask(gl_FragCoord.xy*1.0001,color,lum), vec3(1.0),lum*0.9);
-    if (slotmask !=0.0) color*=SlotMask(gl_FragCoord.xy*1.0001,color);
+    color*=mix(mask(maskpos.xy*1.0001,color,lum), vec3(1.0),lum*0.9);
+    if (slotmask !=0.0) color*=SlotMask(maskpos.xy*1.0001,color);
     
     color*=mix(brightboost1, brightboost2, lum);    
 
@@ -569,8 +588,8 @@ color =clamp(color, 0.0,1.0);
 
     if (sat != 1.0) color = saturation(color, lum, lumWeighting);
     
-    if (corner!=0.0) color*= corner0(pC4);
-    if (nois != 0.0) color*=1.0+noise(pC4)*nois;
+    if (corner!=0.0) color *= corner0(pC4);
+    if (nois != 0.0) color *= 1.0+noise(pC4)*nois;
 	
 	res = vec4(color,1.0);
 	if (contrast !=1.0) res = contrastMatrix(contrast)*res;
