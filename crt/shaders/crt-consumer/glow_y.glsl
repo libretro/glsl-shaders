@@ -1,5 +1,8 @@
-#version 130
-#pragma parameter sizey "Glow Size Y" 0.6 0.0 2.0 0.05
+#version 110
+
+#pragma parameter glow "Glow strength" 0.15 0.0 1.0 0.01
+
+#define pi 3.1415926535897932384626433
 
 #if defined(VERTEX)
 
@@ -25,6 +28,7 @@ COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 
+
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
 uniform COMPAT_PRECISION int FrameDirection;
@@ -38,10 +42,19 @@ uniform COMPAT_PRECISION vec2 InputSize;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float SIZE;
+
+#else
+#define SIZE     1.0      
+   
+#endif
+
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    TEX0.xy = TexCoord.xy*1.0001;
+    TEX0.xy = TexCoord.xy;
+
 }
 
 #elif defined(FRAGMENT)
@@ -75,6 +88,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 
+
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
@@ -83,31 +97,27 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float sizey;
 uniform COMPAT_PRECISION float glow;
-uniform COMPAT_PRECISION float SCANLINE;
 
 #else
-#define sizey 1.0
-#define SCANLINE 0.3
+#define glow 0.1     
+    
 #endif
 
-const float k[9] = float[9](0.015, 0.05, 0.12,0.19, 0.22,0.19, 0.12, 0.05, 0.015);
+#define psy vec2(0.0,SourceSize.w)
+#define size_x int(glow)
 
 void main()
-{   
-    vec2 tex = SourceSize.zw;
-    vec2 pos = vTexCoord*SourceSize.xy;
-    vec2 dy = vec2(0.0,sizey);
+{
 
-    vec3 res = COMPAT_TEXTURE(Source,(pos)*tex).rgb;
-    vec3 sum = vec3(0.0);
-    for (float i=-4.0; i<=4.0; i++)
-    {
-    sum += COMPAT_TEXTURE(Source,(pos + i*dy)*tex).rgb * k[int(i) + 4];
-    }
-    res = (res+sum*glow);
-    FragColor = vec4(res,1.0);
+vec3 res = COMPAT_TEXTURE(Source,vTexCoord).rgb;
+vec3 res0 = COMPAT_TEXTURE(Source,vTexCoord).rgb*0.468;
+res0 += COMPAT_TEXTURE(Source,vTexCoord+psy).rgb*0.236;
+res0 += COMPAT_TEXTURE(Source,vTexCoord-psy).rgb*0.236;
+res0 += COMPAT_TEXTURE(Source,vTexCoord-2.0*psy).rgb*0.03;
+res0 += COMPAT_TEXTURE(Source,vTexCoord+2.0*psy).rgb*0.03;
 
+
+FragColor.rgb = res+glow*res0;    
 }
 #endif
