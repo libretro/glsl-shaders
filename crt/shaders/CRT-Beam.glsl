@@ -4,19 +4,22 @@
 */
 
 #pragma parameter blur "Horizontal Blur/Beam shape" 0.6 0.0 1.0 0.1
-#pragma parameter Scanline "Scanline thickness" 0.3 0.0 1.0 0.05
-#pragma parameter weightr "  Scanline Red brightness" 0.85 0.0 1.0 0.05
-#pragma parameter weightg "  Scanline Green brightness" 0.85 0.0 1.0 0.05
-#pragma parameter weightb "  Scanline Blue brightness" 0.85 0.0 1.0 0.05
+#pragma parameter Scanline "Scanline thickness" 0.2 0.0 1.0 0.05
+#pragma parameter weightr "Scanline Red brightness" 0.8 0.0 1.0 0.05
+#pragma parameter weightg "Scanline Green brightness" 0.8 0.0 1.0 0.05
+#pragma parameter weightb "Scanline Blue brightness" 0.8 0.0 1.0 0.05
+#pragma parameter bogus_msk " [ MASKS ] " 0.0 0.0 0.0 0.0
 #pragma parameter mask "Mask 0:CGWG,1-2:Lottes,3-4 Gray,5-6:CGWG slot,7 VGA" 3.0 -1.0 7.0 1.0
 #pragma parameter msk_size "Mask size" 1.0 1.0 2.0 1.0
 #pragma parameter scale "VGA Mask Vertical Scale" 2.0 2.00 10.00 1.0
 #pragma parameter MaskDark "Lottes Mask Dark" 0.7 0.00 2.00 0.10
-#pragma parameter MaskLight "Lottes Mask Light" 1.00 0.00 2.00 0.10
-#pragma parameter bright "  Boost bright" 1.35 1.00 2.00 0.02
-#pragma parameter dark "  Boost dark" 1.25 1.00 2.00 0.02
-#pragma parameter glow "  Glow Strength" 0.08 0.0 0.5 0.01
-#pragma parameter sat "  Saturation" 1.1 0.00 2.00 0.05
+#pragma parameter MaskLight "Lottes Mask Light" 1.0 0.00 2.00 0.10
+#pragma parameter bogus_col " [ COLOR ] " 0.0 0.0 0.0 0.0
+#pragma parameter sat "Saturation" 1.0 0.00 2.00 0.05
+#pragma parameter bright "Boost bright" 1.0 1.00 2.00 0.05
+#pragma parameter dark "Boost dark" 1.45 1.00 2.00 0.05
+#pragma parameter glow "Glow Strength" 0.08 0.0 0.5 0.01
+
 
 #define pi 3.14159
 
@@ -30,6 +33,7 @@ precision mediump float;
 
 uniform vec2 TextureSize;
 varying vec2 TEX0;
+varying vec2 fragpos;
 
 #if defined(VERTEX)
 uniform mat4 MVPMatrix;
@@ -41,7 +45,8 @@ uniform vec2 OutputSize;
 void main()
 {
 	TEX0 = TexCoord*1.0001;                    
-	gl_Position = MVPMatrix * VertexCoord;     
+	gl_Position = MVPMatrix * VertexCoord;  
+	fragpos = TEX0.xy*OutputSize.xy*TextureSize.xy/InputSize.xy;   
 }
 
 #elif defined(FRAGMENT)
@@ -229,6 +234,7 @@ vec3 booster (vec2 pos)
 	vec3 gl0 = gl.rgb;
 	return gl0*glow;
 }
+
 void main()
 {	
 	vec2 pos =vTexCoord;
@@ -242,16 +248,16 @@ void main()
 	float lum = max(max(res.r*weightr,res.g*weightg),res.b*weightb);
 	float f = fract(OGL2Pos.y);
 	
-
 	res *= 1.0-(f-0.5)*(f-0.5)*45.0*(Scanline*(1.0-lum));
 	res = clamp(res,0.0,1.0);
-	float l = dot(res,vec3(0.2,0.7,0.1));
+	
+	float l = dot(res,vec3(0.3,0.6,0.1));
 	res = mix(vec3(l), res, sat);
 	res += booster(coords);
 	vec4 res0 = vec4(res,1.0); 
-	res0 *= Mask(gl_FragCoord.xy*1.0001);
-	res0 *= mix(1.0,bright,l);
-	res0 *= mix(dark,1.0,l);
+	res0 *= Mask(fragpos*1.0001);
+	res0 *= mix(dark,bright,l);
+	
 	FragColor = res0;
 }
 #endif
