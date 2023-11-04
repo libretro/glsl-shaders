@@ -22,7 +22,7 @@ any later version.
 #pragma parameter scanlow "Beam low" 6.0 1.0 15.0 1.0
 #pragma parameter scanhigh "Beam high" 8.0 1.0 15.0 1.0
 #pragma parameter inter "Interlacing Toggle" 1.0 0.0 1.0 1.0
-#pragma parameter scan_type "Scanline Type, pronounced/soft"  2.0 1.0 3.0 1.0 
+#pragma parameter scan_type "Scanline Type, pronounced/soft"  2.0 2.0 3.0 1.0 
 #pragma parameter beamlow "Scanlines dark" 1.35 0.5 2.5 0.05 
 #pragma parameter beamhigh "Scanlines bright" 0.9 0.5 2.5 0.05 
 #pragma parameter Shadowmask "  Mask Type" 0.0 -1.0 8.0 1.0 
