@@ -1,6 +1,5 @@
 #version 110
 
-
 #define pi 3.1415926535897932384626433
 
 #if defined(VERTEX)
@@ -96,27 +95,18 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float glow;
+uniform COMPAT_PRECISION float g_in;
 
 #else
-#define glow 0.1    
+#define g_in 2.4     
     
 #endif
 
-#define psx vec2(SourceSize.z,0.0)
 
 void main()
 {
-
 vec3 res = COMPAT_TEXTURE(Source,vTexCoord).rgb;
-
-vec3 res0 = COMPAT_TEXTURE(Source,vTexCoord).rgb*0.468;
-res0 += COMPAT_TEXTURE(Source,vTexCoord+psx).rgb*0.236;
-res0 += COMPAT_TEXTURE(Source,vTexCoord-psx).rgb*0.236;
-res0 += COMPAT_TEXTURE(Source,vTexCoord-2.0*psx).rgb*0.03;
-res0 += COMPAT_TEXTURE(Source,vTexCoord+2.0*psx).rgb*0.03;
-
-
-FragColor.rgb = res+glow*res0;    
+res = sqrt(res);
+FragColor.rgb = res;    
 }
 #endif

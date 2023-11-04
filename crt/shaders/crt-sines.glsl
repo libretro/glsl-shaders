@@ -3,6 +3,7 @@
 /* 
   crt-sines, a work by DariusG 2023
   
+  v1.8b removed glow and used crt-consumer glow, probably faster?
   v1.8 replaced fake vignette with CRT accurate one.
   v1.7b minor tweaks here and there.
   v1.7 re-worked from scratch, compacted, faster, better looking and glow added. 
@@ -20,12 +21,11 @@
 
 
 #pragma parameter CURV "Curvature On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter scanl "Scanlines/Mask Low" 0.4 0.0 1.0 0.05
-#pragma parameter scanh "Scanlines/Mask High" 0.2 0.0 1.0 0.05
+#pragma parameter scanl "Scanlines/Mask Low" 0.3 0.0 1.0 0.05
+#pragma parameter scanh "Scanlines/Mask High" 0.15 0.0 1.0 0.05
 #pragma parameter SIZE "Mask Type, 2:Fine, 3:Coarse" 3.0 2.0 3.0 1.0
-#pragma parameter glow "Glow Strength" 0.16 0.0 1.0 0.02
 #pragma parameter Trin "Trinitron Colors" 1.0 0.0 1.0 1.0
-#pragma parameter sat "Saturation" 1.1 0.0 2.0 0.05
+#pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
 #pragma parameter bogus_conv " [ CONVERGENCE ] " 0.0 0.0 0.0 0.0
 #pragma parameter RX "Red Convergence Horiz." 0.0 -2.0 2.0 0.05
 #pragma parameter RY "Red Convergence Vert." 0.0 -2.0 2.0 0.05
@@ -160,14 +160,12 @@ uniform COMPAT_PRECISION float scanh;
 uniform COMPAT_PRECISION float sat;
 uniform COMPAT_PRECISION float Trin;
 uniform COMPAT_PRECISION float CURV;
-uniform COMPAT_PRECISION float glow;
 #else
 #define scanl  0.5      
 #define scanh  0.22      
 #define sat  1.1  
 #define Trin  1.0
 #define CURV  1.0
-#define glow  0.25   
 #endif
 
 vec2 Warp(vec2 pos)
@@ -192,22 +190,6 @@ mat3 hue = mat3(
 #endif
 
 
-vec3 Glow (vec2 pos, vec3 frame)
-{
-    vec2 x = vec2(psg.x,0.0);
-    vec2 y = vec2(0.0,psg.y);
-
-    vec3 c00 = frame*0.28;
-    vec3 c01 = COMPAT_TEXTURE(Source,pos + x).rgb*0.18;
-    vec3 c02 = COMPAT_TEXTURE(Source,pos - x).rgb*0.18;
-    vec3 c03 = COMPAT_TEXTURE(Source,pos + y).rgb*0.18;
-    vec3 c04 = COMPAT_TEXTURE(Source,pos - y).rgb*0.18;
-
-    vec3 glo = (c00+c01+c02+c03+c04); 
-    float w = dot (vec3(0.33),glo);
-    glo *= mix(0.0,1.25,w);
-    return glo * glow;
-}
 
 void main()
 {
@@ -241,10 +223,7 @@ else pos = vTexCoord;
   x = x*x;    // curved response: higher values (more far from center) get higher results.
 
   vec3 conv = vec3(r,g,b);
-  res = res*0.5 + conv*0.5;
-
-// Glow, the more costly, costed ~15 fps and removal of slotmask to be able to handle all.
-  res += Glow(p,res);   
+  res = res*0.5 + conv*0.5;   
 
  float w = dot(vec3(0.28),res);
  float scan = mix(scanl,scanh,w);
