@@ -22,7 +22,6 @@
 // Parameter lines go here:
 #pragma parameter CRTCGWG_GAMMA "CRTcgwg Gamma" 2.7 0.0 10.0 0.01
 #pragma parameter CGWG "CGWG Mask Brightness" 0.7 0.0 1.0 0.05
-#pragma parameter SIZE "Mask Size" 2.0 1.0 4.0 1.0
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -65,7 +64,6 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
-uniform COMPAT_PRECISION float SIZE;
 #define vTexCoord TEX0.xy
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
@@ -87,7 +85,7 @@ void main()
     c12 = vTexCoord + vec2(0.0, dy);
     c22 = vTexCoord + vec2(dx, dy);
     c32 = vTexCoord + vec2(2.0 * dx, dy);
-    mod_factor  = vTexCoord.x * outsize.x*SIZE;
+    mod_factor  = vTexCoord.x * outsize.x*TextureSize.x/InputSize.x;
     ratio_scale = vTexCoord * SourceSize.xy;
 }
 
@@ -165,8 +163,8 @@ void main()
     col  = clamp(texes0 * coeffs, 0.0, 1.0).xyz;
     col2 = clamp(texes1 * coeffs, 0.0, 1.0).xyz;
 
-    vec3 wid  = 2.0 * pow(col,  vec3(4.0, 4.0, 4.0)) + 2.0;
-    vec3 wid2 = 2.0 * pow(col2, vec3(4.0, 4.0, 4.0)) + 2.0;
+    vec3 wid  = 2.0 * pow(col,  vec3(4.0)) + 2.0;
+    vec3 wid2 = 2.0 * pow(col2, vec3(4.0)) + 2.0;
 
     col  = pow(col,  vec3(CRTCGWG_GAMMA));
     col2 = pow(col2, vec3(CRTCGWG_GAMMA));
