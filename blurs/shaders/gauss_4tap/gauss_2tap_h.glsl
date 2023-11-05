@@ -73,7 +73,7 @@ void main() {
 // approximation of the Gaussian sampled at pixel centers.
 float get_offset(float sigma) {
   // Weight at x = 0 evaluates to 1 for all values of sigma.
-  const float w = exp(-1.0 / (sigma * sigma));
+  float w = exp(-1.0 / (sigma * sigma));
   return 2.0 * w / (2.0 * w + 1.0);
 }
 
@@ -125,7 +125,7 @@ uniform COMPAT_PRECISION float SIGMA;
 #endif
 
 void main() {
-  const vec2 offset = vec2(get_offset(SIGMA) * SourceSize.z, 0.0);
+  vec2 offset = vec2(get_offset(SIGMA) * SourceSize.z, 0.0);
   FragColor = 0.5 * (COMPAT_TEXTURE(Source, vTexCoord - offset) +
                      COMPAT_TEXTURE(Source, vTexCoord + offset));
 }
