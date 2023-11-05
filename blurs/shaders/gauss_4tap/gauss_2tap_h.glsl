@@ -68,15 +68,6 @@ void main() {
 
 #elif defined(FRAGMENT)
 
-// Finds the offset so that two samples drawn with linear filtering at that
-// offset from a central pixel, multiplied with 1/2 each, sum up to a 3-sample
-// approximation of the Gaussian sampled at pixel centers.
-float get_offset(float sigma) {
-  // Weight at x = 0 evaluates to 1 for all values of sigma.
-  float w = exp(-1.0 / (sigma * sigma));
-  return 2.0 * w / (2.0 * w + 1.0);
-}
-
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
@@ -115,14 +106,20 @@ COMPAT_VARYING vec4 TEX0;
   vec4(TextureSize, 1.0 / TextureSize) // either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
-// delete all 'params.' or 'registers.' or whatever in the fragment and replace
-// texture(a, b) with COMPAT_TEXTURE(a, b) <-can't macro unfortunately
-
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float SIGMA;
 #else
 #define SIGMA 1.0
 #endif
+
+// Finds the offset so that two samples drawn with linear filtering at that
+// offset from a central pixel, multiplied with 1/2 each, sum up to a 3-sample
+// approximation of the Gaussian sampled at pixel centers.
+float get_offset(float sigma) {
+  // Weight at x = 0 evaluates to 1 for all values of sigma.
+  float w = exp(-1.0 / (sigma * sigma));
+  return 2.0 * w / (2.0 * w + 1.0);
+}
 
 void main() {
   vec2 offset = vec2(get_offset(SIGMA) * SourceSize.z, 0.0);
