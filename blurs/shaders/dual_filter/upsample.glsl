@@ -1,21 +1,10 @@
 // #version 450
 
-/*
-    Gauss-4tap v1.0 by fishku
-    Copyright (C) 2023
-    Public domain license (CC0)
-
-    Simple two-pass Gaussian blur filter which does two taps per pass.
-    Idea based on:
-    https://www.rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/
-
-    Changelog:
-    v1.0: Initial release.
-*/
+// See downsample.glsl for copyright and other information.
 
 // clang-format off
-#pragma parameter GAUSS_4TAP_SETTINGS "=== Gauss-4tap v1.0 settings ===" 0.0 0.0 1.0 1.0
-#pragma parameter SIGMA "Gaussian filtering sigma" 1.0 0.0 2.0 0.05
+#pragma parameter DUAL_FILTER_SETTINGS "=== Dual Filter Blur & Bloom v1.1 settings ===" 0.0 0.0 1.0 1.0
+#pragma parameter BLUR_RADIUS "Blur radius" 1.0 0.0 7.5 0.1
 // clang-format on
 
 #if defined(VERTEX)
@@ -39,7 +28,6 @@
 COMPAT_ATTRIBUTE vec4 VertexCoord;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 uniform mat4 MVPMatrix;
 uniform COMPAT_PRECISION int FrameDirection;
@@ -50,8 +38,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 // compatibility #defines
 #define vTexCoord TEX0.xy
-#define SourceSize                                                             \
-  vec4(TextureSize, 1.0 / TextureSize) // either TextureSize or InputSize
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize)
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
@@ -100,28 +87,45 @@ COMPAT_VARYING vec4 TEX0;
 #define Source Texture
 #define vTexCoord TEX0.xy
 
-#define SourceSize                                                             \
-  vec4(TextureSize, 1.0 / TextureSize) // either TextureSize or InputSize
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize)
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float SIGMA;
+uniform COMPAT_PRECISION float BLUR_RADIUS;
 #else
-#define SIGMA 1.0
+#define BLUR_RADIUS 1.0
 #endif
 
-// Finds the offset so that two samples drawn with linear filtering at that
-// offset from a central pixel, multiplied with 1/2 each, sum up to a 3-sample
-// approximation of the Gaussian sampled at pixel centers.
-float get_offset(float sigma) {
-  // Weight at x = 0 evaluates to 1 for all values of sigma.
-  float w = exp(-1.0 / (sigma * sigma));
-  return 2.0 * w / (2.0 * w + 1.0);
+vec3 downsample(sampler2D tex, vec2 coord, vec2 offset) {
+  // The offset should be 1 source pixel size which equals 0.5 output pixel
+  // sizes in the default configuration.
+  return (COMPAT_TEXTURE(tex, coord - offset).rgb +                    //
+          COMPAT_TEXTURE(tex, coord + vec2(offset.x, -offset.y)).rgb + //
+          COMPAT_TEXTURE(tex, coord).rgb * 4.0 +                       //
+          COMPAT_TEXTURE(tex, coord + offset).rgb +                    //
+          COMPAT_TEXTURE(tex, coord - vec2(offset.x, -offset.y)).rgb) *
+         0.125;
+}
+
+vec3 upsample(sampler2D tex, vec2 coord, vec2 offset) {
+  // The offset should be 0.5 source pixel sizes which equals 1 output pixel
+  // size in the default configuration.
+  return (COMPAT_TEXTURE(tex, coord + vec2(0.0, -offset.y * 2.0)).rgb +
+          (COMPAT_TEXTURE(tex, coord + vec2(-offset.x, -offset.y)).rgb +
+           COMPAT_TEXTURE(tex, coord + vec2(offset.x, -offset.y)).rgb) *
+              2.0 +
+          COMPAT_TEXTURE(tex, coord + vec2(-offset.x * 2.0, 0.0)).rgb +
+          COMPAT_TEXTURE(tex, coord + vec2(offset.x * 2.0, 0.0)).rgb +
+          (COMPAT_TEXTURE(tex, coord + vec2(-offset.x, offset.y)).rgb +
+           COMPAT_TEXTURE(tex, coord + vec2(offset.x, offset.y)).rgb) *
+              2.0 +
+          COMPAT_TEXTURE(tex, coord + vec2(0.0, offset.y * 2.0)).rgb) /
+         12.0;
 }
 
 void main() {
-  vec2 offset = vec2(get_offset(SIGMA) * SourceSize.z, 0.0);
-  FragColor = 0.5 * (COMPAT_TEXTURE(Source, vTexCoord - offset) +
-                     COMPAT_TEXTURE(Source, vTexCoord + offset));
+  vec2 offset = 0.5 * SourceSize.zw * BLUR_RADIUS;
+  FragColor = vec4(upsample(Source, vTexCoord, offset), 1.0);
 }
+
 #endif

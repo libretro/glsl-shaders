@@ -23,7 +23,6 @@
 COMPAT_ATTRIBUTE vec4 VertexCoord;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 uniform mat4 MVPMatrix;
 uniform COMPAT_PRECISION int FrameDirection;
@@ -47,7 +46,6 @@ uniform COMPAT_PRECISION float WHATEVER;
 void main() {
   gl_Position = MVPMatrix * VertexCoord;
   TEX0.xy = TexCoord.xy;
-  // Paste vertex contents here:
 }
 
 #elif defined(FRAGMENT)
@@ -80,7 +78,6 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-// in variables go here as COMPAT_VARYING whatever
 
 // compatibility #defines
 #define Source Texture
