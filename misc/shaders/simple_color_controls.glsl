@@ -1,5 +1,5 @@
 
-#pragma parameter CS "Color Space: sRGB,PAL,NTSC-U,NTSC-J" 0.0 0.0 3.0 1.0
+#pragma parameter CS "Colors: sRGB, PAL, NTSC-U, NTSC-J" 0.0 0.0 3.0 1.0
 #pragma parameter TEMP "Color Temperature in Kelvins"  6503.0 1031.0 12047.0 72.0
 #pragma parameter gamma_in "Gamma In" 2.4 1.0 4.0 0.05
 #pragma parameter RG "Green <-to-> Red Hue" 0.0 -0.25 0.25 0.01
@@ -141,26 +141,24 @@ uniform COMPAT_PRECISION float CS;
 #define CS 0.0 
 #endif
 
-const mat3 PAL = mat3(
-0.9792,  -0.0141, 0.0305,
--0.0139, 0.9992,  0.0129,
--0.0054, -0.0042, 1.1353
+// standard 6500k
+mat3 PAL = mat3(                    
+1.0278  ,   -0.0825 ,   0.0508  ,
+0.0092  ,   0.9788  ,   0.0150  ,
+0.0040  ,   0.0005  ,   1.3144  );
 
-);
+// standard 6500k
+mat3 NTSC = mat3(                   
+0.8895  ,   0.0197  ,   0.0885  ,
+-0.0144 ,   0.9801  ,   0.0409  ,
+0.0181  ,   -0.0353 ,   1.3413  );
 
-const mat3 NTSC = mat3(
-0.8870,  0.0451,  0.0566,
--0.0800, 1.0368,  0.0361,
-0.0053,  -0.1196, 1.2320
 
-);
-
-const mat3 NTSC_J = mat3(
-0.7203,  0.1344 , 0.1233,
--0.1051, 1.0305,  0.0637,
-0.0127 , -0.0743, 1.3545
-
-);
+// standard 8500k
+mat3 NTSC_J = mat3(                 
+1.0243  ,   -0.1346 ,   0.1448  ,
+0.0728  ,   0.8770  ,   0.0639  ,
+0.0242  ,   -0.0479 ,   1.6923  );
 
 
 float saturate(float v) 
