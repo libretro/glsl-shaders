@@ -2,7 +2,8 @@
 
 /* 
   crt-sines, a work by DariusG 2023
-  
+
+  v1.8c improved accuracy of colors (PAL)
   v1.8b removed glow and used crt-consumer glow, probably faster?
   v1.8 replaced fake vignette with CRT accurate one.
   v1.7b minor tweaks here and there.
@@ -24,7 +25,7 @@
 #pragma parameter scanl "Scanlines/Mask Low" 0.3 0.0 1.0 0.05
 #pragma parameter scanh "Scanlines/Mask High" 0.15 0.0 1.0 0.05
 #pragma parameter SIZE "Mask Type, 2:Fine, 3:Coarse" 3.0 2.0 3.0 1.0
-#pragma parameter Trin "Trinitron Colors" 1.0 0.0 1.0 1.0
+#pragma parameter Trin "PAL Colors" 1.0 0.0 1.0 1.0
 #pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
 #pragma parameter bogus_conv " [ CONVERGENCE ] " 0.0 0.0 0.0 0.0
 #pragma parameter RX "Red Convergence Horiz." 0.0 -2.0 2.0 0.05
@@ -182,11 +183,11 @@ vec2 Warp(vec2 pos)
     -0.05, 0.1,  1.0
 );
 #else
-mat3 hue = mat3(
-      0.95,  0.0, 0.05,
-     -0.05,  1.0, -0.2,
-      0.0,  0.15, 1.1
-);
+mat3 hue = mat3(                    
+1.0278  ,   -0.0825 ,   0.0508  ,
+0.0092  ,   0.9788  ,   0.0150  ,
+0.0040  ,   0.0005  ,   1.3144  );
+
 #endif
 
 
