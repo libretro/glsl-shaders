@@ -1,6 +1,6 @@
 
 #pragma parameter CS "Colors: sRGB, PAL, NTSC-U, NTSC-J" 0.0 0.0 3.0 1.0
-#pragma parameter TEMP "Color Temperature in Kelvins (NTSC-J 9300)"  6503.0 1031.0 12047.0 72.0
+#pragma parameter TEMP "Color Temperature in Kelvins (NTSC-J 9300)"  6863.0 1031.0 12047.0 72.0
 #pragma parameter gamma_in "Gamma In" 2.4 1.0 4.0 0.05
 #pragma parameter RG "Green <-to-> Red Hue" 0.0 -0.25 0.25 0.01
 #pragma parameter RB "Blue <-to-> Red Hue"  0.0 -0.25 0.25 0.01
@@ -12,9 +12,7 @@
 #pragma parameter SEGA "SEGA Lum Fix" 0.0 0.0 1.0 1.0
 #pragma parameter postbr "Bright Boost" 1.0 1.0 2.0 0.05
 #pragma parameter postdk "Dark Boost" 1.25 1.0 2.0 0.05
-#pragma parameter gamma_out_red "Gamma out Red" 2.2 1.0 4.0 0.05
-#pragma parameter gamma_out_green "Gamma out Green" 2.2 1.0 4.0 0.05
-#pragma parameter gamma_out_blue "Gamma out Blue" 2.2 1.0 4.0 0.05
+#pragma parameter gamma_out "Gamma out" 2.2 1.0 4.0 0.05
 #pragma parameter mono "Mono Display On/Off" 0.0 0.0 1.0 1.0
 #pragma parameter R "Mono Red/Channel" 1.0 0.0 2.0 0.01
 #pragma parameter G "Mono Green/Channel" 1.0 0.0 2.0 0.01
@@ -112,9 +110,8 @@ uniform COMPAT_PRECISION float postbr;
 uniform COMPAT_PRECISION float postdk; 
 uniform COMPAT_PRECISION float mono; 
 uniform COMPAT_PRECISION float gamma_in;
-uniform COMPAT_PRECISION float gamma_out_blue; 
-uniform COMPAT_PRECISION float gamma_out_green; 
-uniform COMPAT_PRECISION float gamma_out_red; 
+uniform COMPAT_PRECISION float gamma_out; 
+ 
 uniform COMPAT_PRECISION float BLACK; 
 uniform COMPAT_PRECISION float RG;
 uniform COMPAT_PRECISION float RB;
@@ -133,9 +130,7 @@ uniform COMPAT_PRECISION float CS;
 #define postbr 1.0
 #define postdk 1.0
 #define mono 0.0
-#define gamma_out_blue 2.2
-#define gamma_out_green 2.2
-#define gamma_out_red 2.2
+#define gamma_out 2.2
 #define gamma_in 2.4
 #define BLACK 0.0
 #define RG 0.0   
@@ -236,22 +231,26 @@ mat3 hue = mat3(
 //color temperature  
    col *= ColorTemp(TEMP);
 
-   col = pow(col, vec3(gamma_in));
+   col = pow((col+0.099)/1.099, vec3(gamma_in));
 
-   
 if (CS != 0.0){
     if (CS == 1.0) col *= PAL;
     if (CS == 2.0) col *= NTSC;
     if (CS == 3.0) col *= NTSC_J;
     col /= vec3(0.24,0.69,0.07);
-    col *= vec3(0.3,0.6,0.1); 
-col = clamp(col,0.0,1.0);
+    col *= vec3(0.29,0.60,0.11); 
+
+if (col.r >1.0) col.r = mix(0.9,1.0,col.r);
+if (col.g >1.0) col.g = mix(0.9,1.0,col.g);
+if (col.b >1.0) col.b = mix(0.9,1.0,col.b);
+if (col.r < 0.0) col.r = 0.0;
+if (col.g < 0.0) col.g = 0.0;
+if (col.b < 0.0) col.b = 0.0;
 }
    if (SEGA == 1.0) col *= 1.0625;
 
-    col.r = pow(col.r, 1.0/gamma_out_red);
-    col.g = pow(col.g, 1.0/gamma_out_green);
-    col.b = pow(col.b, 1.0/gamma_out_blue);
+    col = pow(1.099*col, vec3(1.0/gamma_out))-0.099;
+   
     col -= vec3(BLACK);
     col*= vec3(1.0)/vec3(1.0-BLACK);
     
