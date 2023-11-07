@@ -147,10 +147,11 @@ vec2 Warp (vec2 pos)
     return pos;
 }
 
-mat3 hue = mat3(                 
-1.0243  ,   -0.1346 ,   0.1448  ,
-0.0728  ,   0.8770  ,   0.0639  ,
-0.0242  ,   -0.0479 ,   1.6923  );
+mat3 hue = mat3(                    
+0.9501  ,   -0.0431 ,   0.0857  ,
+0.0265  ,   0.9278  ,   0.0432  ,
+0.0011  ,   -0.0206 ,   1.3153  );
+
 
 
 void main()
@@ -185,7 +186,10 @@ void main()
     float w = max(max(res.r,res.g),res.b)*0.5;
 
 res *=res;
-if (ntsc_j == 1.0) {res *= hue; res = clamp(res,0.0,1.0);}
+if (ntsc_j == 1.0) {res *= hue; 
+    res /= vec3(0.24,0.69,0.07);
+    res *= vec3(0.3,0.6,0.1); 
+    res = clamp(res,0.0,1.0);}
 // mask
 res *= maskc*sin(maskpos*pi*2.0/slotx)+1.0-maskc;
 
