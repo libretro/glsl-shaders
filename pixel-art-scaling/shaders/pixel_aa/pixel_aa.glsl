@@ -190,7 +190,7 @@ vec3 sample_aa(sampler2D tex, vec2 tx_per_px, vec2 tx_to_uv, vec2 tx_coord,
 // interpolation.
 vec4 pixel_aa(sampler2D tex, vec2 tx_per_px, vec2 tx_to_uv, vec2 tx_coord,
               float sharpness, bool gamma_correct, bool sample_subpx,
-              bool subpx_bgr, uint rotation) {
+              bool subpx_bgr, int rotation) {
   if (sample_subpx) {
     // Subpixel sampling: Shift the sampling by 1/3rd of an output pixel for
     // each subpixel, assuming that the output size is at monitor
@@ -203,9 +203,9 @@ vec4 pixel_aa(sampler2D tex, vec2 tx_per_px, vec2 tx_to_uv, vec2 tx_coord,
     rotation_correction[3] = vec2(0.0, -1.0);
     vec2 sub_tx_offset =
         tx_per_px / 3.0 *
-        rotation_correction[(rotation + uint(subpx_bgr) * 2u) % 4u];
+        rotation_correction[(rotation + int(subpx_bgr) * 2) % 4];
     vec3 res;
-    for (uint i = 0u; i < 3u; ++i) {
+    for (int i = 0; i < 3; ++i) {
       res[i] = sample_aa(tex, tx_per_px, tx_to_uv,
                          tx_coord + sub_tx_offset * (float(i) - 1.0),
                          sharpness, gamma_correct)[i];
@@ -234,7 +234,7 @@ uniform COMPAT_PRECISION float PIX_AA_SUBPX_BGR;
 void main() {
   FragColor = pixel_aa(Source, tx_per_px, tx_to_uv, tx_coord, PIX_AA_SHARP,
                        PIX_AA_GAMMA > 0.5, PIX_AA_SUBPX > 0.5,
-                       PIX_AA_SUBPX_BGR > 0.5, 0u);
+                       PIX_AA_SUBPX_BGR > 0.5, 0);
 }
 
 #endif
