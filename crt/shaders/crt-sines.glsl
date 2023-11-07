@@ -3,6 +3,10 @@
 /* 
   crt-sines, a work by DariusG 2023
 
+  v1.8d switched matrix to a simple calculation, as i read CRTs used a different
+  luminance than supposed to (and RGB uses), instead of 0.23,0.70,0.07 they used
+  0.29,0.60,0.11 (NTSC luminance). RGB is pretty close to SMPTE-C that CRTs used.
+  So there it is, possibly gaining some extra fps too. Colors are pretty close.
   v1.8c improved accuracy of colors (PAL)
   v1.8b removed glow and used crt-consumer glow, probably faster?
   v1.8 replaced fake vignette with CRT accurate one.
@@ -25,7 +29,7 @@
 #pragma parameter scanl "Scanlines/Mask Low" 0.3 0.0 1.0 0.05
 #pragma parameter scanh "Scanlines/Mask High" 0.15 0.0 1.0 0.05
 #pragma parameter SIZE "Mask Type, 2:Fine, 3:Coarse" 3.0 2.0 3.0 1.0
-#pragma parameter Trin "PAL Colors" 1.0 0.0 1.0 1.0
+#pragma parameter Trin "CRT Colors" 1.0 0.0 1.0 1.0
 #pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
 #pragma parameter bogus_conv " [ CONVERGENCE ] " 0.0 0.0 0.0 0.0
 #pragma parameter RX "Red Convergence Horiz." 0.0 -2.0 2.0 0.05
@@ -176,20 +180,6 @@ vec2 Warp(vec2 pos)
     return pos;
 }
 
-#if defined GL_ES
- mat3 hue = mat3(
-    1.0,  0.05, 0.05,
-    -0.05, 1.0, -0.1,
-    -0.05, 0.1,  1.0
-);
-#else
-mat3 hue = mat3(                    
-1.0740  ,   -0.0574 ,   -0.0119 ,
-0.0384  ,   0.9699  ,   -0.0059 ,
--0.0079 ,   0.0204  ,   0.9884  );
-
-#endif
-
 
 
 void main()
@@ -236,7 +226,7 @@ else pos = vTexCoord;
 
     res = res*res; 
 
-    if(Trin == 1.0) {res *= hue; 
+    if(Trin == 1.0) { 
     res /= vec3(0.24,0.69,0.07);
     res *= vec3(0.3,0.6,0.1); 
     res = clamp(res,0.0,1.0);}
