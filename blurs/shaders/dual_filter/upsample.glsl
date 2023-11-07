@@ -34,12 +34,6 @@ uniform COMPAT_PRECISION vec2 InputSize;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize)
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
-#ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float WHATEVER;
-#else
-#define WHATEVER 0.0
-#endif
-
 void main() {
   gl_Position = MVPMatrix * VertexCoord;
   TEX0.xy = TexCoord.xy;
