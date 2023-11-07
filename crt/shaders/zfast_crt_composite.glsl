@@ -18,8 +18,8 @@
 #pragma parameter maskc "Mask Strength" 0.35 0.0 1.0 0.05
 #pragma parameter mask "Slot Strength" 0.3 0.0 1.0 0.05
 #pragma parameter slotx "Mask Width" 3.0 2.0 3.0 1.0
-#pragma parameter sat "Saturation" 1.15 1.0 2.0 0.05
-#pragma parameter ntsc_j "NTSC-J colors" 1.0 0.0 1.0 1.0
+#pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
+#pragma parameter ntsc_j "NTSC-J colors" 0.0 0.0 1.0 1.0
 
 #define pi 3.14159265
 #define SourceSize vec4(TextureSize.xy,1.0/TextureSize.xy)
