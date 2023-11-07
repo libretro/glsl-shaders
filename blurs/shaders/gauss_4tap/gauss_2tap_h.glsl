@@ -37,7 +37,6 @@
 COMPAT_ATTRIBUTE vec4 VertexCoord;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 TEX0;
-// out variables go here as COMPAT_VARYING whatever
 
 uniform mat4 MVPMatrix;
 uniform COMPAT_PRECISION int FrameDirection;
@@ -48,8 +47,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 // compatibility #defines
 #define vTexCoord TEX0.xy
-#define SourceSize                                                             \
-  vec4(TextureSize, 1.0 / TextureSize) // either TextureSize or InputSize
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize)
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
@@ -98,8 +96,7 @@ COMPAT_VARYING vec4 TEX0;
 #define Source Texture
 #define vTexCoord TEX0.xy
 
-#define SourceSize                                                             \
-  vec4(TextureSize, 1.0 / TextureSize) // either TextureSize or InputSize
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize)
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM

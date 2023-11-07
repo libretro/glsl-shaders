@@ -31,8 +31,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 // compatibility #defines
 #define vTexCoord TEX0.xy
-#define SourceSize                                                             \
-  vec4(TextureSize, 1.0 / TextureSize) // either TextureSize or InputSize
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize)
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
@@ -81,12 +80,8 @@ COMPAT_VARYING vec4 TEX0;
 #define Source Texture
 #define vTexCoord TEX0.xy
 
-#define SourceSize                                                             \
-  vec4(TextureSize, 1.0 / TextureSize) // either TextureSize or InputSize
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize)
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
-
-// delete all 'params.' or 'registers.' or whatever in the fragment and replace
-// texture(a, b) with COMPAT_TEXTURE(a, b) <-can't macro unfortunately
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float SIGMA;
