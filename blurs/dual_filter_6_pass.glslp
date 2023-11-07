@@ -1,6 +1,6 @@
 shaders = 8
 
-shader0 = shaders/kawase/linearize.glsl
+shader0 = shaders/dual_filter/linearize_and_parameters.glsl
 filter_linear0 = false
 scale_type0 = source
 scale_x0 = 1.0

@@ -1,5 +1,3 @@
-// #version 450
-
 /*
     Dual Filter Blur & Bloom v1.1 by fishku
     Copyright (C) 2023
@@ -29,11 +27,6 @@
     v1.1: Added bloom functionality.
     v1.0: Initial release.
 */
-
-// clang-format off
-#pragma parameter DUAL_FILTER_SETTINGS "=== Dual Filter Blur & Bloom v1.1 settings ===" 0.0 0.0 1.0 1.0
-#pragma parameter BLUR_RADIUS "Blur radius" 1.0 0.0 7.5 0.1
-// clang-format on
 
 #if defined(VERTEX)
 

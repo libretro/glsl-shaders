@@ -1,4 +1,9 @@
-// See gauss_2tap_h.glsl for copyright and other information.
+// This is a copy of ../kawase/linearize.glsl with added parameters for the preset.
+
+// clang-format off
+#pragma parameter DUAL_FILTER_SETTINGS "=== Dual Filter Blur & Bloom v1.1 settings ===" 0.0 0.0 1.0 1.0
+#pragma parameter BLUR_RADIUS "Blur radius" 1.0 0.0 7.5 0.1
+// clang-format on
 
 #if defined(VERTEX)
 
@@ -7,8 +12,8 @@
 #define COMPAT_ATTRIBUTE in
 #define COMPAT_TEXTURE texture
 #else
-#define COMPAT_VARYING varying
-#define COMPAT_ATTRIBUTE attribute
+#define COMPAT_VARYING varying 
+#define COMPAT_ATTRIBUTE attribute 
 #define COMPAT_TEXTURE texture2D
 #endif
 
@@ -19,9 +24,12 @@
 #endif
 
 COMPAT_ATTRIBUTE vec4 VertexCoord;
+COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
+COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 
+vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
 uniform COMPAT_PRECISION int FrameDirection;
 uniform COMPAT_PRECISION int FrameCount;
@@ -31,19 +39,13 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 // compatibility #defines
 #define vTexCoord TEX0.xy
-#define SourceSize                                                             \
-  vec4(TextureSize, 1.0 / TextureSize) // either TextureSize or InputSize
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
-#ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float WHATEVER;
-#else
-#define WHATEVER 0.0
-#endif
-
-void main() {
-  gl_Position = MVPMatrix * VertexCoord;
-  TEX0.xy = TexCoord.xy;
+void main()
+{
+    gl_Position = MVPMatrix * VertexCoord;
+    TEX0.xy = TexCoord.xy;
 }
 
 #elif defined(FRAGMENT)
@@ -81,32 +83,11 @@ COMPAT_VARYING vec4 TEX0;
 #define Source Texture
 #define vTexCoord TEX0.xy
 
-#define SourceSize                                                             \
-  vec4(TextureSize, 1.0 / TextureSize) // either TextureSize or InputSize
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
-// delete all 'params.' or 'registers.' or whatever in the fragment and replace
-// texture(a, b) with COMPAT_TEXTURE(a, b) <-can't macro unfortunately
-
-#ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float SIGMA;
-#else
-#define SIGMA 1.0
-#endif
-
-// Finds the offset so that two samples drawn with linear filtering at that
-// offset from a central pixel, multiplied with 1/2 each, sum up to a 3-sample
-// approximation of the Gaussian sampled at pixel centers.
-float get_offset(float sigma) {
-  // Weight at x = 0 evaluates to 1 for all values of sigma.
-  float w = exp(-1.0 / (sigma * sigma));
-  return 2.0 * w / (2.0 * w + 1.0);
-}
-
-void main() {
-  vec2 offset = vec2(0.0, get_offset(SIGMA) * SourceSize.w);
-  FragColor = 0.5 * (COMPAT_TEXTURE(Source, vTexCoord - offset) +
-                     COMPAT_TEXTURE(Source, vTexCoord + offset));
-}
-
+void main()
+{
+   FragColor = pow(vec4(COMPAT_TEXTURE(Source, vTexCoord).rgb, 1.0), vec4(2.2));
+} 
 #endif

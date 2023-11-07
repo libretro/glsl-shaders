@@ -1,5 +1,3 @@
-// #version 450
-
 /*
     Gauss-4tap v1.0 by fishku
     Copyright (C) 2023
