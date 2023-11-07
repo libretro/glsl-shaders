@@ -1,6 +1,6 @@
 
 #pragma parameter CS "Colors: sRGB, PAL, NTSC-U, NTSC-J" 0.0 0.0 3.0 1.0
-#pragma parameter TEMP "Color Temperature in Kelvins"  6503.0 1031.0 12047.0 72.0
+#pragma parameter TEMP "Color Temperature in Kelvins (NTSC-J 9300)"  6503.0 1031.0 12047.0 72.0
 #pragma parameter gamma_in "Gamma In" 2.4 1.0 4.0 0.05
 #pragma parameter RG "Green <-to-> Red Hue" 0.0 -0.25 0.25 0.01
 #pragma parameter RB "Blue <-to-> Red Hue"  0.0 -0.25 0.25 0.01
@@ -10,7 +10,8 @@
 #pragma parameter SAT "Saturation" 1.0 0.0 2.0 0.01
 #pragma parameter BLACK  "Black Level" 0.0 -0.20 0.20 0.01 
 #pragma parameter SEGA "SEGA Lum Fix" 0.0 0.0 1.0 1.0
-#pragma parameter postbr "Post Brightness" 1.0 0.0 2.5 0.01
+#pragma parameter postbr "Bright Boost" 1.0 1.0 2.0 0.05
+#pragma parameter postdk "Dark Boost" 1.25 1.0 2.0 0.05
 #pragma parameter gamma_out_red "Gamma out Red" 2.2 1.0 4.0 0.05
 #pragma parameter gamma_out_green "Gamma out Green" 2.2 1.0 4.0 0.05
 #pragma parameter gamma_out_blue "Gamma out Blue" 2.2 1.0 4.0 0.05
@@ -108,6 +109,7 @@ uniform COMPAT_PRECISION float BRIGHTNESS;
 uniform COMPAT_PRECISION float contrast; 
 uniform COMPAT_PRECISION float SEGA; 
 uniform COMPAT_PRECISION float postbr; 
+uniform COMPAT_PRECISION float postdk; 
 uniform COMPAT_PRECISION float mono; 
 uniform COMPAT_PRECISION float gamma_in;
 uniform COMPAT_PRECISION float gamma_out_blue; 
@@ -129,6 +131,7 @@ uniform COMPAT_PRECISION float CS;
 #define contrast 1.0
 #define SEGA 0.0
 #define postbr 1.0
+#define postdk 1.0
 #define mono 0.0
 #define gamma_out_blue 2.2
 #define gamma_out_green 2.2
@@ -143,22 +146,22 @@ uniform COMPAT_PRECISION float CS;
 
 // standard 6500k
 mat3 PAL = mat3(                    
-1.0278  ,   -0.0825 ,   0.0508  ,
-0.0092  ,   0.9788  ,   0.0150  ,
-0.0040  ,   0.0005  ,   1.3144  );
+1.0740  ,   -0.0574 ,   -0.0119 ,
+0.0384  ,   0.9699  ,   -0.0059 ,
+-0.0079 ,   0.0204  ,   0.9884  );
 
 // standard 6500k
 mat3 NTSC = mat3(                   
-0.8895  ,   0.0197  ,   0.0885  ,
--0.0144 ,   0.9801  ,   0.0409  ,
-0.0181  ,   -0.0353 ,   1.3413  );
-
+0.9318  ,   0.0412  ,   0.0217  ,
+0.0135  ,   0.9711  ,   0.0148  ,
+0.0055  ,   -0.0143 ,   1.0085  );
 
 // standard 8500k
 mat3 NTSC_J = mat3(                 
-1.0243  ,   -0.1346 ,   0.1448  ,
-0.0728  ,   0.8770  ,   0.0639  ,
-0.0242  ,   -0.0479 ,   1.6923  );
+1.1608  ,   -0.1355 ,   -0.0159 ,
+0.1459  ,   0.8678  ,   -0.0059 ,
+-0.0039 ,   0.0379  ,   0.9688  );
+
 
 
 float saturate(float v) 
@@ -206,7 +209,9 @@ mat4 contrastMatrix(float contr)
 
 vec3 toGrayscale(vec3 color)
 {
-  float average = dot(vec3(0.22,0.71,0.07),color);
+
+  float average = dot(vec3(0.3,0.59,0.11),color);
+  if (CS == 0.0) average = dot(vec3(0.22,0.71,0.07),color);
   return vec3(average);
 }
 
@@ -238,20 +243,22 @@ if (CS != 0.0){
     if (CS == 1.0) col *= PAL;
     if (CS == 2.0) col *= NTSC;
     if (CS == 3.0) col *= NTSC_J;
+    col /= vec3(0.24,0.69,0.07);
+    col *= vec3(0.3,0.6,0.1); 
 col = clamp(col,0.0,1.0);
 }
    if (SEGA == 1.0) col *= 1.0625;
 
-
-    col = pow(col, vec3(1.0/gamma_out_red,1.0,1.0));
-    col = pow(col, vec3(1.0,1.0/gamma_out_green,1.0));
-    col = pow(col, vec3(1.0,1.0,1.0/gamma_out_blue));
+    col.r = pow(col.r, 1.0/gamma_out_red);
+    col.g = pow(col.g, 1.0/gamma_out_green);
+    col.b = pow(col.b, 1.0/gamma_out_blue);
     col -= vec3(BLACK);
     col*= vec3(1.0)/vec3(1.0-BLACK);
     
 //saturation
-   
-float l = dot(col, vec3(0.3,0.6,0.1));
+vec3 lumw = vec3(0.3,0.59,0.11);
+if (CS == 0.0) lumw = vec3(0.2124,0.7011, 0.0866);   
+float l = dot(col, lumw);
     
    col = mix(vec3(l), col, SAT); 
     if (mono == 1.0)
@@ -262,7 +269,7 @@ float l = dot(col, vec3(0.3,0.6,0.1));
     }
    col *= hue;
 
-col *= mix(1.0,postbr,l);
+col *= mix(postdk,postbr,l);
 col = (contrastMatrix(contrast) * vec4(col,1.0)).rgb;  
    FragColor = vec4(col,1.0);
 }

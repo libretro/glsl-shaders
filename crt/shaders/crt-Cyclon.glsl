@@ -46,6 +46,7 @@ any later version.
 #pragma parameter WARPY "Curvature Vertical" 0.042 0.00 0.25 0.01
 #pragma parameter CORNER "Corner Round" 0.03 0.0 0.25 0.01
 #pragma parameter B_SMOOTH "Border Smoothness" 400.0 100.0 1000.0 25.0
+#pragma parameter vig "Vignette On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter bogus_col " [ COLOR SETTINGS ] " 0.0 0.0 0.0 0.0
 #pragma parameter BR_DEP "Scan/Mask Brightness Dependence" 0.2 0.0 0.333 0.01
 #pragma parameter c_space "Color Space: sRGB,PAL,NTSC-U,NTSC-J" 0.0 0.0 3.0 1.0
@@ -184,6 +185,7 @@ uniform COMPAT_PRECISION float BLACK;
 uniform COMPAT_PRECISION float BR_DEP; 
 uniform COMPAT_PRECISION float POTATO; 
 uniform COMPAT_PRECISION float EXT_GAMMA; 
+uniform COMPAT_PRECISION float vig; 
 
 #else
 #define M_TYPE 0.0
@@ -215,6 +217,7 @@ uniform COMPAT_PRECISION float EXT_GAMMA;
 #define BR_DEP 0.266   
 #define POTATO 0.0   
 #define EXT_GAMMA 0.0   
+#define vig 1.0   
 #endif
 
 vec3 Mask(vec2 pos, float CGWG)
@@ -264,7 +267,7 @@ float scanlineWeights(float distance, vec3 color, float x)
     // independent of its width. That is, for a narrower beam
     // "weights" should have a higher peak at the center of the
     // scanline than for a wider beam.
-    float wid = SCANLINE + 0.15 * dot(color, vec3(0.25-0.5*x));
+    float wid = SCANLINE + 0.15 * dot(color, vec3(0.25-0.8*x));   //0.8 vignette strength
     float weights = distance / wid;
     return 0.4 * exp(-weights * weights ) / wid;
     }
@@ -281,22 +284,22 @@ vec3 inv_gamma(vec3 col, vec3 power)
 
 // standard 6500k
 mat3 PAL = mat3(                    
-1.0278  ,   -0.0825 ,   0.0508  ,
-0.0092  ,   0.9788  ,   0.0150  ,
-0.0040  ,   0.0005  ,   1.3144  );
+1.0740  ,   -0.0574 ,   -0.0119 ,
+0.0384  ,   0.9699  ,   -0.0059 ,
+-0.0079 ,   0.0204  ,   0.9884  );
 
 // standard 6500k
 mat3 NTSC = mat3(                   
-0.8895  ,   0.0197  ,   0.0885  ,
--0.0144 ,   0.9801  ,   0.0409  ,
-0.0181  ,   -0.0353 ,   1.3413  );
-
+0.9318  ,   0.0412  ,   0.0217  ,
+0.0135  ,   0.9711  ,   0.0148  ,
+0.0055  ,   -0.0143 ,   1.0085  );
 
 // standard 8500k
-mat3 NTSC_J = mat3(                 
-1.0243  ,   -0.1346 ,   0.1448  ,
-0.0728  ,   0.8770  ,   0.0639  ,
-0.0242  ,   -0.0479 ,   1.6923  );
+mat3 NTSC_J = mat3(                    
+0.9501  ,   -0.0431 ,   0.0857  ,
+0.0265  ,   0.9278  ,   0.0432  ,
+0.0011  ,   -0.0206 ,   1.3153  );
+
 
 
 
@@ -364,8 +367,10 @@ mat3 hue = mat3(
                       res0.g*(1.0-C_STR) +  resg*C_STR,
                       res0.b*(1.0-C_STR) +  resb*C_STR 
                    );
-    float x = vTexCoord.x*scale.x-0.5;
-    x = x*x;
+    float x = 0.0;
+    if (vig == 1.0){
+    x = vTexCoord.x*scale.x-0.5;
+    x = x*x;}
     float l = dot(vec3(BR_DEP),res);
     
     if(EXT_GAMMA != 1.0) res *= res;
@@ -373,6 +378,8 @@ mat3 hue = mat3(
     if (c_space == 1.0) res *= PAL;
     if (c_space == 2.0) res *= NTSC;
     if (c_space == 3.0) res *= NTSC_J;
+    res /= vec3(0.24,0.69,0.07);
+    res *= vec3(0.3,0.6,0.1); 
     res = clamp(res,0.0,1.0);
     }
     float s = fract(bpos.y*SourceSize.y-0.5);
