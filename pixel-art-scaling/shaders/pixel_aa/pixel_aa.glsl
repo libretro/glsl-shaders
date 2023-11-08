@@ -143,50 +143,11 @@ vec2 slopestep(vec2 edge0, vec2 edge1, vec2 x, float slope) {
   return o - 0.5 * s * pow(2.0 * (o - s * x), vec2(slope));
 }
 
+float to_lin(float x) { return pow(x, 2.2); }
 vec3 to_lin(vec3 x) { return pow(x, vec3(2.2)); }
 
+float to_srgb(float x) { return pow(x, 1.0 / 2.2); }
 vec3 to_srgb(vec3 x) { return pow(x, vec3(1.0 / 2.2)); }
-
-// Function to get a single sample using the "pixel AA" method.
-// Params:
-// tx_coord: Coordinate in source pixel (texel) coordinates
-vec3 sample_aa(sampler2D tex, vec2 tx_per_px, vec2 tx_to_uv, vec2 tx_coord,
-               float sharpness, bool gamma_correct) {
-  // The offset for interpolation is a periodic function with
-  // a period length of 1 texel.
-  // The input coordinate is shifted so that the center of the texel
-  // aligns with the start of the period.
-  // First, get the period and phase.
-  vec2 period = floor(tx_coord - 0.5);
-  vec2 phase = tx_coord - 0.5 - period;
-  // The function starts at 0, then starts transitioning at
-  // 0.5 - 0.5 / pixels_per_texel, then reaches 0.5 at 0.5,
-  // Then reaches 1 at 0.5 + 0.5 / pixels_per_texel.
-  // For sharpness values < 1.0, blend to bilinear filtering.
-  vec2 offset =
-      slopestep(min(1.0, sharpness) * (0.5 - 0.5 * tx_per_px),
-                1.0 - min(1.0, sharpness) * (1.0 - (0.5 + 0.5 * tx_per_px)),
-                phase, max(1.0, sharpness));
-
-  // With gamma correct blending, we have to do 4 taps and interpolate
-  // manually. Without it, we can make use of a single tap using bilinear
-  // interpolation. The offsets are shifted back to the texel center before
-  // sampling.
-  if (gamma_correct) {
-    return to_srgb(mix(
-        mix(to_lin(COMPAT_TEXTURE(tex, (period + 0.5) * tx_to_uv).rgb),
-            to_lin(
-                COMPAT_TEXTURE(tex, (period + vec2(1.5, 0.5)) * tx_to_uv).rgb),
-            offset.x),
-        mix(to_lin(
-                COMPAT_TEXTURE(tex, (period + vec2(0.5, 1.5)) * tx_to_uv).rgb),
-            to_lin(COMPAT_TEXTURE(tex, (period + 1.5) * tx_to_uv).rgb),
-            offset.x),
-        offset.y));
-  } else {
-    return COMPAT_TEXTURE(tex, (period + 0.5 + offset) * tx_to_uv).rgb;
-  }
-}
 
 // Function to get a pixel value, taking into consideration possible subpixel
 // interpolation.
@@ -198,27 +159,123 @@ vec4 pixel_aa(sampler2D tex, vec2 tx_per_px, vec2 tx_to_uv, vec2 tx_coord,
     // each subpixel, assuming that the output size is at monitor
     // resolution.
     // Compensate for possible rotation of the screen in certain cores.
-    vec2 rotation_correction[4];
-    rotation_correction[0] = vec2(1.0, 0.0);
-    rotation_correction[1] = vec2(0.0, 1.0);
-    rotation_correction[2] = vec2(-1.0, 0.0);
-    rotation_correction[3] = vec2(0.0, -1.0);
+    const vec4 rot_corr = vec4(1.0, 0.0, -1.0, 0.0);
     vec2 sub_tx_offset =
         tx_per_px / 3.0 *
-        rotation_correction[(rotation + int(subpx_bgr) * 2) % 4];
-    vec3 res;
-    for (int i = 0; i < 3; ++i) {
-      res[i] = sample_aa(tex, tx_per_px, tx_to_uv,
-                         tx_coord + sub_tx_offset * (float(i) - 1.0),
-                         sharpness, gamma_correct)[i];
+        vec2(rot_corr[(rotation + int(subpx_bgr) * 2) % 4],
+             rot_corr[(rotation + int(subpx_bgr) * 2 + 3) % 4]);
+
+    float sharpness_upper = min(1.0, sharpness);
+    vec2 sharp_lb = sharpness_upper * (0.5 - 0.5 * tx_per_px);
+    vec2 sharp_ub = 1.0 - sharpness_upper * (1.0 - (0.5 + 0.5 * tx_per_px));
+    float sharpness_lower = max(1.0, sharpness);
+
+    vec4 res;
+    // Red
+    {
+      vec2 period = floor(tx_coord - sub_tx_offset - 0.5);
+      vec2 phase = tx_coord - sub_tx_offset - 0.5 - period;
+      vec2 offset = slopestep(sharp_lb, sharp_ub, phase, sharpness_lower);
+
+      if (gamma_correct) {
+        res.r = to_srgb(mix(
+            mix(to_lin(COMPAT_TEXTURE(tex, (period + 0.5) * tx_to_uv).r),
+                to_lin(COMPAT_TEXTURE(tex, (period + vec2(1.5, 0.5)) * tx_to_uv)
+                           .r),
+                offset.x),
+            mix(to_lin(COMPAT_TEXTURE(tex, (period + vec2(0.5, 1.5)) * tx_to_uv)
+                           .r),
+                to_lin(COMPAT_TEXTURE(tex, (period + 1.5) * tx_to_uv).r),
+                offset.x),
+            offset.y));
+      } else {
+        res.r = COMPAT_TEXTURE(tex, (period + 0.5 + offset) * tx_to_uv).r;
+      }
     }
-    return vec4(res, 1.0);
+    // Green
+    {
+      vec2 period = floor(tx_coord - 0.5);
+      vec2 phase = tx_coord - 0.5 - period;
+      vec2 offset = slopestep(sharp_lb, sharp_ub, phase, sharpness_lower);
+
+      if (gamma_correct) {
+        res.g = to_srgb(mix(
+            mix(to_lin(COMPAT_TEXTURE(tex, (period + 0.5) * tx_to_uv).g),
+                to_lin(COMPAT_TEXTURE(tex, (period + vec2(1.5, 0.5)) * tx_to_uv)
+                           .g),
+                offset.x),
+            mix(to_lin(COMPAT_TEXTURE(tex, (period + vec2(0.5, 1.5)) * tx_to_uv)
+                           .g),
+                to_lin(COMPAT_TEXTURE(tex, (period + 1.5) * tx_to_uv).g),
+                offset.x),
+            offset.y));
+      } else {
+        res.g = COMPAT_TEXTURE(tex, (period + 0.5 + offset) * tx_to_uv).g;
+      }
+    }
+    // Blue
+    {
+      vec2 period = floor(tx_coord + sub_tx_offset - 0.5);
+      vec2 phase = tx_coord + sub_tx_offset - 0.5 - period;
+      vec2 offset = slopestep(sharp_lb, sharp_ub, phase, sharpness_lower);
+
+      if (gamma_correct) {
+        res.b = to_srgb(mix(
+            mix(to_lin(COMPAT_TEXTURE(tex, (period + 0.5) * tx_to_uv).b),
+                to_lin(COMPAT_TEXTURE(tex, (period + vec2(1.5, 0.5)) * tx_to_uv)
+                           .b),
+                offset.x),
+            mix(to_lin(COMPAT_TEXTURE(tex, (period + vec2(0.5, 1.5)) * tx_to_uv)
+                           .b),
+                to_lin(COMPAT_TEXTURE(tex, (period + 1.5) * tx_to_uv).b),
+                offset.x),
+            offset.y));
+      } else {
+        res.b = COMPAT_TEXTURE(tex, (period + 0.5 + offset) * tx_to_uv).b;
+      }
+    }
+    return res;
   } else {
-    return vec4(
-        sample_aa(tex, tx_per_px, tx_to_uv, tx_coord, sharpness, gamma_correct),
-        1.0);
+    // The offset for interpolation is a periodic function with
+    // a period length of 1 texel.
+    // The input coordinate is shifted so that the center of the texel
+    // aligns with the start of the period.
+    // First, get the period and phase.
+    vec2 period = floor(tx_coord - 0.5);
+    vec2 phase = tx_coord - 0.5 - period;
+    // The function starts at 0, then starts transitioning at
+    // 0.5 - 0.5 / pixels_per_texel, then reaches 0.5 at 0.5,
+    // Then reaches 1 at 0.5 + 0.5 / pixels_per_texel.
+    // For sharpness values < 1.0, blend to bilinear filtering.
+    vec2 offset =
+        slopestep(min(1.0, sharpness) * (0.5 - 0.5 * tx_per_px),
+                  1.0 - min(1.0, sharpness) * (1.0 - (0.5 + 0.5 * tx_per_px)),
+                  phase, max(1.0, sharpness));
+
+    // With gamma correct blending, we have to do 4 taps and interpolate
+    // manually. Without it, we can make use of a single tap using bilinear
+    // interpolation. The offsets are shifted back to the texel center before
+    // sampling.
+    if (gamma_correct) {
+      return vec4(
+          to_srgb(mix(
+              mix(to_lin(COMPAT_TEXTURE(tex, (period + 0.5) * tx_to_uv).rgb),
+                  to_lin(
+                      COMPAT_TEXTURE(tex, (period + vec2(1.5, 0.5)) * tx_to_uv)
+                          .rgb),
+                  offset.x),
+              mix(to_lin(
+                      COMPAT_TEXTURE(tex, (period + vec2(0.5, 1.5)) * tx_to_uv)
+                          .rgb),
+                  to_lin(COMPAT_TEXTURE(tex, (period + 1.5) * tx_to_uv).rgb),
+                  offset.x),
+              offset.y)),
+          1.0);
+    } else {
+      return COMPAT_TEXTURE(tex, (period + 0.5 + offset) * tx_to_uv);
+    }
   }
- return vec4(0.0);
+  return vec4(0.0);
 }
 
 #ifdef PARAMETER_UNIFORM
