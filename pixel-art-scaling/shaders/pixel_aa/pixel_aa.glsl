@@ -1,3 +1,5 @@
+#version 130
+
 // layout(push_constant) uniform Push {
 //     vec4 SourceSize;
 //     vec4 OutputSize;
@@ -203,7 +205,7 @@ vec4 pixel_aa(sampler2D tex, vec2 tx_per_px, vec2 tx_to_uv, vec2 tx_coord,
     rotation_correction[3] = vec2(0.0, -1.0);
     vec2 sub_tx_offset =
         tx_per_px / 3.0 *
-        rotation_correction[mod(rotation + int(subpx_bgr) * 2, 4)];
+        rotation_correction[(rotation + int(subpx_bgr) * 2) % 4];
     vec3 res;
     for (int i = 0; i < 3; ++i) {
       res[i] = sample_aa(tex, tx_per_px, tx_to_uv,
