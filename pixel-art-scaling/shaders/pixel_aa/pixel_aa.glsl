@@ -113,7 +113,10 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
-uniform COMPAT_PRECISION uint Rotation;
+// TODO: This seems like a bug in RetroArch -- Rotation is commonly unsigned.
+// The GLSL implementation is the only one that uses a signed integer.
+// The type of this uniform should be changed to `uint` once RA is patched.
+uniform COMPAT_PRECISION int Rotation;
 uniform sampler2D Texture;
 
 COMPAT_VARYING vec2 tx_coord;
@@ -146,7 +149,7 @@ vec3 to_srgb(vec3 x) { return pow(x, vec3(1.0 / 2.2)); }
 // interpolation.
 vec4 pixel_aa(sampler2D tex, vec2 tx_per_px, vec2 tx_to_uv, vec2 tx_coord,
               float sharpness, bool gamma_correct, bool sample_subpx,
-              int subpx_orientation, int rotation) {
+              int subpx_orientation, int screen_rotation) {
   float sharpness_upper = min(1.0, sharpness);
   vec2 sharp_lb = sharpness_upper * (0.5 - 0.5 * tx_per_px);
   vec2 sharp_ub = 1.0 - sharpness_upper * (1.0 - (0.5 + 0.5 * tx_per_px));
@@ -160,8 +163,8 @@ vec4 pixel_aa(sampler2D tex, vec2 tx_per_px, vec2 tx_to_uv, vec2 tx_coord,
     const vec4 rot_corr = vec4(1.0, 0.0, -1.0, 0.0);
     vec2 sub_tx_offset =
         tx_per_px / 3.0 *
-        vec2(rot_corr[(rotation + subpx_orientation) % 4],
-             rot_corr[(rotation + subpx_orientation + 3) % 4]);
+        vec2(rot_corr[(screen_rotation + subpx_orientation) % 4],
+             rot_corr[(screen_rotation + subpx_orientation + 3) % 4]);
 
     vec3 res;
     vec2 period, phase, offset;
