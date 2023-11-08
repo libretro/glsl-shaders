@@ -122,7 +122,7 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
-uniform COMPAT_PRECISION unsigned Rotation;
+uniform COMPAT_PRECISION uint Rotation;
 uniform sampler2D Texture;
 
 COMPAT_VARYING vec2 tx_coord;
@@ -291,7 +291,7 @@ uniform COMPAT_PRECISION float PIX_AA_SUBPX_BGR;
 void main() {
   FragColor = pixel_aa(Source, tx_per_px, tx_to_uv, tx_coord, PIX_AA_SHARP,
                        PIX_AA_GAMMA > 0.5, PIX_AA_SUBPX > 0.5,
-                       PIX_AA_SUBPX_BGR > 0.5, Rotation);
+                       PIX_AA_SUBPX_BGR > 0.5, int(Rotation));
 }
 
 #endif
