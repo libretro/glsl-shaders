@@ -1,18 +1,7 @@
 #version 130
 
-// layout(push_constant) uniform Push {
-//     vec4 SourceSize;
-//     vec4 OutputSize;
-//     uint Rotation;
-//     float PIX_AA_SHARP;
-//     float PIX_AA_GAMMA;
-//     float PIX_AA_SUBPX;
-//     float PIX_AA_SUBPX_BGR;
-// }
-// param;
-
 /*
-    Pixel AA v1.4 by fishku
+    Pixel AA v1.5 by fishku
     Copyright (C) 2023
     Public domain license (CC0)
 
@@ -35,7 +24,9 @@
     subpixel anti-aliasing, results are identical to the "pixellate" shader.
 
     Changelog:
-    v1.4: Optimize for embedded devices.
+    v1.5: Optimize for embedded devices.
+    v1.4: Enable subpixel sampling for all four pixel layout orientations,
+          including rotated screens.
     v1.3: Account for screen rotation in subpixel sampling.
     v1.2: Optimize and simplify algorithm. Enable sharpness < 1.0. Fix subpixel
           sampling bug.
@@ -44,11 +35,11 @@
 */
 
 // clang-format off
-#pragma parameter PIX_AA_SETTINGS "=== Pixel AA v1.4 settings ===" 0.0 0.0 1.0 1.0
+#pragma parameter PIX_AA_SETTINGS "=== Pixel AA v1.5 settings ===" 0.0 0.0 1.0 1.0
 #pragma parameter PIX_AA_SHARP "Pixel AA sharpening amount" 1.5 0.0 2.0 0.05
 #pragma parameter PIX_AA_GAMMA "Enable gamma-correct blending" 1.0 0.0 1.0 1.0
 #pragma parameter PIX_AA_SUBPX "Enable subpixel AA" 0.0 0.0 1.0 1.0
-#pragma parameter PIX_AA_SUBPX_BGR "Use BGR subpx. instead of RGB" 0.0 0.0 1.0 1.0
+#pragma parameter PIX_AA_SUBPX_ORIENTATION "Subpixel layout (0=RGB, 1=RGB vert., 2=BGR, 3=BGR vert.)" 0.0 0.0 3.0 1.0
 // clang-format on
 
 #if defined(VERTEX)
@@ -155,7 +146,7 @@ vec3 to_srgb(vec3 x) { return pow(x, vec3(1.0 / 2.2)); }
 // interpolation.
 vec4 pixel_aa(sampler2D tex, vec2 tx_per_px, vec2 tx_to_uv, vec2 tx_coord,
               float sharpness, bool gamma_correct, bool sample_subpx,
-              bool subpx_bgr, int rotation) {
+              int subpx_orientation, int rotation) {
   float sharpness_upper = min(1.0, sharpness);
   vec2 sharp_lb = sharpness_upper * (0.5 - 0.5 * tx_per_px);
   vec2 sharp_ub = 1.0 - sharpness_upper * (1.0 - (0.5 + 0.5 * tx_per_px));
@@ -169,8 +160,8 @@ vec4 pixel_aa(sampler2D tex, vec2 tx_per_px, vec2 tx_to_uv, vec2 tx_coord,
     const vec4 rot_corr = vec4(1.0, 0.0, -1.0, 0.0);
     vec2 sub_tx_offset =
         tx_per_px / 3.0 *
-        vec2(rot_corr[(rotation + int(subpx_bgr) * 2) % 4],
-             rot_corr[(rotation + int(subpx_bgr) * 2 + 3) % 4]);
+        vec2(rot_corr[(rotation + subpx_orientation) % 4],
+             rot_corr[(rotation + subpx_orientation + 3) % 4]);
 
     vec3 res;
     vec2 period, phase, offset;
@@ -280,18 +271,18 @@ vec4 pixel_aa(sampler2D tex, vec2 tx_per_px, vec2 tx_to_uv, vec2 tx_coord,
 uniform COMPAT_PRECISION float PIX_AA_SHARP;
 uniform COMPAT_PRECISION float PIX_AA_GAMMA;
 uniform COMPAT_PRECISION float PIX_AA_SUBPX;
-uniform COMPAT_PRECISION float PIX_AA_SUBPX_BGR;
+uniform COMPAT_PRECISION float PIX_AA_SUBPX_ORIENTATION;
 #else
 #define PIX_AA_SHARP 1.5
 #define PIX_AA_GAMMA 1.0
 #define PIX_AA_SUBPX 0.0
-#define PIX_AA_SUBPX_BGR 0.0
+#define PIX_AA_SUBPX_ORIENTATION 0.0
 #endif
 
 void main() {
   FragColor = pixel_aa(Source, tx_per_px, tx_to_uv, tx_coord, PIX_AA_SHARP,
                        PIX_AA_GAMMA > 0.5, PIX_AA_SUBPX > 0.5,
-                       PIX_AA_SUBPX_BGR > 0.5, int(Rotation));
+                       int(PIX_AA_SUBPX_ORIENTATION), int(Rotation));
 }
 
 #endif
