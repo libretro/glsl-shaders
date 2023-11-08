@@ -12,7 +12,7 @@
 // param;
 
 /*
-    Pixel AA v1.3 by fishku
+    Pixel AA v1.4 by fishku
     Copyright (C) 2023
     Public domain license (CC0)
 
@@ -35,6 +35,7 @@
     subpixel anti-aliasing, results are identical to the "pixellate" shader.
 
     Changelog:
+    v1.4: Optimize for embedded devices.
     v1.3: Account for screen rotation in subpixel sampling.
     v1.2: Optimize and simplify algorithm. Enable sharpness < 1.0. Fix subpixel
           sampling bug.
@@ -43,7 +44,7 @@
 */
 
 // clang-format off
-#pragma parameter PIX_AA_SETTINGS "=== Pixel AA v1.3 settings ===" 0.0 0.0 1.0 1.0
+#pragma parameter PIX_AA_SETTINGS "=== Pixel AA v1.4 settings ===" 0.0 0.0 1.0 1.0
 #pragma parameter PIX_AA_SHARP "Pixel AA sharpening amount" 1.5 0.0 2.0 0.05
 #pragma parameter PIX_AA_GAMMA "Enable gamma-correct blending" 1.0 0.0 1.0 1.0
 #pragma parameter PIX_AA_SUBPX "Enable subpixel AA" 0.0 0.0 1.0 1.0
@@ -121,6 +122,7 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION unsigned Rotation;
 uniform sampler2D Texture;
 
 COMPAT_VARYING vec2 tx_coord;
@@ -289,7 +291,7 @@ uniform COMPAT_PRECISION float PIX_AA_SUBPX_BGR;
 void main() {
   FragColor = pixel_aa(Source, tx_per_px, tx_to_uv, tx_coord, PIX_AA_SHARP,
                        PIX_AA_GAMMA > 0.5, PIX_AA_SUBPX > 0.5,
-                       PIX_AA_SUBPX_BGR > 0.5, 0);
+                       PIX_AA_SUBPX_BGR > 0.5, Rotation);
 }
 
 #endif
