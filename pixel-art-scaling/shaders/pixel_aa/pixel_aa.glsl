@@ -86,9 +86,9 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 void main() {
   gl_Position = MVPMatrix * VertexCoord;
-  tx_coord = TexCoord.xy * SourceSize.xy;
-  tx_per_px = SourceSize.xy * OutSize.zw;
-  tx_to_uv = SourceSize.zw;
+  tx_coord = TexCoord.xy * TextureSize;
+  tx_per_px = InputSize / OutputSize;
+  tx_to_uv = 1.0 / TextureSize;
 }
 
 #elif defined(FRAGMENT)
