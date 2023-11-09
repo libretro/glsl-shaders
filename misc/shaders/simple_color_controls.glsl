@@ -6,6 +6,7 @@
 #pragma parameter RB "Blue <-to-> Red Hue"  0.0 -0.25 0.25 0.01
 #pragma parameter GB "Blue <-to-> Green Hue" 0.0 -0.25 0.25 0.01
 #pragma parameter BRIGHTNESS "Brightness" 1.0 0.0 2.0 0.01
+#pragma parameter crt_lum "CRT Luminances On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter contrast "Contrast" 1.0 0.00 2.00 0.01
 #pragma parameter SAT "Saturation" 1.0 0.0 2.0 0.01
 #pragma parameter BLACK  "Black Level" 0.0 -0.20 0.20 0.01 
@@ -117,6 +118,7 @@ uniform COMPAT_PRECISION float RG;
 uniform COMPAT_PRECISION float RB;
 uniform COMPAT_PRECISION float GB;
 uniform COMPAT_PRECISION float CS;
+uniform COMPAT_PRECISION float crt_lum;
 
 #else
 #define R 1.0
@@ -137,6 +139,7 @@ uniform COMPAT_PRECISION float CS;
 #define RB 0.0   
 #define GB 0.0  
 #define CS 0.0 
+#define crt_lum 1.0 
 #endif
 
 // standard 6500k
@@ -151,11 +154,12 @@ mat3 NTSC = mat3(
 0.0135  ,   0.9711  ,   0.0148  ,
 0.0055  ,   -0.0143 ,   1.0085  );
 
-// standard 8500k
+// standard 6500k
 mat3 NTSC_J = mat3(                 
-1.1608  ,   -0.1355 ,   -0.0159 ,
-0.1459  ,   0.8678  ,   -0.0059 ,
--0.0039 ,   0.0379  ,   0.9688  );
+1.0185  ,   -0.0144 ,   -0.0029 ,
+0.0732  ,   0.9369  ,   -0.0059 ,
+-0.0318 ,   -0.0080 ,   1.0353  );
+
 
 
 
@@ -228,25 +232,30 @@ mat3 hue = mat3(
    vec3 col = COMPAT_TEXTURE(Source,vTexCoord).rgb;
    col *= BRIGHTNESS;
    
+
+   col = pow((col+0.055)/1.055, vec3(gamma_in));
 //color temperature  
    col *= ColorTemp(TEMP);
 
-   col = pow((col+0.099)/1.099, vec3(gamma_in));
-
+   
 if (CS != 0.0){
     if (CS == 1.0) col *= PAL;
     if (CS == 2.0) col *= NTSC;
     if (CS == 3.0) col *= NTSC_J;
-    col /= vec3(0.24,0.69,0.07);
-    col *= vec3(0.29,0.60,0.11); 
+   
 
-if (col.r >1.0) col.r = mix(0.9,1.0,col.r);
-if (col.g >1.0) col.g = mix(0.9,1.0,col.g);
-if (col.b >1.0) col.b = mix(0.9,1.0,col.b);
+if (col.r >1.0) col.r = mix(0.9,1.0,col.r-0.25);
+if (col.g >1.0) col.g = mix(0.9,1.0,col.g-0.25);
+if (col.b >1.0) col.b = mix(0.9,1.0,col.b-0.25);
 if (col.r < 0.0) col.r = 0.0;
 if (col.g < 0.0) col.g = 0.0;
 if (col.b < 0.0) col.b = 0.0;
 }
+if (crt_lum == 1.0){
+
+    // 0.29/0.24, 0.6/0.69, 0.11/0.07
+     col *= vec3(1.208,0.8695,1.5714); 
+   }
    if (SEGA == 1.0) col *= 1.0625;
 
     col = pow(1.099*col, vec3(1.0/gamma_out))-0.099;
@@ -256,7 +265,7 @@ if (col.b < 0.0) col.b = 0.0;
     
 //saturation
 vec3 lumw = vec3(0.3,0.59,0.11);
-if (CS == 0.0) lumw = vec3(0.2124,0.7011, 0.0866);   
+if (CS == 0.0) lumw = vec3(0.29, 0.6, 0.11);   
 float l = dot(col, lumw);
     
    col = mix(vec3(l), col, SAT); 
