@@ -34,6 +34,7 @@ any later version.
 #pragma parameter double_slot "   Slot Mask Height: 2x1 or 4x1" 1.0 1.0 2.0 1.0
 #pragma parameter slotms "   Slot Mask Size" 1.0 1.0 2.0 1.0
 #pragma parameter GAMMA_OUT "Gamma Out" 2.2 0.0 4.0 0.05
+#pragma parameter crt_lum "CRT Luminances On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter brightboost1 "Bright boost dark pixels" 1.3 0.0 3.0 0.05
 #pragma parameter brightboost2 "Bright boost bright pixels" 1.05 0.0 3.0 0.05
 #pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
@@ -168,6 +169,7 @@ uniform COMPAT_PRECISION float bleed;
 uniform COMPAT_PRECISION float bl_size;
 uniform COMPAT_PRECISION float sharpx;
 uniform COMPAT_PRECISION float sharpy;
+uniform COMPAT_PRECISION float crt_lum;
 
 #else
 #define blurx  0.0    
@@ -204,6 +206,8 @@ uniform COMPAT_PRECISION float sharpy;
 #define bl_size 1.0
 #define sharpx 2.0
 #define sharpy 3.0
+#define crt_lum 1.0 
+
 #endif
 
 
@@ -583,7 +587,11 @@ color =clamp(color, 0.0,1.0);
     if (slotmask !=0.0) color*=SlotMask(maskpos.xy*1.0001,color);
     
     color*=mix(brightboost1, brightboost2, lum);    
+if (crt_lum == 1.0){
 
+    // 0.29/0.24, 0.6/0.69, 0.11/0.07
+     color *= vec3(1.208,0.8695,1.5714); 
+   }
     color=pow(color,vec3(1.0/GAMMA_OUT));
 
     if (sat != 1.0) color = saturation(color, lum, lumWeighting);
