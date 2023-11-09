@@ -6,13 +6,12 @@
 #pragma parameter RB "Blue <-to-> Red Hue"  0.0 -0.25 0.25 0.01
 #pragma parameter GB "Blue <-to-> Green Hue" 0.0 -0.25 0.25 0.01
 #pragma parameter BRIGHTNESS "Brightness" 1.0 0.0 2.0 0.01
-#pragma parameter crt_lum "CRT Luminances On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter contrast "Contrast" 1.0 0.00 2.00 0.01
 #pragma parameter SAT "Saturation" 1.0 0.0 2.0 0.01
 #pragma parameter BLACK  "Black Level" 0.0 -0.20 0.20 0.01 
 #pragma parameter SEGA "SEGA Lum Fix" 0.0 0.0 1.0 1.0
 #pragma parameter postbr "Bright Boost" 1.0 1.0 2.0 0.05
-#pragma parameter postdk "Dark Boost" 1.25 1.0 2.0 0.05
+#pragma parameter postdk "Dark Boost" 1.0 1.0 2.0 0.05
 #pragma parameter gamma_out "Gamma out" 2.2 1.0 4.0 0.05
 #pragma parameter mono "Mono Display On/Off" 0.0 0.0 1.0 1.0
 #pragma parameter R "Mono Red/Channel" 1.0 0.0 2.0 0.01
@@ -118,7 +117,6 @@ uniform COMPAT_PRECISION float RG;
 uniform COMPAT_PRECISION float RB;
 uniform COMPAT_PRECISION float GB;
 uniform COMPAT_PRECISION float CS;
-uniform COMPAT_PRECISION float crt_lum;
 
 #else
 #define R 1.0
@@ -139,7 +137,6 @@ uniform COMPAT_PRECISION float crt_lum;
 #define RB 0.0   
 #define GB 0.0  
 #define CS 0.0 
-#define crt_lum 1.0 
 #endif
 
 // standard 6500k
@@ -159,7 +156,6 @@ mat3 NTSC_J = mat3(
 1.0185  ,   -0.0144 ,   -0.0029 ,
 0.0732  ,   0.9369  ,   -0.0059 ,
 -0.0318 ,   -0.0080 ,   1.0353  );
-
 
 
 
@@ -220,6 +216,41 @@ vec3 colorize(vec3 grayscale, vec3 color)
 }
 
 
+vec3 huePreserveClipDesaturate(float r, float g, float b)
+{
+   float l = (.299 * r) + (0.587 * g) + (0.114 * b);
+   bool ovr = false;
+   float ratio = 1.0;
+
+   if ((r > 1.0) || (g > 1.0) || (b > 1.0))
+   {
+      ovr = true;
+      float max = r;
+      if (g > max) max = g;
+      if (b > max) max = b;
+      ratio = 1.0 / max;
+   }
+
+   if (ovr)
+   {
+      r -= 1.0;
+      g -= 1.0;
+      b -= 1.0;
+      r *= ratio;
+      g *= ratio;
+      b *= ratio;
+      r += 1.0;
+      g += 1.0;
+      b += 1.0;
+   }
+
+   r = clamp(r, 0.0, 1.0);
+   g = clamp(g, 0.0, 1.0);
+   b = clamp(b, 0.0, 1.0);
+
+   return vec3(r, g, b);
+}
+
 
 void main()
 {
@@ -232,8 +263,7 @@ mat3 hue = mat3(
    vec3 col = COMPAT_TEXTURE(Source,vTexCoord).rgb;
    col *= BRIGHTNESS;
    
-
-   col = pow((col+0.055)/1.055, vec3(gamma_in));
+   col = pow((col+0.099)/1.099, vec3(gamma_in));
 //color temperature  
    col *= ColorTemp(TEMP);
 
@@ -242,20 +272,10 @@ if (CS != 0.0){
     if (CS == 1.0) col *= PAL;
     if (CS == 2.0) col *= NTSC;
     if (CS == 3.0) col *= NTSC_J;
-   
+    col /= vec3(0.24,0.69,0.07);
+    col *= vec3(0.29,0.60,0.11); 
 
-if (col.r >1.0) col.r = mix(0.9,1.0,col.r-0.25);
-if (col.g >1.0) col.g = mix(0.9,1.0,col.g-0.25);
-if (col.b >1.0) col.b = mix(0.9,1.0,col.b-0.25);
-if (col.r < 0.0) col.r = 0.0;
-if (col.g < 0.0) col.g = 0.0;
-if (col.b < 0.0) col.b = 0.0;
 }
-if (crt_lum == 1.0){
-
-    // 0.29/0.24, 0.6/0.69, 0.11/0.07
-     col *= vec3(1.208,0.8695,1.5714); 
-   }
    if (SEGA == 1.0) col *= 1.0625;
 
     col = pow(1.099*col, vec3(1.0/gamma_out))-0.099;
@@ -265,7 +285,7 @@ if (crt_lum == 1.0){
     
 //saturation
 vec3 lumw = vec3(0.3,0.59,0.11);
-if (CS == 0.0) lumw = vec3(0.29, 0.6, 0.11);   
+if (CS == 0.0) lumw = vec3(0.2124,0.7011, 0.0866);   
 float l = dot(col, lumw);
     
    col = mix(vec3(l), col, SAT); 
@@ -279,6 +299,9 @@ float l = dot(col, lumw);
 
 col *= mix(postdk,postbr,l);
 col = (contrastMatrix(contrast) * vec4(col,1.0)).rgb;  
+
+   col = huePreserveClipDesaturate(col.r, col.g, col.b);
+
    FragColor = vec4(col,1.0);
 }
 #endif
