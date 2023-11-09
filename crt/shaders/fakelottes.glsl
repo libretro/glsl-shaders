@@ -154,7 +154,9 @@ vec4 scanline(vec2 coord, vec4 frame)
 		sine_comp = sine_comp.yx;
 		omega = omega.yx;
 	#endif
-	vec3 scanline = res * (SCANLINE_BASE_BRIGHTNESS + dot(sine_comp * sin(coord * omega), vec2(1.0, 1.0)));
+
+// -0.25 fixes scanline misplacement on pixels
+	vec3 scanline = res * (SCANLINE_BASE_BRIGHTNESS + dot(sine_comp * sin((coord-vec2(0.0,0.25*SourceSize.w)) * omega), vec2(1.0, 1.0)));
 
 	return vec4(scanline.x, scanline.y, scanline.z, 1.0);
 #else
