@@ -274,7 +274,7 @@ if (CS != 0.0){
     if (CS == 3.0) col *= NTSC_J;
     col /= vec3(0.24,0.69,0.07);
     col *= vec3(0.29,0.60,0.11); 
-
+  col = clamp(col,0.0,2.0);
 }
    if (SEGA == 1.0) col *= 1.0625;
 
