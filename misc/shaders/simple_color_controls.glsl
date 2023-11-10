@@ -139,6 +139,24 @@ uniform COMPAT_PRECISION float CS;
 #define CS 0.0 
 #endif
 
+#if defined GL_ES
+
+mat3 PAL = mat3(                    
+0.7954  ,   0.1881  ,   0.0053  ,
+-0.0310 ,   1.0343  ,   -0.0044 ,
+-0.0236 ,   0.1383  ,   0.8927  );
+
+mat3 NTSC = mat3(                   
+0.6837  ,   0.2635  ,   0.0336  ,
+-0.0499 ,   1.0323  ,   0.0139  ,
+-0.0119 ,   0.1071  ,   0.9111  );
+
+mat3 NTSC_J = mat3(                 
+0.8642  ,   0.1253  ,   0.0030  ,
+0.0545  ,   0.9513  ,   -0.0029 ,
+-0.0214 ,   0.1554  ,   0.8750  );
+
+#else
 // standard 6500k
 mat3 PAL = mat3(                    
 1.0740  ,   -0.0574 ,   -0.0119 ,
@@ -156,7 +174,7 @@ mat3 NTSC_J = mat3(
 1.0185  ,   -0.0144 ,   -0.0029 ,
 0.0732  ,   0.9369  ,   -0.0059 ,
 -0.0318 ,   -0.0080 ,   1.0353  );
-
+#endif
 
 
 float saturate(float v) 
@@ -274,7 +292,7 @@ if (CS != 0.0){
     if (CS == 3.0) col *= NTSC_J;
     col /= vec3(0.24,0.69,0.07);
     col *= vec3(0.29,0.60,0.11); 
-  col = clamp(col,0.0,2.0);
+    col = clamp(col,0.0,2.0);
 }
    if (SEGA == 1.0) col *= 1.0625;
 
@@ -295,7 +313,7 @@ float l = dot(col, lumw);
     vec3 c = vec3(R, G, B);
     col = colorize (col1, c);
     }
-   col *= hue;
+   //col *= hue;
 
 col *= mix(postdk,postbr,l);
 col = (contrastMatrix(contrast) * vec4(col,1.0)).rgb;  
