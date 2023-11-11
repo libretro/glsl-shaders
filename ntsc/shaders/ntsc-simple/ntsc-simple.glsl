@@ -10,7 +10,7 @@
 #pragma parameter CHR_BLUR "CHROMA RESOLUTION" 2.3 1.0 10.0 0.1
 #pragma parameter L_BLUR "LUMA RESOLUTION" 10.5 10.0 20.0 0.5
 #pragma parameter CHROMA_SATURATION "CHROMA SATURATION" 5.0 0.0 15.0 0.1
-#pragma parameter BRIGHTNESS "LUMA BRIGHTNESS" 0.55 0.0 2.0 0.01
+#pragma parameter L_brightness "LUMA BRIGHTNESS" 0.55 0.0 2.0 0.01
 #pragma parameter IHUE "I SHIFT (blue to orange)" 0.0 -1.0 1.0 0.01
 #pragma parameter QHUE "Q SHIFT (green to purple)" 0.0 -1.0 1.0 0.01
 
@@ -106,7 +106,7 @@ COMPAT_VARYING vec4 TEX0;
 uniform COMPAT_PRECISION float CHR_BLUR;
 uniform COMPAT_PRECISION float L_BLUR;
 uniform COMPAT_PRECISION float CHROMA_SATURATION;
-uniform COMPAT_PRECISION float BRIGHTNESS;
+uniform COMPAT_PRECISION float L_brightness;
 uniform COMPAT_PRECISION float IHUE;
 uniform COMPAT_PRECISION float QHUE;
 
@@ -115,7 +115,7 @@ uniform COMPAT_PRECISION float QHUE;
 #define CHR_BLUR 4.0
 #define L_BLUR 12.0
 #define CHROMA_SATURATION 7.0
-#define BRIGHTNESS 10.0
+#define L_brightness 10.0
 #define IHUE 0.0
 #define QHUE 0.0
 #endif
@@ -172,7 +172,7 @@ for (int d = -FIR_SIZE; d < FIR_SIZE; d++) {
         // LUMA decode
         // Apply Blackman window for smoother colors
         float window = blackman((offset/2.0 + 10.0), float(FIR_SIZE/2)); 
-        yiq.r += s.r * BRIGHTNESS * window;
+        yiq.r += s.r * L_brightness * window;
         // LUMA decode end!
 
         // CHROMA encode
