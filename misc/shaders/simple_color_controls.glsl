@@ -5,6 +5,9 @@
 #pragma parameter RG "Green <-to-> Red Hue" 0.0 -0.25 0.25 0.01
 #pragma parameter RB "Blue <-to-> Red Hue"  0.0 -0.25 0.25 0.01
 #pragma parameter GB "Blue <-to-> Green Hue" 0.0 -0.25 0.25 0.01
+#pragma parameter r_out "CRT Red Vibrancy" 0.29 0.0 1.0 0.01
+#pragma parameter g_out "CRT Green Vibrancy" 0.62 0.0 1.0 0.01
+#pragma parameter b_out "CRT Blue Vibrancy" 0.09 0.0 1.0 0.01
 #pragma parameter BRIGHTNESS "Brightness" 1.0 0.0 2.0 0.01
 #pragma parameter contrast "Contrast" 1.0 0.00 2.00 0.01
 #pragma parameter SAT "Saturation" 1.0 0.0 2.0 0.01
@@ -111,7 +114,9 @@ uniform COMPAT_PRECISION float postdk;
 uniform COMPAT_PRECISION float mono; 
 uniform COMPAT_PRECISION float gamma_in;
 uniform COMPAT_PRECISION float gamma_out; 
- 
+uniform COMPAT_PRECISION float r_out;
+uniform COMPAT_PRECISION float g_out;
+uniform COMPAT_PRECISION float b_out;
 uniform COMPAT_PRECISION float BLACK; 
 uniform COMPAT_PRECISION float RG;
 uniform COMPAT_PRECISION float RB;
@@ -137,6 +142,9 @@ uniform COMPAT_PRECISION float CS;
 #define RB 0.0   
 #define GB 0.0  
 #define CS 0.0 
+#define r_out 0.0 
+#define g_out 0.0 
+#define b_out 0.0 
 #endif
 
 #if defined GL_ES
@@ -291,7 +299,7 @@ if (CS != 0.0){
     if (CS == 2.0) col *= NTSC;
     if (CS == 3.0) col *= NTSC_J;
     col /= vec3(0.24,0.69,0.07);
-    col *= vec3(0.29,0.60,0.11); 
+    col *= vec3(r_out,g_out,b_out); 
     col = clamp(col,0.0,2.0);
 }
    if (SEGA == 1.0) col *= 1.0625;
