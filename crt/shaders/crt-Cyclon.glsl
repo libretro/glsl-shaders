@@ -43,9 +43,10 @@ any later version.
 #pragma parameter CONV_B "Convergence Blue X-Axis" 0.0 -1.0 1.0 0.05
 #pragma parameter bogus_geom " [ GEOMETRY SETTINGS ] " 0.0 0.0 0.0 0.0
 #pragma parameter bzl "Bezel On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter zoom "Zoom Image" 1.03 0.1 1.5 0.005
-#pragma parameter centerx "Image Center X" 0.45 -2.0 2.0 0.01 
-#pragma parameter centery "Image Center Y" 0.48 -2.0 2.0 0.01 
+#pragma parameter zoomx "Zoom Image X" 1.04 0.1 1.5 0.005
+#pragma parameter zoomy "Zoom Image Y" 1.05 0.1 1.5 0.005
+#pragma parameter centerx "Image Center X" 0.3 -3.0 3.0 0.1 
+#pragma parameter centery "Image Center Y" 0.2 -3.0 3.0 0.1 
 #pragma parameter WARPX "Curvature Horizontal" 0.01 0.00 0.25 0.01
 #pragma parameter WARPY "Curvature Vertical" 0.01 0.00 0.25 0.01
 #pragma parameter vig "Vignette On/Off" 1.0 0.0 1.0 1.0
@@ -187,7 +188,8 @@ uniform COMPAT_PRECISION float BR_DEP;
 uniform COMPAT_PRECISION float POTATO; 
 uniform COMPAT_PRECISION float EXT_GAMMA; 
 uniform COMPAT_PRECISION float vig; 
-uniform COMPAT_PRECISION float zoom;
+uniform COMPAT_PRECISION float zoomx;
+uniform COMPAT_PRECISION float zoomy;
 uniform COMPAT_PRECISION float centerx;
 uniform COMPAT_PRECISION float centery;
 uniform COMPAT_PRECISION float bzl;
@@ -220,7 +222,8 @@ uniform COMPAT_PRECISION float bzl;
 #define POTATO 0.0   
 #define EXT_GAMMA 0.0   
 #define vig 1.0   
-#define zoom  1.05      
+#define zoomx  1.05      
+#define zoomy 1.05      
 #define centerx  0.07      
 #define centery  0.07  
 #define bzl  1.0  
@@ -344,7 +347,7 @@ mat3 hue = mat3(
     RG, 1.0, -GB,
     RB, GB, 1.0
 );
-    vec2 pos = Warp((vTexCoord*zoom-vec2(centerx,centery)/100.0)*scale)/scale;
+    vec2 pos = Warp((vTexCoord*vec2(zoomx,zoomy)-vec2(centerx,centery)/100.0)*scale)/scale;
     vec4 bez = COMPAT_TEXTURE(bezel,vTexCoord*SourceSize.xy/InputSize.xy);    
     vec2 bpos = pos;
     vec2 dx = vec2(ps.x,0.0);
