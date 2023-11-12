@@ -42,10 +42,13 @@ any later version.
 #pragma parameter CONV_G "Convergence Green X-axis" 0.0 -1.0 1.0 0.05
 #pragma parameter CONV_B "Convergence Blue X-Axis" 0.0 -1.0 1.0 0.05
 #pragma parameter bogus_geom " [ GEOMETRY SETTINGS ] " 0.0 0.0 0.0 0.0
-#pragma parameter WARPX "Curvature Horizontal" 0.032 0.00 0.25 0.01
-#pragma parameter WARPY "Curvature Vertical" 0.042 0.00 0.25 0.01
-#pragma parameter CORNER "Corner Round" 0.03 0.0 0.25 0.01
-#pragma parameter B_SMOOTH "Border Smoothness" 400.0 100.0 1000.0 25.0
+#pragma parameter bzl "Bezel On/Off" 1.0 0.0 1.0 1.0
+#pragma parameter zoomx "Zoom Image X" -0.04 -1.0 1.0 0.005
+#pragma parameter zoomy "Zoom Image Y" -0.05 -1.0 1.0 0.005
+#pragma parameter centerx "Image Center X" 0.4 -3.0 3.0 0.05 
+#pragma parameter centery "Image Center Y" 0.2 -3.0 3.0 0.05
+#pragma parameter WARPX "Curvature Horizontal" 0.01 0.00 0.25 0.01
+#pragma parameter WARPY "Curvature Vertical" 0.01 0.00 0.25 0.01
 #pragma parameter vig "Vignette On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter bogus_col " [ COLOR SETTINGS ] " 0.0 0.0 0.0 0.0
 #pragma parameter BR_DEP "Scan/Mask Brightness Dependence" 0.2 0.0 0.333 0.01
@@ -145,6 +148,7 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
+uniform sampler2D bezel;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 scale;
 COMPAT_VARYING vec2 ps;
@@ -175,8 +179,6 @@ uniform COMPAT_PRECISION float SLOT;
 uniform COMPAT_PRECISION float SLOTW;
 uniform COMPAT_PRECISION float c_space;
 uniform COMPAT_PRECISION float SATURATION;
-uniform COMPAT_PRECISION float CORNER;
-uniform COMPAT_PRECISION float B_SMOOTH;
 uniform COMPAT_PRECISION float BRIGHTNESS;
 uniform COMPAT_PRECISION float RG;
 uniform COMPAT_PRECISION float RB;
@@ -186,7 +188,11 @@ uniform COMPAT_PRECISION float BR_DEP;
 uniform COMPAT_PRECISION float POTATO; 
 uniform COMPAT_PRECISION float EXT_GAMMA; 
 uniform COMPAT_PRECISION float vig; 
-
+uniform COMPAT_PRECISION float zoomx;
+uniform COMPAT_PRECISION float zoomy;
+uniform COMPAT_PRECISION float centerx;
+uniform COMPAT_PRECISION float centery;
+uniform COMPAT_PRECISION float bzl;
 #else
 #define M_TYPE 0.0
 #define BGR 0.0
@@ -206,9 +212,7 @@ uniform COMPAT_PRECISION float vig;
 #define SLOT 0.0    
 #define SLOTW 2.0    
 #define c_space 0.0    
-#define SATURATION 1.0    
-#define CORNER 0.02   
-#define B_SMOOTH 200.0   
+#define SATURATION 1.0     
 #define BRIGHTNESS 1.0   
 #define RG 0.0   
 #define RB 0.0   
@@ -218,6 +222,11 @@ uniform COMPAT_PRECISION float vig;
 #define POTATO 0.0   
 #define EXT_GAMMA 0.0   
 #define vig 1.0   
+#define zoomx  1.05      
+#define zoomy 1.05      
+#define centerx  0.07      
+#define centery  0.07  
+#define bzl  1.0  
 #endif
 
 vec3 Mask(vec2 pos, float CGWG)
@@ -327,15 +336,7 @@ vec2 Warp(vec2 pos)
     return pos;
 }
 
-float corner(vec2 coord)
-{
-        coord = min(coord, vec2(1.0)-coord) * vec2(1.0, 0.75);
-        vec2 cdist = vec2(CORNER);
-             coord = cdist - min(coord,cdist);
-        float dist = sqrt(dot(coord,coord));
-        
-        return clamp((cdist.x-dist)*B_SMOOTH,0.0, 1.0);
-}  
+
 
 
 void main()
@@ -346,9 +347,8 @@ mat3 hue = mat3(
     RG, 1.0, -GB,
     RB, GB, 1.0
 );
-    vec2 pos = Warp(vTexCoord*scale); vec2 cpos=pos;
-    pos /=scale; // blurry
-
+    vec2 pos = Warp((vTexCoord*vec2(1.0-zoomx,1.0-zoomy)-vec2(centerx,centery)/100.0)*scale)/scale;
+    vec4 bez = COMPAT_TEXTURE(bezel,vTexCoord*SourceSize.xy/InputSize.xy);    
     vec2 bpos = pos;
     vec2 dx = vec2(ps.x,0.0);
 
@@ -404,12 +404,17 @@ mat3 hue = mat3(
     else {res = sqrt(res); res *= mix(1.3,1.1,l);}
 
     float lum = dot(vec3(0.29,0.60,0.11),res);
+    bez.rgb = mix(bez.rgb, vec3(0.1),0.8);
+
     res = mix(vec3(lum),res,SATURATION);
     res *= BRIGHTNESS;
     res *= hue;
     res -= vec3(BLACK);
     res *= blck;
-    if (CORNER !=0.0) res *= corner(cpos);
+    // code adapted from new-pixie
+    if (bzl >0.0)
+    res.rgb = mix(res.rgb, mix(max(res.rgb, 0.0), pow( abs(bez.rgb), vec3( 1.4 ) ), bez.w * bez.w), vec3( 1.0 ) );
+
     FragColor = vec4(res,1.0);
 }
 #endif
