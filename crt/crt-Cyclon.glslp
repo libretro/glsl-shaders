@@ -1,3 +1,8 @@
 shaders = "1"
 shader0 = "shaders/crt-Cyclon.glsl"
 filter_linear0 = "true"
+
+textures = bezel
+bezel = "shaders/crt-consumer/bezel.png"
+bezel_linear = true
+bezel_wrap_mode = "clamp_to_edge"
