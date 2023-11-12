@@ -44,8 +44,8 @@ any later version.
 #pragma parameter bogus_geom " [ GEOMETRY SETTINGS ] " 0.0 0.0 0.0 0.0
 #pragma parameter bzl "Bezel On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter zoom "Zoom Image" 1.03 0.1 1.5 0.005
-#pragma parameter centerx "Image Center X" 0.45 -1.0 1.0 0.01 
-#pragma parameter centery "Image Center Y" 0.48 -1.0 1.0 0.01 
+#pragma parameter centerx "Image Center X" 0.45 -2.0 2.0 0.01 
+#pragma parameter centery "Image Center Y" 0.48 -2.0 2.0 0.01 
 #pragma parameter WARPX "Curvature Horizontal" 0.01 0.00 0.25 0.01
 #pragma parameter WARPY "Curvature Vertical" 0.01 0.00 0.25 0.01
 #pragma parameter vig "Vignette On/Off" 1.0 0.0 1.0 1.0
