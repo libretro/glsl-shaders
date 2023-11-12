@@ -43,8 +43,8 @@ any later version.
 #pragma parameter CONV_B "Convergence Blue X-Axis" 0.0 -1.0 1.0 0.05
 #pragma parameter bogus_geom " [ GEOMETRY SETTINGS ] " 0.0 0.0 0.0 0.0
 #pragma parameter bzl "Bezel On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter zoomx "Zoom Image X" 1.04 0.1 1.5 0.005
-#pragma parameter zoomy "Zoom Image Y" 1.05 0.1 1.5 0.005
+#pragma parameter zoomx "Zoom Image X" 0.04 -1.0 1.0 0.005
+#pragma parameter zoomy "Zoom Image Y" 0.05 -1.0 1.0 0.005
 #pragma parameter centerx "Image Center X" 0.3 -3.0 3.0 0.1 
 #pragma parameter centery "Image Center Y" 0.2 -3.0 3.0 0.1 
 #pragma parameter WARPX "Curvature Horizontal" 0.01 0.00 0.25 0.01
@@ -347,7 +347,7 @@ mat3 hue = mat3(
     RG, 1.0, -GB,
     RB, GB, 1.0
 );
-    vec2 pos = Warp((vTexCoord*vec2(zoomx,zoomy)-vec2(centerx,centery)/100.0)*scale)/scale;
+    vec2 pos = Warp((vTexCoord*vec2(1.0+zoomx,1.0+zoomy)-vec2(centerx,centery)/100.0)*scale)/scale;
     vec4 bez = COMPAT_TEXTURE(bezel,vTexCoord*SourceSize.xy/InputSize.xy);    
     vec2 bpos = pos;
     vec2 dx = vec2(ps.x,0.0);
