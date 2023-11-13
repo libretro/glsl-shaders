@@ -47,7 +47,7 @@ any later version.
 #pragma parameter zoomy "Zoom Image Y" -0.05 -1.0 1.0 0.005
 #pragma parameter centerx "Image Center X" 0.4 -3.0 3.0 0.05 
 #pragma parameter centery "Image Center Y" 0.2 -3.0 3.0 0.05
-#pragma parameter WARPX "Curvature Horizontal" 0.01 0.00 0.25 0.01
+#pragma parameter WARPX "Curvature Horizontal" 0.02 0.00 0.25 0.01
 #pragma parameter WARPY "Curvature Vertical" 0.01 0.00 0.25 0.01
 #pragma parameter vig "Vignette On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter bogus_col " [ COLOR SETTINGS ] " 0.0 0.0 0.0 0.0
