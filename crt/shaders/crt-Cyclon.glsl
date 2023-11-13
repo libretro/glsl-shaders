@@ -14,8 +14,8 @@ on a Xiaomi Note 3 Pro cellphone (around 170(?) gflops gpu or so)
 This shader uses parts from:
 crt-Geom (scanlines)
 Quillez (main filter)
-Grade (some primaries)
 Dogway's inverse Gamma
+NewPixie Bezel Code only
 Masks-slot-color handling, tricks etc are mine.
 
 This program is free software; you can redistribute it and/or modify it
@@ -37,7 +37,7 @@ any later version.
 #pragma parameter Maskl "Mask Brightness Dark" 0.3 0.0 1.0 0.05
 #pragma parameter Maskh "Mask Brightness Bright" 0.75 0.0 1.0 0.05
 #pragma parameter bogus_con " [ CONVERGENCE SETTINGS ] " 0.0 0.0 0.0 0.0
-#pragma parameter C_STR "Convergence Overall Strength" 0.0 0.0 1.0 0.05
+#pragma parameter C_STR "Convergence Overall Strength" 0.0 0.0 0.5 0.05
 #pragma parameter CONV_R "Convergence Red X-Axis" 0.0 -1.0 1.0 0.05
 #pragma parameter CONV_G "Convergence Green X-axis" 0.0 -1.0 1.0 0.05
 #pragma parameter CONV_B "Convergence Blue X-Axis" 0.0 -1.0 1.0 0.05
@@ -262,8 +262,6 @@ if (M_TYPE == 1.0){
 
 }
 
-
-
 float scanlineWeights(float distance, vec3 color, float x)
     {
     // "wid" controls the width of the scanline beam, for each RGB
@@ -309,9 +307,6 @@ mat3 NTSC_J = mat3(
 0.0265  ,   0.9278  ,   0.0432  ,
 0.0011  ,   -0.0206 ,   1.3153  );
 
-
-
-
 vec3 slot(vec2 pos)
 {
     float h = fract(pos.x/SLOTW);
@@ -336,28 +331,31 @@ vec2 Warp(vec2 pos)
     return pos;
 }
 
-
-
-
 void main()
 {   
 
+// Hue matrix inside main() to avoid GLES error
 mat3 hue = mat3(
     1.0, -RG, -RB,
     RG, 1.0, -GB,
     RB, GB, 1.0
 );
+// zoom in and center screen for bezel
     vec2 pos = Warp((vTexCoord*vec2(1.0-zoomx,1.0-zoomy)-vec2(centerx,centery)/100.0)*scale)/scale;
     vec4 bez = COMPAT_TEXTURE(bezel,vTexCoord*SourceSize.xy/InputSize.xy);    
-    vec2 bpos = pos;
-    vec2 dx = vec2(ps.x,0.0);
+    bez.rgb = mix(bez.rgb, vec3(0.15),0.8);
 
+    vec2 bpos = pos;
+
+    vec2 dx = vec2(ps.x,0.0);
+// Quilez
     vec2 ogl2 = pos*SourceSize.xy;
     vec2 i = floor(pos*SourceSize.xy) + 0.5;
     float f = ogl2.y - i.y;
     pos.y = (i.y + 4.0*f*f*f)*ps.y; // smooth
     pos.x = mix(pos.x, i.x*ps.x, 0.2);
 
+// Convergence
     vec3  res0 = COMPAT_TEXTURE(Source,pos).rgb;
     float resr = COMPAT_TEXTURE(Source,pos + dx*CONV_R).r;
     float resb = COMPAT_TEXTURE(Source,pos + dx*CONV_B).b;
@@ -367,19 +365,23 @@ mat3 hue = mat3(
                       res0.g*(1.0-C_STR) +  resg*C_STR,
                       res0.b*(1.0-C_STR) +  resb*C_STR 
                    );
+// Vignette
     float x = 0.0;
     if (vig == 1.0){
     x = vTexCoord.x*scale.x-0.5;
     x = x*x;}
+
     float l = dot(vec3(BR_DEP),res);
-    
+ 
+ // Color Spaces   
     if(EXT_GAMMA != 1.0) res *= res;
     if (c_space != 0.0) {
     if (c_space == 1.0) res *= PAL;
     if (c_space == 2.0) res *= NTSC;
     if (c_space == 3.0) res *= NTSC_J;
+// Apply CRT-like luminances
     res /= vec3(0.24,0.69,0.07);
-    res *= vec3(0.3,0.6,0.1); 
+    res *= vec3(0.29,0.6,0.11); 
     res = clamp(res,0.0,1.0);
     }
     float s = fract(bpos.y*SourceSize.y-0.5);
@@ -389,29 +391,31 @@ mat3 hue = mat3(
         s = fract(bpos.y*SourceSize.y/2.0-0.5);
         if (INTERLACE == 1.0) s = mod(float(FrameCount),2.0) < 1.0 ? s: s+0.5;
     }
-
+// Calculate CRT-Geom scanlines weight and apply
     float weight  = scanlineWeights(s, res, x);
     float weight2 = scanlineWeights(1.0-s, res, x);
-
     res *= weight + weight2;
-    vec2 xy = vTexCoord*OutputSize.xy*scale/MSIZE;
-    
+
+// Masks
+    vec2 xy = vTexCoord*OutputSize.xy*scale/MSIZE;    
     float CGWG = mix(Maskl, Maskh, l);
-   
     res *= Mask(xy, CGWG);
+// Apply slot mask on top of Trinitron-like mask
     if (SLOT == 1.0) res *= mix(slot(xy/2.0),vec3(1.0),CGWG);
+    
     if (POTATO == 0.0) res = inv_gamma(res,pwr);
     else {res = sqrt(res); res *= mix(1.3,1.1,l);}
 
+// Saturation
     float lum = dot(vec3(0.29,0.60,0.11),res);
-    bez.rgb = mix(bez.rgb, vec3(0.1),0.8);
-
     res = mix(vec3(lum),res,SATURATION);
+
+// Brightness, Hue and Black Level
     res *= BRIGHTNESS;
     res *= hue;
     res -= vec3(BLACK);
     res *= blck;
-    // code adapted from new-pixie
+// Apply bezel code, adapted from New-Pixie
     if (bzl >0.0)
     res.rgb = mix(res.rgb, mix(max(res.rgb, 0.0), pow( abs(bez.rgb), vec3( 1.4 ) ), bez.w * bez.w), vec3( 1.0 ) );
 
