@@ -37,8 +37,6 @@
 #pragma parameter warpX "warpX" 0.0 0.0 0.125 0.01
 #pragma parameter warpY "warpY" 0.0 0.0 0.125 0.01
 #pragma parameter vignette "Vignette On/Off" 0.0 0.0 1.0 1.0
-#pragma parameter vpower "Vignette Power" 0.15 0.0 1.0 0.01
-#pragma parameter vstr "Vignette strength" 45.0 0.0 50.0 1.0
 
 #define lumweight vec3(0.3,0.6,0.1)
 
@@ -66,6 +64,8 @@ COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 scale;
+COMPAT_VARYING vec2 fragpos;
+COMPAT_VARYING vec2 ps;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -81,6 +81,8 @@ void main()
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy * 1.00001;
     scale = TextureSize.xy/InputSize.xy;
+    fragpos = TEX0.xy*OutputSize.xy*scale;
+    ps = 1.0/TextureSize.xy;
 }
 
 #elif defined(FRAGMENT)
@@ -114,13 +116,13 @@ uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 scale;
+COMPAT_VARYING vec2 fragpos;
+COMPAT_VARYING vec2 ps;
 
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
 
-#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutputSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
@@ -140,8 +142,7 @@ uniform COMPAT_PRECISION float CGWG;
 uniform COMPAT_PRECISION float warpX;
 uniform COMPAT_PRECISION float warpY;
 uniform COMPAT_PRECISION float vignette;
-uniform COMPAT_PRECISION float vpower;
-uniform COMPAT_PRECISION float vstr;
+
 #else
 #define brightboost  1.20     // adjust brightness
 #define scanline     8.0      // scanline param, vertical sharpness
@@ -159,14 +160,12 @@ uniform COMPAT_PRECISION float vstr;
 #define warpX        0.0    // Curvature X
 #define warpY        0.0    // Curvature Y
 #define vignette 1.0
-#define vpower 0.15
-#define vstr 45.0
 #endif
 
-float sw (float y, float l)
+float sw (float y, float l, float v)
 {
     float scan = mix(scanline-2.0, scanline, y);
-    float tmp = mix(beam_min, beam_max, l);
+    float tmp = mix(beam_min+v, beam_max+v, l);
     float ex = y*tmp;
     return exp2(-scan*ex*ex);
 }
@@ -347,21 +346,6 @@ vec3 Mask(vec2 pos, vec3 c)
 	return mask;
 }  
 
-mat3 vign()
-{
-    vec2 vpos = vTexCoord * scale;
-    vpos *= 1.0 - vpos;    
-
-    float vig = vpos.x * vpos.y * vstr;
-
-    vig = min(pow(vig, vpower), 1.0); 
-    
-    if (vignette == 0.0) vig=1.0;
-   
-    return mat3(vig, 0, 0,
-                 0,   vig, 0,
-                 0,    0, vig);
-}
 
 // Distortion of scanlines, and end of screen alpha.
 vec2 Warp(vec2 pos)
@@ -371,26 +355,12 @@ vec2 Warp(vec2 pos)
     return (pos*0.5) + 0.5;
 } 
 
-vec3 saturation (vec3 Color, float l)
-{
-    float lum=l;
-
-    vec3 lweight = lumweight;
-    if (lum<0.5) lweight=(lweight*lweight)+(lweight*lweight);
-
-    float luminance = dot(Color, lweight);
-    vec3 greyScaleColor = vec3(luminance);
-
-    vec3 res = vec3(mix(greyScaleColor, Color, sat));
-    return res;
-}
-
 void main()
 {
-	vec2 pos = Warp(TEX0.xy*scale)/scale;	
+	vec2 warp = TEX0.xy*scale;
+	vec2 pos = Warp(warp)/scale;	
 
-	vec2 ps = SourceSize.zw;
-	vec2 OGL2Pos = pos * SourceSize.xy;
+	vec2 OGL2Pos = pos * TextureSize.xy;
 	vec2 fp = fract(OGL2Pos);
 	vec2 dx = vec2(ps.x,0.0);
 	vec2 dy = vec2(0.0, ps.y);
@@ -416,14 +386,21 @@ void main()
 	float lum = dot (color1, lumweight);
 	float lum2 = dot (color2, lumweight);
 
-    color = color1*sw(f, lum) + color2*sw(1.0-f, lum2); 
-	color = color*Mask(gl_FragCoord.xy*1.0001, color);
+
+  float v = 0.0;
+  // vignette
+  if (vignette > 0.0){  
+  v = (warp.x-0.5);  // range -0.5 to 0.5, 0.0 being center of screen
+  v = v*v;    // curved response: higher values (more far from center) get higher results.
+}
+    color = color1*sw(f, lum,v) + color2*sw(1.0-f, lum2,v); 
+	color = color*Mask(fragpos, color);
 
 	color = pow(color, vec3(gamma_out));
 
 	color*= mix(1.0,brightboost,lum);
-	color = saturation(color, lum);
-	color*= vign();
+	color = mix(vec3(lum),color,sat);
+	
 	
 	#if defined GL_ES
 	// hacky clamp fix for GLES
@@ -434,6 +411,6 @@ void main()
         	color = vec3(0.0);
 	#endif
 
-    FragColor = vec4(color, 1.0);
+    FragColor.rgb = color;
 } 
 #endif
