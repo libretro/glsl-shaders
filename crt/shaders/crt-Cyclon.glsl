@@ -49,7 +49,7 @@ any later version.
 #pragma parameter centery "Image Center Y" 0.2 -3.0 3.0 0.05
 #pragma parameter WARPX "Curvature Horizontal" 0.02 0.00 0.25 0.01
 #pragma parameter WARPY "Curvature Vertical" 0.01 0.00 0.25 0.01
-#pragma parameter corner "Corners Cut" 1.0 0.0 1.0 1.0
+#pragma parameter corner "Corners Cut (bezel off)" 0.0 0.0 1.0 1.0
 #pragma parameter vig "Vignette On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter bogus_col " [ COLOR SETTINGS ] " 0.0 0.0 0.0 0.0
 #pragma parameter BR_DEP "Scan/Mask Brightness Dependence" 0.2 0.0 0.333 0.01
