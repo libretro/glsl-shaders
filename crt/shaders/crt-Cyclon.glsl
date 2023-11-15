@@ -47,7 +47,7 @@ any later version.
 #pragma parameter zoomy "Zoom Image Y" -0.05 -1.0 1.0 0.005
 #pragma parameter centerx "Image Center X" 0.4 -3.0 3.0 0.05 
 #pragma parameter centery "Image Center Y" 0.2 -3.0 3.0 0.05
-#pragma parameter WARPX "Curvature Horizontal" 0.01 0.00 0.25 0.01
+#pragma parameter WARPX "Curvature Horizontal" 0.02 0.00 0.25 0.01
 #pragma parameter WARPY "Curvature Vertical" 0.01 0.00 0.25 0.01
 #pragma parameter vig "Vignette On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter bogus_col " [ COLOR SETTINGS ] " 0.0 0.0 0.0 0.0
@@ -55,7 +55,7 @@ any later version.
 #pragma parameter c_space "Color Space: sRGB,PAL,NTSC-U,NTSC-J" 0.0 0.0 3.0 1.0
 #pragma parameter EXT_GAMMA "External Gamma In (Glow etc)" 0.0 0.0 1.0 1.0
 #pragma parameter SATURATION "Saturation" 1.0 0.0 2.0 0.05
-#pragma parameter BRIGHTNESS "Brightness, Sega fix:1.06" 1.0 0.0 2.0 0.01
+#pragma parameter BRIGHTNESs "Brightness, Sega fix:1.06" 1.0 0.0 2.0 0.01
 #pragma parameter BLACK  "Black Level" 0.0 -0.20 0.20 0.01 
 #pragma parameter RG "Green <-to-> Red Hue" 0.0 -0.25 0.25 0.01
 #pragma parameter RB "Blue <-to-> Red Hue"  0.0 -0.25 0.25 0.01
@@ -179,7 +179,7 @@ uniform COMPAT_PRECISION float SLOT;
 uniform COMPAT_PRECISION float SLOTW;
 uniform COMPAT_PRECISION float c_space;
 uniform COMPAT_PRECISION float SATURATION;
-uniform COMPAT_PRECISION float BRIGHTNESS;
+uniform COMPAT_PRECISION float BRIGHTNESs;
 uniform COMPAT_PRECISION float RG;
 uniform COMPAT_PRECISION float RB;
 uniform COMPAT_PRECISION float GB;
@@ -213,7 +213,7 @@ uniform COMPAT_PRECISION float bzl;
 #define SLOTW 2.0    
 #define c_space 0.0    
 #define SATURATION 1.0     
-#define BRIGHTNESS 1.0   
+#define BRIGHTNESs 1.0   
 #define RG 0.0   
 #define RB 0.0   
 #define GB 0.0   
@@ -411,7 +411,7 @@ mat3 hue = mat3(
     res = mix(vec3(lum),res,SATURATION);
 
 // Brightness, Hue and Black Level
-    res *= BRIGHTNESS;
+    res *= BRIGHTNESs;
     res *= hue;
     res -= vec3(BLACK);
     res *= blck;
