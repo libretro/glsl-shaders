@@ -1,0 +1,6 @@
+#reference "plain.glslp"
+CS = "2.000000"
+TEMP = "6719.000000"
+C_STR = "0.200000"
+centerx = "1.400000"
+centery = "1.250000"

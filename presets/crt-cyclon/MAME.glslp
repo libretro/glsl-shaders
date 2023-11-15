@@ -1,0 +1,7 @@
+#reference "plain.glslp"
+CS = "3.000000"
+TEMP = "8663.000000"
+zoomy = "-0.060000"
+centerx = "1.849999"
+centery = "2.249999"
+SATURATION = "1.100000"
