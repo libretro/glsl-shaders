@@ -1,0 +1,5 @@
+#reference "megadrive.glslp"
+BRIGHTNESs = "1.060000"
+postdk = "1.050000"
+C_STR = "0.500000"
+SATURATION = "0.900000"

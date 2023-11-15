@@ -1,0 +1,12 @@
+#reference "plain.glslp"
+
+mono = "1.000000"
+R = "0.150000"
+B = "0.200000"
+glow = "0.400000"
+M_TYPE = "0.000000"
+SLOTW = "2.000000"
+zoomx = "-0.045000"
+centerx = "0.950000"
+centery = "1.000000"
+
