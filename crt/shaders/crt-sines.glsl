@@ -29,15 +29,12 @@
 #pragma parameter scanl "Scanlines/Mask Low" 0.3 0.0 1.0 0.05
 #pragma parameter scanh "Scanlines/Mask High" 0.15 0.0 1.0 0.05
 #pragma parameter SIZE "Mask Type, 2:Fine, 3:Coarse" 3.0 2.0 3.0 1.0
+#pragma parameter bogus_col " [ COLORS ] " 0.0 0.0 0.0 0.0
 #pragma parameter Trin "CRT Colors" 1.0 0.0 1.0 1.0
 #pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
+#pragma parameter boostd "Boost Dark Colors" 1.1 1.0 2.0 0.05
 #pragma parameter bogus_conv " [ CONVERGENCE ] " 0.0 0.0 0.0 0.0
-#pragma parameter RX "Red Convergence Horiz." 0.0 -2.0 2.0 0.05
-#pragma parameter RY "Red Convergence Vert." 0.0 -2.0 2.0 0.05
-#pragma parameter GX "Green Convergence Horiz." 0.0 -2.0 2.0 0.05
-#pragma parameter GY "Green Convergence Vert." 0.0 -2.0 2.0 0.05
-#pragma parameter BX "Blue Convergence Horiz." 0.0 -2.0 2.0 0.05
-#pragma parameter BY "Blue Convergence Vert." 0.0 -2.0 2.0 0.05
+#pragma parameter RX "Convergence Horiz." 0.0 -2.0 2.0 0.05
 
 #define pi 3.14159265
 
@@ -70,8 +67,7 @@ COMPAT_VARYING vec2 warpp;
 COMPAT_VARYING float fragpos;
 COMPAT_VARYING vec2 ps;
 COMPAT_VARYING vec2 psg;
-COMPAT_VARYING vec3 dx;
-COMPAT_VARYING vec3 dy;
+COMPAT_VARYING float dx;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -87,19 +83,10 @@ uniform COMPAT_PRECISION vec2 InputSize;
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float SIZE;
 uniform COMPAT_PRECISION float RX;
-uniform COMPAT_PRECISION float RY;
-uniform COMPAT_PRECISION float GX;
-uniform COMPAT_PRECISION float GY;
-uniform COMPAT_PRECISION float BX;
-uniform COMPAT_PRECISION float BY;
+
 #else
 #define SIZE     2.0 
-#define RX 0.0     
-#define RY 0.0     
-#define GX 0.0     
-#define GY 0.0     
-#define BX 0.0     
-#define BY 0.0       
+    
 #endif
 
 void main()
@@ -112,8 +99,7 @@ void main()
     warpp = warp*2.0-1.0;
     ps = 1.0/TextureSize.xy;
     psg = vec2(1.5)/TextureSize.xy;
-    dx = ps.x*vec3(RX,GX,BX);
-    dy = ps.y*vec3(RY,GY,BY);
+    dx = ps.x*RX;
 }   
 
 #elif defined(FRAGMENT)
@@ -153,8 +139,7 @@ COMPAT_VARYING vec2 warp;
 COMPAT_VARYING vec2 warpp;
 COMPAT_VARYING vec2 ps;
 COMPAT_VARYING vec2 psg;
-COMPAT_VARYING vec3 dx;
-COMPAT_VARYING vec3 dy;
+COMPAT_VARYING float dx;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
@@ -163,12 +148,14 @@ COMPAT_VARYING vec3 dy;
 uniform COMPAT_PRECISION float scanl;
 uniform COMPAT_PRECISION float scanh;
 uniform COMPAT_PRECISION float sat;
+uniform COMPAT_PRECISION float boostd;
 uniform COMPAT_PRECISION float Trin;
 uniform COMPAT_PRECISION float CURV;
 #else
 #define scanl  0.5      
 #define scanh  0.22      
 #define sat  1.1  
+#define boostd  1.2  
 #define Trin  1.0
 #define CURV  1.0
 #endif
@@ -182,7 +169,7 @@ vec2 Warp(vec2 pos)
 
 void main()
 {
-vec2 pos;
+ vec2 pos;
  vec2 corn ;
 
  if (CURV == 1.0){
@@ -203,15 +190,13 @@ else pos = vTexCoord;
        p = (i + f-0.5)*ps;
 // Convergence
   vec3 res = COMPAT_TEXTURE(Source,p).rgb;
-  float r =  COMPAT_TEXTURE(Source,p + vec2(dx.r,dy.r)).r;
-  float g =  COMPAT_TEXTURE(Source,p + vec2(dx.g,dy.g)).g;
-  float b =  COMPAT_TEXTURE(Source,p + vec2(dx.b,dy.b)).b;
+  vec3 conv =  COMPAT_TEXTURE(Source,p + vec2(dx,0.0)).rgb;
+
 
 // vignette  
   float x = (warp.x-0.5);  // range -0.5 to 0.5, 0.0 being center of screen
   x = x*x;    // curved response: higher values (more far from center) get higher results.
 
-  vec3 conv = vec3(r,g,b);
   res = res*0.5 + conv*0.5;   
 
  float w = dot(vec3(0.28),res);
@@ -222,18 +207,15 @@ else pos = vTexCoord;
  float scn = (scan+x)*sin((ogl2pos.y+0.5)*pi*2.0)+1.0-(scan+x);
  float msk = mask*sin(fragpos*pi)+1.0-mask;
 
-    res = res*res; 
 
     if(Trin == 1.0) { 
-    res /= vec3(0.24,0.69,0.07);
-    res *= vec3(0.3,0.6,0.1); 
+    res *= vec3(1.1,0.85,1.3); 
     res = clamp(res,0.0,1.0);}
 
-    res *= scn*msk;
-    res = sqrt(res);
+    res *= sqrt(scn*msk);
   float gray = dot(vec3(0.3,0.6,0.1),res);
     res  = mix(vec3(gray),res,sat);
-    res *= mix(1.4,1.0,w);
+    res *= mix(boostd,1.0,w);
     if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.0001 && CURV == 1.0 )res = vec3(0.0);
 
 FragColor.rgb = res;
