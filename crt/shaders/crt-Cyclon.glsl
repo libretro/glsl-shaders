@@ -49,6 +49,7 @@ any later version.
 #pragma parameter centery "Image Center Y" 0.2 -3.0 3.0 0.05
 #pragma parameter WARPX "Curvature Horizontal" 0.02 0.00 0.25 0.01
 #pragma parameter WARPY "Curvature Vertical" 0.01 0.00 0.25 0.01
+#pragma parameter corner "Corners Cut" 1.0 0.0 1.0 1.0
 #pragma parameter vig "Vignette On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter bogus_col " [ COLOR SETTINGS ] " 0.0 0.0 0.0 0.0
 #pragma parameter BR_DEP "Scan/Mask Brightness Dependence" 0.2 0.0 0.333 0.01
@@ -193,6 +194,7 @@ uniform COMPAT_PRECISION float zoomy;
 uniform COMPAT_PRECISION float centerx;
 uniform COMPAT_PRECISION float centery;
 uniform COMPAT_PRECISION float bzl;
+uniform COMPAT_PRECISION float corner;
 #else
 #define M_TYPE 0.0
 #define BGR 0.0
@@ -227,6 +229,7 @@ uniform COMPAT_PRECISION float bzl;
 #define centerx  0.07      
 #define centery  0.07  
 #define bzl  1.0  
+#define corner  1.0  
 #endif
 
 vec3 Mask(vec2 pos, float CGWG)
@@ -240,7 +243,7 @@ if (M_TYPE == 0.0){
     else{
     float m = fract(pos.x*0.5);
 
-    if (m<0.5) mask.rb = vec2(1.0);
+    if (m < 0.5) mask.rb = vec2(1.0);
     else mask.g = 1.0;
 
     return mask;}
@@ -341,7 +344,15 @@ mat3 hue = mat3(
     RB, GB, 1.0
 );
 // zoom in and center screen for bezel
-    vec2 pos = Warp((vTexCoord*vec2(1.0-zoomx,1.0-zoomy)-vec2(centerx,centery)/100.0)*scale)/scale;
+    vec2 pos = Warp((vTexCoord*vec2(1.0-zoomx,1.0-zoomy)-vec2(centerx,centery)/100.0)*scale);
+    vec2 corn;
+    
+    if (corner == 1.0){
+    corn = min(pos, 1.0-pos);    // This is used to mask the rounded
+    corn.x = 0.00015/corn.x;      // corners later on
+    }     
+    pos /= scale;
+
     vec4 bez = COMPAT_TEXTURE(bezel,vTexCoord*SourceSize.xy/InputSize.xy);    
     bez.rgb = mix(bez.rgb, vec3(0.15),0.8);
 
@@ -418,6 +429,8 @@ mat3 hue = mat3(
 // Apply bezel code, adapted from New-Pixie
     if (bzl >0.0)
     res.rgb = mix(res.rgb, mix(max(res.rgb, 0.0), pow( abs(bez.rgb), vec3( 1.4 ) ), bez.w * bez.w), vec3( 1.0 ) );
+    if (corner == 1.0) 
+       if (corn.y <= corn.x || corn.x < 0.0001 )res = vec3(0.0);
 
     FragColor = vec4(res,1.0);
 }
