@@ -3,6 +3,7 @@
 /* 
   crt-sines, a work by DariusG 2023
 
+  v1.9 speed-up tweaks, removed non-essential stuff and re-entered slot mask
   v1.8d switched matrix to a simple calculation, as i read CRTs used a different
   luminance than supposed to (and RGB uses), instead of 0.23,0.70,0.07 they used
   0.29,0.60,0.11 (NTSC luminance). RGB is pretty close to SMPTE-C that CRTs used.
@@ -29,6 +30,8 @@
 #pragma parameter scanl "Scanlines/Mask Low" 0.3 0.0 1.0 0.05
 #pragma parameter scanh "Scanlines/Mask High" 0.15 0.0 1.0 0.05
 #pragma parameter SIZE "Mask Type, 2:Fine, 3:Coarse" 3.0 2.0 3.0 1.0
+#pragma parameter slotm "Slot Mask On/Off" 1.0 0.0 1.0 1.0
+#pragma parameter slotw "Slot Mask Width" 3.0 2.0 3.0 1.0
 #pragma parameter bogus_col " [ COLORS ] " 0.0 0.0 0.0 0.0
 #pragma parameter Trin "CRT Colors" 1.0 0.0 1.0 1.0
 #pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
@@ -149,11 +152,15 @@ uniform COMPAT_PRECISION float scanl;
 uniform COMPAT_PRECISION float scanh;
 uniform COMPAT_PRECISION float sat;
 uniform COMPAT_PRECISION float boostd;
+uniform COMPAT_PRECISION float slotm;
+uniform COMPAT_PRECISION float slotw;
 uniform COMPAT_PRECISION float Trin;
 uniform COMPAT_PRECISION float CURV;
 #else
 #define scanl  0.5      
 #define scanh  0.22      
+#define slotm  1.0    
+#define slotw  3.0    
 #define sat  1.1  
 #define boostd  1.2  
 #define Trin  1.0
@@ -165,6 +172,22 @@ vec2 Warp(vec2 pos)
     pos *= vec2(1.0 + pos.y*pos.y*0.02, 1.0 + pos.x*pos.x*0.03);
     pos = pos*0.5 + 0.5;
     return pos;
+}
+
+
+vec3 slot(vec2 pos)
+{
+    float h = fract(pos.x/slotw);
+    float v = fract(pos.y);
+    
+    float odd;
+    if (v<0.5) odd = 0.0; else odd = 1.0;
+
+if (odd == 0.0)
+    {if (h<0.5) return vec3(0.5); else return vec3(1.5);}
+
+else if (odd == 1.0)
+    {if (h<0.5) return vec3(1.5); else return vec3(0.5);}
 }
 
 void main()
@@ -188,6 +211,7 @@ else pos = vTexCoord;
        f = f*f*f*(3.0-2.0*f);
        f.y *= f.y;
        p = (i + f-0.5)*ps;
+
 // Convergence
   vec3 res = COMPAT_TEXTURE(Source,p).rgb;
   vec3 conv =  COMPAT_TEXTURE(Source,p + vec2(dx,0.0)).rgb;
@@ -206,14 +230,20 @@ else pos = vTexCoord;
 // apply vignette here
  float scn = (scan+x)*sin((ogl2pos.y+0.5)*pi*2.0)+1.0-(scan+x);
  float msk = mask*sin(fragpos*pi)+1.0-mask;
-
+    
+    vec3 sl = vec3(1.0); vec2 xy = vec2(0.0);
+    if (slotm == 1.0){
+    xy = vTexCoord*OutputSize.xy*scale; 
+    sl = mix(slot(xy/2.0),vec3(1.0),mask);
+    }
 
     if(Trin == 1.0) { 
     res *= vec3(1.1,0.85,1.3); 
-    res = clamp(res,0.0,1.0);}
+    res = clamp(res,0.0,1.0);
+    }
 
-    res *= sqrt(scn*msk);
-  float gray = dot(vec3(0.3,0.6,0.1),res);
+    res *= sqrt(scn*msk*sl);
+    float gray = dot(vec3(0.3,0.6,0.1),res);
     res  = mix(vec3(gray),res,sat);
     res *= mix(boostd,1.0,w);
     if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.0001 && CURV == 1.0 )res = vec3(0.0);
