@@ -43,13 +43,13 @@ any later version.
 #pragma parameter CONV_B "Convergence Blue X-Axis" 0.0 -1.0 1.0 0.05
 #pragma parameter bogus_geom " [ GEOMETRY SETTINGS ] " 0.0 0.0 0.0 0.0
 #pragma parameter bzl "Bezel On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter zoomx "Zoom Image X" -0.04 -1.0 1.0 0.005
-#pragma parameter zoomy "Zoom Image Y" -0.05 -1.0 1.0 0.005
-#pragma parameter centerx "Image Center X" 0.4 -3.0 3.0 0.05 
-#pragma parameter centery "Image Center Y" 0.2 -3.0 3.0 0.05
+#pragma parameter zoomx "Zoom Image X" 0.0 -1.0 1.0 0.005
+#pragma parameter zoomy "Zoom Image Y" 0.0 -1.0 1.0 0.005
+#pragma parameter centerx "Image Center X" 0.0 -3.0 3.0 0.05 
+#pragma parameter centery "Image Center Y" 0.0 -3.0 3.0 0.05
 #pragma parameter WARPX "Curvature Horizontal" 0.02 0.00 0.25 0.01
 #pragma parameter WARPY "Curvature Vertical" 0.01 0.00 0.25 0.01
-#pragma parameter corner "Corners Cut (bezel off)" 0.0 0.0 1.0 1.0
+#pragma parameter corner "Corners Cut" 0.0 0.0 1.0 1.0
 #pragma parameter vig "Vignette On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter bogus_col " [ COLOR SETTINGS ] " 0.0 0.0 0.0 0.0
 #pragma parameter BR_DEP "Scan/Mask Brightness Dependence" 0.2 0.0 0.333 0.01
@@ -353,8 +353,8 @@ mat3 hue = mat3(
     }     
     pos /= scale;
 
-    vec4 bez = COMPAT_TEXTURE(bezel,vTexCoord*SourceSize.xy/InputSize.xy);    
-    bez.rgb = mix(bez.rgb, vec3(0.15),0.8);
+    vec4 bez = COMPAT_TEXTURE(bezel,vTexCoord*SourceSize.xy/InputSize.xy*0.97+vec2(0.015,0.015));    
+    bez.rgb = mix(bez.rgb, vec3(0.2),0.8);
 
     vec2 bpos = pos;
 
