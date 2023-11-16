@@ -1,3 +1,5 @@
 #reference "plain.glslp"
 CS = "2.000000"
+zoomy = "-0.02"
+centery = "0.2"
 centery = "0.450000"
