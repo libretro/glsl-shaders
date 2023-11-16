@@ -238,7 +238,7 @@ else pos = vTexCoord;
     }
 
     if(Trin == 1.0) { 
-    res *= vec3(1.1,0.85,1.3); 
+    res *= vec3(1.0,0.85,1.2); 
     res = clamp(res,0.0,1.0);
     }
 
