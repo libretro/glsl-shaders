@@ -1,3 +1,0 @@
-shaders = "1"
-shader0 = "shaders/color_profiler.glsl"
-filter_linear0 = "false"
