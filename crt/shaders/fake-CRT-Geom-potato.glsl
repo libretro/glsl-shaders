@@ -1,6 +1,6 @@
 #version 110
 
-
+#pragma parameter SIZE "Mask Type" 2.0 2.0 3.0 1.0
 
 #define pi 3.1415926535897932384626433
 
@@ -59,7 +59,7 @@ void main()
     scale = TextureSize.xy/InputSize.xy;
     warpp = TEX0.xy*scale;
     dbwarp = warpp*2.0-1.0;
-    fragpos = warpp.x*OutputSize.x*pi*0.6666;
+    fragpos = warpp.x*OutputSize.x*pi*2.0/SIZE;
 }
 
 #elif defined(FRAGMENT)
@@ -106,10 +106,10 @@ COMPAT_VARYING vec2 dbwarp;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float SIZE;
+uniform COMPAT_PRECISION float something;
 
 #else
-#define SIZE  1.0      
+#define something  1.0      
     
 #endif
 
