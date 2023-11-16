@@ -1,7 +1,7 @@
 
 #pragma parameter CS "Colors: sRGB, PAL, NTSC-U, NTSC-J" 0.0 0.0 3.0 1.0
 #pragma parameter TEMP "Color Temperature in Kelvins (NTSC-J 9300)"  6863.0 1031.0 12047.0 72.0
-#pragma parameter gamma_in "Gamma In" 2.4 1.0 4.0 0.05
+#pragma parameter sc_gamma_in "Gamma In" 2.4 1.0 4.0 0.05
 #pragma parameter RG "Green <-to-> Red Hue" 0.0 -0.25 0.25 0.01
 #pragma parameter RB "Blue <-to-> Red Hue"  0.0 -0.25 0.25 0.01
 #pragma parameter GB "Blue <-to-> Green Hue" 0.0 -0.25 0.25 0.01
@@ -15,7 +15,7 @@
 #pragma parameter SEGA "SEGA Lum Fix" 0.0 0.0 1.0 1.0
 #pragma parameter postbr "Bright Boost" 1.0 1.0 2.0 0.05
 #pragma parameter postdk "Dark Boost" 1.0 1.0 2.0 0.05
-#pragma parameter gamma_out "Gamma out" 2.2 1.0 4.0 0.05
+#pragma parameter sc_gamma_out "Gamma out" 2.2 1.0 4.0 0.05
 #pragma parameter mono "Mono Display On/Off" 0.0 0.0 1.0 1.0
 #pragma parameter R "Mono Red/Channel" 1.0 0.0 2.0 0.01
 #pragma parameter G "Mono Green/Channel" 1.0 0.0 2.0 0.01
@@ -112,8 +112,8 @@ uniform COMPAT_PRECISION float SEGA;
 uniform COMPAT_PRECISION float postbr; 
 uniform COMPAT_PRECISION float postdk; 
 uniform COMPAT_PRECISION float mono; 
-uniform COMPAT_PRECISION float gamma_in;
-uniform COMPAT_PRECISION float gamma_out; 
+uniform COMPAT_PRECISION float sc_gamma_in;
+uniform COMPAT_PRECISION float sc_gamma_out; 
 uniform COMPAT_PRECISION float r_out;
 uniform COMPAT_PRECISION float g_out;
 uniform COMPAT_PRECISION float b_out;
@@ -135,8 +135,8 @@ uniform COMPAT_PRECISION float CS;
 #define postbr 1.0
 #define postdk 1.0
 #define mono 0.0
-#define gamma_out 2.2
-#define gamma_in 2.4
+#define sc_gamma_out 2.2
+#define sc_gamma_in 2.4
 #define BLACK 0.0
 #define RG 0.0   
 #define RB 0.0   
@@ -289,7 +289,7 @@ mat3 hue = mat3(
    vec3 col = COMPAT_TEXTURE(Source,vTexCoord).rgb;
    col *= BRIGHTNESS;
    
-   col = pow((col+0.099)/1.099, vec3(gamma_in));
+   col = pow((col+0.099)/1.099, vec3(sc_gamma_in));
 //color temperature  
    col *= ColorTemp(TEMP);
 
@@ -304,7 +304,7 @@ if (CS != 0.0){
 }
    if (SEGA == 1.0) col *= 1.0625;
 
-    col = pow(1.099*col, vec3(1.0/gamma_out))-0.099;
+    col = pow(1.099*col, vec3(1.0/sc_gamma_out))-0.099;
    
     col -= vec3(BLACK);
     col*= vec3(1.0)/vec3(1.0-BLACK);
