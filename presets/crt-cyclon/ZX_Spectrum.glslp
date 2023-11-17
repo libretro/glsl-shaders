@@ -1,12 +1,8 @@
 #reference "plain.glslp"
 
 CS = "1.000000"
-M_TYPE = "0.000000"
-SLOTW = "2.000000"
-C_STR = "0.400000"
-zoomx = "-0.150000"
-zoomy = "-0.135000"
-centerx = "2.649999"
-centery = "1.150000"
+C_STR = "0.500000"
+zoomx = "-0.10000"
+centerx = "1.4"
 SATURATION = "0.900000"
 

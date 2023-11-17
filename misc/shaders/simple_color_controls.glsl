@@ -321,7 +321,7 @@ float l = dot(col, lumw);
     vec3 c = vec3(R, G, B);
     col = colorize (col1, c);
     }
-   //col *= hue;
+   col *= hue;
 
 col *= mix(postdk,postbr,l);
 col = (contrastMatrix(contrast) * vec4(col,1.0)).rgb;  
