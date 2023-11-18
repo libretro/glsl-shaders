@@ -36,11 +36,6 @@ any later version.
 #pragma parameter BGR "Subpixels BGR/RGB" 0.0 0.0 1.0 1.0
 #pragma parameter Maskl "Mask Brightness Dark" 0.3 0.0 1.0 0.05
 #pragma parameter Maskh "Mask Brightness Bright" 0.75 0.0 1.0 0.05
-#pragma parameter bogus_con " [ CONVERGENCE SETTINGS ] " 0.0 0.0 0.0 0.0
-#pragma parameter C_STR "Convergence Overall Strength" 0.0 0.0 0.5 0.05
-#pragma parameter CONV_R "Convergence Red X-Axis" 0.0 -1.0 1.0 0.05
-#pragma parameter CONV_G "Convergence Green X-axis" 0.0 -1.0 1.0 0.05
-#pragma parameter CONV_B "Convergence Blue X-Axis" 0.0 -1.0 1.0 0.05
 #pragma parameter bogus_geom " [ GEOMETRY SETTINGS ] " 0.0 0.0 0.0 0.0
 #pragma parameter bzl "Bezel On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter zoomx "Zoom Image X" 0.0 -1.0 1.0 0.005
@@ -61,6 +56,11 @@ any later version.
 #pragma parameter RG "Green <-to-> Red Hue" 0.0 -0.25 0.25 0.01
 #pragma parameter RB "Blue <-to-> Red Hue"  0.0 -0.25 0.25 0.01
 #pragma parameter GB "Blue <-to-> Green Hue" 0.0 -0.25 0.25 0.01
+#pragma parameter bogus_con " [ CONVERGENCE SETTINGS ] " 0.0 0.0 0.0 0.0
+#pragma parameter C_STR "Convergence Overall Strength" 0.0 0.0 0.5 0.05
+#pragma parameter CONV_R "Convergence Red X-Axis" 0.0 -1.0 1.0 0.05
+#pragma parameter CONV_G "Convergence Green X-axis" 0.0 -1.0 1.0 0.05
+#pragma parameter CONV_B "Convergence Blue X-Axis" 0.0 -1.0 1.0 0.05
 #pragma parameter POTATO "Potato Boost(Simple Gamma, adjust Mask)" 0.0 0.0 1.0 1.0
 
 #define pi 3.1415926535897932384626433
@@ -353,8 +353,8 @@ mat3 hue = mat3(
     }     
     pos /= scale;
 
-    vec4 bez = COMPAT_TEXTURE(bezel,vTexCoord*SourceSize.xy/InputSize.xy*0.97+vec2(0.015,0.015));    
-    bez.rgb = mix(bez.rgb, vec3(0.2),0.8);
+    vec4 bez = COMPAT_TEXTURE(bezel,vTexCoord*SourceSize.xy/InputSize.xy*0.95+vec2(0.022,0.022));    
+    bez.rgb = mix(bez.rgb, vec3(0.25),0.4);
 
     vec2 bpos = pos;
 
