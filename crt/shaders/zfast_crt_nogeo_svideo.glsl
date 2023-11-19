@@ -137,7 +137,7 @@ uniform COMPAT_PRECISION float blury;
 #define MSCL (OutputSize.y > 1499.0 ? 0.3333 : 0.5)
 // This compensates the scanline+mask embedded gamma from the beam dynamics
 #define pwr vec3(1.0/((-0.0325*SCANLINE_WEIGHT+1.0)*(-0.311*MASK_DARK+1.0))-1.2)
-
+#define scale vec2(TextureSize.xy/InputSize.xy)
 
 /*
 // NTSC-J (D93) -> Rec709 D65 Joint Matrix (with D93 simulation)
