@@ -13,7 +13,7 @@
 
 
 Notes:  This shader does scaling with a weighted linear filter
-        based on the algorithm by Iñigo Quilez here:
+        based on the algorithm by IÃ±igo Quilez here:
         https://iquilezles.org/articles/texture/
         but modified to be somewhat sharper. Then a scanline effect that varies
         based on pixel brightness is applied along with a monochrome aperture mask.
@@ -130,7 +130,7 @@ uniform COMPAT_PRECISION float MASK_DARK;
 #define MASK_DARK 0.4
 #endif
 
-#define MSCL (OutputSize.y > 1499.0 ? 0.30 : 0.5)
+#define MSCL (OutputSize.y > 1499.0 ? 0.3333 : 0.5)
 // This compensates the scanline+mask embedded gamma from the beam dynamics
 #define pwr vec3(1.0/((-0.0325*SCANLINE_WEIGHT+1.0)*(-0.311*MASK_DARK+1.0))-1.2)
 
@@ -171,7 +171,7 @@ void main()
     COMPAT_PRECISION float Y = f*f;
     p = (i + 4.0*Y*f)*invDims.y;
 
-    COMPAT_PRECISION float whichmask = floor(vTexCoord.x*4.0*OutputSize.x)*-MSCL;
+    COMPAT_PRECISION float whichmask = floor(vTexCoord.x*scale.x*OutputSize.x)*-MSCL;
     COMPAT_PRECISION float mask = 1.0 + float(fract(whichmask) < MSCL)    *-MASK_DARK;
     COMPAT_PRECISION vec3 colour = COMPAT_TEXTURE(Source, vec2(vTexCoord.x,p)).rgb;
 
