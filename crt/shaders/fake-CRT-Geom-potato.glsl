@@ -6,9 +6,14 @@
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 #define pi 3.1415926535897932384626433
 
+
 #ifdef GL_ES
-#define COMPAT_PRECISION mediump
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
 precision mediump float;
+#endif
+#define COMPAT_PRECISION mediump
 #else
 #define COMPAT_PRECISION
 #endif
@@ -34,22 +39,18 @@ uniform mat4 MVPMatrix;
 attribute vec4 VertexCoord;
 attribute vec2 TexCoord;
 
-
 void main()
-{	
-	TEX0 = TexCoord*1.0001;
-	gl_Position = MVPMatrix * VertexCoord;
-	scale = TextureSize.xy/InputSize.xy;
+{   
+    TEX0 = TexCoord*1.0001;
+    gl_Position = MVPMatrix * VertexCoord;
+    scale = TextureSize.xy/InputSize.xy;
    warpp = TEX0.xy*scale;
    dbwarp = warpp*2.0-1.0;
    fragpos = warpp.x*OutputSize.x*pi*2.0/SIZE;
 }
 
 #elif defined(FRAGMENT)
-
 uniform sampler2D Texture;
-
-
 
 vec2 Warp(vec2 pos)
 {
