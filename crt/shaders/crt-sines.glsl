@@ -33,7 +33,7 @@
 #pragma parameter slotm "Slot Mask On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter slotw "Slot Mask Width" 3.0 2.0 3.0 1.0
 #pragma parameter bogus_col " [ COLORS ] " 0.0 0.0 0.0 0.0
-#pragma parameter Trin "CRT Colors" 1.0 0.0 1.0 1.0
+#pragma parameter Trin "CRT Colors" 0.0 0.0 1.0 1.0
 #pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
 #pragma parameter boostd "Boost Dark Colors" 1.1 1.0 2.0 0.05
 #pragma parameter bogus_conv " [ CONVERGENCE ] " 0.0 0.0 0.0 0.0
@@ -238,7 +238,7 @@ else pos = vTexCoord;
     }
 
     if(Trin == 1.0) { 
-    res *= vec3(1.0,0.85,1.2); 
+    res *= vec3(1.0,0.9,1.15); 
     res = clamp(res,0.0,1.0);
     }
 
