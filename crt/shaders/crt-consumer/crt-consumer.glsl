@@ -11,28 +11,31 @@ any later version.
 */
 
 // Parameter lines go here:
+#pragma parameter bogus0 " [ CRT-CONSUMER ] " 0.0 0.0 0.0 0.0
 #pragma parameter sharpx "Sharpness Horizontal" 2.0 1.0 5.0 0.1
 #pragma parameter sharpy "Sharpness Vertical" 3.0 1.0 5.0 0.1
-#pragma parameter blurx "Deconvergence X" 0.5 -2.0 2.0 0.05
-#pragma parameter blury "Deconvergence Y" -0.1 -2.0 2.0 0.05
-#pragma parameter warpx "  Curvature X" 0.03 0.0 0.12 0.01
-#pragma parameter warpy "  Curvature Y" 0.04 0.0 0.12 0.01
-#pragma parameter corner "  Corner size" 0.03 0.0 0.10 0.01
-#pragma parameter smoothness "  Border Smoothness" 600.0 25.0 600.0 5.0
+#pragma parameter bogus_geo " [ GEOMETRY ] " 0.0 0.0 0.0 0.0
+#pragma parameter warpx "Curvature X" 0.03 0.0 0.12 0.01
+#pragma parameter warpy "Curvature Y" 0.04 0.0 0.12 0.01
+#pragma parameter corner "Corner size" 0.03 0.0 0.10 0.01
+#pragma parameter smoothness "Border Smoothness" 600.0 25.0 600.0 5.0
+#pragma parameter vignette "Vignette On/Off" 1.0 0.0 1.0 1.0
+#pragma parameter bogus_scan " [ SCANLINES/MASKS ] " 0.0 0.0 0.0 0.0
 #pragma parameter scanlow "Beam low" 6.0 1.0 15.0 1.0
 #pragma parameter scanhigh "Beam high" 8.0 1.0 15.0 1.0
 #pragma parameter inter "Interlacing Toggle" 1.0 0.0 1.0 1.0
 #pragma parameter scan_type "Scanline Type, pronounced/soft"  2.0 2.0 3.0 1.0 
 #pragma parameter beamlow "Scanlines dark" 1.35 0.5 2.5 0.05 
 #pragma parameter beamhigh "Scanlines bright" 0.9 0.5 2.5 0.05 
-#pragma parameter Shadowmask "  Mask Type" 0.0 -1.0 8.0 1.0 
-#pragma parameter masksize "  Mask Size" 1.0 1.0 2.0 1.0
-#pragma parameter MaskDark "  Mask dark" 0.5 0.0 2.0 0.1
-#pragma parameter MaskLight "  Mask light" 1.5 0.0 2.0 0.1
-#pragma parameter slotmask "   Slot Mask Strength" 0.0 0.0 1.0 0.05
-#pragma parameter slotwidth "   Slot Mask Width" 2.0 1.0 6.0 0.5
-#pragma parameter double_slot "   Slot Mask Height: 2x1 or 4x1" 1.0 1.0 2.0 1.0
-#pragma parameter slotms "   Slot Mask Size" 1.0 1.0 2.0 1.0
+#pragma parameter Shadowmask "Mask Type" 0.0 -1.0 8.0 1.0 
+#pragma parameter masksize "Mask Size" 1.0 1.0 2.0 1.0
+#pragma parameter MaskDark "Mask dark" 0.5 0.0 2.0 0.1
+#pragma parameter MaskLight "Mask light" 1.5 0.0 2.0 0.1
+#pragma parameter slotmask "Slot Mask Strength" 0.0 0.0 1.0 0.05
+#pragma parameter slotwidth "Slot Mask Width" 2.0 1.0 6.0 0.5
+#pragma parameter double_slot "Slot Mask Height: 2x1 or 4x1" 1.0 1.0 2.0 1.0
+#pragma parameter slotms "Slot Mask Size" 1.0 1.0 2.0 1.0
+#pragma parameter bogus_col " [ COLORS ] " 0.0 0.0 0.0 0.0
 #pragma parameter GAMMA_OUT "Gamma Out" 2.2 0.0 4.0 0.05
 #pragma parameter crt_lum "CRT Luminances On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter brightboost1 "Bright boost dark pixels" 1.3 0.0 3.0 0.05
@@ -41,11 +44,10 @@ any later version.
 #pragma parameter contrast "Contrast, 1.0:Off" 1.0 0.00 2.00 0.05
 #pragma parameter nois "Noise" 0.0 0.0 1.0 0.01
 #pragma parameter WP "Color Temperature %" 0.0 -100.0 100.0 5.0 
-#pragma parameter vignette "  Vignette On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter sawtooth "  Sawtooth Effect" 1.0 0.0 1.0 1.0
-#pragma parameter bleed "  Color Bleed Effect" 1.0 0.0 1.0 1.0
-#pragma parameter bl_size "  Color Bleed Size, less is more" 1.5 0.1 4.0 0.05
-#pragma parameter alloff "  Switch off shader" 0.0 0.0 1.0 1.0
+#pragma parameter sawtooth "Sawtooth Effect" 1.0 0.0 1.0 1.0
+#pragma parameter bleed "Color Bleed Effect" 1.0 0.0 1.0 1.0
+#pragma parameter bl_size "Color Bleed Size, less is more" 1.5 0.1 4.0 0.05
+#pragma parameter alloff "Switch off shader" 0.0 0.0 1.0 1.0
 #define pi 6.28318
 
 #if defined(VERTEX)
@@ -135,8 +137,7 @@ COMPAT_VARYING vec2 maskpos;
 
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float blurx;
-uniform COMPAT_PRECISION float blury;
+
 uniform COMPAT_PRECISION float warpx;
 uniform COMPAT_PRECISION float warpy;
 uniform COMPAT_PRECISION float corner;
@@ -172,8 +173,7 @@ uniform COMPAT_PRECISION float sharpy;
 uniform COMPAT_PRECISION float crt_lum;
 
 #else
-#define blurx  0.0    
-#define blury  0.0    
+  
 #define warpx  0.0    
 #define warpy  0.0    
 #define corner 0.0    
@@ -518,13 +518,9 @@ void main()
 }
         else
             {
-	       vec3 sample1 = COMPAT_TEXTURE(Source,vec2(pC4.x + blurx*0.001, pC4.y - blury*0.001)).rgb;
 	       vec3 sample2 = COMPAT_TEXTURE(Source,pC4).rgb;
-	       vec3 sample3 = COMPAT_TEXTURE(Source,vec2(pC4.x - blurx*0.001, pC4.y + blury*0.001)).rgb;
 	
-	vec3 color = vec3((sample1.r+sample2.r)*0.5, 
-                      (sample1.g + sample3.g)*0.25 + sample2.g*0.5, 
-                      (sample2.b+ sample3.b)*0.5);
+	vec3 color = sample2;
    //sawtooth effect
 float t = sin(float(FrameCount));  
 if (sawtooth == 1.0){
