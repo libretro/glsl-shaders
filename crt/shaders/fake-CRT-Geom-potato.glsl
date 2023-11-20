@@ -88,8 +88,11 @@ res *= 0.15*sin(fragpos)+0.85;
 
 res = mix(res,clean, w);
 
-res *= vec3(1.0,0.85,1.15);
-
+#if defined GL_ES
+res;
+#else
+res *= vec3(1.0,0.9,1.15);
+#endif
 
 float lum = dot(vec3(0.29,0.6,0.11),res);
 res = mix(vec3(lum),res, 1.1);
