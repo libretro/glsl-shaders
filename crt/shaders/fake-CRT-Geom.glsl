@@ -206,7 +206,7 @@ lanc *= lanc;
 
 float w = dot(vec3(0.33),res);
 
-if (a_sharper == 0.0 && a_lanc == 1.0) {res -= 0.2*lanc; res *= 1.15;} 
+if (a_sharper == 0.0 && a_lanc == 1.0) {res -= 0.2*lanc; res *= 1.15; res = clamp(res,0.0,1.0); } 
 // color temp approximate
 res *= vec3(1.0+a_col_temp,1.0-a_col_temp*0.2,1.0-a_col_temp);
 
