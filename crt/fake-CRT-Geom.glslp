@@ -1,5 +1,5 @@
 shaders = "1"
 feedback_pass = "0"
 shader0 = shaders/fake-CRT-Geom.glsl
-filter_linear0 = "false"
+filter_linear0 = "true"
 
