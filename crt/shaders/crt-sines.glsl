@@ -3,6 +3,7 @@
 /* 
   crt-sines, a work by DariusG 2023
 
+  v1.9b much faster and simple slot mask
   v1.9 speed-up tweaks, removed non-essential stuff and re-entered slot mask
   v1.8d switched matrix to a simple calculation, as i read CRTs used a different
   luminance than supposed to (and RGB uses), instead of 0.23,0.70,0.07 they used
@@ -27,8 +28,8 @@
 
 
 #pragma parameter CURV "Curvature On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter scanl "Scanlines/Mask Low" 0.3 0.0 1.0 0.05
-#pragma parameter scanh "Scanlines/Mask High" 0.15 0.0 1.0 0.05
+#pragma parameter scanl "Scanlines/Mask Low" 0.35 0.0 1.0 0.05
+#pragma parameter scanh "Scanlines/Mask High" 0.20 0.0 1.0 0.05
 #pragma parameter SIZE "Mask Type, 2:Fine, 3:Coarse" 3.0 2.0 3.0 1.0
 #pragma parameter slotm "Slot Mask On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter slotw "Slot Mask Width" 3.0 2.0 3.0 1.0
@@ -174,20 +175,12 @@ vec2 Warp(vec2 pos)
     return pos;
 }
 
-
-vec3 slot(vec2 pos)
+float slot(vec2 pos, float mask)
 {
-    float h = fract(pos.x/slotw);
-    float v = fract(pos.y);
-    
-    float odd;
-    if (v<0.5) odd = 0.0; else odd = 1.0;
+    float odd = 1.0;
+    if (fract(pos.x/(slotw*2.0)) < 0.5) odd = 0.0;
 
-if (odd == 0.0)
-    {if (h<0.5) return vec3(0.5); else return vec3(1.5);}
-
-else if (odd == 1.0)
-    {if (h<0.5) return vec3(1.5); else return vec3(0.5);}
+ return mask*sin((pos.y+odd)*pi)+1.0;
 }
 
 void main()
@@ -219,7 +212,7 @@ else pos = vTexCoord;
 
 // vignette  
   float x = (warp.x-0.5);  // range -0.5 to 0.5, 0.0 being center of screen
-  x = x*x;    // curved response: higher values (more far from center) get higher results.
+  x = x*x*0.7;      // curved response: higher values (more far from center) get higher results.
 
   res = res*0.5 + conv*0.5;   
 
@@ -231,10 +224,10 @@ else pos = vTexCoord;
  float scn = (scan+x)*sin((ogl2pos.y+0.5)*pi*2.0)+1.0-(scan+x);
  float msk = mask*sin(fragpos*pi)+1.0-mask;
     
-    vec3 sl = vec3(1.0); vec2 xy = vec2(0.0);
+    float sl = 1.0; vec2 xy = vec2(0.0);
     if (slotm == 1.0){
     xy = vTexCoord*OutputSize.xy*scale; 
-    sl = mix(slot(xy/2.0),vec3(1.0),mask);
+    sl = slot(xy, mask);
     }
 
     if(Trin == 1.0) { 
