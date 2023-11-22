@@ -2,9 +2,9 @@
 #pragma parameter CS "Colors: sRGB, PAL, NTSC-U, NTSC-J" 0.0 0.0 3.0 1.0
 #pragma parameter TEMP "Color Temperature in Kelvins (NTSC-J 9300)"  6863.0 1031.0 12047.0 72.0
 #pragma parameter sc_gamma_in "Gamma In" 2.4 1.0 4.0 0.05
-#pragma parameter RG "Green <-to-> Red Hue" 0.0 -0.25 0.25 0.01
-#pragma parameter RB "Blue <-to-> Red Hue"  0.0 -0.25 0.25 0.01
-#pragma parameter GB "Blue <-to-> Green Hue" 0.0 -0.25 0.25 0.01
+#pragma parameter sc_RG "Green <-to-> Red Hue" 0.0 -0.25 0.25 0.01
+#pragma parameter sc_RB "Blue <-to-> Red Hue"  0.0 -0.25 0.25 0.01
+#pragma parameter sc_GB "Blue <-to-> Green Hue" 0.0 -0.25 0.25 0.01
 #pragma parameter r_out "CRT Red Vibrancy" 0.29 0.0 1.0 0.01
 #pragma parameter g_out "CRT Green Vibrancy" 0.62 0.0 1.0 0.01
 #pragma parameter b_out "CRT Blue Vibrancy" 0.09 0.0 1.0 0.01
@@ -118,9 +118,9 @@ uniform COMPAT_PRECISION float r_out;
 uniform COMPAT_PRECISION float g_out;
 uniform COMPAT_PRECISION float b_out;
 uniform COMPAT_PRECISION float BLACK; 
-uniform COMPAT_PRECISION float RG;
-uniform COMPAT_PRECISION float RB;
-uniform COMPAT_PRECISION float GB;
+uniform COMPAT_PRECISION float sc_RG;
+uniform COMPAT_PRECISION float sc_RB;
+uniform COMPAT_PRECISION float sc_GB;
 uniform COMPAT_PRECISION float CS;
 
 #else
@@ -138,9 +138,9 @@ uniform COMPAT_PRECISION float CS;
 #define sc_gamma_out 2.2
 #define sc_gamma_in 2.4
 #define BLACK 0.0
-#define RG 0.0   
-#define RB 0.0   
-#define GB 0.0  
+#define sc_RG 0.0   
+#define sc_RB 0.0   
+#define sc_GB 0.0  
 #define CS 0.0 
 #define r_out 0.0 
 #define g_out 0.0 
@@ -281,9 +281,9 @@ vec3 huePreserveClipDesaturate(float r, float g, float b)
 void main()
 {
 mat3 hue = mat3(
-    1.0, -RG, -RB,
-    RG, 1.0, -GB,
-    RB, GB, 1.0
+    1.0, -sc_RG, -sc_RB,
+    sc_RG, 1.0, -sc_GB,
+    sc_RB, sc_GB, 1.0
 );
 
    vec3 col = COMPAT_TEXTURE(Source,vTexCoord).rgb;
