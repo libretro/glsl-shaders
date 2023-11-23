@@ -12,7 +12,7 @@
 #pragma parameter contrast "Contrast" 1.0 0.00 2.00 0.01
 #pragma parameter SAT "Saturation" 1.0 0.0 2.0 0.01
 #pragma parameter BLACK  "Black Level" 0.0 -0.20 0.20 0.01 
-#pragma parameter SEGA "SEGA Lum Fix" 0.0 0.0 1.0 1.0
+#pragma parameter SEGA "Lum Fix: ST/GEN-CPC-AMIGA" 0.0 0.0 3.0 1.0
 #pragma parameter postbr "Bright Boost" 1.0 1.0 2.0 0.05
 #pragma parameter postdk "Dark Boost" 1.0 1.0 2.0 0.05
 #pragma parameter sc_gamma_out "Gamma out" 2.2 1.0 4.0 0.05
@@ -287,6 +287,11 @@ mat3 hue = mat3(
 );
 
    vec3 col = COMPAT_TEXTURE(Source,vTexCoord).rgb;
+
+  if (SEGA == 1.0) col = floor(col*7.0+0.5)/7.0;
+  if (SEGA == 2.0) col = floor(col*2.0+0.5)/2.0;
+  if (SEGA == 3.0) col = floor(col*15.0+0.5)/15.0;
+   
    col *= BRIGHTNESS;
    
    col = pow((col+0.099)/1.099, vec3(sc_gamma_in));
@@ -302,7 +307,6 @@ if (CS != 0.0){
     col *= vec3(r_out,g_out,b_out); 
     col = clamp(col,0.0,2.0);
 }
-   if (SEGA == 1.0) col *= 1.0625;
 
     col = pow(1.099*col, vec3(1.0/sc_gamma_out))-0.099;
    
