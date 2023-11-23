@@ -28,15 +28,15 @@
 
 
 #pragma parameter CURV "Curvature On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter scanl "Scanlines/Mask Low" 0.35 0.0 1.0 0.05
-#pragma parameter scanh "Scanlines/Mask High" 0.20 0.0 1.0 0.05
+#pragma parameter scanl "Scanlines/Mask Low" 0.3 0.0 1.0 0.05
+#pragma parameter scanh "Scanlines/Mask High" 0.15 0.0 1.0 0.05
 #pragma parameter SIZE "Mask Type, 2:Fine, 3:Coarse" 3.0 2.0 3.0 1.0
 #pragma parameter slotm "Slot Mask On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter slotw "Slot Mask Width" 3.0 2.0 3.0 1.0
 #pragma parameter bogus_col " [ COLORS ] " 0.0 0.0 0.0 0.0
 #pragma parameter Trin "CRT Colors" 0.0 0.0 1.0 1.0
 #pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
-#pragma parameter boostd "Boost Dark Colors" 1.1 1.0 2.0 0.05
+#pragma parameter boostd "Boost Dark Colors" 1.15 1.0 2.0 0.05
 #pragma parameter bogus_conv " [ CONVERGENCE ] " 0.0 0.0 0.0 0.0
 #pragma parameter RX "Convergence Horiz." 0.0 -2.0 2.0 0.05
 
@@ -218,7 +218,7 @@ else pos = vTexCoord;
 
  float w = dot(vec3(0.28),res);
  float scan = mix(scanl,scanh,w);
- float mask = scan*0.666;
+ float mask = scan*1.333;
 
 // apply vignette here
  float scn = (scan+x)*sin((ogl2pos.y+0.5)*pi*2.0)+1.0-(scan+x);
