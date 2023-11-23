@@ -25,5 +25,5 @@ scale_type_y3 = "source"
 scale_y3 = "1.000000"
 shader4 = "shaders/crt-sines.glsl"
 filter_linear4 = "true"
-
+g_in = 2.0
 
