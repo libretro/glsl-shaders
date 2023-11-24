@@ -8,7 +8,7 @@
 */
 
 #pragma parameter CHR_BLUR "CHROMA RESOLUTION" 2.3 1.0 10.0 0.1
-#pragma parameter L_BLUR "LUMA RESOLUTION" 10.5 10.0 20.0 0.5
+#pragma parameter L_BLUR "LUMA RESOLUTION" 10.5 2.0 20.0 0.5
 #pragma parameter CHROMA_SATURATION "CHROMA SATURATION" 7.5 0.0 15.0 0.1
 #pragma parameter L_brightness "LUMA BRIGHTNESS" 0.60 0.0 2.0 0.01
 #pragma parameter IHUE "I SHIFT (blue to orange)" 0.0 -1.0 1.0 0.01
