@@ -8,9 +8,9 @@
 */
 
 #pragma parameter CHR_BLUR "CHROMA RESOLUTION" 2.3 1.0 10.0 0.1
-#pragma parameter L_BLUR "LUMA RESOLUTION" 10.5 10.0 20.0 0.5
-#pragma parameter CHROMA_SATURATION "CHROMA SATURATION" 5.0 0.0 15.0 0.1
-#pragma parameter L_brightness "LUMA BRIGHTNESS" 0.55 0.0 2.0 0.01
+#pragma parameter L_BLUR "LUMA RESOLUTION" 10.5 2.0 20.0 0.5
+#pragma parameter CHROMA_SATURATION "CHROMA SATURATION" 7.5 0.0 15.0 0.1
+#pragma parameter L_brightness "LUMA BRIGHTNESS" 0.60 0.0 2.0 0.01
 #pragma parameter IHUE "I SHIFT (blue to orange)" 0.0 -1.0 1.0 0.01
 #pragma parameter QHUE "Q SHIFT (green to purple)" 0.0 -1.0 1.0 0.01
 
@@ -194,7 +194,8 @@ for (int d = -FIR_SIZE; d < FIR_SIZE; d++) {
         counter++;
     }
 
-    yiq.yz /= counter;
+    yiq.y /= counter*2.0;
+    yiq.z /= counter;
     yiq.r /= counter/4.0;
 
     // Saturate chroma (IQ)
