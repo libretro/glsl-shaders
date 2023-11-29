@@ -10,6 +10,7 @@ https://www.shadertoy.com/view/MtfBRB
 */
 #pragma parameter CS_TO "Col.Space: RGB-NTSC1953-PAL-NTSC 80s-NTSC 90s-Sony" 0.0 0.0 5.0 1.0 
 #pragma parameter CS_FROM "Device Col.Space: RGB-Android-Rec709-RGBtv-Rec2020" 0.0 0.0 4.0 1.0 
+#pragma parameter BLACK_lvl  "Black Level" 0.0 -0.20 0.20 0.01 
 
 
 #if defined(VERTEX)
@@ -96,9 +97,11 @@ COMPAT_VARYING vec4 TEX0;
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float CS_FROM;
 uniform COMPAT_PRECISION float CS_TO;
+uniform COMPAT_PRECISION float BLACK_lvl;
 #else
 #define CS_FROM 0.0
 #define CS_TO 0.0
+#define BLACK_lvl 0.0
 #endif
 
 /*
@@ -459,6 +462,8 @@ void main()
     
     color = convert(color, from, to);
     color = toGamma(color, to.trc);
+    color.rgb -= vec3(BLACK_lvl);
+    color.rgb *= vec3(1.0)/vec3(1.0-BLACK_lvl);
     FragColor = color;
 }
 #endif
