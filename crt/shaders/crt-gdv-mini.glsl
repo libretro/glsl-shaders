@@ -21,24 +21,24 @@
 */
 
 // Parameter lines go here:
-#pragma parameter brightboost "Bright boost" 1.0 0.5 2.0 0.05
-#pragma parameter sat "Saturation adjustment" 1.0 0.0 2.0 0.05
+#pragma parameter brightboost "Bright boost" 1.25 0.5 2.0 0.05
+#pragma parameter sat "Saturation adjustment" 1.15 0.0 2.0 0.05
 #pragma parameter scanline "Scanline adjust" 8.0 1.0 15.0 1.0
 #pragma parameter beam_min "Scanline dark" 1.35 0.5 3.0 0.05
 #pragma parameter beam_max "Scanline bright" 1.05 0.5 3.0 0.05
 #pragma parameter h_sharp "Horizontal sharpness" 2.00 1.0 5.0 0.05
-#pragma parameter gamma_out "Gamma out" 0.45 0.2 0.6 0.01
+#pragma parameter gamma_out "Gamma out" 0.55 0.2 0.6 0.01
 #pragma parameter shadowMask "CRT Mask: 0:CGWG, 1-4:Lottes, 5-6:'Trinitron'" 0.0 -1.0 10.0 1.0
 #pragma parameter masksize "CRT Mask Size (2.0 is nice in 4k)" 1.0 1.0 2.0 1.0
 #pragma parameter mcut "Mask 5-7-10 cutoff" 0.25 0.0 0.5 0.05
 #pragma parameter maskDark "Lottes maskDark" 0.5 0.0 2.0 0.1
 #pragma parameter maskLight "Lottes maskLight" 1.5 0.0 2.0 0.1
-#pragma parameter CGWG "CGWG Mask Str." 0.4 0.0 1.0 0.1
+#pragma parameter CGWG "CGWG Mask Str." 0.3 0.0 1.0 0.1
 #pragma parameter warpX "warpX" 0.0 0.0 0.125 0.01
 #pragma parameter warpY "warpY" 0.0 0.0 0.125 0.01
 #pragma parameter vignette "Vignette On/Off" 0.0 0.0 1.0 1.0
 
-#define lumweight vec3(0.3,0.6,0.1)
+#define lumweight vec3(0.30,0.59,0.11)
 
 #if defined(VERTEX)
 
