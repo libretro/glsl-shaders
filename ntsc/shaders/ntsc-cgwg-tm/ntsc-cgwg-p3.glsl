@@ -17,6 +17,9 @@
     any later version.
 */
 
+#pragma parameter crawl "Chroma Crawl" 2.0 1.0 4.0 1.0
+// begin params
+#define PI 3.14159265
 
 #if defined(VERTEX)
 
@@ -108,34 +111,43 @@ uniform COMPAT_PRECISION float crawl;
 
 #endif
 
-  #define TEX2D(c) COMPAT_TEXTURE(Source,(c))
-  #define PI 3.14159265
+#define TEX2D(v) COMPAT_TEXTURE(Source, (v))
 
       void main()
       {
-        vec2 xy = vTexCoord;
-
-        vec2 xyp = xy * SourceSize.xy * 4.0 * PI / 3.0;
-        xyp.y = xyp.y / 2.0 + 2.0 * PI / 3.0 * mod(float(FrameCount),2.0);
-
-        vec4 rgb = TEX2D(xy);
-
         mat3 rgb2yuv = mat3(0.299,-0.14713, 0.615,
                  0.587,-0.28886,-0.51499,
                  0.114, 0.436  ,-0.10001);
+        mat3 yuv2rgb = mat3(1.0, 1.0, 1.0,
+                 0.0,-0.39465,2.03211,
+                 1.13983,-0.58060,0.0);
 
-        vec3 yuv;
-        yuv = rgb2yuv * rgb.rgb;
 
-        float dx = PI/3.0;
-        xyp.x = xyp.x ;
-        float c0 = yuv.x + yuv.y * sin(xyp.x+xyp.y) + yuv.z*cos(xyp.x+xyp.y);
-        float c1 = yuv.x + yuv.y * sin(xyp.x+xyp.y+dx) + yuv.z * cos(xyp.x+xyp.y+dx);
-        rgb = TEX2D(xy + vec2(1.0/SourceSize.x *0.5, 0.0));
-        yuv = rgb2yuv * rgb.rgb;
-        float c2 = yuv.x + yuv.y * sin(xyp.x+xyp.y+2.0*dx) + yuv.z * cos(xyp.x+xyp.y+2.0*dx);
-        float c3 = yuv.x + yuv.y * sin(xyp.x+xyp.y+3.0*dx) + yuv.z * cos(xyp.x+xyp.y+3.0*dx);
+        vec4 sum   = vec4(0.0);
 
-        FragColor = (vec4(c0,c1,c2,c3)+0.65)/2.3;
-}
+        float wid = 3.0;
+        vec4 c1 = vec4(exp(-1.0/wid/wid));
+        vec4 c2 = vec4(exp(-4.0/wid/wid));
+        vec4 c3 = vec4(exp(-9.0/wid/wid));
+        vec4 c4 = vec4(exp(-16.0/wid/wid));
+        vec4 norm = 1.0 / (vec4(1.0) + vec4(2.0)*(c1+c2+c3+c4));
+
+        vec2 xy = vTexCoord;
+        float onex = 1.0 / SourceSize.x;
+
+        sum += TEX2D(xy + vec2(-4.0 * onex,  0.0)) * c4;
+        sum += TEX2D(xy + vec2(-3.0 * onex,  0.0)) * c3;
+        sum += TEX2D(xy + vec2(-2.0 * onex,  0.0)) * c2;
+        sum += TEX2D(xy + vec2(-1.0 * onex,  0.0)) * c1;
+        sum += TEX2D(xy);
+        sum += TEX2D(xy + vec2(+1.0 * onex,  0.0)) * c1;
+        sum += TEX2D(xy + vec2(+2.0 * onex,  0.0)) * c2;
+        sum += TEX2D(xy + vec2(+3.0 * onex,  0.0)) * c3;
+        sum += TEX2D(xy + vec2(+4.0 * onex,  0.0)) * c4;
+
+        float y = (rgb2yuv * TEX2D(xy).rgb).x;
+        vec2 uv = (rgb2yuv * (sum.rgb * norm.rgb)).yz;
+
+        FragColor = vec4(yuv2rgb * vec3(y, uv), 0.0);
+      }
 #endif

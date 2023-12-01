@@ -5,13 +5,13 @@
 //COMPATIBLE WITH GLES 2.0, GLES 3.0
 //https://www.shadertoy.com/view/XlsczN
 
-#pragma parameter blur_amount "Chroma Resolution"  1.5 0.0 8.0 0.1
-#pragma parameter BLUR_X "Chroma Bleed Starting Point, left-right"  -38.0 -100.0 10.0 1.0
-#pragma parameter blur_amountY "Luma Resolution"  1.5 0.0 8.0 0.1
-#pragma parameter SIG "Signal quality, more = worse"  0.3 0.0 50.0 0.05
+#pragma parameter blur_amount "Chroma Resolution"  1.0 0.0 8.0 0.1
+#pragma parameter BLUR_X "Chroma Bleed Starting Point, left-right"  -90.0 -100.0 10.0 1.0
+#pragma parameter blur_amountY "Luma Resolution"  2.0 0.0 8.0 0.1
+#pragma parameter SIG "Signal quality, more = worse"  0.2 0.0 50.0 0.05
 #pragma parameter bottom_strenth "Bottom Strength"  2.0 0.0 6.0 0.1
 #pragma parameter TEAR "Main Tearing Strength"  50.0 0.0 100.0 1.0
-#pragma parameter SAT "Saturation"  1.2 0.0 2.0 0.05
+#pragma parameter SAT "Saturation"  1.0 0.0 2.0 0.05
 #pragma parameter QHUE "Hue Green to Purple"  0.0 -2.0 2.0 0.01
 #pragma parameter IHUE "Hue Blue to Orange"  0.0 -2.0 2.0 0.01
 
