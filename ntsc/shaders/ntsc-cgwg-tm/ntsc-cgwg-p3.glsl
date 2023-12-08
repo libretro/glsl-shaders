@@ -17,7 +17,6 @@
     any later version.
 */
 
-#pragma parameter crawl "Chroma Crawl" 2.0 1.0 4.0 1.0
 // begin params
 #define PI 3.14159265
 
