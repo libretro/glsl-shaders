@@ -7,8 +7,8 @@
    any later version.
 */
 
-#pragma parameter CHR_BLUR "CHROMA RESOLUTION" 2.5 1.0 10.0 0.1
-#pragma parameter L_BLUR "LUMA RESOLUTION" 10.0 2.0 20.0 0.5
+#pragma parameter CHR_BLUR "CHROMA RESOLUTION" 2.0 1.0 10.0 0.1
+#pragma parameter L_BLUR "LUMA RESOLUTION" 4.0 2.0 20.0 0.5
 #pragma parameter CHROMA_SATURATION "CHROMA SATURATION" 4.0 0.0 15.0 0.1
 #pragma parameter L_brightness "LUMA BRIGHTNESS" 2.5 0.0 2.5 0.05
 #pragma parameter IHUE "I SHIFT (blue to orange)" 0.0 -1.0 1.0 0.01
@@ -61,7 +61,7 @@ uniform COMPAT_PRECISION float WHATEVER;
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    TEX0.xy = TexCoord.xy*1.0001;
+    TEX0.xy = TexCoord.xy;
 }
 
 #elif defined(FRAGMENT)
@@ -125,7 +125,7 @@ uniform COMPAT_PRECISION float QHUE;
 #define FSC  3.57945
 
 // Size of the decoding FIR filter
-#define FIR_SIZE 20
+#define FIR_SIZE 15
 
 // YIQ to RGB matrices
 const mat3 yiq_to_rgb = mat3(1.000, 1.000, 1.000,
@@ -160,7 +160,7 @@ void main() {
     vec3 yiq = vec3(0.0);
 
 for (int d = -FIR_SIZE; d < FIR_SIZE; d++) {
-        float odd = mod(vTexCoord.y*SourceSize.y,2.0)*SourceSize.z*0.25;
+        float odd = mod(vTexCoord.y*SourceSize.y*mod(float(FrameCount),30.0),2.0)*SourceSize.z*0.25;
         float offset = float(d);
         float phase = fc*vTexCoord.x+11.0*PI/60.0;
         // LUMA encode
@@ -176,7 +176,7 @@ for (int d = -FIR_SIZE; d < FIR_SIZE; d++) {
         // LUMA decode end!
 
         // CHROMA encode
-        pos = vec2(vTexCoord.x + (offset/CHR_BLUR)*SourceSize.z+odd, vTexCoord.y);
+        pos = vec2(vTexCoord.x + (offset/CHR_BLUR)*SourceSize.z, vTexCoord.y);
         s = COMPAT_TEXTURE(Source, pos).rgb;
         
         s = rgb_to_yiq*s;
