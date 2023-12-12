@@ -1,7 +1,9 @@
 #version 110
 
-#pragma parameter NTSC_sat "NTSC SATURATION" 2.0 0.0 4.0 0.05
+#pragma parameter NTSC_sat "NTSC SATURATION" 1.0 0.0 4.0 0.05
 #pragma parameter NTSC_bri "NTSC BRIGHTNESS" 1.0 0.0 2.0 0.05
+#pragma parameter FRINGING "NTSC FRINGING" 0.15 0.0 1.0 0.05
+#pragma parameter ARTIFACTING "NTSC ARTIFACTING" 0.25 0.0 1.0 0.05
 
 #if defined(VERTEX)
 
@@ -93,10 +95,14 @@ COMPAT_VARYING vec4 TEX0;
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float NTSC_sat;
 uniform COMPAT_PRECISION float NTSC_bri;
+uniform COMPAT_PRECISION float FRINGING;
+uniform COMPAT_PRECISION float ARTIFACTING;
 
 #else
 #define NTSC_sat 1.0
 #define NTSC_bri 1.0
+#define FRINGING 1.0
+#define ARTIFACTING 1.0
 #endif
 
 //  Simple NTSC Decoder
@@ -109,10 +115,6 @@ uniform COMPAT_PRECISION float NTSC_bri;
 
 #define TAU  6.28318530717958647693
 #define PI 3.1415926
-//  Colorspace conversion matrix for YIQ-to-RGB
-const mat3 YIQ2RGB = mat3(1.000, 1.000, 1.000,
-                          0.956,-0.272,-1.106,
-                          0.621,-0.647, 1.703);
 
 const mat3 RGBYIQ = mat3(0.299, 0.596, 0.211,
                              0.587,-0.274,-0.523,
@@ -121,12 +123,17 @@ const mat3 RGBYIQ = mat3(0.299, 0.596, 0.211,
 void main()
 {
    
+mat3 mix_mat = mat3(NTSC_bri  , FRINGING      , FRINGING, 
+                   ARTIFACTING, 2.0 * NTSC_sat, 0.0, 
+                   ARTIFACTING, 0.0           , 2.0 * NTSC_sat);
+
+
     float phase = (vTexCoord.x*SourceSize.x+vTexCoord.y*SourceSize.y) * PI/2.0;
     vec3 YIQ = COMPAT_TEXTURE(Source,vTexCoord).rgb; 
     YIQ = YIQ*RGBYIQ; 
     vec3 signal = vec3(YIQ.x, cos(phase)*YIQ.y,  YIQ.z*sin(phase) );   
         //  Convert YIQ signal to RGB
-        FragColor = vec4(signal*vec3(NTSC_bri,NTSC_sat,NTSC_sat), 1.0);
+        FragColor = vec4(signal*mix_mat, 1.0);
     
 }
 #endif
