@@ -1,5 +1,14 @@
 #version 110
 
+/*
+   Simple S-video like shader by DariusG 2023
+   
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the Free
+   Software Foundation; either version 2 of the License, or (at your option)
+   any later version.
+*/
+
 #pragma parameter NTSC_sat "NTSC SATURATION" 1.0 0.0 4.0 0.05
 #pragma parameter NTSC_bri "NTSC BRIGHTNESS" 1.0 0.0 2.0 0.05
 #pragma parameter FRINGING "NTSC FRINGING" 0.15 0.0 1.0 0.05
@@ -105,13 +114,6 @@ uniform COMPAT_PRECISION float ARTIFACTING;
 #define ARTIFACTING 1.0
 #endif
 
-//  Simple NTSC Decoder
-//
-//  Decodes composite video signal generated in Buffer A.
-//  Simplified fork of an earlier NTSC decoder shader.
-//
-//  copyright (c) 2017-2020, John Leffingwell
-//  license CC BY-SA Attribution-ShareAlike
 
 #define TAU  6.28318530717958647693
 #define PI 3.1415926
@@ -132,8 +134,7 @@ mat3 mix_mat = mat3(NTSC_bri  , FRINGING      , FRINGING,
     vec3 YIQ = COMPAT_TEXTURE(Source,vTexCoord).rgb; 
     YIQ = YIQ*RGBYIQ; 
     vec3 signal = vec3(YIQ.x, cos(phase)*YIQ.y,  YIQ.z*sin(phase) );   
-        //  Convert YIQ signal to RGB
-        FragColor = vec4(signal*mix_mat, 1.0);
+    FragColor = vec4(signal*mix_mat, 1.0);
     
 }
 #endif
