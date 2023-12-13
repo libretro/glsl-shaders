@@ -1,5 +1,14 @@
 #version 110
 
+/*
+   Simple S-video like shader by DariusG 2023
+   
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the Free
+   Software Foundation; either version 2 of the License, or (at your option)
+   any later version.
+*/
+
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -96,23 +105,11 @@ uniform COMPAT_PRECISION float gamma;
 #define gamma 1.0
 #endif
 
-//  Simple NTSC Decoder
-//
-//  Decodes composite video signal generated in Buffer A.
-//  Simplified fork of an earlier NTSC decoder shader.
-//
-//  copyright (c) 2017-2020, John Leffingwell
-//  license CC BY-SA Attribution-ShareAlike
+// this pass is a modification of https://www.shadertoy.com/view/3t2XRV
 
 #define TAU  6.28318530717958647693
 #define PI 3.1415926
-//  Simple NTSC Decoder
-//
-//  Decodes composite video signal generated in Buffer A.
-//  Simplified fork of an earlier NTSC decoder shader.
-//
-//  copyright (c) 2017-2020, John Leffingwell
-//  license CC BY-SA Attribution-ShareAlike
+
 
 #define TAU  6.28318530717958647693
 
