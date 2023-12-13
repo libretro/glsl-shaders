@@ -147,11 +147,25 @@ vec2 Warp (vec2 pos)
     return pos;
 }
 
+// GLES after Google Pixel Primaries:
+// R 0.66, 0.34
+// G 0.23, 0.72
+// B 0.14, 0.01
+
+#if defined GL_ES
+
+mat3 hue = mat3(                
+0.60722     ,0.25198 ,   0.27164,
+-0.10833    ,0.98873 ,   0.19229,
+-0.02558    ,0.12980 ,   1.10027);
+
+#else
 mat3 hue = mat3(                    
 0.9501  ,   -0.0431 ,   0.0857  ,
 0.0265  ,   0.9278  ,   0.0432  ,
 0.0011  ,   -0.0206 ,   1.3153  );
 
+#endif
 
 
 void main()
