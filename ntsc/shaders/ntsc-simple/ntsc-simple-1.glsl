@@ -11,7 +11,7 @@
 
 #pragma parameter NTSC_sat "NTSC SATURATION" 1.0 0.0 4.0 0.05
 #pragma parameter NTSC_bri "NTSC BRIGHTNESS" 1.0 0.0 2.0 0.05
-#pragma parameter FRINGING "NTSC FRINGING" 0.15 0.0 1.0 0.05
+#pragma parameter FRINGING "NTSC FRINGING" 0.30 0.0 1.0 0.05
 #pragma parameter ARTIFACTING "NTSC ARTIFACTING" 0.25 0.0 1.0 0.05
 
 #if defined(VERTEX)
@@ -130,7 +130,7 @@ mat3 mix_mat = mat3(NTSC_bri  , FRINGING      , FRINGING,
                    ARTIFACTING, 0.0           , 2.0 * NTSC_sat);
 
 
-    float phase = (vTexCoord.x*SourceSize.x+vTexCoord.y*SourceSize.y) * PI/2.0;
+    float phase = (vTexCoord.x*SourceSize.x) * PI/2.0 +vTexCoord.y*SourceSize.y*2.0*PI/3.0;
     vec3 YIQ = COMPAT_TEXTURE(Source,vTexCoord).rgb; 
     YIQ = YIQ*RGBYIQ; 
     vec3 signal = vec3(YIQ.x, cos(phase)*YIQ.y,  YIQ.z*sin(phase) );   
