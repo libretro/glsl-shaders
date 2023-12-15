@@ -10,7 +10,7 @@
 */
 
 #pragma parameter NTSC_sat "NTSC SATURATION" 1.0 0.0 4.0 0.05
-#pragma parameter NTSC_bri "NTSC BRIGHTNESS" 1.0 0.0 2.0 0.05
+#pragma parameter NTSC_bri "NTSC BRIGHTNESS" 0.9 0.0 2.0 0.05
 #pragma parameter FRINGING "NTSC FRINGING" 0.30 0.0 1.0 0.05
 #pragma parameter ARTIFACTING "NTSC ARTIFACTING" 0.25 0.0 1.0 0.05
 
@@ -121,6 +121,8 @@ uniform COMPAT_PRECISION float ARTIFACTING;
 const mat3 RGBYIQ = mat3(0.299, 0.596, 0.211,
                              0.587,-0.274,-0.523,
                              0.114,-0.322, 0.312);
+
+#define freq 3545567.0
 
 void main()
 {
