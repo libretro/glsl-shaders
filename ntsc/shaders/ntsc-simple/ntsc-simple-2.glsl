@@ -136,7 +136,7 @@ void main()
             float phase = (vTexCoord.x * SourceSize.x+ float(n)) * TAU / 4.0+vTexCoord.y*SourceSize.y*2.0*PI/3.0 ;
             YIQ.yz += COMPAT_TEXTURE(Source, pos).gb * vec2(cos(phase), sin(phase));
         }
-        YIQ.yz /= 8.0;
+        YIQ.yz /= 6.0;
 
 
         //  Convert YIQ signal to RGB
