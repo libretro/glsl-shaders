@@ -58,9 +58,9 @@ any later version.
 #pragma parameter GB "Blue <-to-> Green Hue" 0.0 -0.25 0.25 0.01
 #pragma parameter bogus_con " [ CONVERGENCE SETTINGS ] " 0.0 0.0 0.0 0.0
 #pragma parameter C_STR "Convergence Overall Strength" 0.0 0.0 0.5 0.05
-#pragma parameter CONV_R "Convergence Red X-Axis" 0.0 -1.0 1.0 0.05
-#pragma parameter CONV_G "Convergence Green X-axis" 0.0 -1.0 1.0 0.05
-#pragma parameter CONV_B "Convergence Blue X-Axis" 0.0 -1.0 1.0 0.05
+#pragma parameter CONV_R "Convergence Red X-Axis" 0.0 -3.0 3.0 0.05
+#pragma parameter CONV_G "Convergence Green X-axis" 0.0 -3.0 3.0 0.05
+#pragma parameter CONV_B "Convergence Blue X-Axis" 0.0 -3.0 3.0 0.05
 #pragma parameter POTATO "Potato Boost(Simple Gamma, adjust Mask)" 0.0 0.0 1.0 1.0
 
 #define pi 3.1415926535897932384626433
