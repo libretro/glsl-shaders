@@ -116,7 +116,7 @@ uniform COMPAT_PRECISION float crawl;
         vec2 xy = vTexCoord;
 
         vec2 xyp = xy * SourceSize.xy * 4.0 * PI / 3.0;
-        xyp.y = xyp.y / 2.0 + 2.0 * PI / 3.0 * mod(float(FrameCount),3.0);
+        xyp.y = xyp.y / 2.0 + 2.0 * PI / 3.0 * mod(float(FrameCount),crawl);
 
         vec4 rgb = TEX2D(xy);
 

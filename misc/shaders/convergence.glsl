@@ -5,7 +5,7 @@ convergence pass DariusG 2023.
 Run in Linear, BEFORE actual shader pass
 */
 
-#pragma parameter C_STR "Convergence Overall Strength" 0.0 0.0 1.0 0.05
+#pragma parameter C_STR "Convergence Overall Strength" 0.0 0.0 0.5 0.05
 #pragma parameter Rx "Convergence Red Horiz." 0.0 -5.0 5.0 0.05
 #pragma parameter Ry "Convergence Red Vert." 0.0 -5.0 5.0 0.05
 #pragma parameter Gx "Convergence Green Horiz." 0.0 -5.0 5.0 0.05

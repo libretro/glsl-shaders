@@ -3,6 +3,7 @@
 /* 
   crt-sines, a work by DariusG 2023
 
+  v2.0  split Convergence R,B and G for more realistic look
   v1.9b much faster and simple slot mask
   v1.9 speed-up tweaks, removed non-essential stuff and re-entered slot mask
   v1.8d switched matrix to a simple calculation, as i read CRTs used a different
@@ -207,14 +208,15 @@ else pos = vTexCoord;
 
 // Convergence
   vec3 res = COMPAT_TEXTURE(Source,p).rgb;
-  vec3 conv =  COMPAT_TEXTURE(Source,p + vec2(dx,0.0)).rgb;
+  vec2 convrb =  COMPAT_TEXTURE(Source,p + vec2(dx,0.0)).xz;
+  float convg =  COMPAT_TEXTURE(Source,p - vec2(dx,0.0)).y;
 
 
 // vignette  
   float x = (warp.x-0.5);  // range -0.5 to 0.5, 0.0 being center of screen
   x = x*x*0.7;      // curved response: higher values (more far from center) get higher results.
 
-  res = res*0.5 + conv*0.5;   
+  res = res*0.5 + 0.5*vec3(convrb.x,convg,convrb.y);   
 
  float w = dot(vec3(0.28),res);
  float scan = mix(scanl,scanh,w);

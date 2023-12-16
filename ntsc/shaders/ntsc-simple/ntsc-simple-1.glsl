@@ -10,7 +10,7 @@
 */
 
 #pragma parameter NTSC_sat "NTSC SATURATION" 1.0 0.0 4.0 0.05
-#pragma parameter NTSC_bri "NTSC BRIGHTNESS" 1.0 0.0 2.0 0.05
+#pragma parameter NTSC_bri "NTSC BRIGHTNESS" 0.9 0.0 2.0 0.05
 #pragma parameter FRINGING "NTSC FRINGING" 0.30 0.0 1.0 0.05
 #pragma parameter ARTIFACTING "NTSC ARTIFACTING" 0.25 0.0 1.0 0.05
 

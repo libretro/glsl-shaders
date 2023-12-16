@@ -124,7 +124,7 @@ uniform COMPAT_PRECISION float crawl;
         vec2 xyf = fract(xy * SourceSize.xy);
         vec2 xyp = floor(xy * SourceSize.xy)+vec2(0.5);
         xy = xyp / SourceSize.xy;
-        float offs = mod(float(FrameCount),3.0)/2.0;
+        float offs = mod(float(FrameCount),crawl)/2.0;
         vec4 phases = (vec4(0.0,0.25,0.5,0.75) + vec4(xyp.x+xyp.y/2.0+offs)) *4.0*PI/3.0;
         vec4 phasesl = (vec4(0.0,0.25,0.5,0.75) + vec4(-1.0+xyp.x+xyp.y/2.0+offs)) *4.0*PI/3.0;
         vec4 phasesr = (vec4(0.0,0.25,0.5,0.75) + vec4( 1.0+xyp.x+xyp.y/2.0+offs)) *4.0*PI/3.0;
