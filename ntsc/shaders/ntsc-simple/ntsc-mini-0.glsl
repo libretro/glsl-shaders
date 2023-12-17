@@ -1,5 +1,7 @@
 #version 110
 
+#pragma parameter compo "S-Video/Composite" 1.0 0.0 1.0 1.0
+
 /*
 NTSC-mini DariusG 2023
 
@@ -96,10 +98,10 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float FIR_GAIN;
+uniform COMPAT_PRECISION float compo;
 
 #else
-#define FIR_GAIN 1.0
+#define compo 1.0
 #endif
 
 const mat3 YIQ2RGB = mat3(1.000, 1.000, 1.000,
@@ -121,6 +123,8 @@ c00 *= vec3(1.0,2.0*cos(phase),2.0*sin(phase));
 
 // send as one signal combined
 float res = dot(c00,vec3(1.0));
-FragColor.rgb = c00;
+if (compo == 1.0) FragColor.rgb = vec3(res);
+else FragColor.rgb = c00;
+
 }
 #endif
