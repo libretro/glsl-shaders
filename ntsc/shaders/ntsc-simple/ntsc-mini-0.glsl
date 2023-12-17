@@ -109,12 +109,12 @@ const mat3 YIQ2RGB = mat3(1.000, 1.000, 1.000,
 const mat3 RGBYIQ = mat3(0.299, 0.596, 0.211,
                              0.587,-0.274,-0.523,
                              0.114,-0.322, 0.312);
-
+#define pi23 2.09439506667
 
 void main()
 {
 vec2 ps = vec2(SourceSize.z, 0.0);
-float phase = (vTexCoord.x*SourceSize.x+vTexCoord.y*SourceSize.y)*3.1415926*0.6666;
+float phase = (vTexCoord.x*SourceSize.x+vTexCoord.y*SourceSize.y)*pi23;
 vec3 c00 = COMPAT_TEXTURE(Source,vTexCoord).rgb;
 c00 *= RGBYIQ;
 c00 *= vec3(1.0,2.0*cos(phase),2.0*sin(phase));
