@@ -119,10 +119,19 @@ vec2 ps = vec2(SourceSize.z, 0.0);
 float phase = (vTexCoord.x*SourceSize.x+vTexCoord.y*SourceSize.y)*pi23;
 vec3 c00 = COMPAT_TEXTURE(Source,vTexCoord).rgb;
 c00 *= RGBYIQ;
-c00 *= vec3(1.0,2.0*cos(phase),2.0*sin(phase));
+vec3 osc = vec3(0.0);
 
-// send as one signal combined
+// tweak to adjust for pinkish tint 
+if (compo == 1.0) osc = vec3(0.95,1.0*cos(phase),1.0*sin(phase));
+if (compo == 0.0) osc = vec3(0.95,3.0*cos(phase),1.0*sin(phase));
+c00 *= osc;
+
+// send compo as 1 signal combined
 float res = dot(c00,vec3(1.0));
+
+// true luma-chroma s-video (send chroma as 1 signal)
+c00.yz = vec2(dot(c00.yz,vec2(1.0)));
+
 if (compo == 1.0) FragColor.rgb = vec3(res);
 else FragColor.rgb = c00;
 
