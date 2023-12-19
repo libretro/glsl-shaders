@@ -129,7 +129,7 @@ vec3 osc = vec3(0.0);
 
 // tweak to adjust for pinkish tint 
 if (compo == 1.0) osc = vec3(1.0,0.666*cos(phase),1.0*sin(phase));
-if (compo == 0.0) osc = vec3(1.0,4.0*cos(phase),2.5*sin(phase));
+if (compo == 0.0) osc = vec3(1.0,3.0*cos(phase),1.0*sin(phase));
 c00 *= osc;
 
 // send compo as 1 signal combined
