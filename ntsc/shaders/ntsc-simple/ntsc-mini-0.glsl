@@ -99,9 +99,11 @@ COMPAT_VARYING vec4 TEX0;
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float compo;
+uniform COMPAT_PRECISION float rainbow;
 
 #else
 #define compo 1.0
+#define rainbow 1.0
 #endif
 
 const mat3 YIQ2RGB = mat3(1.000, 1.000, 1.000,
@@ -116,14 +118,18 @@ const mat3 RGBYIQ = mat3(0.299, 0.596, 0.211,
 void main()
 {
 vec2 ps = vec2(SourceSize.z, 0.0);
-float phase = (vTexCoord.x*SourceSize.x+vTexCoord.y*SourceSize.y)*pi23;
+
+float pattern = vTexCoord.x*SourceSize.x+vTexCoord.y*SourceSize.y;
+if (compo == 1.0 && rainbow == 1.0) pattern = vTexCoord.x*SourceSize.x;
+
+float phase = pattern*pi23;
 vec3 c00 = COMPAT_TEXTURE(Source,vTexCoord).rgb;
 c00 *= RGBYIQ;
 vec3 osc = vec3(0.0);
 
 // tweak to adjust for pinkish tint 
-if (compo == 1.0) osc = vec3(0.95,1.0*cos(phase),1.0*sin(phase));
-if (compo == 0.0) osc = vec3(0.95,3.0*cos(phase),1.0*sin(phase));
+if (compo == 1.0) osc = vec3(1.0,1.0*cos(phase),1.0*sin(phase));
+if (compo == 0.0) osc = vec3(1.0,3.0*cos(phase),1.0*sin(phase));
 c00 *= osc;
 
 // send compo as 1 signal combined
