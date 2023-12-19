@@ -9,6 +9,9 @@ Software Foundation; either version 2 of the License, or (at your option)
 any later version.
 */
 #pragma parameter rainbow "Rainbow Effect" 0.0 0.0 1.0 1.0
+#pragma parameter ntsc_red "NTSC Red" 1.0 0.0 2.0 0.01
+#pragma parameter ntsc_green "NTSC Green" 1.0 0.0 2.0 0.01
+#pragma parameter ntsc_blue "NTSC Blue" 1.0 0.0 2.0 0.01
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -98,11 +101,19 @@ COMPAT_VARYING vec4 TEX0;
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float rainbow;
 uniform COMPAT_PRECISION float compo;
+uniform COMPAT_PRECISION float ntsc_red;
+uniform COMPAT_PRECISION float ntsc_green;
+uniform COMPAT_PRECISION float ntsc_blue;
 
 #else
 #define rainbow 1.0
 #define compo 1.0
+#define ntsc_red 1.0
+#define ntsc_blue 1.0
+#define ntsc_green 1.0
 #endif
+
+
 const mat3 YIQ2RGB = mat3(1.000, 1.000, 1.000,
                           0.956,-0.272,-1.106,
                           0.621,-0.647, 1.703);
@@ -145,8 +156,10 @@ c03.yz *= vec2(cos(phase03),sin(phase03));
 
 vec3 res = c30+c20+c10+c00+c01+c02+c03;
 res *= YIQ2RGB;
-//float l = dot(vec3(0.3,0.6,0.1),res);
-//res *= mix(1.45,1.05,l);
+
+// tint control
+res *= vec3(ntsc_red, ntsc_green, ntsc_blue);
+
 FragColor.rgb = res;
 }
 #endif
