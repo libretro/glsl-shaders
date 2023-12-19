@@ -8,7 +8,7 @@ under the terms of the GNU General Public License as published by the Free
 Software Foundation; either version 2 of the License, or (at your option)
 any later version.
 */
-
+#pragma parameter rainbow "Rainbow Effect" 1.0 0.0 1.0 1.0
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -96,58 +96,55 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float FIR_GAIN;
+uniform COMPAT_PRECISION float rainbow;
+uniform COMPAT_PRECISION float compo;
 
 #else
-#define FIR_GAIN 1.0
+#define rainbow 1.0
+#define compo 1.0
 #endif
 const mat3 YIQ2RGB = mat3(1.000, 1.000, 1.000,
                           0.956,-0.272,-1.106,
                           0.621,-0.647, 1.703);
 #define pi23 2.09439506667
 
+
 void main()
 {
 vec2 ps = vec2(SourceSize.z, 0.0);
+float pattern = vTexCoord.x*SourceSize.x+vTexCoord.y*SourceSize.y;
+if (compo == 1.0 && rainbow == 1.0) pattern = vTexCoord.x*SourceSize.x;
 
-// FIR gaussian moving average calculated at https://fiiir.com/
-vec3 c40 = COMPAT_TEXTURE(Source,vTexCoord-4.0*ps).rgb*0.011002004494348790;
-float phase40 = ((vTexCoord.x*SourceSize.x+vTexCoord.y*SourceSize.y)-4.0)*pi23;
-c40.yz *= vec2(cos(phase40),sin(phase40));
-
-vec3 c30 = COMPAT_TEXTURE(Source,vTexCoord-3.0*ps).rgb*0.043175145021758329;
-float phase30 = ((vTexCoord.x*SourceSize.x+vTexCoord.y*SourceSize.y)-3.0)*pi23;
+// FIR moving average calculated at https://fiiir.com/
+vec3 c30 = COMPAT_TEXTURE(Source,vTexCoord-3.0*ps).rgb*0.019775776609144702;
+float phase30 = (pattern-3.0)*pi23;
 c30.yz *= vec2(cos(phase30),sin(phase30));
 
-vec3 c20 = COMPAT_TEXTURE(Source,vTexCoord-2.0*ps).rgb*0.114643519437383018;
-float phase20 = ((vTexCoord.x*SourceSize.x+vTexCoord.y*SourceSize.y)-2.0)*pi23;
+vec3 c20 = COMPAT_TEXTURE(Source,vTexCoord-2.0*ps).rgb*0.101190476190476164;
+float phase20 = (pattern-2.0)*pi23;
 c20.yz *= vec2(cos(phase20),sin(phase20));
 
-vec3 c10 = COMPAT_TEXTURE(Source,vTexCoord-ps).rgb*0.205977096991565828;
-float phase10 = ((vTexCoord.x*SourceSize.x+vTexCoord.y*SourceSize.y)-1.0)*pi23;
+vec3 c10 = COMPAT_TEXTURE(Source,vTexCoord-ps).rgb*0.230224223390855270;
+float phase10 = (pattern-1.0)*pi23;
 c10.yz *= vec2(cos(phase10),sin(phase10));
 
-vec3 c00 = COMPAT_TEXTURE(Source,vTexCoord).rgb*0.250404468109888034;
-float phase = ((vTexCoord.x*SourceSize.x+vTexCoord.y*SourceSize.y))*pi23;
+vec3 c00 = COMPAT_TEXTURE(Source,vTexCoord).rgb*0.297619047619047616;
+float phase = pattern*pi23;
 c00.yz *= vec2(cos(phase),sin(phase));
 
-vec3 c01 = COMPAT_TEXTURE(Source,vTexCoord+ps).rgb*0.205977096991565828;
-float phase01 = ((vTexCoord.x*SourceSize.x+vTexCoord.y*SourceSize.y)+1.0)*pi23;
+vec3 c01 = COMPAT_TEXTURE(Source,vTexCoord+ps).rgb*0.230224223390855270;
+float phase01 = (pattern+1.0)*pi23;
 c01.yz *= vec2(cos(phase01),sin(phase01));
 
-vec3 c02 = COMPAT_TEXTURE(Source,vTexCoord+2.0*ps).rgb*0.114643519437383018;
-float phase02 = ((vTexCoord.x*SourceSize.x+vTexCoord.y*SourceSize.y)+2.0)*pi23;
+vec3 c02 = COMPAT_TEXTURE(Source,vTexCoord+2.0*ps).rgb*0.101190476190476164;
+float phase02 = (pattern+2.0)*pi23;
 c02.yz *= vec2(cos(phase02),sin(phase02));
 
-vec3 c03 = COMPAT_TEXTURE(Source,vTexCoord+3.0*ps).rgb*0.043175145021758329;
-float phase03 = ((vTexCoord.x*SourceSize.x+vTexCoord.y*SourceSize.y)+3.0)*pi23;
+vec3 c03 = COMPAT_TEXTURE(Source,vTexCoord+3.0*ps).rgb*0.019775776609144702;
+float phase03 = (pattern+3.0)*pi23;
 c03.yz *= vec2(cos(phase03),sin(phase03));
 
-vec3 c04 = COMPAT_TEXTURE(Source,vTexCoord+4.0*ps).rgb*0.011002004494348790;
-float phase04 = ((vTexCoord.x*SourceSize.x+vTexCoord.y*SourceSize.y)+4.0)*pi23;
-c04.yz *= vec2(cos(phase04),sin(phase04));
-
-vec3 res = c40+c30+c20+c10+c00+c01+c02+c03+c04;
+vec3 res = c30+c20+c10+c00+c01+c02+c03;
 res *= YIQ2RGB;
 FragColor.rgb = res;
 }
