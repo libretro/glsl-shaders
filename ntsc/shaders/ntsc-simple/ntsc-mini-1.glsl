@@ -8,7 +8,7 @@ under the terms of the GNU General Public License as published by the Free
 Software Foundation; either version 2 of the License, or (at your option)
 any later version.
 */
-#pragma parameter rainbow "Rainbow Effect" 1.0 0.0 1.0 1.0
+#pragma parameter rainbow "Rainbow Effect" 0.0 0.0 1.0 1.0
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -108,7 +108,6 @@ const mat3 YIQ2RGB = mat3(1.000, 1.000, 1.000,
                           0.621,-0.647, 1.703);
 #define pi23 2.09439506667
 
-
 void main()
 {
 vec2 ps = vec2(SourceSize.z, 0.0);
@@ -146,6 +145,8 @@ c03.yz *= vec2(cos(phase03),sin(phase03));
 
 vec3 res = c30+c20+c10+c00+c01+c02+c03;
 res *= YIQ2RGB;
+//float l = dot(vec3(0.3,0.6,0.1),res);
+//res *= mix(1.45,1.05,l);
 FragColor.rgb = res;
 }
 #endif
