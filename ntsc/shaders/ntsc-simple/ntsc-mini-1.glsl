@@ -117,7 +117,8 @@ uniform COMPAT_PRECISION float ntsc_blue;
 const mat3 YIQ2RGB = mat3(1.000, 1.000, 1.000,
                           0.956,-0.272,-1.106,
                           0.621,-0.647, 1.703);
-#define pi23 2.09439506667
+#define pi23 3.1415926/2.0
+
 
 void main()
 {
@@ -157,7 +158,6 @@ c03.yz *= vec2(cos(phase03),sin(phase03));
 vec3 res = c30+c20+c10+c00+c01+c02+c03;
 res *= YIQ2RGB;
 
-// tint control
 res *= vec3(ntsc_red, ntsc_green, ntsc_blue);
 
 FragColor.rgb = res;
