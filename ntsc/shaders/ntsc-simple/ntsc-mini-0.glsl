@@ -111,9 +111,9 @@ const mat3 YIQ2RGB = mat3(1.000, 1.000, 1.000,
                           0.621,-0.647, 1.703);
 
 const mat3 RGBYIQ = mat3(0.299, 0.596, 0.211,
-                             0.587,-0.274,-0.523,
-                             0.114,-0.322, 0.312);
-#define pi23 2.09439506667
+                         0.587,-0.274,-0.523,
+                         0.114,-0.322, 0.312);
+#define pi23 3.1415926/2.0
 
 void main()
 {
@@ -128,8 +128,8 @@ c00 *= RGBYIQ;
 vec3 osc = vec3(0.0);
 
 // tweak to adjust for pinkish tint 
-if (compo == 1.0) osc = vec3(1.0,0.666*cos(phase),1.0*sin(phase));
-if (compo == 0.0) osc = vec3(1.0,3.0*cos(phase),1.0*sin(phase));
+if (compo == 1.0) osc = vec3(1.0,1.0*cos(phase),1.0*sin(phase));
+if (compo == 0.0) osc = vec3(1.0,2.0*cos(phase),2.0*sin(phase));
 c00 *= osc;
 
 // send compo as 1 signal combined
