@@ -8,7 +8,8 @@ under the terms of the GNU General Public License as published by the Free
 Software Foundation; either version 2 of the License, or (at your option)
 any later version.
 */
-#pragma parameter rainbow "Rainbow Effect" 0.0 0.0 1.0 1.0
+#pragma parameter rainbow "Rainbow Effect (Phase)" 0.0 0.0 1.0 1.0
+#pragma parameter afacts "NTSC Artifacts" 0.5 0.0 1.0 0.05
 #pragma parameter ntsc_red "NTSC Red" 1.0 0.0 2.0 0.01
 #pragma parameter ntsc_green "NTSC Green" 1.0 0.0 2.0 0.01
 #pragma parameter ntsc_blue "NTSC Blue" 1.0 0.0 2.0 0.01
@@ -90,6 +91,7 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
+uniform sampler2D PassPrev2Texture;
 COMPAT_VARYING vec4 TEX0;
 
 // compatibility #defines
@@ -101,6 +103,7 @@ COMPAT_VARYING vec4 TEX0;
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float rainbow;
 uniform COMPAT_PRECISION float compo;
+uniform COMPAT_PRECISION float afacts;
 uniform COMPAT_PRECISION float ntsc_red;
 uniform COMPAT_PRECISION float ntsc_green;
 uniform COMPAT_PRECISION float ntsc_blue;
@@ -108,6 +111,7 @@ uniform COMPAT_PRECISION float ntsc_blue;
 #else
 #define rainbow 1.0
 #define compo 1.0
+#define afacts 0.5
 #define ntsc_red 1.0
 #define ntsc_blue 1.0
 #define ntsc_green 1.0
@@ -160,6 +164,11 @@ res *= YIQ2RGB;
 
 res *= vec3(ntsc_red, ntsc_green, ntsc_blue);
 
+vec3 clean = vec3(0.0);
+clean += COMPAT_TEXTURE(PassPrev2Texture,vTexCoord).rgb*0.50;
+clean += COMPAT_TEXTURE(PassPrev2Texture,vTexCoord+ps).rgb*0.25;
+clean += COMPAT_TEXTURE(PassPrev2Texture,vTexCoord-ps).rgb*0.25;
+res = res*afacts + clean*(1.0-afacts);
 FragColor.rgb = res;
 }
 #endif
