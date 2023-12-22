@@ -8,6 +8,7 @@ under the terms of the GNU General Public License as published by the Free
 Software Foundation; either version 2 of the License, or (at your option)
 any later version.
 */
+#pragma parameter bogus_ph " [ Info: Phase 0:~256px, 1:~320px Horiz. ] " 0.0 0.0 0.0 0.0
 #pragma parameter rainbow "Rainbow Effect (Phase)" 0.0 0.0 1.0 1.0
 #pragma parameter afacts "NTSC Artifacts" 0.5 0.0 1.0 0.05
 #pragma parameter ntsc_red "NTSC Red" 1.0 0.0 2.0 0.01
@@ -128,7 +129,7 @@ void main()
 {
 vec2 ps = vec2(SourceSize.z, 0.0);
 float pattern = vTexCoord.x*SourceSize.x+vTexCoord.y*SourceSize.y;
-if (compo == 1.0 && rainbow == 1.0) pattern = vTexCoord.x*SourceSize.x;
+if (rainbow == 1.0) pattern = vTexCoord.x*SourceSize.x;
 
 // FIR moving average calculated at https://fiiir.com/
 vec3 c30 = COMPAT_TEXTURE(Source,vTexCoord-3.0*ps).rgb*0.019775776609144702;
