@@ -120,7 +120,7 @@ void main()
 vec2 ps = vec2(SourceSize.z, 0.0);
 
 float pattern = vTexCoord.x*SourceSize.x+vTexCoord.y*SourceSize.y;
-if (compo == 1.0 && rainbow == 1.0) pattern = vTexCoord.x*SourceSize.x;
+if (rainbow == 1.0) pattern = vTexCoord.x*SourceSize.x;
 
 float phase = pattern*pi23;
 vec3 c00 = COMPAT_TEXTURE(Source,vTexCoord).rgb;
