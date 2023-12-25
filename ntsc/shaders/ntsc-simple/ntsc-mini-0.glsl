@@ -118,12 +118,16 @@ const mat3 RGBYIQ = mat3(0.299, 0.596, 0.211,
 void main()
 {
 vec2 ps = vec2(SourceSize.z, 0.0);
-
-float pattern = vTexCoord.x*SourceSize.x+vTexCoord.y*SourceSize.y;
-if (rainbow == 1.0) pattern = vTexCoord.x*SourceSize.x;
+// predict the half res. x after this pass (/2.0 the x freq)
+float pattern = vTexCoord.x*SourceSize.x/2.0+vTexCoord.y*SourceSize.y;
+if (rainbow == 1.0) pattern = vTexCoord.x/2.0*SourceSize.x;
 
 float phase = pattern*pi23;
 vec3 c00 = COMPAT_TEXTURE(Source,vTexCoord).rgb;
+// I-Q should have half bandwidth than Y
+vec3 c01 = COMPAT_TEXTURE(Source,vTexCoord+ps).rgb;
+c00 = vec3(c00.r,c01.gb);
+
 c00 *= RGBYIQ;
 vec3 osc = vec3(0.0);
 
