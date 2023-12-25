@@ -126,7 +126,7 @@ float phase = pattern*pi23;
 vec3 c00 = COMPAT_TEXTURE(Source,vTexCoord).rgb;
 // I-Q should have half bandwidth than Y
 vec3 c01 = COMPAT_TEXTURE(Source,vTexCoord+ps).rgb;
-c00 = vec3(c00.r,c01.gb);
+c00 = vec3(c00.r,c01.gb*0.5+c00.gb*0.5);
 
 c00 *= RGBYIQ;
 vec3 osc = vec3(0.0);
