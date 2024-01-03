@@ -9,10 +9,6 @@
    any later version.
 */
 
-#pragma parameter NTSC_sat "NTSC SATURATION" 1.0 0.0 4.0 0.05
-#pragma parameter NTSC_bri "NTSC BRIGHTNESS" 0.9 0.0 2.0 0.05
-#pragma parameter FRINGING "NTSC FRINGING" 0.30 0.0 1.0 0.05
-#pragma parameter ARTIFACTING "NTSC ARTIFACTING" 0.25 0.0 1.0 0.05
 
 #if defined(VERTEX)
 
@@ -60,7 +56,7 @@ uniform COMPAT_PRECISION float WHATEVER;
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    TEX0.xy = TexCoord.xy;
+    TEX0.xy = TexCoord.xy*1.0001;
 }
 
 #elif defined(FRAGMENT)
@@ -102,16 +98,10 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float NTSC_sat;
 uniform COMPAT_PRECISION float NTSC_bri;
-uniform COMPAT_PRECISION float FRINGING;
-uniform COMPAT_PRECISION float ARTIFACTING;
 
 #else
-#define NTSC_sat 1.0
 #define NTSC_bri 1.0
-#define FRINGING 1.0
-#define ARTIFACTING 1.0
 #endif
 
 
@@ -124,17 +114,11 @@ const mat3 RGBYIQ = mat3(0.299, 0.596, 0.211,
 
 void main()
 {
-   
-mat3 mix_mat = mat3(NTSC_bri  , FRINGING      , FRINGING, 
-                   ARTIFACTING, 2.0 * NTSC_sat, 0.0, 
-                   ARTIFACTING, 0.0           , 2.0 * NTSC_sat);
-
-
-    float phase = (vTexCoord.x*SourceSize.x) * PI/2.0 +vTexCoord.y*SourceSize.y*2.0*PI/3.0;
+    float phase = vTexCoord.x*SourceSize.x*PI/2.0 + vTexCoord.y*SourceSize.y*2.0;
     vec3 YIQ = COMPAT_TEXTURE(Source,vTexCoord).rgb; 
     YIQ = YIQ*RGBYIQ; 
-    vec3 signal = vec3(YIQ.x, cos(phase)*YIQ.y,  YIQ.z*sin(phase) );   
-    FragColor = vec4(signal*mix_mat, 1.0);
-    
+    phase += mod(float(FrameCount),3.0);
+    float signal = 0.9*YIQ.x + (YIQ.y*cos(phase) + YIQ.z*sin(phase)) ;   
+    FragColor = vec4(vec3(signal), 1.0);
 }
 #endif
