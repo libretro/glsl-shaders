@@ -55,7 +55,7 @@ uniform COMPAT_PRECISION float WHATEVER;
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    TEX0.xy = TexCoord.xy;
+    TEX0.xy = TexCoord.xy*1.0001;
 }
 
 #elif defined(FRAGMENT)
@@ -110,9 +110,6 @@ uniform COMPAT_PRECISION float gamma;
 #define TAU  6.28318530717958647693
 #define PI 3.1415926
 
-
-#define TAU  6.28318530717958647693
-
 //  Colorspace conversion matrix for YIQ-to-RGB
 const mat3 YIQ2RGB = mat3(1.000, 1.000, 1.000,
                           0.956,-0.272,-1.106,
@@ -120,29 +117,33 @@ const mat3 YIQ2RGB = mat3(1.000, 1.000, 1.000,
 
 void main()
 {
-    vec2 size = SourceSize.xy;
-    vec2 uv = vTexCoord;
+vec2 size = SourceSize.xy;
+vec2 uv = vTexCoord;
 
-        //  Sample composite signal and decode to YIQ
-        vec3 YIQ = vec3(0);
-        for (int n=-2; n<2; n++) {
-            vec2 pos = uv + vec2(float(n) / size.x, 0.0);
-            YIQ.x += COMPAT_TEXTURE(Source, pos).r ;
+    //Sample composite signal and decode to YIQ
+    vec3 YIQ = vec3(0);
+    float sum = 0.0;
+    for (int n=-2; n<2; n++) {
+        float w = exp(-0.02*float(n)*float(n));
+        vec2 pos = uv + vec2(float(n) / size.x, 0.0);
+        // low pass Y signal
+        YIQ.x += COMPAT_TEXTURE(Source, pos).r*w ;
+        sum += w;
         }
-        YIQ.x /= 4.0;
+        YIQ.x /= sum;
 
-        for (int n=-4; n<4; n++) {
-            vec2 pos = uv + vec2(float(n) / size.x, 0.0);
-            float phase = (vTexCoord.x * SourceSize.x+ float(n)) * TAU / 4.0+vTexCoord.y*SourceSize.y*2.0*PI/3.0 ;
-            YIQ.yz += COMPAT_TEXTURE(Source, pos).gb * vec2(cos(phase), sin(phase));
+    for (int n=-8; n<8; n++) {
+        vec2 pos = uv + vec2(float(n) / size.x, 0.0);
+        float phase = (vTexCoord.x*SourceSize.x + float(n))*PI/2.0 + vTexCoord.y*SourceSize.y*2.0;
+
+    phase += mod(float(FrameCount),3.0);
+        YIQ.yz += COMPAT_TEXTURE(Source, pos).gb * vec2(cos(phase), sin(phase));
         }
-        YIQ.yz /= 8.0;
+    YIQ.yz /= 16.0;
 
-
-        //  Convert YIQ signal to RGB
-        YIQ = YIQ2RGB*YIQ;
-
-        FragColor = vec4(YIQ, 1.0);
+    //  Convert YIQ signal to RGB
+    YIQ = YIQ2RGB*YIQ;
+    FragColor = vec4(YIQ, 1.0);
     
 }
 #endif
