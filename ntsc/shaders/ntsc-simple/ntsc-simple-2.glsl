@@ -9,6 +9,10 @@
    any later version.
 */
 
+#pragma parameter ntsc_sat "NTSC Saturation" 1.25 0.0 2.0 0.05
+#pragma parameter afacts "NTSC Artifacts Strength (lowpass Y)" 0.02 0.0 1.0 0.01
+#pragma parameter animate_afacts "NTSC Artifacts Animate" 1.0 0.0 1.0 1.0
+
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -97,12 +101,14 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float ARTF;
-uniform COMPAT_PRECISION float gamma;
+uniform COMPAT_PRECISION float ntsc_sat;
+uniform COMPAT_PRECISION float afacts;
+uniform COMPAT_PRECISION float animate_afacts;
 
 #else
-#define ARTF 0.3
-#define gamma 1.0
+#define ntsc_sat 1.0
+#define afacts 0.0
+#define animate_afacts 0.0
 #endif
 
 // this pass is a modification of https://www.shadertoy.com/view/3t2XRV
@@ -124,9 +130,10 @@ vec2 uv = vTexCoord;
     vec3 YIQ = vec3(0);
     float sum = 0.0;
     for (int n=-2; n<2; n++) {
-        float w = exp(-0.02*float(n)*float(n));
+        // lowpass
+        float w = exp(-afacts*float(n)*float(n));
         vec2 pos = uv + vec2(float(n) / size.x, 0.0);
-        // low pass Y signal
+        // low pass Y signal, high frequency chroma pattern is cut-off
         YIQ.x += COMPAT_TEXTURE(Source, pos).r*w ;
         sum += w;
         }
@@ -134,10 +141,11 @@ vec2 uv = vTexCoord;
 
     for (int n=-8; n<8; n++) {
         vec2 pos = uv + vec2(float(n) / size.x, 0.0);
-        float phase = (vTexCoord.x*SourceSize.x + float(n))*PI/2.0 + vTexCoord.y*SourceSize.y*2.0;
-
-    phase += mod(float(FrameCount),3.0);
-        YIQ.yz += COMPAT_TEXTURE(Source, pos).gb * vec2(cos(phase), sin(phase));
+        float phase = (vTexCoord.x*SourceSize.x + float(n))*PI/2.0 +  (vTexCoord.y*SourceSize.y*2.0);
+    //animate to hide artifacts
+    if (animate_afacts == 1.0) phase += mod(float(FrameCount),3.0);
+    // missing a bandpass here to weaken artifacts on high luminance
+        YIQ.yz += COMPAT_TEXTURE(Source, pos).gb * ntsc_sat*vec2(cos(phase), sin(phase));
         }
     YIQ.yz /= 16.0;
 

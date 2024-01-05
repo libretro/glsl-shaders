@@ -9,6 +9,8 @@
    any later version.
 */
 
+#pragma parameter ntsc_bri "NTSC Brightness" 1.0 0.0 2.0 0.01
+#pragma parameter ntsc_hue "NTSC Hue" -0.2 -2.0 2.0 0.05
 
 #if defined(VERTEX)
 
@@ -98,10 +100,14 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float NTSC_bri;
+uniform COMPAT_PRECISION float ntsc_bri;
+uniform COMPAT_PRECISION float ntsc_hue;
+uniform COMPAT_PRECISION float animate_afacts;
 
 #else
-#define NTSC_bri 1.0
+#define ntsc_bri 1.0
+#define ntsc_hue 0.0
+#define animate_afacts 1.0
 #endif
 
 
@@ -114,11 +120,13 @@ const mat3 RGBYIQ = mat3(0.299, 0.596, 0.211,
 
 void main()
 {
-    float phase = vTexCoord.x*SourceSize.x*PI/2.0 + vTexCoord.y*SourceSize.y*2.0;
+    float phase = vTexCoord.x*SourceSize.x*PI/2.0 + (vTexCoord.y*SourceSize.y*2.0);
+    phase += ntsc_hue;
     vec3 YIQ = COMPAT_TEXTURE(Source,vTexCoord).rgb; 
     YIQ = YIQ*RGBYIQ; 
-    phase += mod(float(FrameCount),3.0);
-    float signal = 0.9*YIQ.x + (YIQ.y*cos(phase) + YIQ.z*sin(phase)) ;   
+    if (animate_afacts == 1.0) phase += mod(float(FrameCount),3.0);
+    float signal = ntsc_bri*YIQ.x + (YIQ.y*cos(phase) + YIQ.z*sin(phase)) ;   
     FragColor = vec4(vec3(signal), 1.0);
+    
 }
 #endif
