@@ -141,9 +141,9 @@ vec2 uv = vTexCoord;
 
     for (int n=-8; n<8; n++) {
         vec2 pos = uv + vec2(float(n) / size.x, 0.0);
-        float phase = (vTexCoord.x*SourceSize.x + float(n))*PI/2.0 +  (vTexCoord.y*SourceSize.y*2.0);
+        float phase = (vTexCoord.x*SourceSize.x + float(n))*PI/2.0 - vTexCoord.y*SourceSize.y*2.0;
     //animate to hide artifacts
-    if (animate_afacts == 1.0) phase += mod(float(FrameCount),3.0);
+    if (animate_afacts == 1.0) phase += mod(float(FrameCount),2.0)*PI;
     // missing a bandpass here to weaken artifacts on high luminance
         YIQ.yz += COMPAT_TEXTURE(Source, pos).gb * ntsc_sat*vec2(cos(phase), sin(phase));
         }
