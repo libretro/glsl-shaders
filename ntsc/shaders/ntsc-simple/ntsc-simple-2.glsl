@@ -9,8 +9,9 @@
    any later version.
 */
 
-#pragma parameter ntsc_bri "NTSC Brightness" 1.0 0.0 2.0 0.01
-#pragma parameter ntsc_hue "NTSC Hue" -0.2 -2.0 2.0 0.05
+#pragma parameter ntsc_sat "NTSC Saturation" 1.25 0.0 2.0 0.05
+#pragma parameter afacts "NTSC Artifacts Strength (lowpass Y)" 0.02 0.0 1.0 0.01
+#pragma parameter animate_afacts "NTSC Artifacts Animate" 0.0 0.0 1.0 1.0
 
 #if defined(VERTEX)
 
@@ -100,33 +101,57 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float ntsc_bri;
-uniform COMPAT_PRECISION float ntsc_hue;
+uniform COMPAT_PRECISION float ntsc_sat;
+uniform COMPAT_PRECISION float afacts;
 uniform COMPAT_PRECISION float animate_afacts;
 
 #else
-#define ntsc_bri 1.0
-#define ntsc_hue 0.0
-#define animate_afacts 1.0
+#define ntsc_sat 1.0
+#define afacts 0.0
+#define animate_afacts 0.0
 #endif
 
+// this pass is a modification of https://www.shadertoy.com/view/3t2XRV
 
 #define TAU  6.28318530717958647693
 #define PI 3.1415926
 
-const mat3 RGBYIQ = mat3(0.299, 0.596, 0.211,
-                             0.587,-0.274,-0.523,
-                             0.114,-0.322, 0.312);
+//  Colorspace conversion matrix for YIQ-to-RGB
+const mat3 YIQ2RGB = mat3(1.000, 1.000, 1.000,
+                          0.956,-0.272,-1.106,
+                          0.621,-0.647, 1.703);
 
 void main()
 {
-    float phase = (vTexCoord.x*SourceSize.x -mod(vTexCoord.y*SourceSize.y,2.0))*PI/2.0 ;
-    phase += ntsc_hue;
-    vec3 YIQ = COMPAT_TEXTURE(Source,vTexCoord).rgb; 
-    YIQ = YIQ*RGBYIQ; 
+vec2 size = SourceSize.xy;
+vec2 uv = vTexCoord;
+
+    //Sample composite signal and decode to YIQ
+    vec3 YIQ = vec3(0);
+    float sum = 0.0;
+    for (int n=-2; n<2; n++) {
+        // lowpass
+        float w = exp(-afacts*float(n)*float(n));
+        vec2 pos = uv + vec2(float(n) / size.x, 0.0);
+        // low pass Y signal, high frequency chroma pattern is cut-off
+        YIQ.x += COMPAT_TEXTURE(Source, pos).r*w ;
+        sum += w;
+        }
+        YIQ.x /= sum;
+
+    for (int n=-8; n<8; n++) {
+        vec2 pos = uv + vec2(float(n) / size.x, 0.0);
+        float phase = (vTexCoord.x*SourceSize.x + float(n)- mod(vTexCoord.y*SourceSize.y,2.0))*PI/2.0 ;
+    //animate to hide artifacts
     if (animate_afacts == 1.0) phase -= sin(float(FrameCount));
-    float signal = ntsc_bri*YIQ.x + (YIQ.y*cos(phase) + YIQ.z*sin(phase)) ;   
-    FragColor = vec4(vec3(signal), 1.0);
+    // missing a bandpass here to weaken artifacts on high luminance
+        YIQ.yz += COMPAT_TEXTURE(Source, pos).gb * ntsc_sat*vec2(cos(phase), sin(phase));
+        }
+    YIQ.yz /= 16.0;
+
+    //  Convert YIQ signal to RGB
+    YIQ = YIQ2RGB*YIQ;
+    FragColor = vec4(YIQ, 1.0);
     
 }
 #endif
