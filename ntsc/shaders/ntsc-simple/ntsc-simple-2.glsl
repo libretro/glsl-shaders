@@ -11,7 +11,7 @@
 
 #pragma parameter ntsc_sat "NTSC Saturation" 1.25 0.0 2.0 0.05
 #pragma parameter afacts "NTSC Artifacts Strength (lowpass Y)" 0.02 0.0 1.0 0.01
-#pragma parameter animate_afacts "NTSC Artifacts Animate" 1.0 0.0 1.0 1.0
+#pragma parameter animate_afacts "NTSC Artifacts Animate" 0.0 0.0 1.0 1.0
 
 #if defined(VERTEX)
 
@@ -141,9 +141,9 @@ vec2 uv = vTexCoord;
 
     for (int n=-8; n<8; n++) {
         vec2 pos = uv + vec2(float(n) / size.x, 0.0);
-        float phase = (vTexCoord.x*SourceSize.x + float(n))*PI/2.0 - vTexCoord.y*SourceSize.y*2.0;
+        float phase = (vTexCoord.x*SourceSize.x + float(n)- mod(vTexCoord.y*SourceSize.y,2.0))*PI/2.0 ;
     //animate to hide artifacts
-    if (animate_afacts == 1.0) phase -= (vTexCoord.y*SourceSize.y*2.0)*PI*mod(float(FrameCount),2.0);
+    if (animate_afacts == 1.0) phase -= sin(float(FrameCount));
     // missing a bandpass here to weaken artifacts on high luminance
         YIQ.yz += COMPAT_TEXTURE(Source, pos).gb * ntsc_sat*vec2(cos(phase), sin(phase));
         }
