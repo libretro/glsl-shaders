@@ -124,8 +124,8 @@ void main()
     phase += ntsc_hue;
     vec3 YIQ = COMPAT_TEXTURE(Source,vTexCoord).rgb; 
     YIQ = YIQ*RGBYIQ; 
-    if (animate_afacts == 1.0) phase -= sin(float(FrameCount));
-    float signal = ntsc_bri*YIQ.x + (YIQ.y*cos(phase) + YIQ.z*sin(phase)) ;   
+    if (animate_afacts == 1.0) phase -= sin(float(FrameCount*2))*mod(vTexCoord.y*SourceSize.y,1.0);
+    float signal = ntsc_bri*YIQ.x + 0.5*(YIQ.y*cos(phase) + YIQ.z*sin(phase)) ;   
     FragColor = vec4(vec3(signal), 1.0);
     
 }
