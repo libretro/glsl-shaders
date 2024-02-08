@@ -1,19 +1,6 @@
 #version 110
 
-/*
-NTSC-mini DariusG 2023
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2 of the License, or (at your option)
-any later version.
-*/
-#pragma parameter bogus_ph " [ Info: Phase 0:~256px, 1:~320px Horiz. ] " 0.0 0.0 0.0 0.0
-#pragma parameter rainbow "Rainbow Effect (Phase)" 0.0 0.0 1.0 1.0
-#pragma parameter afacts "NTSC Artifacts" 0.5 0.0 1.0 0.05
-#pragma parameter ntsc_red "NTSC Red" 1.0 0.0 2.0 0.01
-#pragma parameter ntsc_green "NTSC Green" 1.0 0.0 2.0 0.01
-#pragma parameter ntsc_blue "NTSC Blue" 1.0 0.0 2.0 0.01
+#pragma parameter animate_ph "Animate Phase" 0.0 0.0 1.0 1.0
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -92,7 +79,6 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
-uniform sampler2D PassPrev2Texture;
 COMPAT_VARYING vec4 TEX0;
 
 // compatibility #defines
@@ -102,74 +88,48 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float rainbow;
-uniform COMPAT_PRECISION float compo;
-uniform COMPAT_PRECISION float afacts;
-uniform COMPAT_PRECISION float ntsc_red;
-uniform COMPAT_PRECISION float ntsc_green;
-uniform COMPAT_PRECISION float ntsc_blue;
+uniform COMPAT_PRECISION float animate_ph;
 
 #else
-#define rainbow 1.0
-#define compo 1.0
-#define afacts 0.5
-#define ntsc_red 1.0
-#define ntsc_blue 1.0
-#define ntsc_green 1.0
+#define animate_ph 1.0
 #endif
 
 
-const mat3 YIQ2RGB = mat3(1.000, 1.000, 1.000,
-                          0.956,-0.272,-1.106,
-                          0.621,-0.647, 1.703);
-#define pi23 3.1415926/2.0
+// Encoder or Modulator
+// This pass converts RGB colors  to
+// a YIQ (NTSC) Composite signal.
 
+#define PI   3.14159265358979323846*2.0/3.0
+#define TAU  6.28318530717958647693
 
-void main()
-{
-vec2 ps = vec2(SourceSize.z, 0.0);
-float pattern = vTexCoord.x*SourceSize.x+vTexCoord.y*SourceSize.y;
-if (rainbow == 1.0) pattern = vTexCoord.x*SourceSize.x;
+const mat3 yiq_to_rgb = mat3(1.000, 1.000, 1.000,
+                             0.956,-0.272,-1.106,
+                             0.621,-0.647, 1.703);
 
-// FIR moving average calculated at https://fiiir.com/
-vec3 c30 = COMPAT_TEXTURE(Source,vTexCoord-3.0*ps).rgb*0.019775776609144702;
-float phase30 = (pattern-3.0)*pi23;
-c30.yz *= vec2(cos(phase30),sin(phase30));
+void main() {
+    vec3 rgb = vec3(0.0);
+    float sum = 0.0;
+    vec2 ps = vec2(SourceSize.z,0.0);
+    
+    for (int i=-4; i<4; i++)
+    {    
+    float offset = float(i);
+    float w= exp(-0.1*offset*offset);
+    float phase = vTexCoord.x*SourceSize.x + vTexCoord.y*SourceSize.y*2.0 + offset;
+    
+    if (animate_ph == 1.0) phase += mod(float(FrameCount),3.0)*PI;
+    float cs = cos(phase*PI);
+    float sn = sin(phase*PI);
+    
+    if ( offset<1.0 && offset>-1.0) rgb.r += COMPAT_TEXTURE(Source,vTexCoord+ps*offset).r;
+    rgb.yz += COMPAT_TEXTURE(Source,vTexCoord + ps*offset).gb*2.0*vec2(cs,sn)*w;
+    sum += w;
+    }
+    
+    rgb.yz /= sum;
+    rgb.x /= 1.0;
+    rgb *= yiq_to_rgb;
 
-vec3 c20 = COMPAT_TEXTURE(Source,vTexCoord-2.0*ps).rgb*0.101190476190476164;
-float phase20 = (pattern-2.0)*pi23;
-c20.yz *= vec2(cos(phase20),sin(phase20));
-
-vec3 c10 = COMPAT_TEXTURE(Source,vTexCoord-ps).rgb*0.230224223390855270;
-float phase10 = (pattern-1.0)*pi23;
-c10.yz *= vec2(cos(phase10),sin(phase10));
-
-vec3 c00 = COMPAT_TEXTURE(Source,vTexCoord).rgb*0.297619047619047616;
-float phase = pattern*pi23;
-c00.yz *= vec2(cos(phase),sin(phase));
-
-vec3 c01 = COMPAT_TEXTURE(Source,vTexCoord+ps).rgb*0.230224223390855270;
-float phase01 = (pattern+1.0)*pi23;
-c01.yz *= vec2(cos(phase01),sin(phase01));
-
-vec3 c02 = COMPAT_TEXTURE(Source,vTexCoord+2.0*ps).rgb*0.101190476190476164;
-float phase02 = (pattern+2.0)*pi23;
-c02.yz *= vec2(cos(phase02),sin(phase02));
-
-vec3 c03 = COMPAT_TEXTURE(Source,vTexCoord+3.0*ps).rgb*0.019775776609144702;
-float phase03 = (pattern+3.0)*pi23;
-c03.yz *= vec2(cos(phase03),sin(phase03));
-
-vec3 res = c30+c20+c10+c00+c01+c02+c03;
-res *= YIQ2RGB;
-
-res *= vec3(ntsc_red, ntsc_green, ntsc_blue);
-
-vec3 clean = vec3(0.0);
-clean += COMPAT_TEXTURE(PassPrev2Texture,vTexCoord).rgb*0.50;
-clean += COMPAT_TEXTURE(PassPrev2Texture,vTexCoord+ps).rgb*0.25;
-clean += COMPAT_TEXTURE(PassPrev2Texture,vTexCoord-ps).rgb*0.25;
-res = res*afacts + clean*(1.0-afacts);
-FragColor.rgb = res;
+    FragColor = vec4(vec3(rgb), 1.0);
 }
-#endif
+#endif 
