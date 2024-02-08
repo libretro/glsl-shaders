@@ -2,15 +2,6 @@
 
 #pragma parameter compo "S-Video/Composite" 1.0 0.0 1.0 1.0
 
-/*
-NTSC-mini DariusG 2023
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2 of the License, or (at your option)
-any later version.
-*/
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -99,51 +90,39 @@ COMPAT_VARYING vec4 TEX0;
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float compo;
-uniform COMPAT_PRECISION float rainbow;
+uniform COMPAT_PRECISION float animate_ph;
 
 #else
 #define compo 1.0
-#define rainbow 1.0
+#define animate_ph 1.0
 #endif
 
-const mat3 YIQ2RGB = mat3(1.000, 1.000, 1.000,
-                          0.956,-0.272,-1.106,
-                          0.621,-0.647, 1.703);
 
-const mat3 RGBYIQ = mat3(0.299, 0.596, 0.211,
-                         0.587,-0.274,-0.523,
-                         0.114,-0.322, 0.312);
-#define pi23 3.1415926/2.0
+// Encoder or Modulator
+// This pass converts RGB colors  to
+// a YIQ (NTSC) Composite signal.
 
-void main()
-{
-vec2 ps = vec2(SourceSize.z, 0.0);
-// predict the half res. x after this pass (/2.0 the x freq)
-float pattern = vTexCoord.x*SourceSize.x/2.0+vTexCoord.y*SourceSize.y;
-if (rainbow == 1.0) pattern = vTexCoord.x/2.0*SourceSize.x;
+#define PI   3.14159265358979323846*2.0/3.0
+#define TAU  6.28318530717958647693
 
-float phase = pattern*pi23;
-vec3 c00 = COMPAT_TEXTURE(Source,vTexCoord).rgb;
-// I-Q should have half bandwidth than Y
-vec3 c01 = COMPAT_TEXTURE(Source,vTexCoord+ps).rgb;
-c00 = vec3(c00.r,c01.gb*0.5+c00.gb*0.5);
+const mat3 rgb_to_yiq = mat3(0.299, 0.596, 0.211,
+                             0.587,-0.274,-0.523,
+                             0.114,-0.322, 0.312);
 
-c00 *= RGBYIQ;
-vec3 osc = vec3(0.0);
 
-// tweak to adjust for pinkish tint 
-if (compo == 1.0) osc = vec3(1.0,1.0*cos(phase),1.0*sin(phase));
-if (compo == 0.0) osc = vec3(1.0,2.0*cos(phase),2.0*sin(phase));
-c00 *= osc;
-
-// send compo as 1 signal combined
-float res = dot(c00,vec3(1.0));
-
-// true luma-chroma s-video (send chroma as 1 signal)
-c00.yz = vec2(dot(c00.yz,vec2(1.0)));
-
-if (compo == 1.0) FragColor.rgb = vec3(res);
-else FragColor.rgb = c00;
-
+void main() {
+    vec3 yiq = COMPAT_TEXTURE(Source,vTexCoord).rgb;
+    yiq *= rgb_to_yiq;
+    float phase = vTexCoord.x*SourceSize.x + vTexCoord.y*SourceSize.y*2.0;
+    if (animate_ph == 1.0) phase += mod(float(FrameCount),3.0)*PI;
+    float cs = cos(phase*PI);
+    float sn = sin(phase*PI);
+    yiq.yz *= 0.5*vec2(cs, sn);
+    vec2 iq = yiq.yz;
+    // Return a grayscale representation of the signal
+    if (compo == 0.0)
+    FragColor = vec4(vec3(yiq.r,iq), 1.0);
+    else FragColor = vec4(vec3(yiq.r+iq.x+iq.y), 1.0);
+    
 }
-#endif
+#endif 
