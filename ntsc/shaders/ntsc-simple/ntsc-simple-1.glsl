@@ -103,11 +103,13 @@ COMPAT_VARYING vec4 TEX0;
 uniform COMPAT_PRECISION float ntsc_bri;
 uniform COMPAT_PRECISION float ntsc_hue;
 uniform COMPAT_PRECISION float animate_afacts;
+uniform COMPAT_PRECISION float yuv_rgb;
 
 #else
 #define ntsc_bri 1.0
 #define ntsc_hue 0.0
 #define animate_afacts 1.0
+#define yuv_rgb 0.0
 #endif
 
 
@@ -118,13 +120,20 @@ const mat3 RGBYIQ = mat3(0.299, 0.596, 0.211,
                              0.587,-0.274,-0.523,
                              0.114,-0.322, 0.312);
 
+const mat3 RGBYUV = mat3(0.299, 0.587, 0.114,
+                        -0.299, -0.587, 0.886, 
+                         0.701, -0.587, -0.114);
+
 void main()
 {
     float phase = (vTexCoord.x*SourceSize.x -mod(vTexCoord.y*SourceSize.y,2.0))*PI/2.0 ;
     phase += ntsc_hue;
     vec3 YIQ = COMPAT_TEXTURE(Source,vTexCoord).rgb; 
-    YIQ = YIQ*RGBYIQ; 
-    if (animate_afacts == 1.0) phase -= sin(float(FrameCount*2))*mod(vTexCoord.y*SourceSize.y,1.0);
+    
+    if (yuv_rgb == 0.0) YIQ = YIQ*RGBYIQ; 
+    else YIQ = YIQ*RGBYUV;
+    
+    if (animate_afacts == 1.0) phase -= (0.5*sin(float(FrameCount*2))+0.5)*mod(vTexCoord.y*SourceSize.y,2.0);
     float signal = ntsc_bri*YIQ.x + 0.5*(YIQ.y*cos(phase) + YIQ.z*sin(phase)) ;   
     FragColor = vec4(vec3(signal), 1.0);
     

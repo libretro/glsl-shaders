@@ -9,9 +9,10 @@
    any later version.
 */
 
-#pragma parameter ntsc_sat "NTSC Saturation" 2.0 0.0 3.0 0.05
+#pragma parameter ntsc_sat "NTSC Saturation" 2.5 0.0 6.0 0.05
 #pragma parameter afacts "NTSC Artifacts Strength (lowpass Y)" 0.02 0.0 1.0 0.01
 #pragma parameter animate_afacts "NTSC Artifacts Animate" 0.0 0.0 1.0 1.0
+#pragma parameter yuv_rgb "YIQ/YUV"  1.0 0.0 1.0 1.0
 
 #if defined(VERTEX)
 
@@ -104,11 +105,13 @@ COMPAT_VARYING vec4 TEX0;
 uniform COMPAT_PRECISION float ntsc_sat;
 uniform COMPAT_PRECISION float afacts;
 uniform COMPAT_PRECISION float animate_afacts;
+uniform COMPAT_PRECISION float yuv_rgb;
 
 #else
 #define ntsc_sat 1.0
 #define afacts 0.0
 #define animate_afacts 0.0
+#define yuv_rgb 0.0
 #endif
 
 // this pass is a modification of https://www.shadertoy.com/view/3t2XRV
@@ -120,6 +123,9 @@ uniform COMPAT_PRECISION float animate_afacts;
 const mat3 YIQ2RGB = mat3(1.000, 1.000, 1.000,
                           0.956,-0.272,-1.106,
                           0.621,-0.647, 1.703);
+const mat3 YUV2RGB = mat3(1.0, 0.0, 1.13983,
+                          1.0, -0.39465, -0.58060,
+                          1.0, 2.03211, 0.0);
 
 void main()
 {
@@ -143,14 +149,15 @@ vec2 uv = vTexCoord;
         vec2 pos = uv + vec2(float(n) / size.x, 0.0);
         float phase = (vTexCoord.x*SourceSize.x + float(n)- mod(vTexCoord.y*SourceSize.y,2.0))*PI/2.0 ;
     //animate to hide artifacts
-    if (animate_afacts == 1.0) phase -= sin(float(FrameCount*2))*mod(vTexCoord.y*SourceSize.y,1.0);
+    if (animate_afacts == 1.0) phase -= (0.5*sin(float(FrameCount*2))+0.5)*mod(vTexCoord.y*SourceSize.y,2.0);
     // missing a bandpass here to weaken artifacts on high luminance
         YIQ.yz += COMPAT_TEXTURE(Source, pos).gb * ntsc_sat*vec2(cos(phase), sin(phase));
         }
     YIQ.yz /= 16.0;
 
     //  Convert YIQ signal to RGB
-    YIQ = YIQ2RGB*YIQ;
+    if (yuv_rgb == 0.0) YIQ = YIQ*YIQ2RGB; 
+    else YIQ = YIQ*YUV2RGB;
     FragColor = vec4(YIQ, 1.0);
     
 }
