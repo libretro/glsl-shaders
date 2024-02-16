@@ -153,7 +153,7 @@ vec2 uv = vTexCoord;
 
     for (int n=-8; n<8; n++) {
         vec2 pos = uv + vec2(float(n) / size.x, 0.0);
-        float phase = (vTexCoord.x*SourceSize.x + float(n)- mod(vTexCoord.y*SourceSize.y,2.0))*PI/2.0 ;
+        float phase = (vTexCoord.x*SourceSize.x + float(n))*PI/2.0- mod(vTexCoord.y*SourceSize.y,2.0)*PI ;
     //animate to hide artifacts
     if (animate_afacts == 1.0) phase -= (0.5*sin(float(FrameCount*2))+0.5)*mod(vTexCoord.y*SourceSize.y,2.0);
     // missing a bandpass here to weaken artifacts on high luminance
