@@ -11,7 +11,7 @@
 
 #pragma parameter ntsc_sat "NTSC Saturation" 1.5 0.0 6.0 0.05
 #pragma parameter afacts "NTSC Artifacts Strength (lowpass Y)" 0.02 0.0 1.0 0.01
-#pragma parameter animate_afacts "NTSC Artifacts Animate" 1.0 0.0 1.0 1.0
+#pragma parameter animate_afacts "NTSC Artifacts Animate" 0.0 0.0 1.0 1.0
 #pragma parameter phase_shifti "Phase Shift I" -0.3 -5.0 5.0 0.05
 #pragma parameter phase_shiftq "Phase Shift Q" 0.1 -5.0 5.0 0.05
 #pragma parameter yuv_rgb "YIQ/YUV"  1.0 0.0 1.0 1.0
