@@ -9,11 +9,10 @@
    any later version.
 */
 
-#pragma parameter ntsc_sat "NTSC Saturation" 10.5 0.0 20.0 0.05
+#pragma parameter ntsc_sat "NTSC Saturation" 2.0 0.0 6.0 0.05
 #pragma parameter iq_width "Chroma Width (Bleed)" 8.0 4.0 32.0 2.0
 #pragma parameter y_width "Luma Width (Blurry)" 2.0 1.0 8.0 1.0
 #pragma parameter afacts "NTSC Artifacts Strength (lowpass Y)" 0.02 0.0 1.0 0.01
-#pragma parameter hann_w "Hann Window (Artifacts Intensity)" 0.0 0.0 10.0 0.1
 #pragma parameter animate_afacts "NTSC Artifacts Animate" 0.0 0.0 1.0 1.0
 #pragma parameter phase_shifti "Phase Shift I" -0.3 -5.0 5.0 0.05
 #pragma parameter phase_shiftq "Phase Shift Q" 0.1 -5.0 5.0 0.05
@@ -170,7 +169,7 @@ int b = int(y_width);
     //animate to hide artifacts
     if (animate_afacts == 1.0) phase *= sin(float(FrameCount))<0.0? -1.0:1.0;
     // add hann window function
-        YIQ.yz += COMPAT_TEXTURE(Source, pos).gb * ntsc_sat*vec2(sin(phase+phase_shifti), cos(phase+phase_shiftq))*hann(float(n),a*4,hann_w);
+        YIQ.yz += COMPAT_TEXTURE(Source, pos).gb * ntsc_sat*vec2(sin(phase+phase_shifti), cos(phase+phase_shiftq));
         }
     YIQ.yz /= iq_width*2.0;
 
