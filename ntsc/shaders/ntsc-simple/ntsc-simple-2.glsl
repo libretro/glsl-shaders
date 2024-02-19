@@ -9,7 +9,9 @@
    any later version.
 */
 
-#pragma parameter ntsc_sat "NTSC Saturation" 1.5 0.0 6.0 0.05
+#pragma parameter ntsc_sat "NTSC Saturation" 2.0 0.0 6.0 0.05
+#pragma parameter iq_width "Chroma Width (Bleed)" 8.0 4.0 32.0 2.0
+#pragma parameter y_width "Luma Width (Blurry)" 2.0 1.0 8.0 1.0
 #pragma parameter afacts "NTSC Artifacts Strength (lowpass Y)" 0.02 0.0 1.0 0.01
 #pragma parameter animate_afacts "NTSC Artifacts Animate" 0.0 0.0 1.0 1.0
 #pragma parameter phase_shifti "Phase Shift I" -0.3 -5.0 5.0 0.05
@@ -110,6 +112,9 @@ uniform COMPAT_PRECISION float animate_afacts;
 uniform COMPAT_PRECISION float yuv_rgb;
 uniform COMPAT_PRECISION float phase_shifti;
 uniform COMPAT_PRECISION float phase_shiftq;
+uniform COMPAT_PRECISION float iq_width;
+uniform COMPAT_PRECISION float y_width;
+uniform COMPAT_PRECISION float hann_w;
 
 #else
 #define ntsc_sat 1.0
@@ -118,6 +123,9 @@ uniform COMPAT_PRECISION float phase_shiftq;
 #define yuv_rgb 0.0
 #define phase_shifti 0.0
 #define phase_shiftq 0.0
+#define iq_width 8.0
+#define y_width 2.0
+#define hann_w 0.0
 #endif
 
 // this pass is a modification of https://www.shadertoy.com/view/3t2XRV
@@ -132,16 +140,20 @@ const mat3 YIQ2RGB = mat3(1.000, 1.000, 1.000,
 const mat3 YUV2RGB = mat3(1.0, 0.0, 1.13983,
                           1.0, -0.39465, -0.58060,
                           1.0, 2.03211, 0.0);
+float hann(float i, int size, float phase) {
+    return pow(sin((PI * (i + phase)) / float(size)), 2.0);
+}
 
 void main()
 {
 vec2 size = SourceSize.xy;
 vec2 uv = vTexCoord;
-
+int a = int(iq_width);
+int b = int(y_width);
     //Sample composite signal and decode to YIQ
     vec3 YIQ = vec3(0);
     float sum = 0.0;
-    for (int n=-2; n<2; n++) {
+    for (int n=-b; n<b; n++) {
         // lowpass
         float w = exp(-afacts*float(n)*float(n));
         vec2 pos = uv + vec2(float(n) / size.x, 0.0);
@@ -151,15 +163,15 @@ vec2 uv = vTexCoord;
         }
         YIQ.x /= sum;
 
-    for (int n=-8; n<8; n++) {
+    for (int n=-a; n<a; n++) {
         vec2 pos = uv + vec2(float(n) / size.x, 0.0);
         float phase = (vTexCoord.x*SourceSize.x + float(n))*PI*0.5- mod(vTexCoord.y*SourceSize.y,2.0)*PI ;
     //animate to hide artifacts
     if (animate_afacts == 1.0) phase *= sin(float(FrameCount))<0.0? -1.0:1.0;
-    // missing a bandpass here to weaken artifacts on high luminance
+    // add hann window function
         YIQ.yz += COMPAT_TEXTURE(Source, pos).gb * ntsc_sat*vec2(sin(phase+phase_shifti), cos(phase+phase_shiftq));
         }
-    YIQ.yz /= 16.0;
+    YIQ.yz /= iq_width*2.0;
 
     //  Convert YIQ signal to RGB
     if (yuv_rgb == 0.0) YIQ = YIQ*YIQ2RGB; 
