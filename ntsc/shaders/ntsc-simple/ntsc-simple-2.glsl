@@ -14,8 +14,8 @@
 #pragma parameter y_width "Luma Width (Blurry)" 2.0 1.0 8.0 1.0
 #pragma parameter afacts "NTSC Artifacts Strength (lowpass Y)" 0.02 0.0 1.0 0.01
 #pragma parameter animate_afacts "NTSC Artifacts Animate" 0.0 0.0 1.0 1.0
-#pragma parameter phase_shifti "Phase Shift I" -0.3 -5.0 5.0 0.05
-#pragma parameter phase_shiftq "Phase Shift Q" 0.1 -5.0 5.0 0.05
+#pragma parameter phase_shifti "Phase Shift I" 0.0 -5.0 5.0 0.05
+#pragma parameter phase_shiftq "Phase Shift Q" 0.0 -5.0 5.0 0.05
 #pragma parameter yuv_rgb "YIQ/YUV"  1.0 0.0 1.0 1.0
 
 #if defined(VERTEX)
@@ -150,6 +150,7 @@ vec2 size = SourceSize.xy;
 vec2 uv = vTexCoord;
 int a = int(iq_width);
 int b = int(y_width);
+
     //Sample composite signal and decode to YIQ
     vec3 YIQ = vec3(0);
     float sum = 0.0;
@@ -165,11 +166,11 @@ int b = int(y_width);
 
     for (int n=-a; n<a; n++) {
         vec2 pos = uv + vec2(float(n) / size.x, 0.0);
-        float phase = (vTexCoord.x*SourceSize.x + float(n))*PI*0.5- mod(vTexCoord.y*SourceSize.y,2.0)*PI ;
+        float phase = (vTexCoord.x*SourceSize.x + float(n))*PI*0.5 -mod(vTexCoord.y*SourceSize.y,2.0)*PI ;
     //animate to hide artifacts
     if (animate_afacts == 1.0) phase *= sin(float(FrameCount))<0.0? -1.0:1.0;
     // add hann window function
-        YIQ.yz += COMPAT_TEXTURE(Source, pos).gb * ntsc_sat*vec2(sin(phase+phase_shifti), cos(phase+phase_shiftq));
+        YIQ.yz += COMPAT_TEXTURE(Source, pos).gb * ntsc_sat*4.0*vec2(sin(phase+phase_shifti), cos(phase+phase_shiftq))*hann(float(n),a*4,0.0);
         }
     YIQ.yz /= iq_width*2.0;
 
