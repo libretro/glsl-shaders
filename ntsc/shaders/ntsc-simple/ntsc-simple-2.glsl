@@ -17,6 +17,7 @@
 #pragma parameter phase_shifti "Phase Shift I" 0.0 -5.0 5.0 0.05
 #pragma parameter phase_shiftq "Phase Shift Q" 0.0 -5.0 5.0 0.05
 #pragma parameter yuv_rgb "YIQ/YUV"  1.0 0.0 1.0 1.0
+#pragma parameter comp_rf "Composite/RF" 0.0 0.0 1.0 1.0
 
 #if defined(VERTEX)
 
@@ -114,7 +115,7 @@ uniform COMPAT_PRECISION float phase_shifti;
 uniform COMPAT_PRECISION float phase_shiftq;
 uniform COMPAT_PRECISION float iq_width;
 uniform COMPAT_PRECISION float y_width;
-uniform COMPAT_PRECISION float hann_w;
+uniform COMPAT_PRECISION float comp_rf;
 
 #else
 #define ntsc_sat 1.0
@@ -125,7 +126,7 @@ uniform COMPAT_PRECISION float hann_w;
 #define phase_shiftq 0.0
 #define iq_width 8.0
 #define y_width 2.0
-#define hann_w 0.0
+#define comp_rf 0.0
 #endif
 
 // this pass is a modification of https://www.shadertoy.com/view/3t2XRV
@@ -170,7 +171,10 @@ int b = int(y_width);
     //animate to hide artifacts
     if (animate_afacts == 1.0) phase *= sin(float(FrameCount))<0.0? -1.0:1.0;
     // add hann window function
-        YIQ.yz += COMPAT_TEXTURE(Source, pos).gb * ntsc_sat*4.0*vec2(sin(phase+phase_shifti), cos(phase+phase_shiftq))*hann(float(n),a*4,0.0);
+    vec2 carrier;
+    if (comp_rf == 0.0) carrier = ntsc_sat*vec2(sin(phase+phase_shifti), cos(phase+phase_shiftq));
+    else carrier = ntsc_sat*4.0*vec2(sin(phase+phase_shifti), cos(phase+phase_shiftq))*hann(float(n),a*4,0.0);
+        YIQ.yz += COMPAT_TEXTURE(Source, pos).gb * carrier;
         }
     YIQ.yz /= iq_width*2.0;
 
