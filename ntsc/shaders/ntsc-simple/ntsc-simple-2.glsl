@@ -13,8 +13,9 @@
 #pragma parameter iq_width "Chroma Width (Bleed)" 8.0 4.0 32.0 2.0
 #pragma parameter y_width "Luma Width (Blurry)" 2.0 1.0 8.0 1.0
 #pragma parameter afacts "NTSC Artifacts Strength (lowpass Y)" 0.02 0.0 1.0 0.01
+#pragma parameter h_pass_c "High Pass Chroma" 0.4 0.01 1.0 0.01
 #pragma parameter animate_afacts "NTSC Artifacts Animate" 0.0 0.0 1.0 1.0
-#pragma parameter phase_shifti "Phase Shift I" 0.0 -5.0 5.0 0.05
+#pragma parameter phase_shifti "Phase Shift I" -0.2 -5.0 5.0 0.05
 #pragma parameter phase_shiftq "Phase Shift Q" 0.0 -5.0 5.0 0.05
 #pragma parameter yuv_rgb "YIQ/YUV"  1.0 0.0 1.0 1.0
 #pragma parameter comp_rf "Composite/RF" 0.0 0.0 1.0 1.0
@@ -116,6 +117,7 @@ uniform COMPAT_PRECISION float phase_shiftq;
 uniform COMPAT_PRECISION float iq_width;
 uniform COMPAT_PRECISION float y_width;
 uniform COMPAT_PRECISION float comp_rf;
+uniform COMPAT_PRECISION float h_pass_c;
 
 #else
 #define ntsc_sat 1.0
@@ -127,6 +129,7 @@ uniform COMPAT_PRECISION float comp_rf;
 #define iq_width 8.0
 #define y_width 2.0
 #define comp_rf 0.0
+#define h_pass_c 0.05
 #endif
 
 // this pass is a modification of https://www.shadertoy.com/view/3t2XRV
@@ -164,19 +167,22 @@ int b = int(y_width);
         sum += w;
         }
         YIQ.x /= sum;
-
+    float sumc = 0.0;
     for (int n=-a; n<a; n++) {
         vec2 pos = uv + vec2(float(n) / size.x, 0.0);
-        float phase = (vTexCoord.x*SourceSize.x + float(n))*PI*0.5 -mod(vTexCoord.y*SourceSize.y,2.0)*PI ;
+        float phase = (vTexCoord.x*SourceSize.x + float(n))*PI*0.5 - mod(vTexCoord.y*SourceSize.y,2.0)*PI ;
+    // High Pass Chroma
+    float r = 1.0-exp(-h_pass_c*float(n)*float(n));
     //animate to hide artifacts
-    if (animate_afacts == 1.0) phase *= sin(float(FrameCount))<0.0? -1.0:1.0;
+    if (animate_afacts == 1.0) phase += mod(float(FrameCount),2.0);
     // add hann window function
     vec2 carrier;
     if (comp_rf == 0.0) carrier = ntsc_sat*vec2(sin(phase+phase_shifti), cos(phase+phase_shiftq));
     else carrier = ntsc_sat*4.0*vec2(sin(phase+phase_shifti), cos(phase+phase_shiftq))*hann(float(n),a*4,0.0);
-        YIQ.yz += COMPAT_TEXTURE(Source, pos).gb * carrier;
+        YIQ.yz += r*COMPAT_TEXTURE(Source, pos).gb * carrier;
+        sumc += r;
         }
-    YIQ.yz /= iq_width*2.0;
+    YIQ.yz /= sumc;
 
     //  Convert YIQ signal to RGB
     if (yuv_rgb == 0.0) YIQ = YIQ*YIQ2RGB; 
