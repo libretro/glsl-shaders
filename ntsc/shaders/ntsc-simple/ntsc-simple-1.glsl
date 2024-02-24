@@ -126,14 +126,14 @@ const mat3 RGBYUV = mat3(0.299, 0.587, 0.114,
 
 void main()
 {
-    float phase = (vTexCoord.x*SourceSize.x)*PI*0.5 -mod(vTexCoord.y*SourceSize.y,2.0)*PI ;
+    float phase = (vTexCoord.x*SourceSize.x)*PI*0.5 - mod(vTexCoord.y*SourceSize.y,2.0)*PI ;
     phase += ntsc_hue;
     vec3 YIQ = COMPAT_TEXTURE(Source,vTexCoord).rgb; 
     
     if (yuv_rgb == 0.0) YIQ = YIQ*RGBYIQ; 
     else YIQ = YIQ*RGBYUV;
     
-    if (animate_afacts == 1.0) phase *= sin(float(FrameCount))<0.0? -1.0:1.0;
+    if (animate_afacts == 1.0) phase += mod(float(FrameCount),2.0);
     float signal = ntsc_bri*YIQ.x + 0.5*(YIQ.y*sin(phase) + YIQ.z*cos(phase)) ;   
     FragColor = vec4(vec3(signal), 1.0);
     
