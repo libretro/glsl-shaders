@@ -1,5 +1,4 @@
 shaders = "4"
-feedback_pass = "0"
 shader0 = "../stock.glsl"
 scale_type_x0 = "absolute"
 scale_x0 = "640.000000"
