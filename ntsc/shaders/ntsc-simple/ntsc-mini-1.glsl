@@ -1,6 +1,6 @@
 #version 110
 
-#pragma parameter animate_ph "Animate Phase" 0.0 0.0 1.0 1.0
+#pragma parameter animate_ph "Animate Phase" 1.0 0.0 1.0 1.0
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
