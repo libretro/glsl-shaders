@@ -104,12 +104,16 @@ uniform COMPAT_PRECISION float ntsc_bri;
 uniform COMPAT_PRECISION float ntsc_hue;
 uniform COMPAT_PRECISION float animate_afacts;
 uniform COMPAT_PRECISION float yuv_rgb;
+uniform COMPAT_PRECISION float y_mod;
+uniform COMPAT_PRECISION float x_mod;
 
 #else
 #define ntsc_bri 1.0
 #define ntsc_hue 0.0
 #define animate_afacts 1.0
 #define yuv_rgb 0.0
+#define y_mod 0.0
+#define x_mod 0.0
 #endif
 
 
@@ -126,7 +130,7 @@ const mat3 RGBYUV = mat3(0.299, 0.587, 0.114,
 
 void main()
 {
-    float phase = (vTexCoord.x*SourceSize.x)*PI*0.5 - mod(vTexCoord.y*SourceSize.y,2.0)*PI ;
+    float phase = (vTexCoord.x*SourceSize.x)*PI*x_mod - mod(vTexCoord.y*SourceSize.y,2.0)*PI*y_mod;
     phase += ntsc_hue;
     vec3 YIQ = COMPAT_TEXTURE(Source,vTexCoord).rgb; 
     
