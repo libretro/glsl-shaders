@@ -9,17 +9,18 @@
    any later version.
 */
 
-#pragma parameter ntsc_sat "NTSC Saturation" 2.0 0.0 6.0 0.05
-#pragma parameter iq_width "Chroma Width (Bleed)" 8.0 4.0 32.0 2.0
+#pragma parameter ntsc_sat "NTSC Saturation" 3.0 0.0 6.0 0.05
+#pragma parameter iq_width "Chroma Width (Bleed)" 7.0 4.0 32.0 1.0
 #pragma parameter y_width "Luma Width (Blurry)" 4.0 1.0 8.0 1.0
-#pragma parameter afacts "NTSC Artifacts Strength (lowpass Y)" 0.25 0.0 1.0 0.01
+#pragma parameter afacts "NTSC Artifacts Strength (lowpass Y)" 0.02 0.0 1.0 0.01
 #pragma parameter h_pass_c "High Pass Chroma" 0.4 0.01 1.0 0.01
 #pragma parameter animate_afacts "NTSC Artifacts Animate" 0.0 0.0 1.0 1.0
 #pragma parameter phase_shifti "Phase Shift I" -0.2 -5.0 5.0 0.05
 #pragma parameter phase_shiftq "Phase Shift Q" 0.0 -5.0 5.0 0.05
 #pragma parameter yuv_rgb "YIQ/YUV"  1.0 0.0 1.0 1.0
 #pragma parameter comp_rf "Composite/RF" 0.0 0.0 1.0 1.0
-#pragma parameter x_mod "PI x mod" 0.5 0.0 2.0 0.01
+#pragma parameter x_mod "PI x mod" 0.59 0.0 2.0 0.01
+#pragma parameter dummy "ZX Spectrum:0.59, Gen:0.76" 0.0 0.0 0.0 0.0
 #pragma parameter y_mod "PI y mod" 1.0 0.0 2.0 0.01
 
 #if defined(VERTEX)
@@ -167,7 +168,7 @@ int b = int(y_width);
     for (int n=-b; n<b; n++) {
         // lowpass
         float w = exp(-afacts*float(n)*float(n));
-        vec2 pos = uv + vec2(float(n) / size.x, 0.0);
+        vec2 pos = uv + vec2(float(n) / size.x/2.0, 0.0);
         // low pass Y signal, high frequency chroma pattern is cut-off
         YIQ.x += COMPAT_TEXTURE(Source, pos).r*w ;
         sum += w;
@@ -180,7 +181,7 @@ int b = int(y_width);
     // High Pass Chroma
     float r = 1.0-exp(-h_pass_c*float(n)*float(n));
     //animate to hide artifacts
-    if (animate_afacts == 1.0) phase += mod(float(FrameCount),2.0);
+    if (animate_afacts == 1.0) phase += PI*sin(mod(float(FrameCount+1),2.0));
     // add hann window function
     vec2 carrier;
     if (comp_rf == 0.0) carrier = ntsc_sat*vec2(sin(phase+phase_shifti), cos(phase+phase_shiftq));
