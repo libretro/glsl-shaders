@@ -1,7 +1,6 @@
 #version 110
 
-#pragma parameter compo "S-Video/Composite" 1.0 0.0 1.0 1.0
-#pragma parameter mini_hue "Hue Shift" 0.0 0.0 6.3 0.05
+#pragma parameter ntsc_hue "NTSC Hue" 3.15 -6.0 6.0 0.05
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -25,7 +24,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 scale;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -50,7 +48,6 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
-    scale = SourceSize.xy/InputSize.xy;
 }
 
 #elif defined(FRAGMENT)
@@ -83,7 +80,6 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 scale;
 
 // compatibility #defines
 #define vTexCoord TEX0.xy
@@ -92,44 +88,39 @@ COMPAT_VARYING vec2 scale;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float compo;
-uniform COMPAT_PRECISION float animate_ph;
-uniform COMPAT_PRECISION float mini_hue;
+uniform COMPAT_PRECISION float crawl;
+uniform COMPAT_PRECISION float ntsc_hue;
+uniform COMPAT_PRECISION float pi_mod;
 
 #else
-#define compo 1.0
-#define animate_ph 0.0
-#define mini_hue 0.0
+#define crawl 1.0
+#define ntsc_hue 0.0
+#define pi_mod 0.0
 #endif
 
-
 // Encoder or Modulator
-// This pass converts RGB colors  to
+// This pass converts RGB colors on iChannel0 to
 // a YIQ (NTSC) Composite signal.
 
 #define PI   3.14159265358979323846
 #define TAU  6.28318530717958647693
-
-const mat3 rgb_to_yiq = mat3(0.299, 0.596, 0.211,
-                             0.587,-0.274,-0.523,
-                             0.114,-0.322, 0.312);
-
-
+const mat3 RGBYUV = mat3(0.299, 0.587, 0.114,
+                        -0.299, -0.587, 0.886, 
+                         0.701, -0.587, -0.114);
 void main() {
-    vec3 yiq = COMPAT_TEXTURE(Source,vTexCoord).rgb;
-    yiq *= rgb_to_yiq;
 
-    float phase = vTexCoord.x*SourceSize.x*PI*0.666 + mod(vTexCoord.y*SourceSize.y*0.666,2.0)*PI;
-    float time = animate_ph > 0.0? (float(FrameCount))*PI:0.0;
-    float cs = cos(phase+mini_hue+time);
-    float sn = sin(phase+mini_hue+time);
-    yiq.yz *= 0.5*vec2(cs, sn);
-   
-    vec2 iq = yiq.yz;
 
-    // Return a grayscale representation of the signal
-    if (compo == 0.0)
-    FragColor = vec4(vec3(yiq.r,iq), 1.0);
-    else FragColor = vec4(vec3(yiq.r+iq.x+iq.y), 1.0);
+vec3 res = vec3(0.0);
+vec2 ps = vec2(SourceSize.z,0.0);
+
+float phase = (vTexCoord.x*SourceSize.x)*PI*pi_mod + mod(vTexCoord.y*SourceSize.y,2.0 )*PI*0.5;
+if (crawl == 1.0) phase += sin(mod(float(FrameCount),2.0))*PI;
+
+res = COMPAT_TEXTURE(Source,vTexCoord ).rgb*RGBYUV;
+res *=vec3(1.0,cos(phase-ntsc_hue),sin(phase-ntsc_hue));
+
+float signal = dot(vec3(1.0,0.5,0.5),res);
+
+FragColor.rgb = vec3(signal);
 }
 #endif 
