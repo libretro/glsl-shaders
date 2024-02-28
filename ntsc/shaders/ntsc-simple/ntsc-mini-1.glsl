@@ -1,8 +1,14 @@
 #version 110
 
+/*
+ntsc-mini, composite shader based on actual ZX Spectrum RF images
+https://i.imgur.com/t51E3zt.jpeg
+DariuG @2024
+*/
+
 #pragma parameter crawl "Dot Crawl (Genesis off)" 0.0 0.0 1.0 1.0
 #pragma parameter Y_lp "Luma Low Pass (sharper)" 0.08 0.0 1.0 0.01
-#pragma parameter pi_mod "Pi modifier 1' degree-step" 0.633319 0.5 1.0 0.005555
+#pragma parameter pi_mod "Pi mod. 1 degree-step/adjust hue" 0.633319 0.5 1.0 0.005555
 #pragma parameter dummy "Genesis 0.53" 0.0 0.0 0.0 0.0
 #if defined(VERTEX)
 
@@ -134,15 +140,15 @@ for (int x=0; x<4; x++)
 for (int a=0; a<7; a++)
     {
         float b = float(a);  
-        float phase = (vTexCoord.x*SourceSize.x + b)*PI*pi_mod + mod(vTexCoord.y*SourceSize.y,2.0)*PI*0.5 ;
+        float phase = (vTexCoord.x*SourceSize.x + b)*PI*pi_mod + mod(vTexCoord.y*SourceSize.y,2.0)*PI ;
         if (crawl == 1.0) phase += sin(mod(float(FrameCount),2.0))*PI;
         vec3 carr = vec3(1.0,2.0*cos(phase),2.0*sin(phase));
         float w = 1.0-exp(-0.4*b*b);  
 
-        vec3 cline   = COMPAT_TEXTURE(Source,vTexCoord + b*dx).rgb*carr;        
-        vec3 clineup = COMPAT_TEXTURE(Source,vTexCoord -dy + b*dx).rgb*carr;  
+        vec3 cline   = COMPAT_TEXTURE(Source,vTexCoord -dx*3.0 + b*dx).rgb*carr;        
+        vec3 clineup = COMPAT_TEXTURE(Source,vTexCoord -dx*3.0 -dy + b*dx).rgb*carr;  
         // Comb-filter separate, idea borrowed from blastem and tweaked to ntsc-mini 
-        vec3 iqmix = (cline - (cline+clineup));
+        vec3 iqmix = cline - (cline+clineup);
         res.gb += iqmix.gb/7.0;
     }
     FragColor.rgb = res*YUV2RGB;
