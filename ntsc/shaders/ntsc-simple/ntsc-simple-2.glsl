@@ -1,7 +1,7 @@
 #version 110
 
 /*
-   Simple S-video like shader by DariusG 2023
+   Simple composite-video (more like RF) like shader by DariusG 2023
    
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the Free
@@ -10,18 +10,16 @@
 */
 
 #pragma parameter ntsc_sat "NTSC Saturation" 3.0 0.0 6.0 0.05
-#pragma parameter iq_width "Chroma Width (Bleed)" 7.0 4.0 32.0 1.0
 #pragma parameter y_width "Luma Width (Blurry)" 4.0 1.0 8.0 1.0
-#pragma parameter afacts "NTSC Artifacts Strength (lowpass Y)" 0.02 0.0 1.0 0.01
+#pragma parameter iq_width "Chroma Width (Bleed)" 7.0 4.0 32.0 1.0
+#pragma parameter afacts "Low Pass Luma" 0.02 0.0 1.0 0.01
 #pragma parameter h_pass_c "High Pass Chroma" 0.4 0.01 1.0 0.01
 #pragma parameter animate_afacts "NTSC Artifacts Animate" 0.0 0.0 1.0 1.0
 #pragma parameter phase_shifti "Phase Shift I" -0.2 -5.0 5.0 0.05
 #pragma parameter phase_shiftq "Phase Shift Q" 0.0 -5.0 5.0 0.05
-#pragma parameter yuv_rgb "YIQ/YUV"  1.0 0.0 1.0 1.0
 #pragma parameter comp_rf "Composite/RF" 0.0 0.0 1.0 1.0
 #pragma parameter x_mod "PI x mod" 0.59 0.0 2.0 0.01
 #pragma parameter dummy "ZX Spectrum:0.59, Gen:0.76" 0.0 0.0 0.0 0.0
-#pragma parameter y_mod "PI y mod" 1.0 0.0 2.0 0.01
 
 #if defined(VERTEX)
 
@@ -114,28 +112,24 @@ COMPAT_VARYING vec4 TEX0;
 uniform COMPAT_PRECISION float ntsc_sat;
 uniform COMPAT_PRECISION float afacts;
 uniform COMPAT_PRECISION float animate_afacts;
-uniform COMPAT_PRECISION float yuv_rgb;
 uniform COMPAT_PRECISION float phase_shifti;
 uniform COMPAT_PRECISION float phase_shiftq;
 uniform COMPAT_PRECISION float iq_width;
 uniform COMPAT_PRECISION float y_width;
 uniform COMPAT_PRECISION float comp_rf;
 uniform COMPAT_PRECISION float h_pass_c;
-uniform COMPAT_PRECISION float y_mod;
 uniform COMPAT_PRECISION float x_mod;
 
 #else
 #define ntsc_sat 1.0
 #define afacts 0.0
 #define animate_afacts 0.0
-#define yuv_rgb 0.0
 #define phase_shifti 0.0
 #define phase_shiftq 0.0
 #define iq_width 8.0
 #define y_width 2.0
 #define comp_rf 0.0
 #define h_pass_c 0.05
-#define y_mod 0.05
 #define x_mod 0.05
 #endif
 
@@ -144,13 +138,12 @@ uniform COMPAT_PRECISION float x_mod;
 #define TAU  6.28318530717958647693
 #define PI 3.1415926
 
-//  Colorspace conversion matrix for YIQ-to-RGB
-const mat3 YIQ2RGB = mat3(1.000, 1.000, 1.000,
-                          0.956,-0.272,-1.106,
-                          0.621,-0.647, 1.703);
+// Colorspace conversion matrix for YUV-to-RGB
+// All modern CRTs use YUV instead of YIQ
 const mat3 YUV2RGB = mat3(1.0, 0.0, 1.13983,
                           1.0, -0.39465, -0.58060,
                           1.0, 2.03211, 0.0);
+
 float hann(float i, int size, float phase) {
     return pow(sin((PI * (i + phase)) / float(size)), 2.0);
 }
@@ -162,39 +155,38 @@ vec2 uv = vTexCoord;
 int a = int(iq_width);
 int b = int(y_width);
 
-    //Sample composite signal and decode to YIQ
-    vec3 YIQ = vec3(0);
+    //Sample composite signal and decode to YUV
+    vec3 YUV = vec3(0);
     float sum = 0.0;
     for (int n=-b; n<b; n++) {
         // lowpass
         float w = exp(-afacts*float(n)*float(n));
         vec2 pos = uv + vec2(float(n) / size.x/2.0, 0.0);
         // low pass Y signal, high frequency chroma pattern is cut-off
-        YIQ.x += COMPAT_TEXTURE(Source, pos).r*w ;
+        YUV.x += COMPAT_TEXTURE(Source, pos).r*w ;
         sum += w;
         }
-        YIQ.x /= sum;
+        YUV.x /= sum;
     float sumc = 0.0;
     for (int n=-a; n<a; n++) {
         vec2 pos = uv + vec2(float(n) / size.x, 0.0);
-        float phase = (vTexCoord.x*SourceSize.x + float(n))*PI*x_mod - mod(vTexCoord.y*SourceSize.y,2.0)*PI*y_mod ;
+        float phase = (vTexCoord.x*SourceSize.x + float(n))*PI*x_mod - mod(vTexCoord.y*SourceSize.y,2.0)*PI ;
     // High Pass Chroma
     float r = 1.0-exp(-h_pass_c*float(n)*float(n));
-    //animate to hide artifacts
+    //animate to further hide artifacts
     if (animate_afacts == 1.0) phase += PI*sin(mod(float(FrameCount+1),2.0));
-    // add hann window function
+    // add optional hann window function
     vec2 carrier;
     if (comp_rf == 0.0) carrier = ntsc_sat*vec2(sin(phase+phase_shifti), cos(phase+phase_shiftq));
     else carrier = ntsc_sat*4.0*vec2(sin(phase+phase_shifti), cos(phase+phase_shiftq))*hann(float(n),a*4,0.0);
-        YIQ.yz += r*COMPAT_TEXTURE(Source, pos).gb * carrier;
+        YUV.yz += r*COMPAT_TEXTURE(Source, pos).gb * carrier;
         sumc += r;
         }
-    YIQ.yz /= sumc;
+    YUV.yz /= sumc;
 
-    //  Convert YIQ signal to RGB
-    if (yuv_rgb == 0.0) YIQ = YIQ*YIQ2RGB; 
-    else YIQ = YIQ*YUV2RGB;
-    FragColor = vec4(YIQ, 1.0);
+    //  Convert signal to RGB
+    YUV = YUV*YUV2RGB;
+    FragColor = vec4(YUV, 1.0);
     
 }
 #endif
