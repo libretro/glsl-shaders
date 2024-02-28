@@ -9,7 +9,6 @@ DariuG @2024
 #pragma parameter crawl "Dot Crawl (Genesis off)" 0.0 0.0 1.0 1.0
 #pragma parameter Y_lp "Luma Low Pass (sharper)" 0.08 0.0 1.0 0.01
 #pragma parameter pi_mod "Pi mod. 1 degree-step/adjust hue" 0.633319 0.5 1.0 0.005555
-#pragma parameter dummy "Genesis 0.53" 0.0 0.0 0.0 0.0
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
