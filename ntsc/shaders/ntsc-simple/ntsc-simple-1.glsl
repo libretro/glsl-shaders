@@ -1,7 +1,7 @@
 #version 110
 
 /*
-   Simple S-video like shader by DariusG 2023
+   Simple composite-video (more like RF) like shader by DariusG 2023
    
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the Free
@@ -103,16 +103,12 @@ COMPAT_VARYING vec4 TEX0;
 uniform COMPAT_PRECISION float ntsc_bri;
 uniform COMPAT_PRECISION float ntsc_hue;
 uniform COMPAT_PRECISION float animate_afacts;
-uniform COMPAT_PRECISION float yuv_rgb;
-uniform COMPAT_PRECISION float y_mod;
 uniform COMPAT_PRECISION float x_mod;
 
 #else
 #define ntsc_bri 1.0
 #define ntsc_hue 0.0
 #define animate_afacts 1.0
-#define yuv_rgb 0.0
-#define y_mod 0.0
 #define x_mod 0.0
 #endif
 
@@ -120,25 +116,23 @@ uniform COMPAT_PRECISION float x_mod;
 #define TAU  6.28318530717958647693
 #define PI 3.1415926
 
-const mat3 RGBYIQ = mat3(0.299, 0.596, 0.211,
-                             0.587,-0.274,-0.523,
-                             0.114,-0.322, 0.312);
 
+// Colorspace conversion matrix for RGB-to-YUV
+// All modern CRTs use YUV instead of YIQ
 const mat3 RGBYUV = mat3(0.299, 0.587, 0.114,
                         -0.299, -0.587, 0.886, 
                          0.701, -0.587, -0.114);
 
 void main()
 {
-    float phase = (vTexCoord.x*SourceSize.x)*PI*x_mod - mod(vTexCoord.y*SourceSize.y,2.0)*PI*y_mod;
+    float phase = (vTexCoord.x*SourceSize.x)*PI*x_mod - mod(vTexCoord.y*SourceSize.y,2.0)*PI; 
     phase += ntsc_hue;
-    vec3 YIQ = COMPAT_TEXTURE(Source,vTexCoord).rgb; 
+    vec3 YUV = COMPAT_TEXTURE(Source,vTexCoord).rgb; 
     
-    if (yuv_rgb == 0.0) YIQ = YIQ*RGBYIQ; 
-    else YIQ = YIQ*RGBYUV;
+     YUV = YUV*RGBYUV;
     
     if (animate_afacts == 1.0) phase += PI*sin(mod(float(FrameCount+1),2.0));
-    float signal = ntsc_bri*YIQ.x + 0.5*(YIQ.y*sin(phase) + YIQ.z*cos(phase)) ;   
+    float signal = ntsc_bri*YUV.x + 0.5*(YUV.y*sin(phase) + YUV.z*cos(phase)) ;   
     FragColor = vec4(vec3(signal), 1.0);
     
 }
