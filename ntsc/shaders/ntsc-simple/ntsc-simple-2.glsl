@@ -18,6 +18,7 @@
 #pragma parameter phase_shifti "Phase Shift I" -0.2 -5.0 5.0 0.05
 #pragma parameter phase_shiftq "Phase Shift Q" 0.0 -5.0 5.0 0.05
 #pragma parameter comp_rf "Composite/RF" 0.0 0.0 1.0 1.0
+#pragma parameter rf_noise "RF noise" 0.1 0.0 1.0 0.01
 #pragma parameter x_mod "PI x mod" 0.59 0.0 2.0 0.01
 #pragma parameter dummy "ZX Spectrum:0.59, Gen:0.76" 0.0 0.0 0.0 0.0
 
@@ -119,6 +120,7 @@ uniform COMPAT_PRECISION float y_width;
 uniform COMPAT_PRECISION float comp_rf;
 uniform COMPAT_PRECISION float h_pass_c;
 uniform COMPAT_PRECISION float x_mod;
+uniform COMPAT_PRECISION float rf_noise;
 
 #else
 #define ntsc_sat 1.0
@@ -131,6 +133,7 @@ uniform COMPAT_PRECISION float x_mod;
 #define comp_rf 0.0
 #define h_pass_c 0.05
 #define x_mod 0.05
+#define rf_noise 0.05
 #endif
 
 // this pass is a modification of https://www.shadertoy.com/view/3t2XRV
@@ -146,6 +149,13 @@ const mat3 YUV2RGB = mat3(1.0, 0.0, 1.13983,
 
 float hann(float i, int size, float phase) {
     return pow(sin((PI * (i + phase)) / float(size)), 2.0);
+}
+
+#define iTimer float(FrameCount)
+
+float noise(vec2 co)
+{
+return fract(sin(iTimer * dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
 void main()
@@ -186,7 +196,7 @@ int b = int(y_width);
 
     //  Convert signal to RGB
     YUV = YUV*YUV2RGB;
-    FragColor = vec4(YUV, 1.0);
+    FragColor = vec4(YUV*(1.0+noise(vTexCoord)*rf_noise), 1.0);
     
 }
 #endif
