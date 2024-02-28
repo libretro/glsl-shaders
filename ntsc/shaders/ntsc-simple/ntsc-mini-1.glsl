@@ -8,7 +8,8 @@ DariuG @2024
 
 #pragma parameter crawl "Dot Crawl (Genesis off)" 0.0 0.0 1.0 1.0
 #pragma parameter Y_lp "Luma Low Pass (sharper)" 0.08 0.0 1.0 0.01
-#pragma parameter pi_mod "Pi mod. 1 degree-step/adjust hue" 0.633319 0.5 1.0 0.005555
+#pragma parameter pi_mod "Pi mod. 1 degree-step/adjust hue" 0.649985 0.5 1.0 0.005555
+#pragma parameter dummy "Genesis 0.53" 0.0 0.0 0.0 0.0
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -136,13 +137,12 @@ for (int x=0; x<4; x++)
         res.r += ymix.r;
     }
     res.r /= sum;
-for (int a=0; a<7; a++)
+for (int a=0; a<9; a++)
     {
         float b = float(a);  
         float phase = (vTexCoord.x*SourceSize.x + b)*PI*pi_mod + mod(vTexCoord.y*SourceSize.y,2.0)*PI ;
         if (crawl == 1.0) phase += sin(mod(float(FrameCount),2.0))*PI;
-        vec3 carr = vec3(1.0,2.0*cos(phase),2.0*sin(phase));
-        float w = 1.0-exp(-0.4*b*b);  
+        vec3 carr = vec3(1.0,2.0*sin(phase),2.0*cos(phase));
 
         vec3 cline   = COMPAT_TEXTURE(Source,vTexCoord -dx*3.0 + b*dx).rgb*carr;        
         vec3 clineup = COMPAT_TEXTURE(Source,vTexCoord -dx*3.0 -dy + b*dx).rgb*carr;  
