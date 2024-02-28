@@ -1,6 +1,12 @@
 #version 110
 
-#pragma parameter ntsc_hue "NTSC Hue" 3.15 -6.0 6.0 0.05
+/*
+ntsc-mini, composite shader based on actual ZX Spectrum RF images
+https://i.imgur.com/t51E3zt.jpeg
+DariuG @2024
+*/
+
+#pragma parameter ntsc_hue "NTSC Hue" 3.5 0.0 6.0 0.05
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -113,7 +119,7 @@ void main() {
 vec3 res = vec3(0.0);
 vec2 ps = vec2(SourceSize.z,0.0);
 
-float phase = (vTexCoord.x*SourceSize.x)*PI*pi_mod + mod(vTexCoord.y*SourceSize.y,2.0 )*PI*0.5;
+float phase = (vTexCoord.x*SourceSize.x)*PI*pi_mod + mod(vTexCoord.y*SourceSize.y,2.0 )*PI;
 if (crawl == 1.0) phase += sin(mod(float(FrameCount),2.0))*PI;
 
 res = COMPAT_TEXTURE(Source,vTexCoord ).rgb*RGBYUV;
