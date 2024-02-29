@@ -149,7 +149,6 @@ for (int n=0; n<35; n++) {
         float a = PI * 2.0 / (16.0 * 2.0) * float(n);
         float w = blackman(a);
         vec2 pos = uv - vec2(16.0/size.x,0.0) + vec2(float(n) / size.x, 0.0);
-        // low pass Y signal, high frequency chroma pattern is cut-off
         
         float x = float(n) - 16.0;
         float to_angle = resolution + 1.0;
