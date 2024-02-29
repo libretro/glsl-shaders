@@ -1,7 +1,7 @@
 #version 110
 
 #pragma parameter ntsc_sat "Saturation" 2.0 0.0 6.0 0.05
-#pragma parameter bleed "Bleed" 0.5 0.0 1.0 0.05
+#pragma parameter bleed "Bleed" 0.5 0.0 2.0 0.05
 #pragma parameter resolution "Resolution" 2.0 0.0 2.0 0.05
 #pragma parameter sharpness "Sharpness" 0.3 0.0 1.0 0.05
 #pragma parameter LUMA_CUTOFF "Luma Cut-off" 0.04 0.0 1.0 0.01
@@ -133,33 +133,38 @@ vec2 uv = vTexCoord;
 
 float cutoff_factor = -0.03125;
 float cutoff = bleed;       
+    if ( cutoff < 0.0 )
+        {
+    /* keep extreme value accessible only near upper end of scale (1.0) */
     cutoff *= cutoff;
     cutoff *= cutoff;
     cutoff *= cutoff;
     cutoff *= -30.0 / 0.65;    
+        }
+
     cutoff = cutoff_factor - 0.65 * cutoff_factor * cutoff;
     
     //Sample composite signal and decode to YUV
     vec3 YUV = vec3(0);
     float sum = 0.0;
+    float to_angle = resolution + 1.0;
+    float  rolloff = 1.0 + sharpness * 0.032;
+    float  maxh = 32.0;
+    float  pow_a_n = pow( rolloff, maxh );
+    to_angle = PI / maxh * LUMA_CUTOFF * (to_angle * to_angle + 1.0);
 
-for (int n=0; n<35; n++) {
+for (int n=0; n<35; n++) { // 2*maxh + 1
         // blargg-ntsc
         // generate luma (y) filter using sinc kernel 
         float a = PI * 2.0 / (16.0 * 2.0) * float(n);
         float w = blackman(a);
         vec2 pos = uv - vec2(16.0/size.x,0.0) + vec2(float(n) / size.x, 0.0);
         
-        float x = float(n) - 16.0;
-        float to_angle = resolution + 1.0;
-        float  rolloff = 1.0 + sharpness * 0.032;
-        float  maxh = 32.0;
-        float  pow_a_n = pow( rolloff, maxh );
-        to_angle = PI / maxh * LUMA_CUTOFF * (to_angle * to_angle + 1.0);
+        float x = float(n) - 16.0; // maxh/2
+        
         float angle = x * to_angle;
         float kernel = 0.0;
-        
-        
+                
             //instability occurs at center point with rolloff very close to 1.0 
             if ( x > 1.056  || pow_a_n > 1.056 || pow_a_n < 0.981 )
             {
@@ -183,7 +188,7 @@ for (int n=0; n<35; n++) {
 
 for (int n=-16; n<16; n++) {
     vec2 pos = uv + vec2(float(n) / size.x, 0.0);
-    float phase = (floor(vTexCoord.x*SourceSize.x)+float(n))*PI*0.5 - mod(floor(vTexCoord.y*SourceSize.y)*0.6667,2.0)*PI; 
+    float phase = (floor(vTexCoord.x*SourceSize.x)+float(n))*PI*0.5 + mod(floor(vTexCoord.y*SourceSize.y)*0.6667,2.0)*PI; 
     if (stat_ph == 1.0) phase += sin(mod(float(FrameCount),2.0))*PI;
 
     float r = exp(cutoff*float(n)*float(n));
