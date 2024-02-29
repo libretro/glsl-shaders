@@ -125,7 +125,7 @@ const mat3 RGBYUV = mat3(0.299, 0.587, 0.114,
 
 void main()
 {
-    float phase = (vTexCoord.x*SourceSize.x)*PI*x_mod - mod(vTexCoord.y*SourceSize.y,2.0)*PI; 
+    float phase = floor(vTexCoord.x*SourceSize.x)*PI*x_mod - mod(floor(vTexCoord.y*SourceSize.y),2.0)*PI; 
     phase += ntsc_hue;
     vec3 YUV = COMPAT_TEXTURE(Source,vTexCoord).rgb; 
     
