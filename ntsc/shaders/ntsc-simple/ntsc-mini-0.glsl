@@ -6,7 +6,7 @@ https://i.imgur.com/t51E3zt.jpeg
 DariuG @2024
 */
 
-#pragma parameter ntsc_hue "NTSC Hue" 3.5 0.0 6.0 0.05
+#pragma parameter ntsc_hue "NTSC Hue" 3.3 0.0 6.0 0.05
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -123,7 +123,7 @@ float phase = (vTexCoord.x*SourceSize.x)*PI*pi_mod + mod(vTexCoord.y*SourceSize.
 if (crawl == 1.0) phase += sin(mod(float(FrameCount),2.0))*PI;
 
 res = COMPAT_TEXTURE(Source,vTexCoord ).rgb*RGBYUV;
-res *=vec3(1.0,cos(phase-ntsc_hue),sin(phase-ntsc_hue));
+res *=vec3(1.0,sin(phase-ntsc_hue),cos(phase-ntsc_hue));
 
 float signal = dot(vec3(1.0,0.5,0.5),res);
 
