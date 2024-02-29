@@ -119,7 +119,7 @@ mat3 mix_mat = mat3(1.0, fring, fring,
                      0.0, afacts, 1.0);
 void main()
 {
-    float phase = floor(vTexCoord.x*SourceSize.x)*PI*0.5 - mod(floor(vTexCoord.y*SourceSize.y)*0.6667,2.0)*PI; 
+    float phase = floor(vTexCoord.x*SourceSize.x)*PI*0.5 + mod(floor(vTexCoord.y*SourceSize.y)*0.6667,2.0)*PI; 
     phase += ntsc_hue;
     if (stat_ph == 1.0) phase += sin(mod(float(FrameCount),2.0))*PI;
     
