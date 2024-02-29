@@ -180,7 +180,7 @@ int b = int(y_width);
     float sumc = 0.0;
     for (int n=-a; n<a; n++) {
         vec2 pos = uv + vec2(float(n) / size.x, 0.0);
-        float phase = (vTexCoord.x*SourceSize.x + float(n))*PI*x_mod - mod(vTexCoord.y*SourceSize.y,2.0)*PI ;
+        float phase = (floor(vTexCoord.x*SourceSize.x + float(n)))*PI*x_mod - mod(floor(vTexCoord.y*SourceSize.y),2.0)*PI ;
     // High Pass Chroma
     float r = 1.0-exp(-h_pass_c*float(n)*float(n));
     //animate to further hide artifacts
