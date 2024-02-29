@@ -12,8 +12,8 @@
 #pragma parameter ntsc_sat "NTSC Saturation" 3.0 0.0 6.0 0.05
 #pragma parameter y_width "Luma Width (Blurry)" 4.0 1.0 8.0 1.0
 #pragma parameter iq_width "Chroma Width (Bleed)" 7.0 4.0 32.0 1.0
-#pragma parameter afacts "Low Pass Luma" 0.02 0.0 1.0 0.01
-#pragma parameter h_pass_c "High Pass Chroma" 0.4 0.01 1.0 0.01
+#pragma parameter afacts "Low Pass Luma" 0.05 0.0 1.0 0.01
+#pragma parameter h_pass_c "High Pass Chroma" 0.05 0.01 1.0 0.01
 #pragma parameter animate_afacts "NTSC Artifacts Animate" 0.0 0.0 1.0 1.0
 #pragma parameter phase_shifti "Phase Shift I" -0.2 -5.0 5.0 0.05
 #pragma parameter phase_shiftq "Phase Shift Q" 0.0 -5.0 5.0 0.05
@@ -182,7 +182,7 @@ int b = int(y_width);
         vec2 pos = uv + vec2(float(n) / size.x, 0.0);
         float phase = (floor(vTexCoord.x*SourceSize.x + float(n)))*PI*x_mod - mod(floor(vTexCoord.y*SourceSize.y),2.0)*PI ;
     // High Pass Chroma
-    float r = 1.0-exp(-h_pass_c*float(n)*float(n));
+    float r = exp(-h_pass_c*float(n)*float(n));
     //animate to further hide artifacts
     if (animate_afacts == 1.0) phase += PI*sin(mod(float(FrameCount+1),2.0));
     // add optional hann window function
