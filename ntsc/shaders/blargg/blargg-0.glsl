@@ -95,12 +95,14 @@ uniform COMPAT_PRECISION float ntsc_bri;
 uniform COMPAT_PRECISION float ntsc_hue;
 uniform COMPAT_PRECISION float stat_ph ;
 uniform COMPAT_PRECISION float pi_mod ;
+uniform COMPAT_PRECISION float vert_scal ;
 
 #else
 #define ntsc_bri 1.0
 #define ntsc_hue 0.0
 #define  stat_ph 1.0
 #define  pi_mod 90.0
+#define  vert_scal 0.6667
 #endif
 
 #define PI 3.1415926 
@@ -115,7 +117,7 @@ const mat3 RGBYIQ = mat3(
 
 void main()
 {
-    float phase = floor(vTexCoord.x*SourceSize.x)*pi_mod*onedeg + mod(floor(vTexCoord.y*SourceSize.y)*0.6667,2.0)*PI; 
+    float phase = floor(vTexCoord.x*SourceSize.x)*pi_mod*onedeg + mod(floor(vTexCoord.y*SourceSize.y)*vert_scal,2.0)*PI; 
     phase += ntsc_hue;
     if (stat_ph == 1.0) phase += sin(mod(float(FrameCount),2.0))*PI;
     
