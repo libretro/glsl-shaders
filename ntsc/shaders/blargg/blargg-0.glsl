@@ -2,8 +2,6 @@
 
 #pragma parameter ntsc_bri "Brightness" 1.0 0.0 2.0 0.01
 #pragma parameter ntsc_hue "Hue" -0.15 -1.0 6.0 0.05
-#pragma parameter afacts "Artifacts" 0.4 0.0 5.0 0.05
-#pragma parameter fring "Fringing" 0.0 0.0 5.0 0.05
 
 #if defined(VERTEX)
 
@@ -95,15 +93,11 @@ COMPAT_VARYING vec4 TEX0;
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float ntsc_bri;
 uniform COMPAT_PRECISION float ntsc_hue;
-uniform COMPAT_PRECISION float afacts ;
-uniform COMPAT_PRECISION float fring ;
 uniform COMPAT_PRECISION float stat_ph ;
 
 #else
 #define ntsc_bri 1.0
 #define ntsc_hue 0.0
-#define  afacts 0.4
-#define  fring 0.4
 #define  stat_ph 1.0
 #endif
 
@@ -114,9 +108,7 @@ uniform COMPAT_PRECISION float stat_ph ;
 const mat3 RGBYUV = mat3(0.299, 0.587, 0.114,
                         -0.299, -0.587, 0.886, 
                          0.701, -0.587, -0.114);
-mat3 mix_mat = mat3(1.0, fring, fring, 
-                     0.0, 1.0, afacts , 
-                     0.0, afacts, 1.0);
+
 void main()
 {
     float phase = floor(vTexCoord.x*SourceSize.x)*PI*0.5 + mod(floor(vTexCoord.y*SourceSize.y)*0.6667,2.0)*PI; 
@@ -127,9 +119,7 @@ void main()
     YUV = YUV*RGBYUV;
 
     YUV *= vec3(1.0, 0.5*sin(phase), 0.5*cos(phase));
-    YUV *= mix_mat;
-    //YUV *= vec3(1.0, sin(phase), cos(phase));
-
+   
     float signal = YUV.x + YUV.y + YUV.z;   
     FragColor = vec4(vec3(signal), 1.0);
     
