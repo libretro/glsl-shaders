@@ -10,7 +10,7 @@
 #pragma parameter LUMA_CUTOFF "Luma Cut-off" 0.04 0.0 1.0 0.01
 #pragma parameter stat_ph "Dot Crawl On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter dummy " [ System Specific Tweaks] " 0.0 0.0 0.0 0.0
-#pragma parameter pi_mod "Phase Horizontal Degrees" 90.0 1.0 360.0 1.0
+#pragma parameter pi_mod "Phase-Horiz. Angle" 90.0 1.0 360.0 1.0
 #pragma parameter vert_scal "Phase-Vertical Scale" 0.6667 0.0 1.0 0.16666
 
 #if defined(VERTEX)
