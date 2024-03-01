@@ -118,7 +118,7 @@ void main()
     vec3 YUV = COMPAT_TEXTURE(Source,vTexCoord).rgb; 
     YUV = YUV*RGBYUV;
 
-    YUV *= vec3(1.0, 0.5*sin(phase), 0.5*cos(phase));
+    YUV *= vec3(ntsc_bri, 0.5*sin(phase), 0.5*cos(phase));
    
     float signal = YUV.x + YUV.y + YUV.z;   
     FragColor = vec4(vec3(signal), 1.0);
