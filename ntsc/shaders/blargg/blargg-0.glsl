@@ -1,7 +1,7 @@
 #version 110
 
 #pragma parameter ntsc_bri "Brightness" 1.0 0.0 2.0 0.01
-#pragma parameter ntsc_hue "Hue" -0.15 -1.0 6.0 0.05
+#pragma parameter ntsc_hue "Hue" 0.0 -1.0 6.0 0.05
 
 #if defined(VERTEX)
 
@@ -94,31 +94,35 @@ COMPAT_VARYING vec4 TEX0;
 uniform COMPAT_PRECISION float ntsc_bri;
 uniform COMPAT_PRECISION float ntsc_hue;
 uniform COMPAT_PRECISION float stat_ph ;
+uniform COMPAT_PRECISION float pi_mod ;
 
 #else
 #define ntsc_bri 1.0
 #define ntsc_hue 0.0
 #define  stat_ph 1.0
+#define  pi_mod 90.0
 #endif
 
 #define PI 3.1415926 
 
-// Colorspace conversion matrix for RGB-to-YUV
-// All modern CRTs use YUV instead of YIQ
-const mat3 RGBYUV = mat3(0.299, 0.587, 0.114,
-                        -0.299, -0.587, 0.886, 
-                         0.701, -0.587, -0.114);
+// Colorspace conversion matrix for RGB-to-YIQ
+const mat3 RGBYIQ = mat3(
+      0.2989, 0.5870, 0.1140,
+      0.5959, -0.2744, -0.3216,
+      0.2115, -0.5229, 0.3114
+);
+#define onedeg 0.017453
 
 void main()
 {
-    float phase = floor(vTexCoord.x*SourceSize.x)*PI*0.5 + mod(floor(vTexCoord.y*SourceSize.y)*0.6667,2.0)*PI; 
+    float phase = floor(vTexCoord.x*SourceSize.x)*pi_mod*onedeg + mod(floor(vTexCoord.y*SourceSize.y)*0.6667,2.0)*PI; 
     phase += ntsc_hue;
     if (stat_ph == 1.0) phase += sin(mod(float(FrameCount),2.0))*PI;
     
     vec3 YUV = COMPAT_TEXTURE(Source,vTexCoord).rgb; 
-    YUV = YUV*RGBYUV;
+    YUV = YUV*RGBYIQ;
 
-    YUV *= vec3(ntsc_bri, 0.5*sin(phase), 0.5*cos(phase));
+    YUV *= vec3(ntsc_bri, cos(phase)/1.14, sin(phase)/2.03);
    
     float signal = YUV.x + YUV.y + YUV.z;   
     FragColor = vec4(vec3(signal), 1.0);
