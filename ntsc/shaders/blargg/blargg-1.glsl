@@ -9,7 +9,9 @@
 #pragma parameter afacts "Artifacts" 0.0 0.0 1.0 0.05
 #pragma parameter LUMA_CUTOFF "Luma Cut-off" 0.04 0.0 1.0 0.01
 #pragma parameter stat_ph "Dot Crawl On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter pi_mod "PI Degrees" 90.0 1.0 360.0 1.0
+#pragma parameter dummy " [ System Specific Tweaks] " 0.0 0.0 0.0 0.0
+#pragma parameter pi_mod "Phase Horizontal Degrees" 90.0 1.0 360.0 1.0
+#pragma parameter vert_scal "Phase-Vertical Scale" 0.6667 0.0 1.0 0.16666
 
 #if defined(VERTEX)
 
@@ -109,6 +111,7 @@ uniform COMPAT_PRECISION float fring ;
 uniform COMPAT_PRECISION float afacts ;
 uniform COMPAT_PRECISION float kernel_half ;
 uniform COMPAT_PRECISION float pi_mod ;
+uniform COMPAT_PRECISION float vert_scal ;
 
 #else
 #define ntsc_sat 1.0
@@ -121,6 +124,7 @@ uniform COMPAT_PRECISION float pi_mod ;
 #define  afacts 0.4
 #define  kernel_half 16.0
 #define pi_mod 90.0
+#define vert_scal 0.6667
 #endif
 
 #define PI 3.1415926
@@ -211,7 +215,7 @@ if (fract(float(n)/4.0) == 0.0)
 
 for (int n=-i; n<i; n++) {
     vec2 pos = uv + vec2(float(n) / size.x, 0.0);
-    float phase = (floor(vTexCoord.x*SourceSize.x)+float(n))*pi_mod*onedeg + mod(floor(vTexCoord.y*SourceSize.y)*0.6667,2.0)*PI; 
+    float phase = (floor(vTexCoord.x*SourceSize.x)+float(n))*pi_mod*onedeg + mod(floor(vTexCoord.y*SourceSize.y)*vert_scal,2.0)*PI; 
     if (stat_ph == 1.0) phase += sin(mod(float(FrameCount),2.0))*PI;
 
     float r = exp(cutoff*float(n)*float(n));
