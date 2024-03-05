@@ -1,7 +1,7 @@
 #version 110
 
 #pragma parameter ntsc_bri "Brightness" 1.0 0.0 2.0 0.01
-#pragma parameter ntsc_hue "Hue" 0.0 -1.0 6.0 0.05
+#pragma parameter ntsc_hue "Hue" 0.0 -1.0 6.3 0.05
 
 #if defined(VERTEX)
 
@@ -124,7 +124,7 @@ void main()
     vec3 YUV = COMPAT_TEXTURE(Source,vTexCoord).rgb; 
     YUV = YUV*RGBYIQ;
 
-    YUV *= vec3(ntsc_bri, cos(phase)/1.14, sin(phase)/2.03);
+    YUV *= vec3(ntsc_bri, cos(phase), sin(phase));
    
     float signal = YUV.x + YUV.y + YUV.z;   
     FragColor = vec4(vec3(signal), 1.0);
