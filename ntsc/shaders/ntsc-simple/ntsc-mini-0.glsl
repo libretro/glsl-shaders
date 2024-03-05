@@ -1,12 +1,5 @@
 #version 110
 
-/*
-ntsc-mini, composite shader based on actual ZX Spectrum RF images
-https://i.imgur.com/t51E3zt.jpeg
-DariuG @2024
-*/
-
-#pragma parameter ntsc_hue "NTSC Hue" 3.3 0.0 6.0 0.05
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -94,20 +87,14 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float crawl;
-uniform COMPAT_PRECISION float ntsc_hue;
-uniform COMPAT_PRECISION float pi_mod;
+uniform COMPAT_PRECISION float ph_mode;
 
 #else
-#define crawl 1.0
-#define ntsc_hue 0.0
-#define pi_mod 0.0
+#define ph_mode 0.0
+
 #endif
 
-// Encoder or Modulator
-// This pass converts RGB colors on iChannel0 to
-// a YIQ (NTSC) Composite signal.
-
+#define onedeg 0.017453
 #define PI   3.14159265358979323846
 #define TAU  6.28318530717958647693
 const mat3 RGBYUV = mat3(0.299, 0.587, 0.114,
@@ -115,17 +102,19 @@ const mat3 RGBYUV = mat3(0.299, 0.587, 0.114,
                          0.701, -0.587, -0.114);
 void main() {
 
-
 vec3 res = vec3(0.0);
-vec2 ps = vec2(SourceSize.z,0.0);
+float h_ph, v_ph = 0.0;
+if (ph_mode == 0.0) {h_ph = 90.0*onedeg; v_ph = PI*0.6667;}
+else if (ph_mode == 1.0) {h_ph = 110.0*onedeg; v_ph = PI;}
+else {h_ph = 90.0*onedeg; v_ph =PI;}
 
-float phase = (vTexCoord.x*SourceSize.x)*PI*pi_mod + mod(vTexCoord.y*SourceSize.y,2.0 )*PI;
-if (crawl == 1.0) phase += sin(mod(float(FrameCount),2.0))*PI;
+float phase = floor(vTexCoord.x*SourceSize.x)*h_ph + floor(vTexCoord.y*SourceSize.y)*v_ph;
+phase += sin(mod(float(FrameCount),2.0))*PI;
+phase += 0.1;
+res = COMPAT_TEXTURE(Source,vTexCoord).rgb*RGBYUV;
+res.gb *=0.5*vec2(cos(phase),sin(phase));
 
-res = COMPAT_TEXTURE(Source,vTexCoord ).rgb*RGBYUV;
-res *=vec3(1.0,sin(phase-ntsc_hue),cos(phase-ntsc_hue));
-
-float signal = dot(vec3(1.0,0.5,0.5),res);
+float signal = dot(vec3(1.0),res);
 
 FragColor.rgb = vec3(signal);
 }
