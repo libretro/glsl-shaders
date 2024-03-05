@@ -1,15 +1,9 @@
 #version 110
 
-/*
-ntsc-mini, composite shader based on actual ZX Spectrum RF images
-https://i.imgur.com/t51E3zt.jpeg
-DariuG @2024
-*/
+#pragma parameter ph_mode "Phase Mode" 0.0 0.0 2.0 1.0
+#pragma parameter Fl "Freq. Cutoff" 0.3 0.01 1.0 0.01
+#pragma parameter lpass "Chroma Low Pass" 0.1 0.0 1.0 0.01
 
-#pragma parameter crawl "Dot Crawl (Genesis off)" 0.0 0.0 1.0 1.0
-#pragma parameter Y_lp "Luma Low Pass (sharper)" 0.08 0.0 1.0 0.01
-#pragma parameter pi_mod "Pi mod. 1 degree-step/adjust hue" 0.649985 0.5 1.0 0.005555
-#pragma parameter dummy "Genesis 0.53" 0.0 0.0 0.0 0.0
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -97,59 +91,68 @@ COMPAT_VARYING vec4 TEX0;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float crawl;
-uniform COMPAT_PRECISION float Y_lp;
-uniform COMPAT_PRECISION float pi_mod;
+uniform COMPAT_PRECISION float ph_mode;
+uniform COMPAT_PRECISION float Fl;
+uniform COMPAT_PRECISION float lpass;
 
 #else
-#define crawl 1.0
-#define Y_lp 0.2
-#define pi_mod 0.5
+#define ph_mode 90.0
+#define Fl 90.0
+#define lpass 0.2
 #endif
 
 #define PI   3.14159265358979323846
 #define TAU  6.28318530717958647693
+#define s 1.0
+#define onedeg 0.017453
 
 const mat3 YUV2RGB = mat3(1.0, 0.0, 1.13983,
                           1.0, -0.39465, -0.58060,
                           1.0, 2.03211, 0.0);
 
-
-void main() 
+float kaizer (float N, float p)
 {
-vec2 dx = vec2(SourceSize.z,0.0);
-vec2 dy = vec2(0.0,SourceSize.w*0.5);
-vec3 res = vec3(0.0);
-float sum = 0.0;
-float sumc = 0.0;
+    // Compute sinc filter.
+    float k = sin(2.0 * Fl / s * (N - (p - 1.0) / 2.0));
+    return k;
+}
 
-// Comb-filter YC separation idea borrowed from ntsc-blastem
-for (int x=0; x<4; x++)
-    {
-        float n = float(x);
-        float w = exp(-Y_lp*n*n);
-        // add a lowpass to Luma too  
-        vec3 line = w*COMPAT_TEXTURE(Source,vTexCoord + n*dx).rgb;        
-        vec3 lineup = w*COMPAT_TEXTURE(Source,vTexCoord -dy + n*dx).rgb;        
-        sum += w;
-        // Comb-filter separate, idea borrowed from blastem and tweaked to ntsc-mini 
-        vec3 ymix = (line+lineup)*0.5;
-        res.r += ymix.r;
-    }
-    res.r /= sum;
-for (int a=0; a<9; a++)
-    {
-        float b = float(a);  
-        float phase = (vTexCoord.x*SourceSize.x + b)*PI*pi_mod + mod(vTexCoord.y*SourceSize.y,2.0)*PI ;
-        if (crawl == 1.0) phase += sin(mod(float(FrameCount),2.0))*PI;
-        vec3 carr = vec3(1.0,2.0*sin(phase),2.0*cos(phase));
+void main() {
 
-        vec3 cline   = COMPAT_TEXTURE(Source,vTexCoord -dx*3.0 + b*dx).rgb*carr;        
-        vec3 clineup = COMPAT_TEXTURE(Source,vTexCoord -dx*3.0 -dy + b*dx).rgb*carr;  
-        // Comb-filter separate, idea borrowed from blastem and tweaked to ntsc-mini 
-        vec3 iqmix = cline - (cline+clineup);
-        res.gb += iqmix.gb/7.0;
-    }
-    FragColor.rgb = res*YUV2RGB;
+vec3 yuv = vec3(0.0);
+vec2 ps = vec2(SourceSize.z,0.0);
+float sum = 0.0; float sumc = 0.0;
+
+for (int i=0; i<4; i++)
+{
+float p = float (i);
+vec2 pos = vTexCoord + ps*p -ps;
+// Window
+float w = kaizer(4.0,p);
+yuv.r += COMPAT_TEXTURE(Source,pos).r*w;
+sum += w;
+}
+yuv.r /= sum;
+
+for (int i=-4; i<4; i++)
+{
+float p = float (i);
+// Low-pass 
+float w = exp(-lpass*p*p);
+float h_ph, v_ph = 0.0;
+
+if (ph_mode == 0.0) {h_ph = 90.0*onedeg; v_ph = PI*0.6667;}
+else if (ph_mode == 1.0) {h_ph = 110.0*onedeg; v_ph = PI;}
+else {h_ph = 90.0*onedeg; v_ph =PI;}
+
+float phase = floor(vTexCoord.x*SourceSize.x + p)*h_ph + floor(vTexCoord.y*SourceSize.y)*v_ph;
+phase += sin(mod(float(FrameCount),2.0))*PI;
+vec2 qam = 2.5*vec2(cos(phase),sin(phase));
+yuv.gb += COMPAT_TEXTURE(Source,vTexCoord + ps*p).gb*qam*w;
+sumc += w;
+}
+yuv.gb /= sumc;
+
+FragColor.rgb = yuv*YUV2RGB;
 }
 #endif 

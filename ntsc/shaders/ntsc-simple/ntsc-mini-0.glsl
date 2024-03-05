@@ -1,9 +1,5 @@
 #version 110
 
-#pragma parameter ph_mode "Phase Mode" 0.0 0.0 2.0 1.0
-#pragma parameter Fl "Freq. Cutoff" 0.3 0.01 1.0 0.01
-#pragma parameter lpass "Chroma Low Pass" 0.1 0.0 1.0 0.01
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -92,67 +88,34 @@ COMPAT_VARYING vec4 TEX0;
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float ph_mode;
-uniform COMPAT_PRECISION float Fl;
-uniform COMPAT_PRECISION float lpass;
 
 #else
-#define ph_mode 90.0
-#define Fl 90.0
-#define lpass 0.2
+#define ph_mode 0.0
+
 #endif
 
+#define onedeg 0.017453
 #define PI   3.14159265358979323846
 #define TAU  6.28318530717958647693
-#define s 1.0
-#define onedeg 0.017453
-
-const mat3 YUV2RGB = mat3(1.0, 0.0, 1.13983,
-                          1.0, -0.39465, -0.58060,
-                          1.0, 2.03211, 0.0);
-
-float kaizer (float N, float p)
-{
-    // Compute sinc filter.
-    float k = sin(2.0 * Fl / s * (N - (p - 1.0) / 2.0));
-    return k;
-}
-
+const mat3 RGBYUV = mat3(0.299, 0.587, 0.114,
+                        -0.299, -0.587, 0.886, 
+                         0.701, -0.587, -0.114);
 void main() {
 
-vec3 yuv = vec3(0.0);
-vec2 ps = vec2(SourceSize.z,0.0);
-float sum = 0.0; float sumc = 0.0;
-
-for (int i=0; i<4; i++)
-{
-float p = float (i);
-vec2 pos = vTexCoord + ps*p -ps;
-// Window
-float w = kaizer(4.0,p);
-yuv.r += COMPAT_TEXTURE(Source,pos).r*w;
-sum += w;
-}
-yuv.r /= sum;
-
-for (int i=-4; i<4; i++)
-{
-float p = float (i);
-// Low-pass 
-float w = exp(-lpass*p*p);
+vec3 res = vec3(0.0);
 float h_ph, v_ph = 0.0;
-
 if (ph_mode == 0.0) {h_ph = 90.0*onedeg; v_ph = PI*0.6667;}
 else if (ph_mode == 1.0) {h_ph = 110.0*onedeg; v_ph = PI;}
 else {h_ph = 90.0*onedeg; v_ph =PI;}
 
-float phase = floor(vTexCoord.x*SourceSize.x + p)*h_ph + floor(vTexCoord.y*SourceSize.y)*v_ph;
+float phase = floor(vTexCoord.x*SourceSize.x)*h_ph + floor(vTexCoord.y*SourceSize.y)*v_ph;
 phase += sin(mod(float(FrameCount),2.0))*PI;
-vec2 qam = 2.5*vec2(cos(phase),sin(phase));
-yuv.gb += COMPAT_TEXTURE(Source,vTexCoord + ps*p).gb*qam*w;
-sumc += w;
-}
-yuv.gb /= sumc;
+phase += 0.1;
+res = COMPAT_TEXTURE(Source,vTexCoord).rgb*RGBYUV;
+res.gb *=0.5*vec2(cos(phase),sin(phase));
 
-FragColor.rgb = yuv*YUV2RGB;
+float signal = dot(vec3(1.0),res);
+
+FragColor.rgb = vec3(signal);
 }
 #endif 
