@@ -2,12 +2,12 @@
 
 #pragma parameter kernel_half "Kernel Half-Size (speed-up)" 16.0 1.0 16.0 1.0
 #pragma parameter ntsc_sat "Saturation" 2.0 0.0 6.0 0.05
-#pragma parameter ntsc_bleed "Bleed" 0.5 0.0 2.0 0.05
 #pragma parameter ntsc_res "Resolution" 2.0 0.0 2.0 0.05
 #pragma parameter ntsc_sharp "Sharpness" 0.3 0.0 1.0 0.05
 #pragma parameter fring "Fringing" 0.0 0.0 1.0 0.05
 #pragma parameter afacts "Artifacts" 0.0 0.0 1.0 0.05
-#pragma parameter LUMA_CUTOFF "Luma Cut-off" 0.04 0.0 1.0 0.01
+#pragma parameter ntsc_bleed "Chroma Bleed" 0.0 -0.75 2.0 0.05
+#pragma parameter LUMA_CUTOFF "Luma Cutoff" 0.04 0.0 1.0 0.005
 #pragma parameter stat_ph "Dot Crawl On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter dummy " [ System Specific Tweaks] " 0.0 0.0 0.0 0.0
 #pragma parameter pi_mod "Phase-Horiz. Angle" 90.0 1.0 360.0 1.0
@@ -128,10 +128,10 @@ uniform COMPAT_PRECISION float vert_scal ;
 #endif
 
 #define PI 3.1415926
-#define fringing_mid 0.4
-#define fringing_max 1.2
-#define artifacts_mid 0.4
-#define artifacts_max 1.2
+#define fringing_mid 1.0
+#define fringing_max 1.5
+#define artifacts_mid 1.0
+#define artifacts_max 1.5
 #define onedeg 0.017453
 
 // Colorspace conversion matrix for YIQ-to-RGB
@@ -185,7 +185,7 @@ for (int n=0; n<i*2+1; n++) { // 2*maxh + 1
         float kernel = 0.0;
  
 float fringing = 0.0; 
-if (fract(float(n)/4.0) == 0.0)
+if (fract(float(n+2)/4.0) == 0.0)
 {
     if(fring >0.0)
     fringing = -fring*(fringing_max-fringing_mid);
@@ -221,7 +221,7 @@ for (int n=-i; n<i; n++) {
     float r = exp(cutoff*float(n)*float(n));
 
 float artifacts = 0.0; 
-if (fract(float(n+i)/4.0) == 0.0)
+if (fract(float(n+i+2)/4.0) == 0.0)
 {
     if(afacts>0.0)
     artifacts= -afacts*(artifacts_max-artifacts_mid);
