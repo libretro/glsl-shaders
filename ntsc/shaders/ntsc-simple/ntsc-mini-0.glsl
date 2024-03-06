@@ -88,9 +88,11 @@ COMPAT_VARYING vec4 TEX0;
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float ph_mode;
+uniform COMPAT_PRECISION float d_crawl;
 
 #else
 #define ph_mode 0.0
+#define d_crawl 0.0
 
 #endif
 
@@ -109,7 +111,7 @@ else if (ph_mode == 1.0) {h_ph = 110.0*onedeg; v_ph = PI;}
 else {h_ph = 90.0*onedeg; v_ph =PI;}
 
 float phase = floor(vTexCoord.x*SourceSize.x)*h_ph + floor(vTexCoord.y*SourceSize.y)*v_ph;
-phase += sin(mod(float(FrameCount),2.0))*PI;
+if (d_crawl == 1.0) phase += sin(mod(float(FrameCount),2.0))*PI;
 phase += 0.1;
 res = COMPAT_TEXTURE(Source,vTexCoord).rgb*RGBYUV;
 res.gb *=0.5*vec2(cos(phase),sin(phase));
