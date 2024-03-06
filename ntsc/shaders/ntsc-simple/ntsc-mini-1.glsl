@@ -150,7 +150,7 @@ else {h_ph = 90.0*onedeg; v_ph =PI;}
 
 float phase = floor(vTexCoord.x*SourceSize.x + p)*h_ph + floor(vTexCoord.y*SourceSize.y)*v_ph;
 if (d_crawl == 1.0) phase += sin(mod(float(FrameCount),2.0))*PI;
-vec2 qam = 2.5*vec2(cos(phase),sin(phase));
+vec2 qam = 2.0*vec2(cos(phase),sin(phase));
 yuv.gb += COMPAT_TEXTURE(Source,vTexCoord + ps*p).gb*qam*w;
 sumc += w;
 }
