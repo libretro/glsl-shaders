@@ -1,8 +1,9 @@
 #version 110
 
 #pragma parameter ph_mode "Phase Mode" 0.0 0.0 2.0 1.0
-#pragma parameter Fl "Freq. Cutoff" 0.3 0.01 1.0 0.01
+#pragma parameter Fl "Freq. Cutoff" 0.2 0.01 1.0 0.01
 #pragma parameter lpass "Chroma Low Pass" 0.1 0.0 1.0 0.01
+#pragma parameter d_crawl "Dot Crawl" 0.0 0.0 1.0 1.0
 
 #if defined(VERTEX)
 
@@ -94,11 +95,13 @@ COMPAT_VARYING vec4 TEX0;
 uniform COMPAT_PRECISION float ph_mode;
 uniform COMPAT_PRECISION float Fl;
 uniform COMPAT_PRECISION float lpass;
+uniform COMPAT_PRECISION float d_crawl;
 
 #else
 #define ph_mode 90.0
 #define Fl 90.0
 #define lpass 0.2
+#define d_crawl 0.0
 #endif
 
 #define PI   3.14159265358979323846
@@ -146,7 +149,7 @@ else if (ph_mode == 1.0) {h_ph = 110.0*onedeg; v_ph = PI;}
 else {h_ph = 90.0*onedeg; v_ph =PI;}
 
 float phase = floor(vTexCoord.x*SourceSize.x + p)*h_ph + floor(vTexCoord.y*SourceSize.y)*v_ph;
-phase += sin(mod(float(FrameCount),2.0))*PI;
+if (d_crawl == 1.0) phase += sin(mod(float(FrameCount),2.0))*PI;
 vec2 qam = 2.5*vec2(cos(phase),sin(phase));
 yuv.gb += COMPAT_TEXTURE(Source,vTexCoord + ps*p).gb*qam*w;
 sumc += w;
