@@ -125,7 +125,6 @@ void main()
     YUV = YUV*RGBYIQ;
 
     YUV *= vec3(ntsc_bri, cos(phase), sin(phase));
-   
     float signal = YUV.x + YUV.y + YUV.z;   
     FragColor = vec4(vec3(signal), 1.0);
     

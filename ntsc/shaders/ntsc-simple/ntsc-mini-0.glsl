@@ -108,6 +108,7 @@ vec3 res = vec3(0.0);
 float h_ph, v_ph = 0.0;
 if (ph_mode == 0.0) {h_ph = 90.0*onedeg; v_ph = PI*0.6667;}
 else if (ph_mode == 1.0) {h_ph = 110.0*onedeg; v_ph = PI;}
+else if (ph_mode == 2.0) {h_ph = 132.0*onedeg; v_ph =PI;}
 else {h_ph = 90.0*onedeg; v_ph =PI;}
 
 float phase = floor(vTexCoord.x*SourceSize.x)*h_ph + floor(vTexCoord.y*SourceSize.y)*v_ph;
