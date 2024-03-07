@@ -1,6 +1,6 @@
 #version 110
 
-#pragma parameter ph_mode "Phase Mode" 0.0 0.0 2.0 1.0
+#pragma parameter ph_mode "Phase: default:MD" 2.0 0.0 3.0 1.0
 #pragma parameter Fl "Freq. Cutoff" 0.2 0.01 1.0 0.01
 #pragma parameter lpass "Chroma Low Pass" 0.1 0.0 1.0 0.01
 #pragma parameter d_crawl "Dot Crawl" 0.0 0.0 1.0 1.0
@@ -146,6 +146,7 @@ float h_ph, v_ph = 0.0;
 
 if (ph_mode == 0.0) {h_ph = 90.0*onedeg; v_ph = PI*0.6667;}
 else if (ph_mode == 1.0) {h_ph = 110.0*onedeg; v_ph = PI;}
+else if (ph_mode == 2.0) {h_ph = 132.0*onedeg; v_ph =PI;}
 else {h_ph = 90.0*onedeg; v_ph =PI;}
 
 float phase = floor(vTexCoord.x*SourceSize.x + p)*h_ph + floor(vTexCoord.y*SourceSize.y)*v_ph;
