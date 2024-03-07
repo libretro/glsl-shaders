@@ -2,16 +2,16 @@
 
 #pragma parameter kernel_half "Kernel Half-Size (speed-up)" 16.0 1.0 16.0 1.0
 #pragma parameter ntsc_sat "Saturation" 2.0 0.0 6.0 0.05
-#pragma parameter ntsc_res "Resolution" 2.0 0.0 2.0 0.05
-#pragma parameter ntsc_sharp "Sharpness" 0.3 0.0 1.0 0.05
+#pragma parameter ntsc_res "Resolution" 0.0 -1.0 1.0 0.05
+#pragma parameter ntsc_sharp "Sharpness" 0.1 -1.0 1.0 0.05
 #pragma parameter fring "Fringing" 0.0 0.0 1.0 0.05
 #pragma parameter afacts "Artifacts" 0.0 0.0 1.0 0.05
 #pragma parameter ntsc_bleed "Chroma Bleed" 0.0 -0.75 2.0 0.05
-#pragma parameter LUMA_CUTOFF "Luma Cutoff" 0.04 0.0 1.0 0.005
-#pragma parameter stat_ph "Dot Crawl On/Off" 1.0 0.0 1.0 1.0
+#pragma parameter LUMA_CUTOFF "Luma Cutoff" 0.2 0.0 1.0 0.005
+#pragma parameter stat_ph "Dot Crawl On/Off" 0.0 0.0 1.0 1.0
 #pragma parameter dummy " [ System Specific Tweaks] " 0.0 0.0 0.0 0.0
 #pragma parameter pi_mod "Phase-Horiz. Angle" 90.0 1.0 360.0 1.0
-#pragma parameter vert_scal "Phase-Vertical Scale" 0.6667 0.0 1.0 0.16666
+#pragma parameter vert_scal "Phase-Vertical Scale" 0.6667 0.0 1.0 0.05555
 
 #if defined(VERTEX)
 
@@ -128,10 +128,10 @@ uniform COMPAT_PRECISION float vert_scal ;
 #endif
 
 #define PI 3.1415926
-#define fringing_mid 1.0
-#define fringing_max 1.5
-#define artifacts_mid 1.0
-#define artifacts_max 1.5
+#define fringing_mid 0.8
+#define fringing_max 1.6
+#define artifacts_mid 0.4
+#define artifacts_max 0.6
 #define onedeg 0.017453
 
 // Colorspace conversion matrix for YIQ-to-RGB
