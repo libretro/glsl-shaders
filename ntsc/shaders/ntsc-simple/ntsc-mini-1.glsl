@@ -3,7 +3,7 @@
 #pragma parameter ph_mode "Phase: default:MD" 2.0 0.0 3.0 1.0
 #pragma parameter Fl "Freq. Cutoff" 0.2 0.01 1.0 0.01
 #pragma parameter lpass "Chroma Low Pass" 0.1 0.0 1.0 0.01
-#pragma parameter d_crawl "Dot Crawl" 0.0 0.0 1.0 1.0
+#pragma parameter d_crawl "Dot Crawl Strength" 0.0 0.0 1.0 0.05
 
 #if defined(VERTEX)
 
@@ -150,7 +150,7 @@ else if (ph_mode == 2.0) {h_ph = 132.0*onedeg; v_ph =PI;}
 else {h_ph = 90.0*onedeg; v_ph =PI;}
 
 float phase = floor(vTexCoord.x*SourceSize.x + p)*h_ph + floor(vTexCoord.y*SourceSize.y)*v_ph;
-if (d_crawl == 1.0) phase += sin(mod(float(FrameCount),2.0))*PI;
+phase += d_crawl *sin(mod(float(FrameCount/2),2.0))*PI;
 vec2 qam = 2.0*vec2(cos(phase),sin(phase));
 yuv.gb += COMPAT_TEXTURE(Source,vTexCoord + ps*p).gb*qam*w;
 sumc += w;
