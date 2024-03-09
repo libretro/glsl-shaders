@@ -112,7 +112,7 @@ else if (ph_mode == 2.0) {h_ph = 132.0*onedeg; v_ph =PI;}
 else {h_ph = 90.0*onedeg; v_ph =PI;}
 
 float phase = floor(vTexCoord.x*SourceSize.x)*h_ph + floor(vTexCoord.y*SourceSize.y)*v_ph;
-if (d_crawl == 1.0) phase += sin(mod(float(FrameCount),2.0))*PI;
+phase += d_crawl *sin(mod(float(FrameCount/2),2.0))*PI;
 phase += 0.1;
 res = COMPAT_TEXTURE(Source,vTexCoord).rgb*RGBYUV;
 res.gb *=0.5*vec2(cos(phase),sin(phase));
