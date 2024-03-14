@@ -1,9 +1,8 @@
 #version 110
 
-#pragma parameter ph_mode "Phase: default:MD" 2.0 0.0 3.0 1.0
+#pragma parameter ph_mode "Phase: default:MD, 3:NES" 2.0 0.0 4.0 1.0
 #pragma parameter Fl "Freq. Cutoff" 0.2 0.01 1.0 0.01
 #pragma parameter lpass "Chroma Low Pass" 0.1 0.0 1.0 0.01
-#pragma parameter comb_f "Chroma Comb Filter" 0.6 0.0 1.0 0.05
 #pragma parameter d_crawl "Dot Crawl Strength" 0.15 0.0 1.0 0.05
 
 #if defined(VERTEX)
@@ -97,19 +96,17 @@ uniform COMPAT_PRECISION float ph_mode;
 uniform COMPAT_PRECISION float Fl;
 uniform COMPAT_PRECISION float lpass;
 uniform COMPAT_PRECISION float d_crawl;
-uniform COMPAT_PRECISION float comb_f;
 
 #else
 #define ph_mode 90.0
 #define Fl 90.0
 #define lpass 0.2
-#define comb_f 0.2
 #define d_crawl 0.0
 #endif
 
 #define PI   3.14159265358979323846
 #define TAU  6.28318530717958647693
-#define s 1.0
+#define s 4.0
 #define onedeg 0.017453
 
 const mat3 YUV2RGB = mat3(1.0, 0.0, 1.13983,
@@ -127,7 +124,6 @@ void main() {
 
 vec3 yuv = vec3(0.0);
 vec2 ps = vec2(SourceSize.z,0.0);
-vec2 py = vec2(0.0,SourceSize.w*0.5);
 float sum = 0.0; float sumc = 0.0;
 
 
@@ -144,7 +140,6 @@ sum += w;
 yuv.r /= sum;
 
 vec3 line = vec3(0.0);
-vec3 lineup = vec3(0.0);
 
 //chroma
 for (int i=-4; i<4; i++)
@@ -152,24 +147,23 @@ for (int i=-4; i<4; i++)
 float p = float (i);
 // Low-pass 
 float w = exp(-lpass*p*p);
-float h_ph, v_ph = 0.0;
 
-if (ph_mode == 0.0) {h_ph = 90.0*onedeg; v_ph = PI*0.6667;}
-else if (ph_mode == 1.0) {h_ph = 110.0*onedeg; v_ph = PI;}
-else if (ph_mode == 2.0) {h_ph = 132.0*onedeg; v_ph =PI;}
-else {h_ph = 90.0*onedeg; v_ph =PI;}
+float h_ph, v_ph, mod0 = 0.0;
+if      (ph_mode == 0.0) {h_ph =  90.0*onedeg; v_ph = PI*0.6667; mod0 = 2.0;}
+else if (ph_mode == 1.0) {h_ph = 110.0*onedeg; v_ph = PI;        mod0 = 2.0;}
+else if (ph_mode == 2.0) {h_ph = 132.0*onedeg; v_ph = PI;        mod0 = 2.0;}
+else if (ph_mode == 3.0) {h_ph =  60.0*onedeg; v_ph = PI*0.6667; mod0 = 3.0;}
+else                     {h_ph =  90.0*onedeg; v_ph = PI;        mod0 = 2.0;}
 
-float phase = floor(vTexCoord.x*SourceSize.x + p)*h_ph + floor(vTexCoord.y*SourceSize.y)*v_ph;
-float phaseup = floor(vTexCoord.x*SourceSize.x + p)*h_ph + floor(vTexCoord.y*SourceSize.y)*v_ph +PI;
+float phase = floor(vTexCoord.x*SourceSize.x + p)*h_ph + mod(floor(vTexCoord.y*SourceSize.y),mod0)*v_ph;
 
 phase += d_crawl *sin(mod(float(FrameCount/2),2.0))*PI;
 
 vec2 qam = 2.0*vec2(cos(phase),sin(phase));
-vec2 qamup = 2.0*vec2(cos(phaseup),sin(phaseup));
 
 line.gb = COMPAT_TEXTURE(Source,vTexCoord + ps*p).gb*qam*w;
-lineup.gb = COMPAT_TEXTURE(Source,vTexCoord + ps*p - py).gb*qamup*w;
-yuv.gb += line.gb - (line.gb + lineup.gb)*0.5*comb_f;
+
+yuv.gb += line.gb;
 sumc += w;
 }
 yuv.gb /= sumc;
