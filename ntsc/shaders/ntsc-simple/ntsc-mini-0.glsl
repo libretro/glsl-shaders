@@ -105,15 +105,19 @@ const mat3 RGBYUV = mat3(0.299, 0.587, 0.114,
 void main() {
 
 vec3 res = vec3(0.0);
-float h_ph, v_ph = 0.0;
-if (ph_mode == 0.0) {h_ph = 90.0*onedeg; v_ph = PI*0.6667;}
-else if (ph_mode == 1.0) {h_ph = 110.0*onedeg; v_ph = PI;}
-else if (ph_mode == 2.0) {h_ph = 132.0*onedeg; v_ph =PI;}
-else {h_ph = 90.0*onedeg; v_ph =PI;}
 
-float phase = floor(vTexCoord.x*SourceSize.x)*h_ph + floor(vTexCoord.y*SourceSize.y)*v_ph;
+float h_ph, v_ph, mod0 = 0.0;
+
+if      (ph_mode == 0.0) {h_ph =  90.0*onedeg; v_ph = PI*0.6667; mod0 = 2.0;}
+else if (ph_mode == 1.0) {h_ph = 110.0*onedeg; v_ph = PI;        mod0 = 2.0;}
+else if (ph_mode == 2.0) {h_ph = 132.0*onedeg; v_ph = PI;        mod0 = 2.0;}
+else if (ph_mode == 3.0) {h_ph =  60.0*onedeg; v_ph = PI*0.6667; mod0 = 3.0;}
+else                     {h_ph =  90.0*onedeg; v_ph = PI;        mod0 = 2.0;}
+
+float phase = floor(vTexCoord.x*SourceSize.x)*h_ph + mod(floor(vTexCoord.y*SourceSize.y),mod0)*v_ph;
 phase += d_crawl *sin(mod(float(FrameCount/2),2.0))*PI;
 phase += 0.1;
+
 res = COMPAT_TEXTURE(Source,vTexCoord).rgb*RGBYUV;
 res.gb *=0.5*vec2(cos(phase),sin(phase));
 
