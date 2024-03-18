@@ -1,9 +1,10 @@
 #version 110
 
-#pragma parameter ph_mode "Phase: 2:MD, 3:NES/SNES" 2.0 0.0 4.0 1.0
+#pragma parameter ph_mode "Phase: 1:ZX,2:MD,3:NES/SNES,4:Artifacts" 2.0 0.0 4.0 1.0
 #pragma parameter Fl "Freq. Cutoff" 0.2 0.01 1.0 0.01
 #pragma parameter lpass "Chroma Low Pass" 0.05 0.0 1.0 0.01
-#pragma parameter d_crawl "Artifacts Filter" 0.75 0.0 1.0 0.05
+#pragma parameter d_crawl "Artifacts Filter" 0.3 0.0 1.0 0.05
+#pragma parameter mini_hue "Hue" 0.0 -6.0 6.0 0.05
 
 #if defined(VERTEX)
 
@@ -96,12 +97,14 @@ uniform COMPAT_PRECISION float ph_mode;
 uniform COMPAT_PRECISION float Fl;
 uniform COMPAT_PRECISION float lpass;
 uniform COMPAT_PRECISION float d_crawl;
+uniform COMPAT_PRECISION float mini_hue;
 
 #else
 #define ph_mode 90.0
 #define Fl 90.0
 #define lpass 0.2
 #define d_crawl 0.0
+#define mini_hue 0.0
 #endif
 
 #define PI   3.14159265358979323846
@@ -153,10 +156,10 @@ if      (ph_mode == 0.0) {h_ph =  90.0*onedeg; v_ph = PI*0.6667; mod0 = 2.0;}
 else if (ph_mode == 1.0) {h_ph = 110.0*onedeg; v_ph = PI;        mod0 = 2.0;}
 else if (ph_mode == 2.0) {h_ph = 132.0*onedeg; v_ph = PI;        mod0 = 2.0;}
 else if (ph_mode == 3.0) {h_ph =  96.0*onedeg; v_ph = PI*0.6667; mod0 = 3.0;}
-else                     {h_ph =  90.0*onedeg; v_ph = PI;        mod0 = 2.0;}
+else                     {h_ph =  90.0*onedeg; v_ph = PI;        mod0 = 1.0;}
 
 float phase = floor(vTexCoord.x*SourceSize.x + p)*h_ph + mod(floor(vTexCoord.y*SourceSize.y),mod0)*v_ph;
-
+phase += mini_hue;
 phase += d_crawl *sin(mod(float(FrameCount),2.0))*PI;
 
 vec2 qam = 2.0*vec2(cos(phase),sin(phase));
