@@ -1,7 +1,7 @@
 #version 110
 
 #pragma parameter ph_mode "Phase: 1:ZX,2:MD,3:NES/SNES,4:Artifacts" 2.0 0.0 4.0 1.0
-#pragma parameter mini_sharp "Sharpness" 1.0 0.0 4.0 0.25
+#pragma parameter mini_sharp "Resolution" 1.0 0.1 4.0 0.1
 #pragma parameter Fl "Freq. Cutoff" 0.2 0.01 1.0 0.01
 #pragma parameter lpass "Chroma Low Pass" 0.05 0.0 1.0 0.01
 #pragma parameter d_crawl "Dot Crawl" 0.3 0.0 1.0 0.05
