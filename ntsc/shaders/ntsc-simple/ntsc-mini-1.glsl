@@ -1,10 +1,13 @@
 #version 110
 
 #pragma parameter ph_mode "Phase: 1:ZX,2:MD,3:NES/SNES,4:Artifacts" 2.0 0.0 4.0 1.0
+#pragma parameter mini_sharp "Resolution" 1.0 0.1 4.0 0.1
 #pragma parameter Fl "Freq. Cutoff" 0.2 0.01 1.0 0.01
 #pragma parameter lpass "Chroma Low Pass" 0.05 0.0 1.0 0.01
-#pragma parameter d_crawl "Artifacts Filter" 0.3 0.0 1.0 0.05
-#pragma parameter mini_hue "Hue" 0.0 -6.0 6.0 0.05
+#pragma parameter d_crawl "Dot Crawl" 0.3 0.0 1.0 0.05
+#pragma parameter mini_hue1 "Hue Shift I" 0.1 -6.0 6.0 0.05
+#pragma parameter mini_hue2 "Hue Shift Q" -0.1 -6.0 6.0 0.05
+#pragma parameter mini_sat "Saturation" 2.0 0.0 4.0 0.05
 
 #if defined(VERTEX)
 
@@ -98,6 +101,8 @@ uniform COMPAT_PRECISION float Fl;
 uniform COMPAT_PRECISION float lpass;
 uniform COMPAT_PRECISION float d_crawl;
 uniform COMPAT_PRECISION float mini_hue;
+uniform COMPAT_PRECISION float mini_sat;
+uniform COMPAT_PRECISION float mini_sharp;
 
 #else
 #define ph_mode 90.0
@@ -105,6 +110,8 @@ uniform COMPAT_PRECISION float mini_hue;
 #define lpass 0.2
 #define d_crawl 0.0
 #define mini_hue 0.0
+#define mini_sat 0.0
+#define mini_sharp 1.0
 #endif
 
 #define PI   3.14159265358979323846
@@ -134,7 +141,7 @@ float sum = 0.0; float sumc = 0.0;
 for (int i=0; i<4; i++)
 {
 float p = float (i);
-vec2 pos = vTexCoord + ps*p -ps;
+vec2 pos = vTexCoord + ps*p/mini_sharp -ps;
 // Window
 float w = kaizer(4.0,p);
 yuv.r += COMPAT_TEXTURE(Source,pos).r*w;
@@ -160,9 +167,9 @@ else                     {h_ph =  90.0*onedeg; v_ph = PI;        mod0 = 1.0;}
 
 float phase = floor(vTexCoord.x*SourceSize.x + p)*h_ph + mod(floor(vTexCoord.y*SourceSize.y),mod0)*v_ph;
 phase += mini_hue;
-phase += d_crawl *sin(mod(float(FrameCount),2.0))*PI;
+phase += d_crawl *sin(mod(float(FrameCount/2),2.0))*PI;
 
-vec2 qam = 2.0*vec2(cos(phase),sin(phase));
+vec2 qam = mini_sat*vec2(cos(phase),sin(phase));
 
 line.gb = COMPAT_TEXTURE(Source,vTexCoord + ps*p).gb*qam*w;
 
