@@ -67,7 +67,7 @@ vec2 corn = min(pos, 1.0-pos);    // This is used to mask the rounded
   corn.x = 0.0002/corn.x;         // corners later on
   pos /= scale;
 
-vec2 dx = vec2(SourceSize.z,0.0);
+vec2 dx = vec2(SourceSize.z*0.75,0.0);
 float y = pos.y*SourceSize.y;
 
 // precalculated kaizer window filter
