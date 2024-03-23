@@ -72,10 +72,8 @@ float y = pos.y*SourceSize.y;
 
 // precalculated kaizer window filter
 vec3 res = vec3(0.0);
-res += texture2D(Texture,pos - 2.0*dx).rgb*-0.217;
-res += texture2D(Texture,pos -dx).rgb*0.2;
-res += texture2D(Texture,pos ).rgb*0.582;
-res /= 0.5659;
+res += texture2D(Texture,pos -dx).rgb*-0.26565;
+res += texture2D(Texture,pos ).rgb*1.26565;
 
 vec3 clean = res;
 float w = dot(vec3(0.15),res);
