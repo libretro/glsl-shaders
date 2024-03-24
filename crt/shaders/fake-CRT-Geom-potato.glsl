@@ -68,12 +68,14 @@ vec2 corn = min(pos, 1.0-pos);    // This is used to mask the rounded
   pos /= scale;
 
 vec2 dx = vec2(SourceSize.z*0.75,0.0);
+vec2 dy = vec2(0.0,SourceSize.w*0.5);
 float y = pos.y*SourceSize.y;
 
 // precalculated kaizer window filter
 vec3 res = vec3(0.0);
 res += texture2D(Texture,pos -dx).rgb*-0.26565;
-res += texture2D(Texture,pos ).rgb*1.26565;
+res += texture2D(Texture,pos -dy).rgb*-0.26565;
+res += texture2D(Texture,pos ).rgb*1.5313;
 
 vec3 clean = res;
 float w = dot(vec3(0.15),res);
