@@ -1,4 +1,4 @@
-shaders = 4
+shaders = 10
 
 parameters = "SIGMA;BLUR_RADIUS"
 SIGMA = 1.0
@@ -75,7 +75,8 @@ float_framebuffer9 = true
 wrap_mode9 = mirrored_repeat
 alias9 = "Blurred"
 
-shader10 = shaders/blur_fill/compose.glsl
+# shader10 = shaders/blur_fill/compose.glsl
+shader10 = ../stock.glsl
 filter_linear10 = true
 scale_type10 = viewport
 scale10 = 1.0

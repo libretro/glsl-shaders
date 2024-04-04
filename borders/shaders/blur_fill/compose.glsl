@@ -1,8 +1,8 @@
 #version 450
 
 /*
-    Blur fill v1.9 by fishku
-    Copyright (C) 2023
+    Blur fill v1.10 by fishku
+    Copyright (C) 2023-2024
     Public domain license (CC0)
 
     This shader preset allows cropping the image on any side, and filling the
@@ -27,6 +27,7 @@
     strength of the blur.
 
     Changelog:
+    v1.10: Port from Slang to GLSL with minor optimizations.
     v1.9: Add shift option from input transform library.
     v1.8: Add overscale option from crop and scale library.
     v1.7: Refactor for new scaling library. Add rotation support.
