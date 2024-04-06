@@ -8,7 +8,6 @@ shader0 = shaders/blur_fill/linearize_and_parameters.glsl
 scale_type0 = source
 scale0 = 1.0
 float_framebuffer0 = true
-alias0 = "Input"
 
 shader1 = ../blurs/shaders/gauss_4tap/gauss_2tap_h.glsl
 filter_linear1 = true
@@ -28,7 +27,6 @@ scale_type3 = source
 scale_x3 = 1.1
 scale_y3 = 1.1
 float_framebuffer3 = true
-alias3 = "Tiled"
 
 shader4 = ../blurs/shaders/dual_filter/downsample.glsl
 filter_linear4 = true
@@ -65,7 +63,6 @@ filter_linear9 = true
 scale_type9 = source
 scale9 = 2.0
 float_framebuffer9 = true
-alias9 = "Blurred"
 
 shader10 = shaders/blur_fill/compose.glsl
 filter_linear10 = true

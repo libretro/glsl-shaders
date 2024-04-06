@@ -254,13 +254,25 @@ COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 TEX0;
 
 uniform mat4 MVPMatrix;
-uniform COMPAT_PRECISION vec2 TextureSize;
+
+uniform COMPAT_PRECISION vec2 OrigInputSize;
+uniform COMPAT_PRECISION vec2 OrigTextureSize;
+
 uniform COMPAT_PRECISION vec2 InputSize;
-// uniform COMPAT_PRECISION vec2 TiledSize;
+uniform COMPAT_PRECISION vec2 TextureSize;
+
+// uniform COMPAT_PRECISION vec2 PassPrev10TextureSize;
+// #define InputSizePOT PassPrev10TextureSize
+// uniform COMPAT_PRECISION vec2 PassPrev10InputSize;
+// #define InputSize PassPrev10InputSize
+
+// uniform COMPAT_PRECISION vec2 PassPrev7TextureSize;
+// #define TiledSizePOT PassPrev7TextureSize
+// uniform COMPAT_PRECISION vec2 PassPrev7InputSize;
+// #define TiledSize PassPrev7InputSize
+
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION int Rotation;
-
-#define vTexCoord (TEX0.xy * TextureSize / InputSize)
 
 COMPAT_VARYING vec2 tx_coord;
 COMPAT_VARYING vec2 tx_per_px;
@@ -304,16 +316,16 @@ void main() {
 
     vec4 crop = vec4(OS_CROP_TOP, OS_CROP_LEFT, OS_CROP_BOTTOM, OS_CROP_RIGHT);
     vec2 scale_o2i = get_scale_o2i(
-        InputSize, OutputSize, crop, Rotation, CENTER_AFTER_CROPPING,
+        OrigInputSize, OutputSize, crop, Rotation, CENTER_AFTER_CROPPING,
         FORCE_ASPECT_RATIO, vec2(ASPECT_H, ASPECT_V),
         vec2(FORCE_INTEGER_SCALING_H, FORCE_INTEGER_SCALING_V), OVERSCALE,
         /* output_size_is_final_viewport_size = */ false);
     vec2 shift = vec2(SHIFT_H, SHIFT_V);
-    tx_coord = o2i(vTexCoord, InputSize, crop, shift, Rotation,
-                   CENTER_AFTER_CROPPING, scale_o2i);
+    tx_coord = o2i(TEX0.xy * TextureSize / InputSize, OrigInputSize, crop,
+                   shift, Rotation, CENTER_AFTER_CROPPING, scale_o2i);
     tx_per_px = scale_o2i / OutputSize;
-    tx_to_uv = 1.0 / InputSize;
-    input_corners = get_input_corners(InputSize, crop, Rotation);
+    tx_to_uv = 1.0 / OrigTextureSize;
+    input_corners = get_input_corners(OrigInputSize, crop, Rotation);
 }
 
 #elif defined(FRAGMENT)
@@ -339,23 +351,38 @@ out COMPAT_PRECISION vec4 FragColor;
 #define COMPAT_TEXTURE texture2D
 #endif
 
-uniform COMPAT_PRECISION vec2 TextureSize;
+uniform COMPAT_PRECISION vec2 OrigInputSize;
+uniform COMPAT_PRECISION vec2 OrigTextureSize;
+
 uniform COMPAT_PRECISION vec2 InputSize;
-uniform COMPAT_PRECISION vec2 TiledSize;
+uniform COMPAT_PRECISION vec2 TextureSize;
+
+// uniform COMPAT_PRECISION vec2 PassPrev10TextureSize;
+// #define InputSizePOT PassPrev10TextureSize
+// uniform COMPAT_PRECISION vec2 PassPrev10InputSize;
+// #define InputSize PassPrev10InputSize
+
+uniform COMPAT_PRECISION vec2 PassPrev7TextureSize;
+#define TiledSizePOT PassPrev7TextureSize
+uniform COMPAT_PRECISION vec2 PassPrev7InputSize;
+#define TiledSize PassPrev7InputSize
+
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION int Rotation;
 
-uniform sampler2D Input;
-uniform sampler2D Tiled;
-uniform sampler2D Blurred;
+uniform sampler2D PassPrev10Texture;
+#define Input PassPrev10Texture
+uniform sampler2D PassPrev7Texture;
+#define Tiled PassPrev7Texture
+uniform sampler2D Texture;
+#define Blurred Texture
+
 COMPAT_VARYING vec4 TEX0;
 
 COMPAT_VARYING vec2 tx_coord;
 COMPAT_VARYING vec2 tx_per_px;
 COMPAT_VARYING vec2 tx_to_uv;
 COMPAT_VARYING vec4 input_corners;
-
-#define vTexCoord (TEX0.xy * TextureSize / InputSize)
 
 #ifdef PARAMETER_UNIFORM
 // Own Settings
@@ -575,13 +602,16 @@ void main() {
         if (BLUR_RADIUS > 0.0) {
             // Sample blur.
             FragColor = vec4(
-                pow(texture(Blurred, vTexCoord).rgb, vec3(FILL_GAMMA)), 1.0);
+                pow(COMPAT_TEXTURE(Blurred, TEX0.xy).rgb, vec3(FILL_GAMMA)),
+                1.0);
         } else {
             // Sample tiled pattern.
             // Do a perfectly sharp (nearest neighbor) resampling.
             FragColor = vec4(
-                pow(texture(Tiled,
-                            (floor(vTexCoord * TiledSize.xy) + 0.5) / TiledSize)
+                pow(COMPAT_TEXTURE(Tiled, (floor(TEX0.xy * TextureSize /
+                                                 InputSize * TiledSize.xy) +
+                                           0.5) /
+                                              TiledSizePOT)
                         .rgb,
                     vec3(FILL_GAMMA)),
                 1.0);
@@ -590,9 +620,10 @@ void main() {
         // Sample original.
         if (FORCE_INTEGER_SCALING_H > 0.5 && FORCE_INTEGER_SCALING_V > 0.5) {
             // Do a perfectly sharp (nearest neighbor) sampling.
-            FragColor =
-                vec4(texture(Input, (floor(tx_coord) + 0.5) / InputSize).rgb,
-                     1.0);
+            FragColor = vec4(
+                COMPAT_TEXTURE(Input, (floor(tx_coord) + 0.5) / OrigTextureSize)
+                    .rgb,
+                1.0);
         } else {
             // Do a sharp anti-aliased interpolation.
             // Do not correct for gamma additionally because the input is

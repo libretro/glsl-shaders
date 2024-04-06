@@ -187,15 +187,15 @@ COMPAT_VARYING vec2 tx_coord;
 COMPAT_VARYING vec4 input_corners;
 
 uniform mat4 MVPMatrix;
-uniform COMPAT_PRECISION vec2 TextureSize;
-uniform COMPAT_PRECISION vec2 InputSize;
+
 uniform COMPAT_PRECISION vec2 OrigInputSize;
+// uniform COMPAT_PRECISION vec2 OrigTextureSize;
+
+uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION vec2 TextureSize;
+
 uniform COMPAT_PRECISION vec2 FinalViewportSize;
 uniform COMPAT_PRECISION int Rotation;
-
-#define vTexCoord (TEX0.xy * TextureSize / InputSize)
-// #define SourceSize vec4(TextureSize, 1.0 / TextureSize)
-// #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
 // Own settings
@@ -231,8 +231,13 @@ void main() {
         vec2(FORCE_INTEGER_SCALING_H, FORCE_INTEGER_SCALING_V), OVERSCALE,
         /* output_size_is_final_viewport_size = */ true);
     vec2 shift = vec2(SHIFT_H, SHIFT_V);
-    tx_coord = o2i(vTexCoord, OrigInputSize, crop, shift, Rotation,
-                   CENTER_AFTER_CROPPING, scale_o2i);
+
+    // TODO: why is this not correct?
+    // Non working version:
+    //    x = TEX0.xy * TextureSize / InputSize
+    //    input_size = OrigInputSize
+    tx_coord = o2i(TEX0.xy * TextureSize / InputSize, OrigInputSize, crop,
+                   shift, Rotation, CENTER_AFTER_CROPPING, scale_o2i);
     input_corners = get_input_corners(OrigInputSize, crop, Rotation);
 }
 
