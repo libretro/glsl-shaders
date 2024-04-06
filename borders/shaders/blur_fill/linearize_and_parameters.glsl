@@ -2,7 +2,7 @@
 // parameters for the preset.
 
 // clang-format off
-#pragma parameter BLUR_FILL_SETTINGS "=== Blur fill v1.9 settings ===" 0.0 0.0 1.0 1.0
+#pragma parameter BLUR_FILL_SETTINGS "=== Blur fill v1.10 settings ===" 0.0 0.0 1.0 1.0
 
 #pragma parameter SCALING_SETTINGS "= Scaling parameters =" 0.0 0.0 1.0 1.0
 #pragma parameter FORCE_ASPECT_RATIO "Force aspect ratio" 1.0 0.0 1.0 1.0
@@ -33,9 +33,19 @@
 #pragma parameter FILL_GAMMA "Background fill gamma adjustment" 1.4 0.5 2.0 0.1
 
 #pragma parameter SAMPLE_SIZE "No. of lines for rendering the blur" 16.0 1.0 1024.0 1.0
+// clang-format on
 
-#pragma parameter DUAL_FILTER_SETTINGS "=== Dual Filter Blur & Bloom v1.1 settings ===" 0.0 0.0 1.0 1.0
+// clang-format off
+#pragma parameter DUAL_FILTER_SETTINGS "=== Dual Filter Blur & Bloom v1.2 settings ===" 0.0 0.0 1.0 1.0
 #pragma parameter BLUR_RADIUS "Blur radius" 1.0 0.0 7.5 0.1
+// clang-format on
+
+// clang-format off
+#pragma parameter PIX_AA_SETTINGS "=== Pixel AA v1.5 settings ===" 0.0 0.0 1.0 1.0
+#pragma parameter PIX_AA_SHARP "Pixel AA sharpening amount" 1.5 0.0 2.0 0.05
+#pragma parameter PIX_AA_GAMMA "Enable gamma-correct blending" 1.0 0.0 1.0 1.0
+#pragma parameter PIX_AA_SUBPX "Enable subpixel AA" 0.0 0.0 1.0 1.0
+#pragma parameter PIX_AA_SUBPX_ORIENTATION "Subpixel layout (0=RGB, 1=RGB vert., 2=BGR, 3=BGR vert.)" 0.0 0.0 3.0 1.0
 // clang-format on
 
 #if defined(VERTEX)

@@ -163,32 +163,14 @@ vec2 i2o(vec2 x, vec2 input_size, vec2 output_size, vec4 crop, vec2 shift,
                              output_size_is_final_viewport_size));
 }
 
-// Scaling from unit output to pixel input space.
-vec2 stupid_get_scale_o2i(vec2 input_size, vec2 output_size) {
-    float scale_x, scale_y;
-    if (output_size.x / input_size.x < output_size.y / input_size.y) {
-        // Scale will be limited by width. Calc x scale, then derive y scale
-        // using aspect ratio.
-        scale_x = output_size.x / input_size.x;
-        scale_y = scale_x;
-    } else {
-        // Scale will be limited by height.
-        scale_y = output_size.y / input_size.y;
-        scale_x = scale_y;
-    }
-    return output_size.xy / vec2(scale_x, scale_y);
-}
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
 #define COMPAT_VARYING out
 #define COMPAT_ATTRIBUTE in
-#define COMPAT_TEXTURE texture
 #else
 #define COMPAT_VARYING varying
 #define COMPAT_ATTRIBUTE attribute
-#define COMPAT_TEXTURE texture2D
 #endif
 
 #ifdef GL_ES
@@ -205,21 +187,12 @@ COMPAT_VARYING vec2 tx_coord;
 COMPAT_VARYING vec4 input_corners;
 
 uniform mat4 MVPMatrix;
-// uniform COMPAT_PRECISION int FrameDirection;
-// uniform COMPAT_PRECISION int FrameCount;
-// uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
-
-// uniform COMPAT_PRECISION vec2 OrigTextureSize;
-// #define OriginalInputPOTSize OrigTextureSize
 uniform COMPAT_PRECISION vec2 OrigInputSize;
-#define OriginalInputSize OrigInputSize
+uniform COMPAT_PRECISION vec2 FinalViewportSize;
 uniform COMPAT_PRECISION int Rotation;
 
-uniform COMPAT_PRECISION vec2 FinalViewportSize;
-
-// compatibility #defines
 #define vTexCoord (TEX0.xy * TextureSize / InputSize)
 // #define SourceSize vec4(TextureSize, 1.0 / TextureSize)
 // #define OutSize vec4(OutputSize, 1.0 / OutputSize)
@@ -253,21 +226,14 @@ void main() {
 
     vec4 crop = vec4(OS_CROP_TOP, OS_CROP_LEFT, OS_CROP_BOTTOM, OS_CROP_RIGHT);
     vec2 scale_o2i = get_scale_o2i(
-        OriginalInputSize, FinalViewportSize.xy, crop, Rotation,
+        OrigInputSize, FinalViewportSize.xy, crop, Rotation,
         CENTER_AFTER_CROPPING, FORCE_ASPECT_RATIO, vec2(ASPECT_H, ASPECT_V),
         vec2(FORCE_INTEGER_SCALING_H, FORCE_INTEGER_SCALING_V), OVERSCALE,
         /* output_size_is_final_viewport_size = */ true);
     vec2 shift = vec2(SHIFT_H, SHIFT_V);
-    tx_coord = o2i(vTexCoord, OriginalInputSize, crop, shift, Rotation,
+    tx_coord = o2i(vTexCoord, OrigInputSize, crop, shift, Rotation,
                    CENTER_AFTER_CROPPING, scale_o2i);
-    input_corners = get_input_corners(OriginalInputSize, crop, Rotation);
-
-    // DEBUG
-    // input_corners = vec4(0.0, 0.0, 0.0, 0.0);
-    // vec2 scale_o2i = stupid_get_scale_o2i(
-    //     OriginalInputSize, FinalViewportSize.xy);
-    // tx_coord = o2i(vTexCoord, OriginalInputSize, vec4(0.0), vec2(0.0), 0,
-    //                1.0, scale_o2i);
+    input_corners = get_input_corners(OrigInputSize, crop, Rotation);
 }
 
 #elif defined(FRAGMENT)
@@ -293,16 +259,12 @@ out COMPAT_PRECISION vec4 FragColor;
 #define COMPAT_TEXTURE texture2D
 #endif
 
-// uniform COMPAT_PRECISION int FrameDirection;
-// uniform COMPAT_PRECISION int FrameCount;
-// uniform COMPAT_PRECISION vec2 OutputSize;
+#define Source Texture
+#define vTexCoord (TEX0.xy * TextureSize / InputSize)
+
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
-
-// uniform COMPAT_PRECISION vec2 OrigTextureSize;
 uniform COMPAT_PRECISION vec2 OrigInputSize;
-// #define OriginalInputPOTSize OrigTextureSize
-#define OriginalInputSize OrigInputSize
 uniform COMPAT_PRECISION int Rotation;
 
 uniform sampler2D Texture;
@@ -310,13 +272,6 @@ COMPAT_VARYING vec4 TEX0;
 
 COMPAT_VARYING vec2 tx_coord;
 COMPAT_VARYING vec4 input_corners;
-
-// compatibility #defines
-#define Source Texture
-#define vTexCoord (TEX0.xy * TextureSize / InputSize)
-
-// #define SourceSize vec4(TextureSize, 1.0 / TextureSize)
-// #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
 // Own settings
@@ -385,8 +340,7 @@ vec3 sample_mirrored_frame(vec2 tx_coord, vec4 input_corners) {
     vec2 extend_fill = get_rotated_size(vec2(EXTEND_H, EXTEND_V), Rotation);
     // Converts from texel space in the original input to unit space in the
     // Source pass.
-    vec2 sampling_conv_factor =
-        1.0 / OriginalInputSize * InputSize / TextureSize;
+    vec2 sampling_conv_factor = 1.0 / OrigInputSize * InputSize / TextureSize;
     if (tx_coord.x < input_corners.x) {
         if (extend_fill.x < 0.5) {
             return vec3(0.0);
@@ -531,10 +485,10 @@ void main() {
     // FragColor = vec4(vTexCoord.x, 0.0, 0.0, 1.0);
 
     // FragColor =
-    //     vec4(tx_coord.x > 0.0 ? (tx_coord.x >= OriginalInputSize.x ? 1.0 :
+    //     vec4(tx_coord.x > 0.0 ? (tx_coord.x >= OrigInputSize.x ? 1.0 :
     //     0.5)
     //                           : 0.0,
-    //          tx_coord.y > 0.0 ? (tx_coord.y >= OriginalInputSize.y ? 1.0 :
+    //          tx_coord.y > 0.0 ? (tx_coord.y >= OrigInputSize.y ? 1.0 :
     //          0.5)
     //                           : 0.0,
     //          0.0, 1.0);
