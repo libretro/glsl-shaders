@@ -2,7 +2,7 @@
 
 /*
     Pixel AA v1.5 by fishku
-    Copyright (C) 2023
+    Copyright (C) 2023-2024
     Public domain license (CC0)
 
     Features:
