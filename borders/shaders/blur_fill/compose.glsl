@@ -186,28 +186,6 @@ vec2 o2i(vec2 x, vec2 input_size, vec2 output_size, vec4 crop, vec2 shift,
                              output_size_is_final_viewport_size));
 }
 
-// From pixel input to unit output space.
-// Version where scale is passed in.
-vec2 i2o(vec2 x, vec2 input_size, vec4 crop, vec2 shift, int rotation,
-         float center_after_cropping, vec2 scale_o2i) {
-    return (x - get_input_center(input_size, crop, shift, rotation,
-                                 center_after_cropping)) /
-               scale_o2i +
-           0.49999;
-}
-
-// Version that computes scale.
-vec2 i2o(vec2 x, vec2 input_size, vec2 output_size, vec4 crop, vec2 shift,
-         int rotation, float center_after_cropping, float force_aspect_ratio,
-         vec2 aspect, vec2 force_integer_scaling, float overscale,
-         bool output_size_is_final_viewport_size) {
-    return i2o(x, input_size, crop, shift, rotation, center_after_cropping,
-               get_scale_o2i(input_size, output_size, crop, rotation,
-                             center_after_cropping, force_aspect_ratio, aspect,
-                             force_integer_scaling, overscale,
-                             output_size_is_final_viewport_size));
-}
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -245,9 +223,6 @@ COMPAT_VARYING vec2 tx_to_uv;
 COMPAT_VARYING vec4 input_corners;
 
 #ifdef PARAMETER_UNIFORM
-// Own Settings
-uniform COMPAT_PRECISION float FILL_GAMMA;
-uniform COMPAT_PRECISION float SAMPLE_SIZE;
 // From input transform library, scaling section
 uniform COMPAT_PRECISION float FORCE_ASPECT_RATIO;
 uniform COMPAT_PRECISION float ASPECT_H;
@@ -264,12 +239,6 @@ uniform COMPAT_PRECISION float OS_CROP_RIGHT;
 uniform COMPAT_PRECISION float SHIFT_H;
 uniform COMPAT_PRECISION float SHIFT_V;
 uniform COMPAT_PRECISION float CENTER_AFTER_CROPPING;
-// From dual filter blur
-uniform COMPAT_PRECISION float BLUR_RADIUS;
-// From pixel AA
-uniform COMPAT_PRECISION float PIX_AA_SHARP;
-uniform COMPAT_PRECISION float PIX_AA_SUBPX;
-uniform COMPAT_PRECISION float PIX_AA_SUBPX_ORIENTATION;
 #else
 #define WHATEVER 0.0
 // TODO
@@ -347,23 +316,9 @@ COMPAT_VARYING vec4 input_corners;
 #ifdef PARAMETER_UNIFORM
 // Own Settings
 uniform COMPAT_PRECISION float FILL_GAMMA;
-uniform COMPAT_PRECISION float SAMPLE_SIZE;
 // From input transform library, scaling section
-uniform COMPAT_PRECISION float FORCE_ASPECT_RATIO;
-uniform COMPAT_PRECISION float ASPECT_H;
-uniform COMPAT_PRECISION float ASPECT_V;
 uniform COMPAT_PRECISION float FORCE_INTEGER_SCALING_H;
 uniform COMPAT_PRECISION float FORCE_INTEGER_SCALING_V;
-uniform COMPAT_PRECISION float OVERSCALE;
-// From input transform library, cropping section
-uniform COMPAT_PRECISION float OS_CROP_TOP;
-uniform COMPAT_PRECISION float OS_CROP_BOTTOM;
-uniform COMPAT_PRECISION float OS_CROP_LEFT;
-uniform COMPAT_PRECISION float OS_CROP_RIGHT;
-// From input transform library, moving section
-uniform COMPAT_PRECISION float SHIFT_H;
-uniform COMPAT_PRECISION float SHIFT_V;
-uniform COMPAT_PRECISION float CENTER_AFTER_CROPPING;
 // From dual filter blur
 uniform COMPAT_PRECISION float BLUR_RADIUS;
 // From pixel AA
