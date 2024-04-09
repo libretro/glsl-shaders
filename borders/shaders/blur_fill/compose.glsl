@@ -160,7 +160,7 @@ vec2 get_scale_o2i(vec2 input_size, vec2 output_size, vec4 crop, int rotation,
             scale_x = floor(scale_x);
         }
     }
-    return output_size.xy / vec2(scale_x, scale_y);
+    return output_size / vec2(scale_x, scale_y);
 }
 
 // From unit output to pixel input space.
@@ -416,14 +416,14 @@ void main() {
         } else {
             // Sample tiled pattern.
             // Do a perfectly sharp (nearest neighbor) resampling.
-            FragColor = vec4(
-                pow(COMPAT_TEXTURE(Tiled, (floor(TEX0.xy * TextureSize /
-                                                 InputSize * TiledSize.xy) +
-                                           0.5) /
-                                              TiledSizePOT)
-                        .rgb,
-                    vec3(FILL_GAMMA)),
-                1.0);
+            FragColor =
+                vec4(pow(COMPAT_TEXTURE(Tiled, (floor(TEX0.xy * TextureSize /
+                                                      InputSize * TiledSize) +
+                                                0.5) /
+                                                   TiledSizePOT)
+                             .rgb,
+                         vec3(FILL_GAMMA)),
+                     1.0);
         }
     } else {
         // Sample original.

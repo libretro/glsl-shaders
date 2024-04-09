@@ -115,7 +115,7 @@ vec2 get_scale_o2i(vec2 input_size, vec2 output_size, vec4 crop, int rotation,
             scale_x = floor(scale_x);
         }
     }
-    return output_size.xy / vec2(scale_x, scale_y);
+    return output_size / vec2(scale_x, scale_y);
 }
 
 // From unit output to pixel input space.
@@ -208,9 +208,9 @@ void main() {
     TEX0.xy = TexCoord.xy;
     vec4 crop = vec4(OS_CROP_TOP, OS_CROP_LEFT, OS_CROP_BOTTOM, OS_CROP_RIGHT);
     tx_coord =
-        o2i(TEX0.xy * TextureSize / InputSize, OrigInputSize,
-            FinalViewportSize.xy, crop, vec2(SHIFT_H, SHIFT_V), Rotation,
-            CENTER_AFTER_CROPPING, FORCE_ASPECT_RATIO, vec2(ASPECT_H, ASPECT_V),
+        o2i(TEX0.xy * TextureSize / InputSize, OrigInputSize, FinalViewportSize,
+            crop, vec2(SHIFT_H, SHIFT_V), Rotation, CENTER_AFTER_CROPPING,
+            FORCE_ASPECT_RATIO, vec2(ASPECT_H, ASPECT_V),
             vec2(FORCE_INTEGER_SCALING_H, FORCE_INTEGER_SCALING_V), OVERSCALE,
             /* output_size_is_final_viewport_size = */ true);
     input_corners = get_input_corners(OrigInputSize, crop, Rotation);
