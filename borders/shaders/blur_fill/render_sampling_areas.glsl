@@ -193,8 +193,8 @@ uniform COMPAT_PRECISION float SHIFT_H;
 uniform COMPAT_PRECISION float SHIFT_V;
 uniform COMPAT_PRECISION float CENTER_AFTER_CROPPING;
 #else
-#define WHATEVER 0.0
 // TODO
+#define WHATEVER 0.0
 #endif
 
 void main() {
@@ -255,6 +255,7 @@ uniform COMPAT_PRECISION float SHIFT_H;
 uniform COMPAT_PRECISION float SHIFT_V;
 uniform COMPAT_PRECISION float CENTER_AFTER_CROPPING;
 #else
+// TODO
 #define WHATEVER 0.0
 #endif
 
@@ -268,33 +269,26 @@ int argmin(vec4 i) {
 
 // Returns a coordinate in [0, w) when repeating that interval (and optionally
 // mirroring).
-float mirrored_repeat(float w, float x) {
-    float phase = mod(x, w);
-    if (MIRROR_BLUR < 0.5) {
-        return phase;
-    }
-    int period = int(x / w);
-    return period % 2 == 1 != x > 0.0 ? phase : w - phase;
+float wrap(float w, float x) {
+    float m = mod(x, 2.0 * w);
+    float r = mix(m, w - abs(m - w), step(w, m));
+    return mix(mod(x, w), r, MIRROR_BLUR);
 }
 
 float extend_left(vec2 coord, vec4 input_corners) {
-    return input_corners.x +
-           mirrored_repeat(SAMPLE_SIZE, coord.x - input_corners.x);
+    return input_corners.x + wrap(SAMPLE_SIZE, coord.x - input_corners.x);
 }
 
 float extend_right(vec2 coord, vec4 input_corners) {
-    return input_corners.z -
-           mirrored_repeat(SAMPLE_SIZE, input_corners.z - coord.x);
+    return input_corners.z - wrap(SAMPLE_SIZE, input_corners.z - coord.x);
 }
 
 float extend_top(vec2 coord, vec4 input_corners) {
-    return input_corners.y +
-           mirrored_repeat(SAMPLE_SIZE, coord.y - input_corners.y);
+    return input_corners.y + wrap(SAMPLE_SIZE, coord.y - input_corners.y);
 }
 
 float extend_bottom(vec2 coord, vec4 input_corners) {
-    return input_corners.w -
-           mirrored_repeat(SAMPLE_SIZE, input_corners.w - coord.y);
+    return input_corners.w - wrap(SAMPLE_SIZE, input_corners.w - coord.y);
 }
 
 // This function samples in a very specific way which is the foundation for
@@ -312,6 +306,9 @@ vec3 sample_mirrored_frame(vec2 tx_coord, vec4 input_corners) {
     // Converts from texel space in the original input to unit space in the
     // Source pass.
     vec2 sampling_conv_factor = InputSize / (TextureSize * OrigInputSize);
+    // Sampling extrema to avoid bilinear interpolation artifacts near edges.
+    vec2 sampling_tx_min = vec2(0.5);
+    vec2 sampling_tx_max = OrigInputSize - 0.5;
     if (tx_coord.x < input_corners.x) {
         if (extend_fill.x < 0.5) {
             return vec3(0.0);
@@ -321,27 +318,31 @@ vec3 sample_mirrored_frame(vec2 tx_coord, vec4 input_corners) {
             if (extend_fill.y < 0.5) {
                 return vec3(0.0);
             }
-            return COMPAT_TEXTURE(Texture,
-                                  vec2(extend_left(tx_coord, input_corners),
-                                       extend_top(tx_coord, input_corners)) *
-                                      sampling_conv_factor)
+            return COMPAT_TEXTURE(
+                       Texture, clamp(vec2(extend_left(tx_coord, input_corners),
+                                           extend_top(tx_coord, input_corners)),
+                                      sampling_tx_min, sampling_tx_max) *
+                                    sampling_conv_factor)
                 .rgb;
         } else if (tx_coord.y < input_corners.w) {
             // Left extension
             return COMPAT_TEXTURE(
-                       Texture,
-                       vec2(extend_left(tx_coord, input_corners), tx_coord.y) *
-                           sampling_conv_factor)
+                       Texture, clamp(vec2(extend_left(tx_coord, input_corners),
+                                           tx_coord.y),
+                                      sampling_tx_min, sampling_tx_max) *
+                                    sampling_conv_factor)
                 .rgb;
         } else {
             // Bottom left corner extension
             if (extend_fill.y < 0.5) {
                 return vec3(0.0);
             }
-            return COMPAT_TEXTURE(Texture,
-                                  vec2(extend_left(tx_coord, input_corners),
-                                       extend_bottom(tx_coord, input_corners)) *
-                                      sampling_conv_factor)
+            return COMPAT_TEXTURE(
+                       Texture,
+                       clamp(vec2(extend_left(tx_coord, input_corners),
+                                  extend_bottom(tx_coord, input_corners)),
+                             sampling_tx_min, sampling_tx_max) *
+                           sampling_conv_factor)
                 .rgb;
         }
     } else if (tx_coord.x < input_corners.z) {
@@ -351,9 +352,10 @@ vec3 sample_mirrored_frame(vec2 tx_coord, vec4 input_corners) {
             }
             // Top extension
             return COMPAT_TEXTURE(
-                       Texture,
-                       vec2(tx_coord.x, extend_top(tx_coord, input_corners)) *
-                           sampling_conv_factor)
+                       Texture, clamp(vec2(tx_coord.x,
+                                           extend_top(tx_coord, input_corners)),
+                                      sampling_tx_min, sampling_tx_max) *
+                                    sampling_conv_factor)
                 .rgb;
         } else if (tx_coord.y < input_corners.w) {
             vec4 inner_corners =
@@ -362,7 +364,9 @@ vec3 sample_mirrored_frame(vec2 tx_coord, vec4 input_corners) {
             if (any(lessThan(tx_coord, inner_corners.xy)) ||
                 any(greaterThanEqual(tx_coord, inner_corners.zw))) {
                 // In frame band
-                return COMPAT_TEXTURE(Texture, tx_coord * sampling_conv_factor)
+                return COMPAT_TEXTURE(Texture, clamp(tx_coord, sampling_tx_min,
+                                                     sampling_tx_max) *
+                                                   sampling_conv_factor)
                     .rgb;
             }
             // Innermost -- mirrored repeat sampling from nearest side
@@ -374,24 +378,27 @@ vec3 sample_mirrored_frame(vec2 tx_coord, vec4 input_corners) {
                     // left
                     return COMPAT_TEXTURE(
                                Texture,
-                               vec2(extend_left(tx_coord, input_corners),
-                                    tx_coord.y) *
+                               clamp(vec2(extend_left(tx_coord, input_corners),
+                                          tx_coord.y),
+                                     sampling_tx_min, sampling_tx_max) *
                                    sampling_conv_factor)
                         .rgb;
                 case 1:
                     // right
                     return COMPAT_TEXTURE(
                                Texture,
-                               vec2(extend_right(tx_coord, input_corners),
-                                    tx_coord.y) *
+                               clamp(vec2(extend_right(tx_coord, input_corners),
+                                          tx_coord.y),
+                                     sampling_tx_min, sampling_tx_max) *
                                    sampling_conv_factor)
                         .rgb;
                 case 2:
                     // top
                     return COMPAT_TEXTURE(
                                Texture,
-                               vec2(tx_coord.x,
-                                    extend_top(tx_coord, input_corners)) *
+                               clamp(vec2(tx_coord.x,
+                                          extend_top(tx_coord, input_corners)),
+                                     sampling_tx_min, sampling_tx_max) *
                                    sampling_conv_factor)
                         .rgb;
                 case 3:
@@ -399,8 +406,10 @@ vec3 sample_mirrored_frame(vec2 tx_coord, vec4 input_corners) {
                     // bottom
                     return COMPAT_TEXTURE(
                                Texture,
-                               vec2(tx_coord.x,
-                                    extend_bottom(tx_coord, input_corners)) *
+                               clamp(
+                                   vec2(tx_coord.x,
+                                        extend_bottom(tx_coord, input_corners)),
+                                   sampling_tx_min, sampling_tx_max) *
                                    sampling_conv_factor)
                         .rgb;
             }
@@ -409,10 +418,12 @@ vec3 sample_mirrored_frame(vec2 tx_coord, vec4 input_corners) {
                 return vec3(0.0);
             }
             // Bottom extension
-            return COMPAT_TEXTURE(Texture,
-                                  vec2(tx_coord.x,
-                                       extend_bottom(tx_coord, input_corners)) *
-                                      sampling_conv_factor)
+            return COMPAT_TEXTURE(
+                       Texture,
+                       clamp(vec2(tx_coord.x,
+                                  extend_bottom(tx_coord, input_corners)),
+                             sampling_tx_min, sampling_tx_max) *
+                           sampling_conv_factor)
                 .rgb;
         }
     } else {
@@ -424,16 +435,20 @@ vec3 sample_mirrored_frame(vec2 tx_coord, vec4 input_corners) {
             if (extend_fill.y < 0.5) {
                 return vec3(0.0);
             }
-            return COMPAT_TEXTURE(Texture,
-                                  vec2(extend_right(tx_coord, input_corners),
-                                       extend_top(tx_coord, input_corners)) *
-                                      sampling_conv_factor)
+            return COMPAT_TEXTURE(
+                       Texture,
+                       clamp(vec2(extend_right(tx_coord, input_corners),
+                                  extend_top(tx_coord, input_corners)),
+                             sampling_tx_min, sampling_tx_max) *
+                           sampling_conv_factor)
                 .rgb;
         } else if (tx_coord.y < input_corners.w) {
             // Right extension
             return COMPAT_TEXTURE(
                        Texture,
-                       vec2(extend_right(tx_coord, input_corners), tx_coord.y) *
+                       clamp(vec2(extend_right(tx_coord, input_corners),
+                                  tx_coord.y),
+                             sampling_tx_min, sampling_tx_max) *
                            sampling_conv_factor)
                 .rgb;
         } else {
@@ -441,10 +456,12 @@ vec3 sample_mirrored_frame(vec2 tx_coord, vec4 input_corners) {
             if (extend_fill.y < 0.5) {
                 return vec3(0.0);
             }
-            return COMPAT_TEXTURE(Texture,
-                                  vec2(extend_right(tx_coord, input_corners),
-                                       extend_bottom(tx_coord, input_corners)) *
-                                      sampling_conv_factor)
+            return COMPAT_TEXTURE(
+                       Texture,
+                       clamp(vec2(extend_right(tx_coord, input_corners),
+                                  extend_bottom(tx_coord, input_corners)),
+                             sampling_tx_min, sampling_tx_max) *
+                           sampling_conv_factor)
                 .rgb;
         }
     }
