@@ -40,6 +40,64 @@
     v1.0: Initial release.
 */
 
+#if defined(VERTEX)
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING out
+#define COMPAT_ATTRIBUTE in
+#else
+#define COMPAT_VARYING varying
+#define COMPAT_ATTRIBUTE attribute
+#endif
+
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
+COMPAT_ATTRIBUTE vec4 VertexCoord;
+COMPAT_ATTRIBUTE vec4 TexCoord;
+COMPAT_VARYING vec4 TEX0;
+
+uniform mat4 MVPMatrix;
+
+uniform COMPAT_PRECISION vec2 OrigInputSize;
+uniform COMPAT_PRECISION vec2 OrigTextureSize;
+
+uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION vec2 TextureSize;
+
+uniform COMPAT_PRECISION vec2 OutputSize;
+uniform COMPAT_PRECISION int Rotation;
+
+COMPAT_VARYING vec2 tx_coord;
+COMPAT_VARYING vec2 tx_per_px;
+COMPAT_VARYING vec2 tx_to_uv;
+COMPAT_VARYING vec4 input_corners;
+
+#ifdef PARAMETER_UNIFORM
+// From input transform library, scaling section
+uniform COMPAT_PRECISION float FORCE_ASPECT_RATIO;
+uniform COMPAT_PRECISION float ASPECT_H;
+uniform COMPAT_PRECISION float ASPECT_V;
+uniform COMPAT_PRECISION float FORCE_INTEGER_SCALING_H;
+uniform COMPAT_PRECISION float FORCE_INTEGER_SCALING_V;
+uniform COMPAT_PRECISION float OVERSCALE;
+// From input transform library, cropping section
+uniform COMPAT_PRECISION float OS_CROP_TOP;
+uniform COMPAT_PRECISION float OS_CROP_BOTTOM;
+uniform COMPAT_PRECISION float OS_CROP_LEFT;
+uniform COMPAT_PRECISION float OS_CROP_RIGHT;
+// From input transform library, moving section
+uniform COMPAT_PRECISION float SHIFT_H;
+uniform COMPAT_PRECISION float SHIFT_V;
+uniform COMPAT_PRECISION float CENTER_AFTER_CROPPING;
+#else
+#define WHATEVER 0.0
+// TODO
+#endif
+
 /*
 The following code is copied from:
     Input transformation library v1.2 by fishku
@@ -185,64 +243,6 @@ vec2 o2i(vec2 x, vec2 input_size, vec2 output_size, vec4 crop, vec2 shift,
                              force_integer_scaling, overscale,
                              output_size_is_final_viewport_size));
 }
-
-#if defined(VERTEX)
-
-#if __VERSION__ >= 130
-#define COMPAT_VARYING out
-#define COMPAT_ATTRIBUTE in
-#else
-#define COMPAT_VARYING varying
-#define COMPAT_ATTRIBUTE attribute
-#endif
-
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
-COMPAT_ATTRIBUTE vec4 VertexCoord;
-COMPAT_ATTRIBUTE vec4 TexCoord;
-COMPAT_VARYING vec4 TEX0;
-
-uniform mat4 MVPMatrix;
-
-uniform COMPAT_PRECISION vec2 OrigInputSize;
-uniform COMPAT_PRECISION vec2 OrigTextureSize;
-
-uniform COMPAT_PRECISION vec2 InputSize;
-uniform COMPAT_PRECISION vec2 TextureSize;
-
-uniform COMPAT_PRECISION vec2 OutputSize;
-uniform COMPAT_PRECISION int Rotation;
-
-COMPAT_VARYING vec2 tx_coord;
-COMPAT_VARYING vec2 tx_per_px;
-COMPAT_VARYING vec2 tx_to_uv;
-COMPAT_VARYING vec4 input_corners;
-
-#ifdef PARAMETER_UNIFORM
-// From input transform library, scaling section
-uniform COMPAT_PRECISION float FORCE_ASPECT_RATIO;
-uniform COMPAT_PRECISION float ASPECT_H;
-uniform COMPAT_PRECISION float ASPECT_V;
-uniform COMPAT_PRECISION float FORCE_INTEGER_SCALING_H;
-uniform COMPAT_PRECISION float FORCE_INTEGER_SCALING_V;
-uniform COMPAT_PRECISION float OVERSCALE;
-// From input transform library, cropping section
-uniform COMPAT_PRECISION float OS_CROP_TOP;
-uniform COMPAT_PRECISION float OS_CROP_BOTTOM;
-uniform COMPAT_PRECISION float OS_CROP_LEFT;
-uniform COMPAT_PRECISION float OS_CROP_RIGHT;
-// From input transform library, moving section
-uniform COMPAT_PRECISION float SHIFT_H;
-uniform COMPAT_PRECISION float SHIFT_V;
-uniform COMPAT_PRECISION float CENTER_AFTER_CROPPING;
-#else
-#define WHATEVER 0.0
-// TODO
-#endif
 
 void main() {
     gl_Position = MVPMatrix * VertexCoord;
