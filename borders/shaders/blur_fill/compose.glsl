@@ -41,35 +41,10 @@
 */
 
 /*
+The following code is copied from:
     Input transformation library v1.2 by fishku
-    Copyright (C) 2023
-    Public domain license (CC0)
 
-    Apply cropping, scaling, and transformation operations to input viewport and
-    provide utility functions for coordinate mappings.
-
-    This file acts like a library and should be included in another shader to be
-    used. For example usages, see the border/blur_fill shaders.
-
-    It's recommended to use these functions in the vertex shader pass, and pass
-    the data to the fragment pass.
-
-    Features:
-    - Cropping on each side
-    - Centering of image after crop has been applied
-    - Additional translation in either direction
-    - Forcing of a certain aspect ratio
-    - Forcing of either vert. or horiz. integer scaling, or both
-    - Rotation support (0, 90, 180, 270 degrees) -- all "vertical" and
-      "horizontal" paramaters are transformed accordingly.
-    - Overscaling
-
-    Refactored from the version that used to be in the blur_fill shader.
-
-    Changelog:
-    v1.2: Rename to "input transform". Add translation option.
-    v1.1: Add overscaling option. Unify parameters.
-    v1.0: Initial conversion from blur_fill release. Add rotation support.
+See the original file for a full description.
 */
 
 vec2 get_rotated_size(vec2 x, int rotation) {
@@ -261,16 +236,6 @@ uniform COMPAT_PRECISION vec2 OrigTextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 
-// uniform COMPAT_PRECISION vec2 PassPrev10TextureSize;
-// #define InputSizePOT PassPrev10TextureSize
-// uniform COMPAT_PRECISION vec2 PassPrev10InputSize;
-// #define InputSize PassPrev10InputSize
-
-// uniform COMPAT_PRECISION vec2 PassPrev7TextureSize;
-// #define TiledSizePOT PassPrev7TextureSize
-// uniform COMPAT_PRECISION vec2 PassPrev7InputSize;
-// #define TiledSize PassPrev7InputSize
-
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION int Rotation;
 
@@ -357,11 +322,6 @@ uniform COMPAT_PRECISION vec2 OrigTextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 
-// uniform COMPAT_PRECISION vec2 PassPrev10TextureSize;
-// #define InputSizePOT PassPrev10TextureSize
-// uniform COMPAT_PRECISION vec2 PassPrev10InputSize;
-// #define InputSize PassPrev10InputSize
-
 uniform COMPAT_PRECISION vec2 PassPrev7TextureSize;
 #define TiledSizePOT PassPrev7TextureSize
 uniform COMPAT_PRECISION vec2 PassPrev7InputSize;
@@ -415,37 +375,12 @@ uniform COMPAT_PRECISION float PIX_AA_SUBPX_ORIENTATION;
 #endif
 
 /*
+The following code is copied from:
     Pixel AA v1.5 by fishku
-    Copyright (C) 2023-2024
-    Public domain license (CC0)
+See the original file for a full description.
 
-    Features:
-    - Sharp upscaling with anti-aliasing
-    - Subpixel upscaling
-    - Sharpness can be controlled
-    - Gamma correct blending
-    - Integer scales result in pixel-perfect scaling
-    - Can use bilinear filtering for max. performance
-
-    Inspired by:
-    https://www.shadertoy.com/view/MlB3D3
-    by d7samurai
-    and:
-    https://www.youtube.com/watch?v=d6tp43wZqps
-    by t3ssel8r
-
-    With sharpness = 1.0, using the same gamma-correct blending, and disabling
-    subpixel anti-aliasing, results are identical to the "pixellate" shader.
-
-    Changelog:
-    v1.5: Optimize for embedded devices.
-    v1.4: Enable subpixel sampling for all four pixel layout orientations,
-          including rotated screens.
-    v1.3: Account for screen rotation in subpixel sampling.
-    v1.2: Optimize and simplify algorithm. Enable sharpness < 1.0. Fix subpixel
-          sampling bug.
-    v1.1: Better subpixel sampling.
-    v1.0: Initial release.
+There are the following modifications:
+- Remove code for gamma correction.
 */
 
 // Similar to smoothstep, but has a configurable slope at x = 0.5.
@@ -457,17 +392,11 @@ vec2 slopestep(vec2 edge0, vec2 edge1, vec2 x, float slope) {
     return o - 0.5 * s * pow(2.0 * (o - s * x), vec2(slope));
 }
 
-float to_lin(float x) { return pow(x, 2.2); }
-vec3 to_lin(vec3 x) { return pow(x, vec3(2.2)); }
-
-float to_srgb(float x) { return pow(x, 1.0 / 2.2); }
-vec3 to_srgb(vec3 x) { return pow(x, vec3(1.0 / 2.2)); }
-
 // Function to get a pixel value, taking into consideration possible subpixel
 // interpolation.
 vec4 pixel_aa(sampler2D tex, vec2 tx_per_px, vec2 tx_to_uv, vec2 tx_coord,
-              float sharpness, bool gamma_correct, bool sample_subpx,
-              int subpx_orientation, int screen_rotation) {
+              float sharpness, bool sample_subpx, int subpx_orientation,
+              int screen_rotation) {
     float sharpness_upper = min(1.0, sharpness);
     vec2 sharp_lb = sharpness_upper * (0.5 - 0.5 * tx_per_px);
     vec2 sharp_ub = 1.0 - sharpness_upper * (1.0 - (0.5 + 0.5 * tx_per_px));
@@ -486,74 +415,21 @@ vec4 pixel_aa(sampler2D tex, vec2 tx_per_px, vec2 tx_to_uv, vec2 tx_coord,
 
         vec3 res;
         vec2 period, phase, offset;
-
-        if (gamma_correct) {
-            // Red
-            period = floor(tx_coord - sub_tx_offset - 0.5);
-            phase = tx_coord - sub_tx_offset - 0.5 - period;
-            offset = slopestep(sharp_lb, sharp_ub, phase, sharpness_lower);
-            res.r = to_srgb(mix(
-                mix(to_lin(COMPAT_TEXTURE(tex, (period + 0.5) * tx_to_uv).r),
-                    to_lin(COMPAT_TEXTURE(tex,
-                                          (period + vec2(1.5, 0.5)) * tx_to_uv)
-                               .r),
-                    offset.x),
-                mix(to_lin(COMPAT_TEXTURE(tex,
-                                          (period + vec2(0.5, 1.5)) * tx_to_uv)
-                               .r),
-                    to_lin(COMPAT_TEXTURE(tex, (period + 1.5) * tx_to_uv).r),
-                    offset.x),
-                offset.y));
-            // Green
-            period = floor(tx_coord - 0.5);
-            phase = tx_coord - 0.5 - period;
-            offset = slopestep(sharp_lb, sharp_ub, phase, sharpness_lower);
-            res.g = to_srgb(mix(
-                mix(to_lin(COMPAT_TEXTURE(tex, (period + 0.5) * tx_to_uv).g),
-                    to_lin(COMPAT_TEXTURE(tex,
-                                          (period + vec2(1.5, 0.5)) * tx_to_uv)
-                               .g),
-                    offset.x),
-                mix(to_lin(COMPAT_TEXTURE(tex,
-                                          (period + vec2(0.5, 1.5)) * tx_to_uv)
-                               .g),
-                    to_lin(COMPAT_TEXTURE(tex, (period + 1.5) * tx_to_uv).g),
-                    offset.x),
-                offset.y));
-            // Blue
-            period = floor(tx_coord + sub_tx_offset - 0.5);
-            phase = tx_coord + sub_tx_offset - 0.5 - period;
-            offset = slopestep(sharp_lb, sharp_ub, phase, sharpness_lower);
-            res.b = to_srgb(mix(
-                mix(to_lin(COMPAT_TEXTURE(tex, (period + 0.5) * tx_to_uv).b),
-                    to_lin(COMPAT_TEXTURE(tex,
-                                          (period + vec2(1.5, 0.5)) * tx_to_uv)
-                               .b),
-                    offset.x),
-                mix(to_lin(COMPAT_TEXTURE(tex,
-                                          (period + vec2(0.5, 1.5)) * tx_to_uv)
-                               .b),
-                    to_lin(COMPAT_TEXTURE(tex, (period + 1.5) * tx_to_uv).b),
-                    offset.x),
-                offset.y));
-        } else {
-            // Red
-            period = floor(tx_coord - sub_tx_offset - 0.5);
-            phase = tx_coord - sub_tx_offset - 0.5 - period;
-            offset = slopestep(sharp_lb, sharp_ub, phase, sharpness_lower);
-            res.r = COMPAT_TEXTURE(tex, (period + 0.5 + offset) * tx_to_uv).r;
-            // Green
-            period = floor(tx_coord - 0.5);
-            phase = tx_coord - 0.5 - period;
-            offset = slopestep(sharp_lb, sharp_ub, phase, sharpness_lower);
-            res.g = COMPAT_TEXTURE(tex, (period + 0.5 + offset) * tx_to_uv).g;
-            // Blue
-            period = floor(tx_coord + sub_tx_offset - 0.5);
-            phase = tx_coord + sub_tx_offset - 0.5 - period;
-            offset = slopestep(sharp_lb, sharp_ub, phase, sharpness_lower);
-            res.b = COMPAT_TEXTURE(tex, (period + 0.5 + offset) * tx_to_uv).b;
-        }
-
+        // Red
+        period = floor(tx_coord - sub_tx_offset - 0.5);
+        phase = tx_coord - sub_tx_offset - 0.5 - period;
+        offset = slopestep(sharp_lb, sharp_ub, phase, sharpness_lower);
+        res.r = COMPAT_TEXTURE(tex, (period + 0.5 + offset) * tx_to_uv).r;
+        // Green
+        period = floor(tx_coord - 0.5);
+        phase = tx_coord - 0.5 - period;
+        offset = slopestep(sharp_lb, sharp_ub, phase, sharpness_lower);
+        res.g = COMPAT_TEXTURE(tex, (period + 0.5 + offset) * tx_to_uv).g;
+        // Blue
+        period = floor(tx_coord + sub_tx_offset - 0.5);
+        phase = tx_coord + sub_tx_offset - 0.5 - period;
+        offset = slopestep(sharp_lb, sharp_ub, phase, sharpness_lower);
+        res.b = COMPAT_TEXTURE(tex, (period + 0.5 + offset) * tx_to_uv).b;
         return vec4(res, 1.0);
     } else {
         // The offset for interpolation is a periodic function with
@@ -573,26 +449,7 @@ vec4 pixel_aa(sampler2D tex, vec2 tx_per_px, vec2 tx_to_uv, vec2 tx_coord,
         // manually. Without it, we can make use of a single tap using bilinear
         // interpolation. The offsets are shifted back to the texel center
         // before sampling.
-        if (gamma_correct) {
-            return vec4(
-                to_srgb(mix(
-                    mix(to_lin(
-                            COMPAT_TEXTURE(tex, (period + 0.5) * tx_to_uv).rgb),
-                        to_lin(COMPAT_TEXTURE(
-                                   tex, (period + vec2(1.5, 0.5)) * tx_to_uv)
-                                   .rgb),
-                        offset.x),
-                    mix(to_lin(COMPAT_TEXTURE(
-                                   tex, (period + vec2(0.5, 1.5)) * tx_to_uv)
-                                   .rgb),
-                        to_lin(
-                            COMPAT_TEXTURE(tex, (period + 1.5) * tx_to_uv).rgb),
-                        offset.x),
-                    offset.y)),
-                1.0);
-        } else {
-            return COMPAT_TEXTURE(tex, (period + 0.5 + offset) * tx_to_uv);
-        }
+        return COMPAT_TEXTURE(tex, (period + 0.5 + offset) * tx_to_uv);
     }
 }
 
@@ -628,10 +485,9 @@ void main() {
             // Do a sharp anti-aliased interpolation.
             // Do not correct for gamma additionally because the input is
             // already in linear color space.
-            FragColor =
-                pixel_aa(Input, tx_per_px, tx_to_uv, tx_coord, PIX_AA_SHARP,
-                         /* gamma_correct = */ false, PIX_AA_SUBPX > 0.5,
-                         int(PIX_AA_SUBPX_ORIENTATION), Rotation);
+            FragColor = pixel_aa(Input, tx_per_px, tx_to_uv, tx_coord,
+                                 PIX_AA_SHARP, PIX_AA_SUBPX > 0.5,
+                                 int(PIX_AA_SUBPX_ORIENTATION), Rotation);
         }
     }
 }

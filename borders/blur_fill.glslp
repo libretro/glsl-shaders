@@ -1,4 +1,4 @@
-shaders = 4
+shaders = 12
 
 parameters = "SIGMA;BLUR_RADIUS"
 SIGMA = 1.0
