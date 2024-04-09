@@ -163,6 +163,10 @@ COMPAT_VARYING vec4 TEX0;
 
 COMPAT_VARYING vec2 tx_coord;
 COMPAT_VARYING vec4 input_corners;
+COMPAT_VARYING vec2 extend_fill;
+COMPAT_VARYING vec2 sampling_conv_factor;
+COMPAT_VARYING vec2 sampling_tx_min;
+COMPAT_VARYING vec2 sampling_tx_max;
 
 uniform mat4 MVPMatrix;
 
@@ -176,6 +180,8 @@ uniform COMPAT_PRECISION int Rotation;
 
 #ifdef PARAMETER_UNIFORM
 // Own settings
+uniform COMPAT_PRECISION float EXTEND_H;
+uniform COMPAT_PRECISION float EXTEND_V;
 // From input transform library, scaling section
 uniform COMPAT_PRECISION float FORCE_ASPECT_RATIO;
 uniform COMPAT_PRECISION float ASPECT_H;
@@ -208,6 +214,13 @@ void main() {
             vec2(FORCE_INTEGER_SCALING_H, FORCE_INTEGER_SCALING_V), OVERSCALE,
             /* output_size_is_final_viewport_size = */ true);
     input_corners = get_input_corners(OrigInputSize, crop, Rotation);
+    extend_fill = get_rotated_size(vec2(EXTEND_H, EXTEND_V), Rotation);
+    // Converts from texel space in the original input to unit space in the
+    // Source pass.
+    sampling_conv_factor = InputSize / (TextureSize * OrigInputSize);
+    // Sampling extrema to avoid bilinear interpolation artifacts near edges.
+    sampling_tx_min = vec2(0.5);
+    sampling_tx_max = OrigInputSize - 0.5;
 }
 
 #elif defined(FRAGMENT)
@@ -243,17 +256,15 @@ COMPAT_VARYING vec4 TEX0;
 
 COMPAT_VARYING vec2 tx_coord;
 COMPAT_VARYING vec4 input_corners;
+COMPAT_VARYING vec2 extend_fill;
+COMPAT_VARYING vec2 sampling_conv_factor;
+COMPAT_VARYING vec2 sampling_tx_min;
+COMPAT_VARYING vec2 sampling_tx_max;
 
 #ifdef PARAMETER_UNIFORM
 // Own settings
-uniform COMPAT_PRECISION float EXTEND_H;
-uniform COMPAT_PRECISION float EXTEND_V;
 uniform COMPAT_PRECISION float MIRROR_BLUR;
 uniform COMPAT_PRECISION float SAMPLE_SIZE;
-// From input transform library, moving section
-uniform COMPAT_PRECISION float SHIFT_H;
-uniform COMPAT_PRECISION float SHIFT_V;
-uniform COMPAT_PRECISION float CENTER_AFTER_CROPPING;
 #else
 // TODO
 #define WHATEVER 0.0
@@ -275,88 +286,70 @@ float wrap(float w, float x) {
     return mix(mod(x, w), r, MIRROR_BLUR);
 }
 
-float extend_left(vec2 coord, vec4 input_corners) {
+float extend_left(vec2 coord) {
     return input_corners.x + wrap(SAMPLE_SIZE, coord.x - input_corners.x);
 }
 
-float extend_right(vec2 coord, vec4 input_corners) {
+float extend_right(vec2 coord) {
     return input_corners.z - wrap(SAMPLE_SIZE, input_corners.z - coord.x);
 }
 
-float extend_top(vec2 coord, vec4 input_corners) {
+float extend_top(vec2 coord) {
     return input_corners.y + wrap(SAMPLE_SIZE, coord.y - input_corners.y);
 }
 
-float extend_bottom(vec2 coord, vec4 input_corners) {
+float extend_bottom(vec2 coord) {
     return input_corners.w - wrap(SAMPLE_SIZE, input_corners.w - coord.y);
 }
 
-// This function samples in a very specific way which is the foundation for
-// blurring later.
-// - If the sample coordinate is outside of the cropped input, Either black is
-// returned if blur extension is turned off, or a repeated pattern from the
-// sampling frame band is returned.
-// - If the coordinate is inside the cropped input and within the frame band
-// given by SAMPLE_SIZE, the original texture sample is returned.
-// - If the coordinate is further inside than the frame band, a mirrored
-// repeating sample is returned. The side of the frame that is sampled is given
-// by the one that is closest to the sampled point.
-vec3 sample_mirrored_frame(vec2 tx_coord, vec4 input_corners) {
-    vec2 extend_fill = get_rotated_size(vec2(EXTEND_H, EXTEND_V), Rotation);
-    // Converts from texel space in the original input to unit space in the
-    // Source pass.
-    vec2 sampling_conv_factor = InputSize / (TextureSize * OrigInputSize);
-    // Sampling extrema to avoid bilinear interpolation artifacts near edges.
-    vec2 sampling_tx_min = vec2(0.5);
-    vec2 sampling_tx_max = OrigInputSize - 0.5;
+vec4 get_tex(vec2 coord) {
+    return COMPAT_TEXTURE(
+        Texture,
+        clamp(coord, sampling_tx_min, sampling_tx_max) * sampling_conv_factor);
+}
+
+void main() {
+    // Samples the input in a very specific way which is the foundation for
+    // blurring later.
+    // - If the sample coordinate is outside of the cropped input, Either black
+    // is returned if blur extension is turned off, or a repeated pattern from
+    // the sampling frame band is returned.
+    // - If the coordinate is inside the cropped input and within the frame band
+    // given by SAMPLE_SIZE, the original texture sample is returned.
+    // - If the coordinate is further inside than the frame band, a mirrored
+    // repeating sample is returned. The side of the frame that is sampled is
+    // given by the one that is closest to the sampled point.
     if (tx_coord.x < input_corners.x) {
         if (extend_fill.x < 0.5) {
-            return vec3(0.0);
-        }
-        if (tx_coord.y < input_corners.y) {
+            FragColor = vec4(vec3(0.0), 1.0);
+        } else if (tx_coord.y < input_corners.y) {
             // Top left corner extension
             if (extend_fill.y < 0.5) {
-                return vec3(0.0);
+                FragColor = vec4(vec3(0.0), 1.0);
+            } else {
+                FragColor =
+                    get_tex(vec2(extend_left(tx_coord), extend_top(tx_coord)));
             }
-            return COMPAT_TEXTURE(
-                       Texture, clamp(vec2(extend_left(tx_coord, input_corners),
-                                           extend_top(tx_coord, input_corners)),
-                                      sampling_tx_min, sampling_tx_max) *
-                                    sampling_conv_factor)
-                .rgb;
         } else if (tx_coord.y < input_corners.w) {
             // Left extension
-            return COMPAT_TEXTURE(
-                       Texture, clamp(vec2(extend_left(tx_coord, input_corners),
-                                           tx_coord.y),
-                                      sampling_tx_min, sampling_tx_max) *
-                                    sampling_conv_factor)
-                .rgb;
+            FragColor = get_tex(vec2(extend_left(tx_coord), tx_coord.y));
         } else {
             // Bottom left corner extension
             if (extend_fill.y < 0.5) {
-                return vec3(0.0);
+                FragColor = vec4(vec3(0.0), 1.0);
+            } else {
+                FragColor = get_tex(
+                    vec2(extend_left(tx_coord), extend_bottom(tx_coord)));
             }
-            return COMPAT_TEXTURE(
-                       Texture,
-                       clamp(vec2(extend_left(tx_coord, input_corners),
-                                  extend_bottom(tx_coord, input_corners)),
-                             sampling_tx_min, sampling_tx_max) *
-                           sampling_conv_factor)
-                .rgb;
         }
     } else if (tx_coord.x < input_corners.z) {
         if (tx_coord.y < input_corners.y) {
             if (extend_fill.y < 0.5) {
-                return vec3(0.0);
+                FragColor = vec4(vec3(0.0), 1.0);
+            } else {
+                // Top extension
+                FragColor = get_tex(vec2(tx_coord.x, extend_top(tx_coord)));
             }
-            // Top extension
-            return COMPAT_TEXTURE(
-                       Texture, clamp(vec2(tx_coord.x,
-                                           extend_top(tx_coord, input_corners)),
-                                      sampling_tx_min, sampling_tx_max) *
-                                    sampling_conv_factor)
-                .rgb;
         } else if (tx_coord.y < input_corners.w) {
             vec4 inner_corners =
                 input_corners +
@@ -364,111 +357,68 @@ vec3 sample_mirrored_frame(vec2 tx_coord, vec4 input_corners) {
             if (any(lessThan(tx_coord, inner_corners.xy)) ||
                 any(greaterThanEqual(tx_coord, inner_corners.zw))) {
                 // In frame band
-                return COMPAT_TEXTURE(Texture, clamp(tx_coord, sampling_tx_min,
-                                                     sampling_tx_max) *
-                                                   sampling_conv_factor)
-                    .rgb;
-            }
-            // Innermost -- mirrored repeat sampling from nearest side
-            vec4 distances = vec4(
-                tx_coord.x - inner_corners.x, inner_corners.z - tx_coord.x,
-                tx_coord.y - inner_corners.y, inner_corners.w - tx_coord.y);
-            switch (argmin(distances)) {
-                case 0:
-                    // left
-                    return COMPAT_TEXTURE(
-                               Texture,
-                               clamp(vec2(extend_left(tx_coord, input_corners),
-                                          tx_coord.y),
-                                     sampling_tx_min, sampling_tx_max) *
-                                   sampling_conv_factor)
-                        .rgb;
-                case 1:
-                    // right
-                    return COMPAT_TEXTURE(
-                               Texture,
-                               clamp(vec2(extend_right(tx_coord, input_corners),
-                                          tx_coord.y),
-                                     sampling_tx_min, sampling_tx_max) *
-                                   sampling_conv_factor)
-                        .rgb;
-                case 2:
-                    // top
-                    return COMPAT_TEXTURE(
-                               Texture,
-                               clamp(vec2(tx_coord.x,
-                                          extend_top(tx_coord, input_corners)),
-                                     sampling_tx_min, sampling_tx_max) *
-                                   sampling_conv_factor)
-                        .rgb;
-                case 3:
-                default:
-                    // bottom
-                    return COMPAT_TEXTURE(
-                               Texture,
-                               clamp(
-                                   vec2(tx_coord.x,
-                                        extend_bottom(tx_coord, input_corners)),
-                                   sampling_tx_min, sampling_tx_max) *
-                                   sampling_conv_factor)
-                        .rgb;
+                FragColor = get_tex(tx_coord);
+            } else {
+                // Innermost -- mirrored repeat sampling from nearest side
+                vec4 distances = vec4(
+                    tx_coord.x - inner_corners.x, inner_corners.z - tx_coord.x,
+                    tx_coord.y - inner_corners.y, inner_corners.w - tx_coord.y);
+                switch (argmin(distances)) {
+                    case 0:
+                        // left
+                        FragColor =
+                            get_tex(vec2(extend_left(tx_coord), tx_coord.y));
+                        break;
+                    case 1:
+                        // right
+                        FragColor =
+                            get_tex(vec2(extend_right(tx_coord), tx_coord.y));
+                        break;
+                    case 2:
+                        // top
+                        FragColor =
+                            get_tex(vec2(tx_coord.x, extend_top(tx_coord)));
+                        break;
+                    case 3:
+                    default:
+                        // bottom
+                        FragColor =
+                            get_tex(vec2(tx_coord.x, extend_bottom(tx_coord)));
+                        break;
+                }
             }
         } else {
             if (extend_fill.y < 0.5) {
-                return vec3(0.0);
+                FragColor = vec4(vec3(0.0), 1.0);
+            } else {
+                // Bottom extension
+                FragColor = get_tex(vec2(tx_coord.x, extend_bottom(tx_coord)));
             }
-            // Bottom extension
-            return COMPAT_TEXTURE(
-                       Texture,
-                       clamp(vec2(tx_coord.x,
-                                  extend_bottom(tx_coord, input_corners)),
-                             sampling_tx_min, sampling_tx_max) *
-                           sampling_conv_factor)
-                .rgb;
         }
     } else {
         if (extend_fill.x < 0.5) {
-            return vec3(0.0);
-        }
-        if (tx_coord.y < input_corners.y) {
+            FragColor = vec4(vec3(0.0), 1.0);
+        } else if (tx_coord.y < input_corners.y) {
             // Top right corner extension
             if (extend_fill.y < 0.5) {
-                return vec3(0.0);
+                FragColor = vec4(vec3(0.0), 1.0);
+            } else {
+                FragColor =
+                    get_tex(vec2(extend_right(tx_coord), extend_top(tx_coord)));
             }
-            return COMPAT_TEXTURE(
-                       Texture,
-                       clamp(vec2(extend_right(tx_coord, input_corners),
-                                  extend_top(tx_coord, input_corners)),
-                             sampling_tx_min, sampling_tx_max) *
-                           sampling_conv_factor)
-                .rgb;
         } else if (tx_coord.y < input_corners.w) {
             // Right extension
-            return COMPAT_TEXTURE(
-                       Texture,
-                       clamp(vec2(extend_right(tx_coord, input_corners),
-                                  tx_coord.y),
-                             sampling_tx_min, sampling_tx_max) *
-                           sampling_conv_factor)
-                .rgb;
+            FragColor = get_tex(vec2(extend_right(tx_coord), tx_coord.y));
         } else {
             // Bottom right corner extension
             if (extend_fill.y < 0.5) {
-                return vec3(0.0);
+                FragColor = vec4(vec3(0.0), 1.0);
+            } else {
+                FragColor = get_tex(
+                    vec2(extend_right(tx_coord), extend_bottom(tx_coord)));
             }
-            return COMPAT_TEXTURE(
-                       Texture,
-                       clamp(vec2(extend_right(tx_coord, input_corners),
-                                  extend_bottom(tx_coord, input_corners)),
-                             sampling_tx_min, sampling_tx_max) *
-                           sampling_conv_factor)
-                .rgb;
         }
     }
-}
-
-void main() {
-    FragColor = vec4(sample_mirrored_frame(tx_coord, input_corners), 1.0);
 }
 
 #endif
