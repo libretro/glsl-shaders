@@ -285,7 +285,6 @@ out COMPAT_PRECISION vec4 FragColor;
 #define COMPAT_TEXTURE texture2D
 #endif
 
-uniform COMPAT_PRECISION vec2 OrigInputSize;
 uniform COMPAT_PRECISION vec2 OrigTextureSize;
 
 uniform COMPAT_PRECISION vec2 InputSize;
@@ -296,7 +295,6 @@ uniform COMPAT_PRECISION vec2 PassPrev7TextureSize;
 uniform COMPAT_PRECISION vec2 PassPrev7InputSize;
 #define TiledSize PassPrev7InputSize
 
-uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION int Rotation;
 
 uniform sampler2D PassPrev10Texture;
@@ -349,9 +347,8 @@ vec2 slopestep(vec2 edge0, vec2 edge1, vec2 x, float slope) {
 
 // Function to get a pixel value, taking into consideration possible subpixel
 // interpolation.
-vec4 pixel_aa(sampler2D tex, vec2 tx_per_px, vec2 tx_to_uv, vec2 tx_coord,
-              float sharpness, bool sample_subpx, int subpx_orientation,
-              int screen_rotation) {
+vec4 pixel_aa(sampler2D tex, float sharpness, bool sample_subpx,
+              int subpx_orientation, int screen_rotation) {
     float sharpness_upper = min(1.0, sharpness);
     vec2 sharp_lb = sharpness_upper * (0.5 - 0.5 * tx_per_px);
     vec2 sharp_ub = 1.0 - sharpness_upper * (1.0 - (0.5 + 0.5 * tx_per_px));
@@ -440,8 +437,7 @@ void main() {
             // Do a sharp anti-aliased interpolation.
             // Do not correct for gamma additionally because the input is
             // already in linear color space.
-            FragColor = pixel_aa(Input, tx_per_px, tx_to_uv, tx_coord,
-                                 PIX_AA_SHARP, PIX_AA_SUBPX > 0.5,
+            FragColor = pixel_aa(Input, PIX_AA_SHARP, PIX_AA_SUBPX > 0.5,
                                  int(PIX_AA_SUBPX_ORIENTATION), Rotation);
         }
     }
