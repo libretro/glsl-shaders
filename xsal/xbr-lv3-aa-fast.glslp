@@ -1,0 +1,15 @@
+shaders = 2
+
+shader0 = ../xbr/shaders/xbr-lv3.glsl
+filter_linear0 = false
+scale_type0 = source
+scale0 = 5.0
+
+shader1 = ../anti-aliasing/shaders/aa-shader-4.0.glsl
+filter_linear1 = false
+scale_type1 = viewport
+scale1 = 1.0
+
+parameters = "INTERNAL_RES"
+
+INTERNAL_RES = 4.0

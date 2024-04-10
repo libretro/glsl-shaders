@@ -1,0 +1,21 @@
+shaders = 3
+
+shader0 = ../xbr/shaders/xbr-lv3.glsl
+filter_linear0 = false
+scale_type0 = source
+scale0 = 4.0
+
+shader1 = shaders/2xsal-level2-xbr.glsl
+filter_linear1 = true
+scale_type1 = source
+scale1 = 1.0
+
+shader2 = ../anti-aliasing/shaders/aa-shader-4.0.glsl
+filter_linear2 = false
+scale_type2 = viewport
+scale2 = 1.0
+
+parameters = "INTERNAL_RES;AAOFFSET"
+
+INTERNAL_RES = 2.0
+AAOFFSET = 0.675
