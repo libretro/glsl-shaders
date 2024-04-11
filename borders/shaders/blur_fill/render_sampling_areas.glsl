@@ -217,7 +217,7 @@ void main() {
     extend_fill = get_rotated_size(vec2(EXTEND_H, EXTEND_V), Rotation);
     // Converts from texel space in the original input to unit space in the
     // Source pass.
-    sampling_conv_factor = InputSize / (TextureSize * OrigInputSize);
+    sampling_conv_factor = 1.0 / TextureSize;
     // Sampling extrema to avoid bilinear interpolation artifacts near edges.
     sampling_tx_min = vec2(0.5);
     sampling_tx_max = OrigInputSize - 0.5;
@@ -305,7 +305,8 @@ float extend_bottom(vec2 coord) {
 vec4 get_tex(vec2 coord) {
     return COMPAT_TEXTURE(
         Texture,
-        clamp(coord, sampling_tx_min, sampling_tx_max) * sampling_conv_factor);
+        clamp(coord, sampling_tx_min, sampling_tx_max) *
+        sampling_conv_factor);
 }
 
 void main() {

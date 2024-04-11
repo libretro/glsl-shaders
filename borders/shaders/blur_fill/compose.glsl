@@ -297,8 +297,8 @@ uniform COMPAT_PRECISION vec2 PassPrev7InputSize;
 
 uniform COMPAT_PRECISION int Rotation;
 
-uniform sampler2D PassPrev10Texture;
-#define Input PassPrev10Texture
+uniform sampler2D PassPrev11Texture;
+#define SRGBInput PassPrev11Texture
 uniform sampler2D PassPrev7Texture;
 #define Tiled PassPrev7Texture
 uniform sampler2D Texture;
@@ -345,6 +345,12 @@ vec2 slopestep(vec2 edge0, vec2 edge1, vec2 x, float slope) {
     return o - 0.5 * s * pow(2.0 * (o - s * x), vec2(slope));
 }
 
+float to_lin(float x) { return pow(x, 2.2); }
+vec3 to_lin(vec3 x) { return pow(x, vec3(2.2)); }
+
+float to_srgb(float x) { return pow(x, 1.0 / 2.2); }
+vec3 to_srgb(vec3 x) { return pow(x, vec3(1.0 / 2.2)); }
+
 // Function to get a pixel value, taking into consideration possible subpixel
 // interpolation.
 vec4 pixel_aa(sampler2D tex, float sharpness, bool sample_subpx,
@@ -367,21 +373,50 @@ vec4 pixel_aa(sampler2D tex, float sharpness, bool sample_subpx,
 
         vec3 res;
         vec2 period, phase, offset;
+
         // Red
         period = floor(tx_coord - sub_tx_offset - 0.5);
         phase = tx_coord - sub_tx_offset - 0.5 - period;
         offset = slopestep(sharp_lb, sharp_ub, phase, sharpness_lower);
-        res.r = COMPAT_TEXTURE(tex, (period + 0.5 + offset) * tx_to_uv).r;
+        res.r = to_srgb(mix(
+            mix(to_lin(COMPAT_TEXTURE(tex, (period + 0.5) * tx_to_uv).r),
+                to_lin(COMPAT_TEXTURE(tex, (period + vec2(1.5, 0.5)) * tx_to_uv)
+                           .r),
+                offset.x),
+            mix(to_lin(COMPAT_TEXTURE(tex, (period + vec2(0.5, 1.5)) * tx_to_uv)
+                           .r),
+                to_lin(COMPAT_TEXTURE(tex, (period + 1.5) * tx_to_uv).r),
+                offset.x),
+            offset.y));
         // Green
         period = floor(tx_coord - 0.5);
         phase = tx_coord - 0.5 - period;
         offset = slopestep(sharp_lb, sharp_ub, phase, sharpness_lower);
-        res.g = COMPAT_TEXTURE(tex, (period + 0.5 + offset) * tx_to_uv).g;
+        res.g = to_srgb(mix(
+            mix(to_lin(COMPAT_TEXTURE(tex, (period + 0.5) * tx_to_uv).g),
+                to_lin(COMPAT_TEXTURE(tex, (period + vec2(1.5, 0.5)) * tx_to_uv)
+                           .g),
+                offset.x),
+            mix(to_lin(COMPAT_TEXTURE(tex, (period + vec2(0.5, 1.5)) * tx_to_uv)
+                           .g),
+                to_lin(COMPAT_TEXTURE(tex, (period + 1.5) * tx_to_uv).g),
+                offset.x),
+            offset.y));
         // Blue
         period = floor(tx_coord + sub_tx_offset - 0.5);
         phase = tx_coord + sub_tx_offset - 0.5 - period;
         offset = slopestep(sharp_lb, sharp_ub, phase, sharpness_lower);
-        res.b = COMPAT_TEXTURE(tex, (period + 0.5 + offset) * tx_to_uv).b;
+        res.b = to_srgb(mix(
+            mix(to_lin(COMPAT_TEXTURE(tex, (period + 0.5) * tx_to_uv).b),
+                to_lin(COMPAT_TEXTURE(tex, (period + vec2(1.5, 0.5)) * tx_to_uv)
+                           .b),
+                offset.x),
+            mix(to_lin(COMPAT_TEXTURE(tex, (period + vec2(0.5, 1.5)) * tx_to_uv)
+                           .b),
+                to_lin(COMPAT_TEXTURE(tex, (period + 1.5) * tx_to_uv).b),
+                offset.x),
+            offset.y));
+
         return vec4(res, 1.0);
     } else {
         // The offset for interpolation is a periodic function with
@@ -401,7 +436,20 @@ vec4 pixel_aa(sampler2D tex, float sharpness, bool sample_subpx,
         // manually. Without it, we can make use of a single tap using bilinear
         // interpolation. The offsets are shifted back to the texel center
         // before sampling.
-        return COMPAT_TEXTURE(tex, (period + 0.5 + offset) * tx_to_uv);
+        return vec4(
+            to_srgb(mix(
+                mix(to_lin(COMPAT_TEXTURE(tex, (period + 0.5) * tx_to_uv).rgb),
+                    to_lin(COMPAT_TEXTURE(tex,
+                                          (period + vec2(1.5, 0.5)) * tx_to_uv)
+                               .rgb),
+                    offset.x),
+                mix(to_lin(COMPAT_TEXTURE(tex,
+                                          (period + vec2(0.5, 1.5)) * tx_to_uv)
+                               .rgb),
+                    to_lin(COMPAT_TEXTURE(tex, (period + 1.5) * tx_to_uv).rgb),
+                    offset.x),
+                offset.y)),
+            1.0);
     }
 }
 
@@ -410,34 +458,39 @@ void main() {
         any(greaterThanEqual(tx_coord, input_corners.zw))) {
         if (BLUR_RADIUS > 0.0) {
             // Sample blur.
-            FragColor = vec4(
-                pow(COMPAT_TEXTURE(Blurred, TEX0.xy).rgb, vec3(FILL_GAMMA)),
-                1.0);
+            FragColor = vec4(COMPAT_TEXTURE(Blurred, TEX0.xy).rgb, 1.0);
         } else {
             // Sample tiled pattern.
             // Do a perfectly sharp (nearest neighbor) resampling.
             FragColor =
-                vec4(pow(COMPAT_TEXTURE(Tiled, (floor(TEX0.xy * TextureSize /
-                                                      InputSize * TiledSize) +
-                                                0.5) /
-                                                   TiledSizePOT)
-                             .rgb,
-                         vec3(FILL_GAMMA)),
+                vec4(COMPAT_TEXTURE(Tiled, (floor(TEX0.xy * TextureSize /
+                                                  InputSize * TiledSize) +
+                                            0.5) /
+                                               TiledSizePOT)
+                         .rgb,
                      1.0);
         }
+        // Adjust background brightness and delinearize in one step.
+        FragColor.rgb = pow(FragColor.rgb, vec3(FILL_GAMMA / 2.2));
     } else {
         // Sample original.
         if (FORCE_INTEGER_SCALING_H > 0.5 && FORCE_INTEGER_SCALING_V > 0.5) {
             // Do a perfectly sharp (nearest neighbor) sampling.
-            FragColor = vec4(
-                COMPAT_TEXTURE(Input, (floor(tx_coord) + 0.5) / OrigTextureSize)
-                    .rgb,
-                1.0);
+            // In this case, we can sample the sRGB input directly.
+            FragColor = vec4(COMPAT_TEXTURE(SRGBInput, (floor(tx_coord) + 0.5) /
+                                                           OrigTextureSize)
+                                 .rgb,
+                             1.0);
         } else {
             // Do a sharp anti-aliased interpolation.
-            // Do not correct for gamma additionally because the input is
-            // already in linear color space.
-            FragColor = pixel_aa(Input, PIX_AA_SHARP, PIX_AA_SUBPX > 0.5,
+            // Do a forced gamma correction and interpolate sRGB values to work
+            // around some platforms not supporting float FBOs.
+            // On platforms where the linear colors are stored intermediately,
+            // quantization errors occur. The only way around this is to do more
+            // computations in-memory before writing out quantized values.
+            // This carries a certain performance cost and may be fixed in the
+            // future.
+            FragColor = pixel_aa(SRGBInput, PIX_AA_SHARP, PIX_AA_SUBPX > 0.5,
                                  int(PIX_AA_SUBPX_ORIENTATION), Rotation);
         }
     }

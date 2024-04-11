@@ -1,20 +1,8 @@
 shaders = 11
 
 parameters = "SIGMA;BLUR_RADIUS"
-SIGMA = 1.0
-BLUR_RADIUS = 2.0
-
-# Weaker
-# parameters = "SIGMA;BLUR_RADIUS"
-# SIGMA = 1.0
-# BLUR_RADIUS = 1.0
-# Scaling 2.0
-
-# Stronger
-# parameters = "SIGMA;BLUR_RADIUS"
-# SIGMA = 1.5
-# BLUR_RADIUS = 3.0
-# scaling 0.7
+SIGMA = 1.5
+BLUR_RADIUS = 3.0
 
 shader0 = shaders/blur_fill/linearize_and_parameters.glsl
 filter_linear0 = true
@@ -37,8 +25,8 @@ float_framebuffer2 = true
 shader3 = shaders/blur_fill/render_sampling_areas.glsl
 filter_linear3 = true
 scale_type3 = source
-scale_x3 = 1.1
-scale_y3 = 1.1
+scale_x3 = 0.7
+scale_y3 = 0.7
 float_framebuffer3 = true
 
 shader4 = ../blurs/shaders/dual_filter/downsample.glsl
