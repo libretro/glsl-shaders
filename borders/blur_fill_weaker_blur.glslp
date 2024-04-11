@@ -1,0 +1,72 @@
+shaders = 11
+
+parameters = "SIGMA;BLUR_RADIUS"
+SIGMA = 1.0
+BLUR_RADIUS = 1.0
+
+shader0 = shaders/blur_fill/linearize_and_parameters.glsl
+filter_linear0 = true
+scale_type0 = source
+scale0 = 1.0
+float_framebuffer0 = true
+
+shader1 = ../blurs/shaders/gauss_4tap/gauss_2tap_h.glsl
+filter_linear1 = true
+scale_type1 = source
+scale1 = 1.0
+float_framebuffer1 = true
+
+shader2 = ../blurs/shaders/gauss_4tap/gauss_2tap_v.glsl
+filter_linear2 = true
+scale_type2 = source
+scale2 = 1.0
+float_framebuffer2 = true
+
+shader3 = shaders/blur_fill/render_sampling_areas.glsl
+filter_linear3 = true
+scale_type3 = source
+scale_x3 = 2.0
+scale_y3 = 2.0
+float_framebuffer3 = true
+
+shader4 = ../blurs/shaders/dual_filter/downsample.glsl
+filter_linear4 = true
+scale_type4 = source
+scale4 = 0.5
+float_framebuffer4 = true
+
+shader5 = ../blurs/shaders/dual_filter/downsample.glsl
+filter_linear5 = true
+scale_type5 = source
+scale5 = 0.5
+float_framebuffer5 = true
+
+shader6 = ../blurs/shaders/dual_filter/downsample.glsl
+filter_linear6 = true
+scale_type6 = source
+scale6 = 0.5
+float_framebuffer6 = true
+
+shader7 = ../blurs/shaders/dual_filter/upsample.glsl
+filter_linear7 = true
+scale_type7 = source
+scale7 = 2.0
+float_framebuffer7 = true
+
+shader8 = ../blurs/shaders/dual_filter/upsample.glsl
+filter_linear8 = true
+scale_type8 = source
+scale8 = 2.0
+float_framebuffer8 = true
+
+shader9 = ../blurs/shaders/dual_filter/upsample.glsl
+filter_linear9 = true
+scale_type9 = source
+scale9 = 2.0
+float_framebuffer9 = true
+
+shader10 = shaders/blur_fill/compose.glsl
+filter_linear10 = true
+scale_type10 = viewport
+scale10 = 1.0
+float_framebuffer10 = true
