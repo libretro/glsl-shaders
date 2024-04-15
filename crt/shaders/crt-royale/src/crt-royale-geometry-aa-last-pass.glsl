@@ -110,8 +110,9 @@
 #define LAST_PASS
 #define SIMULATE_CRT_ON_LCD
 
-//#include "../include/user-settings.h"
-/***************** BEGIN user-settings.h ******************/
+//#include "../user-settings.h"
+
+/////////////////////////////  BEGIN USER-SETTINGS  ////////////////////////////
 
 #ifndef USER_SETTINGS_H
 #define USER_SETTINGS_H
@@ -476,10 +477,9 @@
 
 #endif  //  USER_SETTINGS_H
 
-/***************** END user-settings.h ******************/
+////////////////////////////  END USER-SETTINGS  //////////////////////////
 
-//#include "../include/derived-settings-and-constants.h"
-/***************** BEGIN derived-settings-and-constants.h ******************/
+//#include "derived-settings-and-constants.h"
 
 ////////////////////  BEGIN DERIVED-SETTINGS-AND-CONSTANTS  ////////////////////
 
@@ -513,9 +513,9 @@
 
 ///////////////////////////////  BEGIN INCLUDES  ///////////////////////////////
 
-//#include "../include/user-settings.h"
-//#include "../include/user-cgp-constants.h"
-/***************** BEGIN user-cgp-constants.h ******************/
+//#include "user-cgp-constants.h"
+
+/////////////////////////   BEGIN USER-CGP-CONSTANTS   /////////////////////////
 
 #ifndef USER_CGP_CONSTANTS_H
 #define USER_CGP_CONSTANTS_H
@@ -575,8 +575,7 @@ static const float mask_shadow_avg_color = 41.0/255.0;
 
 #endif  //  USER_CGP_CONSTANTS_H
 
-/***************** END user-cgp-constants.h ******************/
-
+//////////////////////////   END USER-CGP-CONSTANTS   //////////////////////////
 
 ////////////////////////////////  END INCLUDES  ////////////////////////////////
 
@@ -863,10 +862,7 @@ static const float under_half = 0.4995;
 
 /////////////////////////////  END DERIVED-SETTINGS-AND-CONSTANTS  ////////////////////////////
 
-/***************** END derived-settings-and-constants.h ******************/
-
-//#include "../include/bind-shader-params.h"
-/***************** BEGIN bind-shader-params.h ******************/
+//#include "bind-shader-h"
 
 /////////////////////////////  BEGIN BIND-SHADER-PARAMS  ////////////////////////////
 
@@ -896,8 +892,6 @@ static const float under_half = 0.4995;
 
 ///////////////////////////////  BEGIN INCLUDES  ///////////////////////////////
 
-//#include "../include/user-settings.h"
-//#include "../include/derived-settings-and-constants.h"
 
 ////////////////////////////////  END INCLUDES  ////////////////////////////////
 
@@ -1119,9 +1113,6 @@ inline float get_mask_sample_mode()
 
 ////////////////////////////  END BIND-SHADER-PARAMS  ///////////////////////////
 
-/***************** END bind-shader-params.h ******************/
-
-
 #ifndef RUNTIME_GEOMETRY_TILT
     //  Create a local-to-global rotation matrix for the CRT's coordinate frame
     //  and its global-to-local inverse.  See the vertex shader for details.
@@ -1140,8 +1131,7 @@ inline float get_mask_sample_mode()
 
 //////////////////////////////////  INCLUDES  //////////////////////////////////
 
-//#include "../include/gamma-management.h"
-/***************** BEGIN gamma-management.h ******************/
+//#include "../../../../include/gamma-management.h"
 
 ////////////////////////////  BEGIN GAMMA-MANAGEMENT  //////////////////////////
 
@@ -1693,10 +1683,8 @@ inline float4 tex2Dlod_linearize_gamma(const sampler2D tex, float4 tex_coords, i
 #endif  //  GAMMA_MANAGEMENT_H
 
 ////////////////////////////  END GAMMA-MANAGEMENT  //////////////////////////
-/***************** END gamma-management.h ******************/
 
-//#include "../include/tex2Dantialias.h"
-/***************** BEGIN tex2Dantialias.h ******************/
+//#include "tex2Dantialias.h"
 
 /////////////////////////  BEGIN TEX2DANTIALIAS  /////////////////////////
 
@@ -1738,8 +1726,8 @@ inline float4 tex2Dlod_linearize_gamma(const sampler2D tex, float4 tex_coords, i
 //                  doesn't support ddx()/ddy().  Ideally, the user could find
 //                  calculate a distorted tangent-space mapping analytically.
 //                  If not, a simple flat mapping can be obtained with:
-//                      const float2 xy_to_uv_scale = IN.output_size *
-//                          IN.video_size/IN.texture_size;
+//                      const float2 xy_to_uv_scale = output_size *
+//                          video_size/texture_size;
 //                      const float2x2 pixel_to_tex_uv = float2x2(
 //                          xy_to_uv_scale.x, 0.0,
 //                          0.0, xy_to_uv_scale.y);
@@ -1771,7 +1759,7 @@ inline float4 tex2Dlod_linearize_gamma(const sampler2D tex, float4 tex_coords, i
 //                      static const float aa_gauss_sigma =
 //                          0.5/aa_pixel_diameter;
 //              3.) Set subpixel offsets.  This requires an accessor function
-//                  for compatibility with scalar runtime shader params.  Return
+//                  for compatibility with scalar runtime shader   Return
 //                  a float2 pixel offset in [-0.5, 0.5] for the red subpixel:
 //                      float2 get_aa_subpixel_r_offset()
 //              The user may also #define ANTIALIAS_OVERRIDE_STATIC_CONSTANTS to
@@ -1895,7 +1883,7 @@ inline float4 tex2Dlod_linearize_gamma(const sampler2D tex, float4 tex_coords, i
     static const float aa_cubic_c = 0.5;
     static const float aa_gauss_sigma = 0.5 / aa_pixel_diameter;
     //  Users may override the subpixel offset accessor function with their own.
-    //  A function is used for compatibility with scalar runtime shader params.
+    //  A function is used for compatibility with scalar runtime shader 
     inline float2 get_aa_subpixel_r_offset()
     {
         return float2(0.0, 0.0);
@@ -1905,7 +1893,6 @@ inline float4 tex2Dlod_linearize_gamma(const sampler2D tex, float4 tex_coords, i
 
 //////////////////////////////////  INCLUDES  //////////////////////////////////
 
-// already included elsewhere
 //#include "../../../../include/gamma-management.h"
 
 
@@ -2268,7 +2255,7 @@ float3 tex2Daa4x(const sampler2D tex, const float2 tex_uv,
     const float3 w_sum_inv = float3(1.0,1.0,1.0)/(w_sum);
     //  Scale the pixel-space to texture offset matrix by the pixel diameter.
     const float2x2 true_pixel_to_tex_uv =
-        float2x2(float4(pixel_to_tex_uv * aa_pixel_diameter));
+        float2x2(pixel_to_tex_uv * aa_pixel_diameter);
     //  Get uv sample offsets, mirror on odd frames if directed, and exploit
     //  diagonal symmetry:
     const float2 frame_sign = get_frame_sign(frame);
@@ -2315,7 +2302,7 @@ float3 tex2Daa5x(const sampler2D tex, const float2 tex_uv,
     const float3 w_sum_inv = float3(1.0)/(w0 + w1 + w2 + w3 + w4);
     //  Scale the pixel-space to texture offset matrix by the pixel diameter.
     const float2x2 true_pixel_to_tex_uv =
-        float2x2(float4(pixel_to_tex_uv * aa_pixel_diameter));
+        float2x2(pixel_to_tex_uv * aa_pixel_diameter);
     //  Get uv sample offsets, mirror on odd frames if directed, and exploit
     //  diagonal symmetry:
     const float2 frame_sign = get_frame_sign(frame);
@@ -2368,7 +2355,7 @@ float3 tex2Daa6x(const sampler2D tex, const float2 tex_uv,
     const float3 w_sum_inv = float3(1.0)/(w_sum);
     //  Scale the pixel-space to texture offset matrix by the pixel diameter.
     const float2x2 true_pixel_to_tex_uv =
-        float2x2(float4(pixel_to_tex_uv * aa_pixel_diameter));
+        float2x2(pixel_to_tex_uv * aa_pixel_diameter);
     //  Get uv sample offsets, mirror on odd frames if directed, and exploit
     //  diagonal symmetry:
     const float2 frame_sign = get_frame_sign(frame);
@@ -2424,7 +2411,7 @@ float3 tex2Daa7x(const sampler2D tex, const float2 tex_uv,
     const float3 w_sum_inv = float3(1.0)/(w_sum);
     //  Scale the pixel-space to texture offset matrix by the pixel diameter.
     const float2x2 true_pixel_to_tex_uv =
-        float2x2(float4(pixel_to_tex_uv * aa_pixel_diameter));
+        float2x2(pixel_to_tex_uv * aa_pixel_diameter);
     //  Get uv sample offsets, mirror on odd frames if directed, and exploit
     //  diagonal symmetry:
     const float2 frame_sign = get_frame_sign(frame);
@@ -2484,7 +2471,7 @@ float3 tex2Daa8x(const sampler2D tex, const float2 tex_uv,
     const float3 w_sum_inv = float3(1.0)/(w_sum);
     //  Scale the pixel-space to texture offset matrix by the pixel diameter.
     const float2x2 true_pixel_to_tex_uv =
-        float2x2(float4(pixel_to_tex_uv * aa_pixel_diameter));
+        float2x2(pixel_to_tex_uv * aa_pixel_diameter);
     //  Get uv sample offsets, and mirror on odd frames if directed:
     const float2 frame_sign = get_frame_sign(frame);
     const float2 uv_offset0 = mul(true_pixel_to_tex_uv, xy_offset0 * frame_sign);
@@ -2556,7 +2543,7 @@ float3 tex2Daa12x(const sampler2D tex, const float2 tex_uv,
     const float3 w_sum_inv = float3(1.0)/w_sum;
     //  Scale the pixel-space to texture offset matrix by the pixel diameter.
     const float2x2 true_pixel_to_tex_uv =
-        float2x2(float4(pixel_to_tex_uv * aa_pixel_diameter));
+        float2x2(pixel_to_tex_uv * aa_pixel_diameter);
     //  Get uv sample offsets, mirror on odd frames if directed, and exploit
     //  diagonal symmetry:
     const float2 frame_sign = get_frame_sign(frame);
@@ -2646,7 +2633,7 @@ float3 tex2Daa16x(const sampler2D tex, const float2 tex_uv,
     const float3 w_sum_inv = float3(1.0)/(w_sum);
     //  Scale the pixel-space to texture offset matrix by the pixel diameter.
     const float2x2 true_pixel_to_tex_uv =
-        float2x2(float4(pixel_to_tex_uv * aa_pixel_diameter));
+        float2x2(pixel_to_tex_uv * aa_pixel_diameter);
     //  Get uv sample offsets, mirror on odd frames if directed, and exploit
     //  diagonal symmetry:
     const float2 frame_sign = get_frame_sign(frame);
@@ -2753,7 +2740,7 @@ float3 tex2Daa20x(const sampler2D tex, const float2 tex_uv,
     const float3 w_sum_inv = float3(1.0)/(w_sum);
     //  Scale the pixel-space to texture offset matrix by the pixel diameter.
     const float2x2 true_pixel_to_tex_uv =
-        float2x2(float4(pixel_to_tex_uv * aa_pixel_diameter));
+        float2x2(pixel_to_tex_uv * aa_pixel_diameter);
     //  Get uv sample offsets, mirror on odd frames if directed, and exploit
     //  diagonal symmetry:
     const float2 frame_sign = get_frame_sign(frame);
@@ -2878,7 +2865,7 @@ float3 tex2Daa24x(const sampler2D tex, const float2 tex_uv,
     const float3 w_sum_inv = float3(1.0)/(w_sum);
     //  Scale the pixel-space to texture offset matrix by the pixel diameter.
     const float2x2 true_pixel_to_tex_uv =
-        float2x2(float4(pixel_to_tex_uv * aa_pixel_diameter));
+        float2x2(pixel_to_tex_uv * aa_pixel_diameter);
     //  Get uv sample offsets, mirror on odd frames if directed, and exploit
     //  diagonal symmetry:
     const float2 frame_sign = get_frame_sign(frame);
@@ -2975,7 +2962,7 @@ float3 tex2Daa_debug_16x_regular(const sampler2D tex, const float2 tex_uv,
     const float3 w_sum_inv = float3(1.0)/(w_sum);
     //  Scale the pixel-space to texture offset matrix by the pixel diameter.
     const float2x2 true_pixel_to_tex_uv =
-        float2x2(float4(pixel_to_tex_uv * aa_pixel_diameter));
+        float2x2(pixel_to_tex_uv * aa_pixel_diameter);
     //  Get uv sample offsets, taking advantage of row alignment:
     const float2 uv_step_x = mul(true_pixel_to_tex_uv, float2(xy_step.x, 0.0));
     const float2 uv_step_y = mul(true_pixel_to_tex_uv, float2(0.0, xy_step.y));
@@ -3040,7 +3027,7 @@ float3 tex2Daa_debug_dynamic(const sampler2D tex, const float2 tex_uv,
     }
     //  Get uv offset vectors along x and y directions:
     const float2x2 true_pixel_to_tex_uv =
-        float2x2(float4(pixel_to_tex_uv * aa_pixel_diameter));
+        float2x2(pixel_to_tex_uv * aa_pixel_diameter);
     const float2 uv_offset_step_x = mul(true_pixel_to_tex_uv,
         float2(filter_space_offset_step.x, 0.0));
     const float2 uv_offset_step_y = mul(true_pixel_to_tex_uv,
@@ -3073,7 +3060,7 @@ float3 tex2Daa_debug_dynamic(const sampler2D tex, const float2 tex_uv,
 inline float3 tex2Daa(const sampler2D tex, const float2 tex_uv,
     const float2x2 pixel_to_tex_uv, const float frame)
 {
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 	return tex2Daa_subpixel_weights_only(
             tex, tex_uv, pixel_to_tex_uv);
@@ -3101,10 +3088,8 @@ inline float3 tex2Daa(const sampler2D tex, const float2 tex_uv,
 #endif  //  TEX2DANTIALIAS_H
 
 /////////////////////////  END TEX2DANTIALIAS  /////////////////////////
-/***************** END tex2Dantialias.h ******************/
 
-//#include "../include/geometry-functions.h"
-/***************** BEGIN geometry-functions.h ******************/
+//#include "geometry-functions.h"
 
 /////////////////////////  BEGIN GEOMETRY-FUNCTIONS  /////////////////////////
 
@@ -3135,7 +3120,7 @@ inline float3 tex2Daa(const sampler2D tex, const float2 tex_uv,
 // already included elsewhere
 //#include "../user-settings.h"
 //#include "derived-settings-and-constants.h"
-//#include "bind-shader-params.h"
+//#include "bind-shader-h"
 
 
 ////////////////////////////  MACROS AND CONSTANTS  ////////////////////////////
@@ -3374,7 +3359,7 @@ float3 get_ideal_global_eye_pos_for_points(float3 eye_pos,
     //              1.) Starting eye_pos is a global 3D position at which the
     //                  camera contains all points in global_coords[] in its FOV
     //              2.) geom_aspect = get_aspect_vector(
-    //                      IN.output_size.x / IN.output_size.y);
+    //                      output_size.x / output_size.y);
     //              3.) global_coords is a point cloud containing global xyz
     //                  coords of extreme points on the simulated CRT screen.
     //              Globals:
@@ -3684,9 +3669,9 @@ float2 get_curved_video_uv_coords_and_tangent_matrix(
     //              2.) eye_pos_local is the 3D camera position in the simulated
     //                  CRT's local coordinate frame.  For best results, it must
     //                  be computed based on the same geom_view_dist used here.
-    //              3.) output_size_inv = float2(1.0)/IN.output_size
+    //              3.) output_size_inv = float2(1.0)/output_size
     //              4.) geom_aspect = get_aspect_vector(
-    //                      IN.output_size.x / IN.output_size.y);
+    //                      output_size.x / output_size.y);
     //              5.) geom_mode is a static or runtime mode setting:
     //                  0 = off, 1 = sphere, 2 = sphere alt., 3 = cylinder
     //              6.) global_to_local is a 3x3 matrix transforming (ordinary)
@@ -3801,8 +3786,6 @@ float get_border_dim_factor(const float2 video_uv, const float2 geom_aspect)
 #endif  //  GEOMETRY_FUNCTIONS_H
 
 /////////////////////////  END GEOMETRY-FUNCTIONS  /////////////////////////
-/***************** END geometry-functions.h ******************/
-
 
 ///////////////////////////////////  HELPERS  //////////////////////////////////
 
