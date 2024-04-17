@@ -37,7 +37,7 @@
 #pragma parameter bogus_col " [ COLORS ] " 0.0 0.0 0.0 0.0
 #pragma parameter Trin "CRT Colors" 0.0 0.0 1.0 1.0
 #pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
-#pragma parameter boostd "Boost Dark Colors" 1.15 1.0 2.0 0.05
+#pragma parameter boostd "Boost Dark Colors" 1.35 1.0 2.0 0.05
 #pragma parameter bogus_conv " [ CONVERGENCE ] " 0.0 0.0 0.0 0.0
 #pragma parameter RX "Convergence Horiz." 0.0 -2.0 2.0 0.05
 
