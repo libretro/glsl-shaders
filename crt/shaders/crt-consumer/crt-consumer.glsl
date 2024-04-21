@@ -522,12 +522,12 @@ void main()
 	
 	vec3 color = sample2;
    //sawtooth effect
-float t = sin(float(FrameCount));  
+float t = sin(float(FrameCount*2));  
 if (sawtooth == 1.0){
     if( mod( floor(pC4.y*SourceSize.y*1.0), 2.0 ) == 0.0 ) {
-        color += COMPAT_TEXTURE( Source, pC4 + vec2(SourceSize.z*0.2*t, 0.0) ).rgb;
+        color += COMPAT_TEXTURE( Source, pC4 + vec2(SourceSize.z*0.5*t, 0.0) ).rgb;
     } else {
-        color += COMPAT_TEXTURE( Source, pC4 - vec2(SourceSize.z*0.2*t, 0.0) ).rgb;
+        color += COMPAT_TEXTURE( Source, pC4 - vec2(SourceSize.z*0.5*t, 0.0) ).rgb;
     }
     color /= 2.0;}
 //end of sawtooth
