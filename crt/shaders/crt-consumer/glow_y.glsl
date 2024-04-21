@@ -1,6 +1,6 @@
 #version 110
 
-#pragma parameter glow "Glow strength" 0.15 0.0 1.0 0.01
+#pragma parameter glow "Glow strength" 0.12 0.0 1.0 0.01
 
 #define pi 3.1415926535897932384626433
 
