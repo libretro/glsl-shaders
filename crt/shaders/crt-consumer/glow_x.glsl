@@ -108,15 +108,16 @@ uniform COMPAT_PRECISION float glow;
 void main()
 {
 
-vec3 res = COMPAT_TEXTURE(Source,vTexCoord).rgb;
+vec3 res  = COMPAT_TEXTURE(Source,vTexCoord).rgb;
 
-vec3 res0 = COMPAT_TEXTURE(Source,vTexCoord).rgb*0.468;
-res0 += COMPAT_TEXTURE(Source,vTexCoord+psx).rgb*0.236;
-res0 += COMPAT_TEXTURE(Source,vTexCoord-psx).rgb*0.236;
-res0 += COMPAT_TEXTURE(Source,vTexCoord-2.0*psx).rgb*0.03;
-res0 += COMPAT_TEXTURE(Source,vTexCoord+2.0*psx).rgb*0.03;
+vec3 res0 = COMPAT_TEXTURE(Source,vTexCoord).rgb*0.2837;
+     res0 += COMPAT_TEXTURE(Source,vTexCoord+psx).rgb*0.229;
+     res0 += COMPAT_TEXTURE(Source,vTexCoord-psx).rgb*0.229;
+     res0 += COMPAT_TEXTURE(Source,vTexCoord-2.0*psx).rgb*0.112;
+     res0 += COMPAT_TEXTURE(Source,vTexCoord+2.0*psx).rgb*0.112;
+     res0 += COMPAT_TEXTURE(Source,vTexCoord+3.0*psx).rgb*0.017;
+     res0 += COMPAT_TEXTURE(Source,vTexCoord-3.0*psx).rgb*0.017;
 
-
-FragColor.rgb = res+glow*res0;    
+FragColor.rgb = res + glow*res0;    
 }
 #endif
