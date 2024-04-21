@@ -1,4 +1,3 @@
-shaders = 2
-shader0 = "shaders/crt-consumer/linearize.glsl"
-shader1 = shaders/crt-geom-mini.glsl
-filter_linear1 = true
+shaders = 1
+shader0 = shaders/crt-geom-mini.glsl
+filter_linear0 = true
