@@ -8,7 +8,7 @@
 #pragma parameter CURV "CRT-Geom Curvature" 1.0 0.0 1.0 1.0
 #pragma parameter SCAN "CRT-Geom Scanline Weight" 0.2 0.1 0.6 0.05
 #pragma parameter MASK "CRT-Geom Dotmask Strength" 0.2 0.0 0.5 0.05
-#pragma parameter LUM "CRT-Geom Luminance" 0.15 0.0 0.5 0.01
+#pragma parameter LUM "CRT-Geom Luminance" 0.1 0.0 0.5 0.01
 #pragma parameter INTERL "CRT-Geom Interlacing Simulation" 1.0 0.0 1.0 1.0
 #pragma parameter SAT "CRT-Geom Saturation" 1.1 0.0 2.0 0.05
 #pragma parameter LANC "Filter profile: Accurate/Fast" 0.0 0.0 1.0 1.0
@@ -208,7 +208,6 @@ void main()
     {
     fp = mod(float(FrameCount),2.0) <1.0 ? 0.5+fp:fp;
     }
-    res = sqrt(clamp(res,vec3(0.0),vec3(1.0)));
 
     float scn  = scan(fp,res) + scan(1.0-fp,res);
     float msk  = MASK*sin(fragpos)+1.0-MASK;
