@@ -25,7 +25,7 @@ any later version.
 
 */
 
-
+#pragma parameter hor_sharp "Sharpness Horizontal" 0.25 0.0 1.0 0.05
 #pragma parameter SCANLINE "Scanline Weight" 0.3 0.2 0.6 0.05
 #pragma parameter INTERLACE "Interlacing On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter bogus_msk " [ MASK SETTINGS ] " 0.0 0.0 0.0 0.0
@@ -195,6 +195,7 @@ uniform COMPAT_PRECISION float centerx;
 uniform COMPAT_PRECISION float centery;
 uniform COMPAT_PRECISION float bzl;
 uniform COMPAT_PRECISION float corner;
+uniform COMPAT_PRECISION float hor_sharp;
 #else
 #define M_TYPE 0.0
 #define BGR 0.0
@@ -230,6 +231,7 @@ uniform COMPAT_PRECISION float corner;
 #define centery  0.07  
 #define bzl  1.0  
 #define corner  1.0  
+#define hor_sharp 0.3  
 #endif
 
 vec3 Mask(vec2 pos, float CGWG)
@@ -364,7 +366,7 @@ mat3 hue = mat3(
     vec2 i = floor(pos*SourceSize.xy) + 0.5;
     float f = ogl2.y - i.y;
     pos.y = (i.y + 4.0*f*f*f)*ps.y; // smooth
-    pos.x = mix(pos.x, i.x*ps.x, 0.2);
+    pos.x = mix(pos.x, i.x*ps.x, hor_sharp);
 
 // Convergence
     vec3  res0 = COMPAT_TEXTURE(Source,pos).rgb;

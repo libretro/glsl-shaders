@@ -14,7 +14,7 @@
 #pragma parameter Curvature "Curvature On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter blurx "Convergence X-Axis" 0.6 -2.0 2.0 0.05
 #pragma parameter blury "Convergence Y-Axis" -0.10 -2.0 2.0 0.05
-#pragma parameter scan "Scanlines Strength" 0.4 0.0 1.0 0.05
+#pragma parameter scan "Scanlines Strength" 0.4 0.0 0.5 0.05
 #pragma parameter maskc "Mask Strength" 0.35 0.0 0.5 0.05
 #pragma parameter mask "Slot Strength" 0.3 0.0 0.5 0.05
 #pragma parameter slotx "Mask Width" 3.0 2.0 3.0 1.0

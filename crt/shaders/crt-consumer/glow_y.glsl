@@ -1,6 +1,6 @@
 #version 110
 
-#pragma parameter glow "Glow strength" 0.15 0.0 1.0 0.01
+#pragma parameter glow "Glow strength" 0.08 0.0 1.0 0.01
 
 #define pi 3.1415926535897932384626433
 
@@ -110,14 +110,12 @@ uniform COMPAT_PRECISION float glow;
 void main()
 {
 
-vec3 res = COMPAT_TEXTURE(Source,vTexCoord).rgb;
-vec3 res0 = COMPAT_TEXTURE(Source,vTexCoord).rgb*0.468;
-res0 += COMPAT_TEXTURE(Source,vTexCoord+psy).rgb*0.236;
-res0 += COMPAT_TEXTURE(Source,vTexCoord-psy).rgb*0.236;
-res0 += COMPAT_TEXTURE(Source,vTexCoord-2.0*psy).rgb*0.03;
-res0 += COMPAT_TEXTURE(Source,vTexCoord+2.0*psy).rgb*0.03;
+vec3 res  = COMPAT_TEXTURE(Source,vTexCoord).rgb;
 
+vec3 res0 = COMPAT_TEXTURE(Source,vTexCoord).rgb*0.309;
+     res0 += COMPAT_TEXTURE(Source,vTexCoord+psy).rgb*0.2414;
+     res0 += COMPAT_TEXTURE(Source,vTexCoord-psy).rgb*0.2414;
 
-FragColor.rgb = res+glow*res0;    
+FragColor.rgb = res + glow*res0;    
 }
 #endif
