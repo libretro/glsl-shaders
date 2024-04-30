@@ -30,6 +30,7 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING vec2 scale;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -54,6 +55,7 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
+    scale = SourceSize.xy/InputSize.xy;
 }
 
 #elif defined(FRAGMENT)
@@ -86,6 +88,7 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING vec2 scale;
 
 // compatibility #defines
 #define vTexCoord TEX0.xy
@@ -196,10 +199,10 @@ vec2 Warp(vec2 pos)
 
 void main() {
 //This is just like "Quilez Scaling" but sharper
-    vec2 pos = Warp(vTexCoord*SourceSize.xy/InputSize.xy);
+    vec2 pos = Warp(vTexCoord*scale);
     vec2 corn = min(pos, 1.0-pos);    // This is used to mask the rounded
     corn.x = 0.0001/corn.x;         // corners later on
-    pos *= InputSize.xy/SourceSize.xy;
+    pos /= scale;
     
     vec2 p = pos * TextureSize;
     vec2 i = floor(p) + 0.5;
@@ -223,7 +226,7 @@ final = sqrt(final);
 vec4 clean = final;
 float l = dot(vec3(0.2),final.rgb);
 final *= LOT_SCAN*sin((pos.y*SourceSize.y-0.25)*PI*2.0)+1.0-LOT_SCAN;
-final *= Mask(vTexCoord*OutputSize.xy*SourceSize.xy/InputSize.xy);
+final *= Mask(vTexCoord*OutputSize.xy*scale);
 final = mix(final,clean,l);
 
 //corners cut
@@ -233,4 +236,4 @@ if (corn.y <= corn.x || corn.x < 0.0001 )final = vec4(0.0);
 
 FragColor = final;
 }
-#endif 
+#endif
