@@ -45,6 +45,7 @@ any later version.
 #pragma parameter nois "Noise" 0.0 0.0 1.0 0.01
 #pragma parameter WP "Color Temperature %" 0.0 -100.0 100.0 5.0 
 #pragma parameter sawtooth "Sawtooth Effect" 1.0 0.0 1.0 1.0
+#pragma parameter saw_static "Sawtooth Static" 1.0 0.0 1.0 1.0
 #pragma parameter bleed "Color Bleed Effect" 1.0 0.0 1.0 1.0
 #pragma parameter bl_size "Color Bleed Size, less is more" 1.5 0.1 4.0 0.05
 #pragma parameter alloff "Switch off shader" 0.0 0.0 1.0 1.0
@@ -171,6 +172,7 @@ uniform COMPAT_PRECISION float bl_size;
 uniform COMPAT_PRECISION float sharpx;
 uniform COMPAT_PRECISION float sharpy;
 uniform COMPAT_PRECISION float crt_lum;
+uniform COMPAT_PRECISION float saw_static;
 
 #else
   
@@ -207,6 +209,7 @@ uniform COMPAT_PRECISION float crt_lum;
 #define sharpx 2.0
 #define sharpy 3.0
 #define crt_lum 1.0 
+#define saw_static 1.0 
 
 #endif
 
@@ -522,7 +525,7 @@ void main()
 	
 	vec3 color = sample2;
    //sawtooth effect
-float t = sin(float(FrameCount*2));  
+float t = sin(float(FrameCount*2));  if(saw_static == 1.0) t= 1.0;
 if (sawtooth == 1.0){
     if( mod( floor(pC4.y*SourceSize.y*1.0), 2.0 ) == 0.0 ) {
         color += COMPAT_TEXTURE( Source, pC4 + vec2(SourceSize.z*0.5*t, 0.0) ).rgb;
