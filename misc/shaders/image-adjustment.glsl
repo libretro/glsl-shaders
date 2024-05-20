@@ -75,7 +75,7 @@ uniform COMPAT_PRECISION float ia_FLIP_VERT;
 #else
 #define ia_overscan_percent_x 0.0  // crop width of image by X%; default is 0.0
 #define ia_overscan_percent_y 0.0  // crop height of image by X%; default is 0.0
-#define ia_ZOOM 0.0                // zoom factor; default is 0.0
+#define ia_ZOOM 1.0                // zoom factor; default is 1.0
 #define ia_XPOS 0.0                // horizontal position modifier; default is 0.0
 #define ia_YPOS 0.0                // vertical position modifier; default is 0.0
 #define ia_FLIP_HORZ 0.0           // horizontal flip toggle; default is 0.0
