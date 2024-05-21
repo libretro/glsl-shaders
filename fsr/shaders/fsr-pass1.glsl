@@ -3,6 +3,8 @@
     Ported from https://www.shadertoy.com/view/stXSWB, MIT license
 */
 
+#pragma parameter FSR_SHARPENING "FSR RCAS Sharpening Amount (Lower = Sharper)" 0.2 0.0 2.0 0.1
+
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -78,6 +80,12 @@ COMPAT_VARYING vec4 TEX0;
 
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float FSR_SHARPENING;
+#else
+#define FSR_SHARPENING 0.2
+#endif
 
 #define FSR_RCAS_LIMIT (0.25-(1.0/16.0))
 //#define FSR_RCAS_DENOISE
@@ -156,13 +164,10 @@ vec4 FsrRcasLoadF(vec2 p) {
 void main()
 {
     vec2 fragCoord = vTexCoord.xy * OutputSize.xy;
-    // Normalized pixel coordinates (from 0 to 1)
-    vec2 uv = fragCoord/OutputSize.xy;
-
+    
     // Set up constants
     float con;
-    float sharpness = 0.2;
-    FsrRcasCon(con,sharpness);
+    FsrRcasCon(con, FSR_SHARPENING);
 
     // Perform RCAS pass
     vec3 col = FsrRcasF(fragCoord, con);
