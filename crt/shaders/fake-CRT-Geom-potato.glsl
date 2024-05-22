@@ -83,7 +83,7 @@ float w = dot(vec3(0.15),res);
 // vignette  
 float x = (warpp.x-0.5);  // range -0.5 to 0.5, 0.0 being center of screen
       x = x*x; 
-res *= (0.25+x)*sin((y-0.25)*pi*2.0)+(0.75-x);
+res *= (0.25+x)*sin((y-0.15)*pi*2.0)+(0.75-x);
 res *= 0.15*sin(fragpos)+0.85;
 
 res = mix(res,clean, w);
