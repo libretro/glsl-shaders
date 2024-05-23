@@ -8,3 +8,4 @@ scale_type_y0 = "source"
 scale_y0 = "1.000000"
 shader1 = "shaders/crt-lottes-mini.glsl"
 filter_linear1 = "true"
+g_in = 2.2
