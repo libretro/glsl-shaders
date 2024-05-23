@@ -67,15 +67,15 @@ vec2 corn = min(pos, 1.0-pos);    // This is used to mask the rounded
   corn.x = 0.0002/corn.x;         // corners later on
   pos /= scale;
 
-vec2 dx = vec2(SourceSize.z*0.75,0.0);
+vec2 dx = vec2(SourceSize.z,0.0);
 vec2 dy = vec2(0.0,SourceSize.w*0.5);
 float y = pos.y*SourceSize.y;
 
 // precalculated kaizer window filter
 vec3 res = vec3(0.0);
-res += texture2D(Texture,pos -dx).rgb*-0.26565;
-res += texture2D(Texture,pos -dy).rgb*-0.26565;
-res += texture2D(Texture,pos ).rgb*1.5313;
+res += texture2D(Texture,pos -dx).rgb*-0.25;
+res += texture2D(Texture,pos -dy).rgb*-0.5;
+res += texture2D(Texture,pos ).rgb*1.75;
 
 vec3 clean = res;
 float w = dot(vec3(0.15),res);
@@ -83,7 +83,7 @@ float w = dot(vec3(0.15),res);
 // vignette  
 float x = (warpp.x-0.5);  // range -0.5 to 0.5, 0.0 being center of screen
       x = x*x; 
-res *= (0.25+x)*sin((y-0.25)*pi*2.0)+(0.75-x);
+res *= (0.2+x)*sin((y-0.15)*pi*2.0)+(0.7-x);
 res *= 0.15*sin(fragpos)+0.85;
 
 res = mix(res,clean, w);
