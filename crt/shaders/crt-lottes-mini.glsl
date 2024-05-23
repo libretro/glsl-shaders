@@ -197,6 +197,12 @@ vec2 Warp(vec2 pos)
     return pos*0.5 + 0.5;
 }
 
+#define one 1.384615
+#define two 3.230769
+#define w0  0.227027
+#define w1  0.316216
+#define w2  0.070270 
+
 void main() {
 //This is just like "Quilez Scaling" but sharper
     vec2 pos = Warp(vTexCoord*scale);
@@ -209,19 +215,16 @@ void main() {
     vec2 f = p - i;
     p = (i + 4.0*f*f*f)*SourceSize.zw;
     p.x = pos.x;
-    vec4 final = COMPAT_TEXTURE(Source,p);
 
-    vec2 ps = vec2(SourceSize.z*0.5,0.0);
-    float sum = 1.0;
-    for (int a=-2; a<2; a++)
-    {
-        float n = float(a);
-        float w = exp(-LOT_SHARP*n*n);
-        final += COMPAT_TEXTURE(Source,p+ps*n)*w;
-        sum += w;
-    }
-final /= sum;
-final = sqrt(final);
+    vec4 final = COMPAT_TEXTURE(Source,p);
+    vec2 ps = vec2(SourceSize.z*(1.0- LOT_SHARP),0.0);
+
+     final += COMPAT_TEXTURE(Source,p+ps*one)*w1;
+     final += COMPAT_TEXTURE(Source,p-ps*one)*w1;
+     final += COMPAT_TEXTURE(Source,p-ps*two)*w2;
+     final += COMPAT_TEXTURE(Source,p+ps*two)*w2;
+
+final = sqrt(final)/1.25;
 
 vec4 clean = final;
 float l = dot(vec3(0.2),final.rgb);
