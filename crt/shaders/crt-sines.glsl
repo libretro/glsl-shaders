@@ -1,8 +1,10 @@
 #version 110
 
 /* 
-  crt-sines, a work by DariusG 2023
+  crt-sines, a work by DariusG 2023-24
 
+  v2.0b use hardware hack for 9-tap blur using linear and 5 passes, see:
+  https://www.rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/
   v2.0  split Convergence R,B and G for more realistic look
   v1.9b much faster and simple slot mask
   v1.9 speed-up tweaks, removed non-essential stuff and re-entered slot mask
@@ -29,8 +31,8 @@
 
 
 #pragma parameter CURV "Curvature On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter scanl "Scanlines/Mask Low" 0.3 0.0 1.0 0.05
-#pragma parameter scanh "Scanlines/Mask High" 0.15 0.0 1.0 0.05
+#pragma parameter scanl "Scanlines/Mask Low" 0.35 0.0 1.0 0.05
+#pragma parameter scanh "Scanlines/Mask High" 0.1 0.0 1.0 0.05
 #pragma parameter SIZE "Mask Type, 2:Fine, 3:Coarse" 3.0 2.0 3.0 1.0
 #pragma parameter slotm "Slot Mask On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter slotw "Slot Mask Width" 3.0 2.0 3.0 1.0
