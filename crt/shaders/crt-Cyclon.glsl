@@ -42,8 +42,7 @@ any later version.
 #pragma parameter zoomy "Zoom Image Y" 0.0 -1.0 1.0 0.005
 #pragma parameter centerx "Image Center X" 0.0 -3.0 3.0 0.05 
 #pragma parameter centery "Image Center Y" 0.0 -3.0 3.0 0.05
-#pragma parameter WARPX "Curvature Horizontal" 0.02 0.00 0.25 0.01
-#pragma parameter WARPY "Curvature Vertical" 0.01 0.00 0.25 0.01
+#pragma parameter DISTORTION "Curvature" 0.12 0.00 0.30 0.01
 #pragma parameter corner "Corners Cut" 0.0 0.0 1.0 1.0
 #pragma parameter vig "Vignette On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter bogus_col " [ COLOR SETTINGS ] " 0.0 0.0 0.0 0.0
@@ -174,8 +173,7 @@ uniform COMPAT_PRECISION float CONV_G;
 uniform COMPAT_PRECISION float CONV_B;
 uniform COMPAT_PRECISION float SCANLINE;
 uniform COMPAT_PRECISION float INTERLACE;
-uniform COMPAT_PRECISION float WARPX;
-uniform COMPAT_PRECISION float WARPY;
+uniform COMPAT_PRECISION float DISTORTION;
 uniform COMPAT_PRECISION float SLOT;
 uniform COMPAT_PRECISION float SLOTW;
 uniform COMPAT_PRECISION float c_space;
@@ -210,8 +208,7 @@ uniform COMPAT_PRECISION float hor_sharp;
 #define CONV_B 0.0      
 #define SCANLINE 0.3   
 #define INTERLACE 1.0   
-#define WARPX 0.032   
-#define WARPY 0.042   
+#define DISTORTION 0.12   
 #define SLOT 0.0    
 #define SLOTW 2.0    
 #define c_space 0.0    
@@ -327,13 +324,26 @@ else if (odd == 1.0)
     {if (h<0.5) return vec3(1.5); else return vec3(0.5);}
 }
 
-vec2 Warp(vec2 pos)
-{
-    pos = pos*2.0-1.0;
-    pos *= vec2(1.0+pos.y*pos.y*WARPX, 1.0+pos.x*pos.x*WARPY);
-    pos = pos*0.5+0.5;
 
-    return pos;
+vec2 Warp(vec2 coord)
+{
+        vec2 CURVATURE_DISTORTION = vec2(DISTORTION, DISTORTION*1.5);
+        // Barrel distortion shrinks the display area a bit, this will allow us to counteract that.
+        vec2 barrelScale = 1.0 - (0.23 * CURVATURE_DISTORTION);
+        //coord *= scale;
+        coord -= vec2(0.5);
+        float rsq = coord.x*coord.x + coord.y*coord.y;
+        coord += coord * (CURVATURE_DISTORTION * rsq);
+        coord *= barrelScale;
+        if (abs(coord.x) >= 0.5 || abs(coord.y) >= 0.5)
+                coord = vec2(-1.0);             // If out of bounds, return an invalid value.
+        else
+        {
+                coord += vec2(0.5);
+         //       coord /= scale;
+        }
+
+        return coord;
 }
 
 void main()
