@@ -276,7 +276,7 @@ float scanlineWeights(float distance, vec3 color, float x)
     // independent of its width. That is, for a narrower beam
     // "weights" should have a higher peak at the center of the
     // scanline than for a wider beam.
-    float wid = SCANLINE + 0.15 * dot(color, vec3(0.25-0.8*x));   //0.8 vignette strength
+    float wid = SCANLINE +  0.4*dot(color, vec3(0.25-1.5*x));   
     float weights = distance / wid;
     return 0.4 * exp(-weights * weights ) / wid;
     }
