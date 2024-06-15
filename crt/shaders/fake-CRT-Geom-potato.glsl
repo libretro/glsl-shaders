@@ -1,11 +1,76 @@
 #version 110
 
-#pragma parameter SIZE "Mask Type" 2.0 2.0 3.0 1.0
+#pragma parameter size "Mask Size" 1.0 0.6667 1.0 0.3333
 
+#define PI   3.14159265358979323846
+#define tau  6.283185
+
+#if defined(VERTEX)
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING out
+#define COMPAT_ATTRIBUTE in
+#define COMPAT_TEXTURE texture
+#else
+#define COMPAT_VARYING varying 
+#define COMPAT_ATTRIBUTE attribute 
+#define COMPAT_TEXTURE texture2D
+#endif
+
+#ifdef GL_ES
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
+COMPAT_ATTRIBUTE vec4 VertexCoord;
+COMPAT_ATTRIBUTE vec4 COLOR;
+COMPAT_ATTRIBUTE vec4 TexCoord;
+COMPAT_VARYING vec4 COL0;
+COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING vec2 ogl2pos;
+COMPAT_VARYING vec2 screenscale;
+COMPAT_VARYING float maskpos;
+
+vec4 _oPosition1; 
+uniform mat4 MVPMatrix;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
+uniform COMPAT_PRECISION vec2 OutputSize;
+uniform COMPAT_PRECISION vec2 TextureSize;
+uniform COMPAT_PRECISION vec2 InputSize;
+
+// compatibility #defines
+#define vTexCoord TEX0.xy
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
-#define pi 3.1415926535897932384626433
 
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float size;
+#else
+#define size 0.0
+#endif
+
+void main()
+{
+    gl_Position = MVPMatrix * VertexCoord;
+    TEX0.xy = TexCoord.xy*1.0001;
+    ogl2pos = TEX0.xy*SourceSize.xy;
+    screenscale = SourceSize.xy/InputSize.xy;
+    maskpos = TEX0.x*OutputSize.x*screenscale.x*PI*size;
+}
+
+#elif defined(FRAGMENT)
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
+#endif
 
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
@@ -18,88 +83,77 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
-#ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float SIZE;
-
-#else
-#define SIZE     1.0      
-   
-#endif
-uniform vec2 OutputSize;
-uniform vec2 TextureSize;
-uniform vec2 InputSize;
-varying vec2 TEX0;
-varying vec2 scale;
-varying float fragpos;
-varying vec2 warpp;
-varying vec2 dbwarp;
-
-#if defined(VERTEX)
-uniform mat4 MVPMatrix;
-attribute vec4 VertexCoord;
-attribute vec2 TexCoord;
-
-void main()
-{   
-    TEX0 = TexCoord*1.0001;
-    gl_Position = MVPMatrix * VertexCoord;
-    scale = TextureSize.xy/InputSize.xy;
-   warpp = TEX0.xy*scale;
-   dbwarp = warpp*2.0-1.0;
-   fragpos = warpp.x*OutputSize.x*pi*2.0/SIZE;
-}
-
-#elif defined(FRAGMENT)
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
+uniform COMPAT_PRECISION vec2 OutputSize;
+uniform COMPAT_PRECISION vec2 TextureSize;
+uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
+COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING vec2 ogl2pos;
+COMPAT_VARYING float maskpos;
+COMPAT_VARYING vec2 screenscale;
 
-vec2 Warp(vec2 pos)
-{
-    pos = dbwarp;
-    pos *= vec2(1.0+pos.y*pos.y*0.03, 1.0+pos.x*pos.x*0.04);
-    pos = pos*0.5+0.5;
-    return pos;
-}
+// compatibility #defines
+#define vTexCoord TEX0.xy
+#define Source Texture
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
+#define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
-void main()
-{
-vec2 pos = Warp(warpp);
-vec2 corn = min(pos, 1.0-pos);    // This is used to mask the rounded
-  corn.x = 0.0002/corn.x;         // corners later on
-  pos /= scale;
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float sharpness;
 
-vec2 dx = vec2(SourceSize.z,0.0);
-vec2 dy = vec2(0.0,SourceSize.w*0.5);
-float y = pos.y*SourceSize.y;
 
-// precalculated kaizer window filter
-vec3 res = vec3(0.0);
-res += texture2D(Texture,pos -dx).rgb*-0.25;
-res += texture2D(Texture,pos -dy).rgb*-0.5;
-res += texture2D(Texture,pos ).rgb*1.75;
-
-vec3 clean = res;
-float w = dot(vec3(0.15),res);
-
-// vignette  
-float x = (warpp.x-0.5);  // range -0.5 to 0.5, 0.0 being center of screen
-      x = x*x; 
-res *= (0.2+x)*sin((y-0.15)*pi*2.0)+(0.7-x);
-res *= 0.15*sin(fragpos)+0.85;
-
-res = mix(res,clean, w);
-
-#if defined GL_ES
-res;
 #else
-res *= vec3(1.0,0.9,1.15);
+#define sharpness 0.0
+
 #endif
 
-float lum = dot(vec3(0.29,0.6,0.11),res);
-res = mix(vec3(lum),res, 1.1);
+vec2 Warp(vec2 coord)
+{
+        vec2 CURVATURE_DISTORTION = vec2(0.15, 0.225);
+        // Barrel distortion shrinks the display area a bit, this will allow us to counteract that.
+        vec2 barrelScale = vec2(0.965,0.948);
+        coord -= vec2(0.5);
+        float rsq = coord.x*coord.x + coord.y*coord.y;
+        coord += coord * (CURVATURE_DISTORTION * rsq);
+        coord *= barrelScale;
+        if (abs(coord.x) >= 0.5 || abs(coord.y) >= 0.5)
+                coord = vec2(-1.0);             // If out of bounds, return an invalid value.
+        else
+        {
+                coord += vec2(0.5);
+        }
 
-res *= mix(1.25,1.0,w);
+        return coord;
+}
+
+void main() 
+{
+vec2 pos = vTexCoord;
+pos = Warp(pos*screenscale);
+
+vec2 corn = min(pos, 1.0-pos);    // This is used to mask the rounded
+     corn.x = 0.0003/corn.x;      // corners later on
+pos /= screenscale;
+float scanpos = pos.y;
+vec2 near = floor(pos*SourceSize.xy)+0.5;
+vec2 f = pos*SourceSize.xy - near;
+
+pos.y = (near.y + 4.0*f.y*f.y*f.y)*SourceSize.w;    
+
+vec3 res = COMPAT_TEXTURE(Source,pos).rgb;
+float l = dot(vec3(0.25),res);
+
+float scan_pow = mix(0.5,0.3,l);
+float scn = scan_pow*sin((scanpos*SourceSize.y-0.25)*tau)+1.0-scan_pow;
+float msk = 0.2*sin(maskpos)+0.8;
+
+res *= sqrt(scn*msk);
+res *= mix(1.25,1.05,l);
+
 if (corn.y <= corn.x || corn.x < 0.0001 )res = vec3(0.0);
 
-gl_FragColor.rgb = res;   
+FragColor.rgb = res;
 }
 #endif
