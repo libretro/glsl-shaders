@@ -184,17 +184,28 @@ vec4 Mask(vec2 pos)
 
 
 // Distortion of scanlines, and end of screen alpha.
-vec2 Warp(vec2 pos)
+vec2 Warp(vec2 coord)
 {
-    float warpx,warpy;
-    if (LOT_CURV == 1.0){warpx = 0.03; warpy = 0.02;}
-    else if (LOT_CURV == 2.0){warpx = 0.0; warpy = 0.05;}
-    else {warpx = 0.0; warpy=0.0;}
+    float a,b,c,d;
+    if (LOT_CURV == 0.0) { a = 0.0, b = 0.0, c = 1.0, d = 1.0;}
+    if (LOT_CURV == 1.0) { a = 0.15, b = 0.225, c = 0.965, d = 0.948;}
+    if (LOT_CURV == 2.0) { a = 0.0, b = 0.225, c = 1.0, d = 0.948;}
 
-    pos  = pos*2.0-1.0;    
-    pos *= vec2(1.0 + (pos.y*pos.y)*warpx, 1.0 + (pos.x*pos.x)*warpy);
-    
-    return pos*0.5 + 0.5;
+        vec2 CURVATURE_DISTORTION = vec2(a, b);
+        // Barrel distortion shrinks the display area a bit, this will allow us to counteract that.
+        vec2 barrelScale = vec2(c,d);
+        coord -= vec2(0.5);
+        float rsq = coord.x*coord.x + coord.y*coord.y;
+        coord += coord * (CURVATURE_DISTORTION * rsq);
+        coord *= barrelScale;
+        if (abs(coord.x) >= 0.5 || abs(coord.y) >= 0.5)
+                coord = vec2(-1.0);             // If out of bounds, return an invalid value.
+        else
+        {
+                coord += vec2(0.5);
+        }
+
+        return coord;
 }
 
 #define one 1.384615
