@@ -6,9 +6,9 @@
 // any later version.
 
 #pragma parameter CURV "CRT-Geom Curvature" 1.0 0.0 1.0 1.0
-#pragma parameter SCAN "CRT-Geom Scanline Weight" 0.2 0.1 0.6 0.05
+#pragma parameter SCAN "CRT-Geom Scanline Weight" 0.3 0.1 0.6 0.05
 #pragma parameter MASK "CRT-Geom Dotmask Strength" 0.2 0.0 0.5 0.05
-#pragma parameter LUM "CRT-Geom Luminance" 0.1 0.0 0.5 0.01
+#pragma parameter LUM "CRT-Geom Luminance" 0.0 0.0 0.5 0.01
 #pragma parameter INTERL "CRT-Geom Interlacing Simulation" 1.0 0.0 1.0 1.0
 #pragma parameter SAT "CRT-Geom Saturation" 1.1 0.0 2.0 0.05
 #pragma parameter LANC "Filter profile: Accurate/Fast" 0.0 0.0 1.0 1.0
@@ -137,18 +137,30 @@ uniform COMPAT_PRECISION float LANC;
 
 float scan(float pos, vec3 color)
     {
-    float wid = SCAN + 0.15 * max(max(color.r,color.g),color.b);
+    float wid = SCAN + 0.2 *dot(vec3(0.2),color);
     float weight = pos / wid;
-    return  (LUM + (0.15 + SCAN)) * exp2(-weight * weight ) / wid;
+    return  (LUM + (0.2 + SCAN)) * exp(-weight*weight ) / wid*1.5;
     }
 
-vec2 Warp(vec2 pos)
+vec2 Warp(vec2 coord)
 {
-    pos = warp;
-    pos *= vec2(1.0+pos.y*pos.y*0.031, 1.0+pos.x*pos.x*0.05);
-    pos = pos*0.5+0.5;
-    return pos;
+        vec2 CURVATURE_DISTORTION = vec2(0.15, 0.225);
+        // Barrel distortion shrinks the display area a bit, this will allow us to counteract that.
+        vec2 barrelScale = vec2(0.965,0.948);
+        coord -= vec2(0.5);
+        float rsq = coord.x*coord.x + coord.y*coord.y;
+        coord += coord * (CURVATURE_DISTORTION * rsq);
+        coord *= barrelScale;
+        if (abs(coord.x) >= 0.5 || abs(coord.y) >= 0.5)
+                coord = vec2(-1.0);             // If out of bounds, return an invalid value.
+        else
+        {
+                coord += vec2(0.5);
+        }
+
+        return coord;
 }
+
 
 void main()
 {
@@ -175,10 +187,10 @@ void main()
     // Calculator here: https://gist.github.com/going-digital/752271db735a07da7617079482394543
     vec4 l2_w0_o3, l2_w1_o3;
     if (LANC == 0.0)
-     {l2_w0_o3 = (((1.5672) * f - 2.6445) * f + 0.0837) * f + 0.9976;
+     {l2_w0_o3 = ((( 1.5672) * f - 2.6445) * f + 0.0837) * f + 0.9976;
       l2_w1_o3 = (((-0.7389) * f + 1.3652) * f - 0.6295) * f - 0.0004;}
     else  {l2_w0_o3 = (-1.1828) * f + 1.1298;
-           l2_w1_o3 = (0.0858) * f - 0.0792;}
+           l2_w1_o3 = ( 0.0858) * f - 0.0792;}
 
     vec4 w1_2  = l2_w0_o3;
     vec2 w12   = w1_2.xy + w1_2.zw;
@@ -200,7 +212,7 @@ void main()
         COMPAT_TEXTURE(Source, vec2(tc3.x, tc12.y)).rgb * wedge.z +
         COMPAT_TEXTURE(Source, vec2(tc12.x, tc3.y)).rgb * wedge.w
     );
-
+    res =clamp(res,0.0,1.0);
     float fp = fract(src_pos.y-0.5);
     if (InputSize.y > 400.0) fp = fract(src_pos.y/2.0-0.5);
 
@@ -211,12 +223,11 @@ void main()
 
     float scn  = scan(fp,res) + scan(1.0-fp,res);
     float msk  = MASK*sin(fragpos)+1.0-MASK;
-    res *= sqrt(scn*msk);
-
+    res *= scn*msk;
+    res = pow(res,vec3(0.55));
     float l = dot(vec3(0.29, 0.6, 0.11), res);
     res  = mix(vec3(l), res, SAT);
-
-if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.0001 && CURV == 1.0 ) res = vec3(0.0);
+    if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.0001 && CURV == 1.0 ) res = vec3(0.0);
 
     FragColor = vec4(res,1.0);
 }
