@@ -40,8 +40,6 @@ COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 scale;
 COMPAT_VARYING vec2 warpp;
-COMPAT_VARYING vec2 warppm;
-COMPAT_VARYING vec2 warp;
 COMPAT_VARYING float fragpos;
 COMPAT_VARYING float omega;
 
@@ -69,7 +67,6 @@ void main()
     scale = TextureSize.xy/InputSize.xy;
     warpp = TEX0.xy*scale;   
     fragpos = warpp.x*OutputSize.x*PI;
-    warp = warpp*2.0-1.0;   
 }
 
 #elif defined(FRAGMENT)
@@ -105,8 +102,6 @@ COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 scale;
 COMPAT_VARYING float fragpos;
 COMPAT_VARYING vec2 warpp;
-COMPAT_VARYING vec2 warppm;
-COMPAT_VARYING vec2 warp;
 COMPAT_VARYING float omega;
 
 // compatibility #defines
