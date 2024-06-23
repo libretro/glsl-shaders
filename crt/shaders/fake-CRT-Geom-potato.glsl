@@ -111,9 +111,9 @@ uniform COMPAT_PRECISION float sharpness;
 
 vec2 Warp(vec2 coord)
 {
-        vec2 CURVATURE_DISTORTION = vec2(0.15, 0.225);
+        vec2 CURVATURE_DISTORTION = vec2(0.13, 0.25);
         // Barrel distortion shrinks the display area a bit, this will allow us to counteract that.
-        vec2 barrelScale = vec2(0.965,0.948);
+        vec2 barrelScale = vec2(0.985,0.945);
         coord -= vec2(0.5);
         float rsq = coord.x*coord.x + coord.y*coord.y;
         coord += coord * (CURVATURE_DISTORTION * rsq);
@@ -134,7 +134,7 @@ vec2 pos = vTexCoord;
 pos = Warp(pos*screenscale);
 
 vec2 corn = min(pos, 1.0-pos);    // This is used to mask the rounded
-     corn.x = 0.0003/corn.x;      // corners later on
+     corn.x = 0.0001/corn.x;      // corners later on
 pos /= screenscale;
 float scanpos = pos.y;
 vec2 near = floor(pos*SourceSize.xy)+0.5;
@@ -145,13 +145,13 @@ pos.y = (near.y + 4.0*f.y*f.y*f.y)*SourceSize.w;
 vec3 res = COMPAT_TEXTURE(Source,pos).rgb;
 float l = dot(vec3(0.25),res);
 
-float scan_pow = mix(0.5,0.3,l);
+float scan_pow = mix(0.5,0.2,l);
 float scn = scan_pow*sin((scanpos*SourceSize.y-0.25)*tau)+1.0-scan_pow;
 float msk = 0.2*sin(maskpos)+0.8;
 
-res *= sqrt(scn*msk);
-res *= mix(1.25,1.05,l);
-
+res *= (scn*msk);
+res *= mix(1.45,1.35,l);
+res = sqrt(res);
 if (corn.y <= corn.x || corn.x < 0.0001 )res = vec3(0.0);
 
 FragColor.rgb = res;
