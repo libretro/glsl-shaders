@@ -38,8 +38,8 @@ any later version.
 #pragma parameter bogus_col " [ COLORS ] " 0.0 0.0 0.0 0.0
 #pragma parameter GAMMA_OUT "Gamma Out" 2.2 0.0 4.0 0.05
 #pragma parameter crt_lum "CRT Luminances On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter brightboost1 "Bright boost dark pixels" 1.3 0.0 3.0 0.05
-#pragma parameter brightboost2 "Bright boost bright pixels" 1.05 0.0 3.0 0.05
+#pragma parameter brightboost1 "Bright boost dark pixels" 1.0 0.0 3.0 0.05
+#pragma parameter brightboost2 "Bright boost bright pixels" 1.0 0.0 3.0 0.05
 #pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
 #pragma parameter contrast "Contrast, 1.0:Off" 1.0 0.00 2.00 0.05
 #pragma parameter nois "Noise" 0.0 0.0 1.0 0.01
