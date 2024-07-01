@@ -1,6 +1,6 @@
 #version 110
 
-#pragma parameter glow "Glow strength" 0.12 0.0 1.0 0.01
+#pragma parameter glow "Glow strength" 0.15 0.0 1.0 0.01
 
 #define pi 3.1415926535897932384626433
 
@@ -104,7 +104,7 @@ uniform COMPAT_PRECISION float glow;
     
 #endif
 
-#define psx vec2(0.0,SourceSize.w)
+#define psx vec2(0.0,SourceSize.w*0.5)
 #define one 1.384615
 #define two 3.230769
 #define w0  0.227027
@@ -122,7 +122,6 @@ vec3 res0 = COMPAT_TEXTURE(Source,vTexCoord).rgb*w0;
      res0 += COMPAT_TEXTURE(Source,vTexCoord-psx*two).rgb*w2;
      res0 += COMPAT_TEXTURE(Source,vTexCoord+psx*two).rgb*w2;
  
-
 FragColor.rgb = res + glow*res0;    
 }
 #endif
