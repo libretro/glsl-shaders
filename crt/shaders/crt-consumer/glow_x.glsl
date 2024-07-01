@@ -102,7 +102,7 @@ uniform COMPAT_PRECISION float glow;
     
 #endif
 
-#define psx vec2(SourceSize.z,0.0)
+#define psx vec2(SourceSize.z*0.75,0.0)
 #define one 1.384615
 #define two 3.230769
 #define w0  0.227027
