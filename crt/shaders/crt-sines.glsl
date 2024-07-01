@@ -39,9 +39,8 @@
 #pragma parameter bogus_col " [ COLORS ] " 0.0 0.0 0.0 0.0
 #pragma parameter Trin "CRT Colors" 0.0 0.0 1.0 1.0
 #pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
-#pragma parameter boostd "Boost Dark Colors" 1.45 1.0 2.0 0.05
 #pragma parameter bogus_conv " [ CONVERGENCE ] " 0.0 0.0 0.0 0.0
-#pragma parameter RX "Convergence Horiz." 0.0 -2.0 2.0 0.05
+#pragma parameter RX "Convergence Horiz." 0.3 -2.0 2.0 0.05
 
 #define pi 3.14159265
 
@@ -155,7 +154,6 @@ COMPAT_VARYING float dx;
 uniform COMPAT_PRECISION float scanl;
 uniform COMPAT_PRECISION float scanh;
 uniform COMPAT_PRECISION float sat;
-uniform COMPAT_PRECISION float boostd;
 uniform COMPAT_PRECISION float slotm;
 uniform COMPAT_PRECISION float slotw;
 uniform COMPAT_PRECISION float Trin;
@@ -166,7 +164,6 @@ uniform COMPAT_PRECISION float CURV;
 #define slotm  1.0    
 #define slotw  3.0    
 #define sat  1.1  
-#define boostd  1.2  
 #define Trin  1.0
 #define CURV  1.0
 #endif
@@ -242,7 +239,6 @@ else pos = vTexCoord;
     res *= sqrt(scn*msk*sl);
     float gray = dot(vec3(0.3,0.6,0.1),res);
     res  = mix(vec3(gray),res,sat);
-    res *= mix(boostd,1.0,w);
     if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.0001 && CURV == 1.0 )res = vec3(0.0);
 
 FragColor.rgb = res;
