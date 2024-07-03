@@ -150,7 +150,6 @@ COMPAT_VARYING float dx;
 // compatibility #defines
 #define Source Texture
 uniform sampler2D PassPrev3Texture;
-uniform sampler2D PassPrev4Texture;
 #define vTexCoord TEX0.xy
 
 #ifdef PARAMETER_UNIFORM
@@ -214,9 +213,9 @@ else pos = vTexCoord;
        p = (i + f-0.5)*ps;
 
 // Convergence
-  vec3 res    =  COMPAT_TEXTURE(PassPrev4Texture,p).rgb;
-  vec2 convrb =  COMPAT_TEXTURE(PassPrev4Texture,p + vec2(dx,0.0)).xz;
-  float convg =  COMPAT_TEXTURE(PassPrev4Texture,p - vec2(dx,0.0)).y;
+  vec3 res    =  COMPAT_TEXTURE(PassPrev3Texture,p).rgb;
+  vec2 convrb =  COMPAT_TEXTURE(PassPrev3Texture,p + vec2(dx,0.0)).xz;
+  float convg =  COMPAT_TEXTURE(PassPrev3Texture,p - vec2(dx,0.0)).y;
 
 
 // vignette  
@@ -248,7 +247,7 @@ else pos = vTexCoord;
     float gray = dot(vec3(0.3,0.6,0.1),res);
     res  = mix(vec3(gray),res,sat);
     res *= mix(boostd, 1.0, w);
-    vec3 Glow = COMPAT_TEXTURE(Source,vTexCoord).rgb;
+    vec3 Glow = COMPAT_TEXTURE(Source,p).rgb;
     res = sqrt(res) + Glow*glow;
     if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.0001 && CURV == 1.0 )res = vec3(0.0);
 
