@@ -3,6 +3,7 @@
 /* 
   crt-sines, a work by DariusG 2023-24
 
+  v2.1 fixed glow properly: by studying how is done the correct way on Guest.r-Dr.Venom 
   v2.0b use hardware hack for 9-tap blur using linear and 5 passes, see:
   https://www.rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/
   v2.0  split Convergence R,B and G for more realistic look
@@ -29,20 +30,22 @@
   v1.1: switched to lanczos4 taps filter
 */
 
-
+#pragma parameter glow "Glow strength" 0.15 0.0 1.0 0.01
 #pragma parameter CURV "Curvature On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter scanl "Scanlines/Mask Low" 0.35 0.0 1.0 0.05
-#pragma parameter scanh "Scanlines/Mask High" 0.1 0.0 1.0 0.05
+#pragma parameter scanl "Scanlines/Mask Low" 0.35 0.0 0.5 0.05
+#pragma parameter scanh "Scanlines/Mask High" 0.15 0.0 0.5 0.05
 #pragma parameter SIZE "Mask Type, 2:Fine, 3:Coarse" 3.0 2.0 3.0 1.0
 #pragma parameter slotm "Slot Mask On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter slotw "Slot Mask Width" 3.0 2.0 3.0 1.0
 #pragma parameter bogus_col " [ COLORS ] " 0.0 0.0 0.0 0.0
 #pragma parameter Trin "CRT Colors" 0.0 0.0 1.0 1.0
+#pragma parameter boostd "Boost Dark Colors" 1.3 1.0 2.0 0.05
 #pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
 #pragma parameter bogus_conv " [ CONVERGENCE ] " 0.0 0.0 0.0 0.0
-#pragma parameter RX "Convergence Horiz." 0.3 -2.0 2.0 0.05
+#pragma parameter RX "Convergence Horiz." 0.0 -2.0 2.0 0.05
 
 #define pi 3.14159265
+#define tau 6.2831852
 
 #if defined(VERTEX)
 
@@ -67,12 +70,12 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
+
 COMPAT_VARYING vec2 scale;
 COMPAT_VARYING vec2 warp;
 COMPAT_VARYING vec2 warpp;
 COMPAT_VARYING float fragpos;
 COMPAT_VARYING vec2 ps;
-COMPAT_VARYING vec2 psg;
 COMPAT_VARYING float dx;
 
 vec4 _oPosition1; 
@@ -104,7 +107,6 @@ void main()
     warp = TEX0.xy*scale;
     warpp = warp*2.0-1.0;
     ps = 1.0/TextureSize.xy;
-    psg = vec2(1.5)/TextureSize.xy;
     dx = ps.x*RX;
 }   
 
@@ -144,10 +146,11 @@ COMPAT_VARYING float fragpos;
 COMPAT_VARYING vec2 warp;
 COMPAT_VARYING vec2 warpp;
 COMPAT_VARYING vec2 ps;
-COMPAT_VARYING vec2 psg;
 COMPAT_VARYING float dx;
 // compatibility #defines
 #define Source Texture
+uniform sampler2D PassPrev3Texture;
+uniform sampler2D PassPrev4Texture;
 #define vTexCoord TEX0.xy
 
 #ifdef PARAMETER_UNIFORM
@@ -158,6 +161,8 @@ uniform COMPAT_PRECISION float slotm;
 uniform COMPAT_PRECISION float slotw;
 uniform COMPAT_PRECISION float Trin;
 uniform COMPAT_PRECISION float CURV;
+uniform COMPAT_PRECISION float glow;
+uniform COMPAT_PRECISION float boostd;
 #else
 #define scanl  0.5      
 #define scanh  0.22      
@@ -166,6 +171,8 @@ uniform COMPAT_PRECISION float CURV;
 #define sat  1.1  
 #define Trin  1.0
 #define CURV  1.0
+#define glow  0.1
+#define boostd 1.3
 #endif
 
 vec2 Warp(vec2 pos)
@@ -196,6 +203,7 @@ void main()
 }
 
 else pos = vTexCoord;
+
 // Hermite
   vec2 ogl2pos = pos*TextureSize.xy;
   vec2 p = ogl2pos+0.5;
@@ -206,15 +214,15 @@ else pos = vTexCoord;
        p = (i + f-0.5)*ps;
 
 // Convergence
-  vec3 res = COMPAT_TEXTURE(Source,p).rgb;
-  vec2 convrb =  COMPAT_TEXTURE(Source,p + vec2(dx,0.0)).xz;
-  float convg =  COMPAT_TEXTURE(Source,p - vec2(dx,0.0)).y;
+  vec3 res    =  COMPAT_TEXTURE(PassPrev4Texture,p).rgb;
+  vec2 convrb =  COMPAT_TEXTURE(PassPrev4Texture,p + vec2(dx,0.0)).xz;
+  float convg =  COMPAT_TEXTURE(PassPrev4Texture,p - vec2(dx,0.0)).y;
 
 
 // vignette  
   float x = (warp.x-0.5);  // range -0.5 to 0.5, 0.0 being center of screen
-  x = x*x*0.7;      // curved response: higher values (more far from center) get higher results.
-
+  x = x*x*0.5;      // curved response: higher values (more far from center) get higher results.
+  
   res = res*0.5 + 0.5*vec3(convrb.x,convg,convrb.y);   
 
  float w = dot(vec3(0.28),res);
@@ -222,7 +230,7 @@ else pos = vTexCoord;
  float mask = scan*1.333;
 
 // apply vignette here
- float scn = (scan+x)*sin((ogl2pos.y+0.5)*pi*2.0)+1.0-(scan+x);
+ float scn = (scan+x)*sin((ogl2pos.y+0.5)*tau)+1.0-scan+x;
  float msk = mask*sin(fragpos*pi)+1.0-mask;
     
     float sl = 1.0; vec2 xy = vec2(0.0);
@@ -232,16 +240,18 @@ else pos = vTexCoord;
     }
 
     if(Trin == 1.0) { 
-    res *= vec3(1.0,0.9,1.1); 
+    res *= vec3(1.0,0.92,1.08); 
     res = clamp(res,0.0,1.0);
     }
 
-    res *= sqrt(scn*msk*sl);
+    res *= scn*msk*sl;
     float gray = dot(vec3(0.3,0.6,0.1),res);
     res  = mix(vec3(gray),res,sat);
+    res *= mix(boostd, 1.0, w);
+    vec3 Glow = COMPAT_TEXTURE(Source,vTexCoord).rgb;
+    res = sqrt(res) + Glow*glow;
     if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.0001 && CURV == 1.0 )res = vec3(0.0);
 
-FragColor.rgb = res;
-    
+FragColor.rgb = res;    
 }
 #endif
