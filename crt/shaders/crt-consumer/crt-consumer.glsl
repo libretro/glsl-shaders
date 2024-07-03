@@ -1,7 +1,8 @@
 #version 110
 
 /* 
-crt-consumer by DariusG 2022-2023,2024
+crt-consumer by DariusG 2022-2023
+
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -597,7 +598,7 @@ if (crt_lum == 1.0){
     // 0.29/0.24, 0.6/0.69, 0.11/0.07
      color *= vec3(1.208,0.8695,1.5714); 
    }
-    vec3 Glow = COMPAT_TEXTURE(Source,vTexCoord).rgb;
+    vec3 Glow = COMPAT_TEXTURE(Source,pC4).rgb;
     color += Glow*glow;
     color=pow(color,vec3(1.0/GAMMA_OUT));
 
