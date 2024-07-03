@@ -30,7 +30,7 @@
   v1.1: switched to lanczos4 taps filter
 */
 
-#pragma parameter glow "Glow strength" 0.15 0.0 1.0 0.01
+#pragma parameter glow "Glow strength" 0.08 0.0 1.0 0.01
 #pragma parameter CURV "Curvature On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter scanl "Scanlines/Mask Low" 0.35 0.0 0.5 0.05
 #pragma parameter scanh "Scanlines/Mask High" 0.15 0.0 0.5 0.05
@@ -150,6 +150,7 @@ COMPAT_VARYING float dx;
 // compatibility #defines
 #define Source Texture
 uniform sampler2D PassPrev3Texture;
+uniform sampler2D PassPrevTexture;
 #define vTexCoord TEX0.xy
 
 #ifdef PARAMETER_UNIFORM
@@ -247,8 +248,9 @@ else pos = vTexCoord;
     float gray = dot(vec3(0.3,0.6,0.1),res);
     res  = mix(vec3(gray),res,sat);
     res *= mix(boostd, 1.0, w);
-    vec3 Glow = COMPAT_TEXTURE(Source,p).rgb;
-    res = sqrt(res) + Glow*glow;
+    vec3 Glow = COMPAT_TEXTURE(Source,pos).rgb;
+    res = res + Glow*glow;
+    res = sqrt(res);
     if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.0001 && CURV == 1.0 )res = vec3(0.0);
 
 FragColor.rgb = res;    
