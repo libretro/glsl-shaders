@@ -30,7 +30,7 @@
   v1.1: switched to lanczos4 taps filter
 */
 
-#pragma parameter glow "Glow strength" 0.08 0.0 1.0 0.01
+#pragma parameter glow "Glow strength" 0.10 0.0 1.0 0.01
 #pragma parameter CURV "Curvature On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter scanl "Scanlines/Mask Low" 0.35 0.0 0.5 0.05
 #pragma parameter scanh "Scanlines/Mask High" 0.15 0.0 0.5 0.05
