@@ -102,7 +102,7 @@ uniform COMPAT_PRECISION float glow;
     
 #endif
 
-#define psx vec2(SourceSize.z*0.75,0.0)
+#define psx vec2(SourceSize.z,0.0)
 #define one 1.384615
 #define two 3.230769
 #define w0  0.227027
@@ -111,9 +111,6 @@ uniform COMPAT_PRECISION float glow;
 
 void main()
 {
-
-vec3 res  = COMPAT_TEXTURE(Source,vTexCoord).rgb;
-
 vec3 res0 = COMPAT_TEXTURE(Source,vTexCoord).rgb*w0;
      res0 += COMPAT_TEXTURE(Source,vTexCoord+psx*one).rgb*w1;
      res0 += COMPAT_TEXTURE(Source,vTexCoord-psx*one).rgb*w1;
@@ -121,6 +118,6 @@ vec3 res0 = COMPAT_TEXTURE(Source,vTexCoord).rgb*w0;
      res0 += COMPAT_TEXTURE(Source,vTexCoord+psx*two).rgb*w2;
  
 
-FragColor.rgb = res + glow*res0;    
+FragColor.rgb = res0;
 }
 #endif
