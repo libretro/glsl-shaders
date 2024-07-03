@@ -1,8 +1,0 @@
-#reference "plain.glslp"
-CS = "1.000000"
-C_STR = "0.450000"
-CONV_R = "0.900000"
-CONV_G = "0.900000"
-CONV_B = "0.900000"
-centerx = "0.50"
-centery = "0.80"
