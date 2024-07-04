@@ -38,7 +38,7 @@ any later version.
 #pragma parameter bogus_col " [ COLORS ] " 0.0 0.0 0.0 0.0
 #pragma parameter GAMMA_OUT "Gamma Out" 2.2 0.0 4.0 0.05
 #pragma parameter crt_lum "CRT Luminances On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter glow "Glow Strength" 0.08 0.0 1.0 0.01
+#pragma parameter glow "Glow Strength" 0.12 0.0 1.0 0.01
 #pragma parameter brightboost1 "Bright boost dark pixels" 1.0 0.0 3.0 0.05
 #pragma parameter brightboost2 "Bright boost bright pixels" 1.0 0.0 3.0 0.05
 #pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
@@ -587,6 +587,8 @@ color =clamp(color, 0.0,1.0);
   x = (vTexCoord.x*SourceSize.x/InputSize.x-0.5);  // range -0.5 to 0.5, 0.0 being center of screen
   x = x*x*1.5;    // curved response: higher values (more far from center) get higher results.
 }
+    vec3 Glow = COMPAT_TEXTURE(Source,pC4).rgb;
+    color += Glow*glow;
     color = color*sw(f,lum,x) + color*sw(1.0-f,lum,x);
     
     color*=mix(mask(maskpos.xy*1.0001,color,lum), vec3(1.0),lum*0.9);
@@ -598,8 +600,7 @@ if (crt_lum == 1.0){
     // 0.29/0.24, 0.6/0.69, 0.11/0.07
      color *= vec3(1.208,0.8695,1.5714); 
    }
-    vec3 Glow = COMPAT_TEXTURE(Source,pC4).rgb;
-    color += Glow*glow;
+
     color=pow(color,vec3(1.0/GAMMA_OUT));
 
     if (sat != 1.0) color = saturation(color, lum, lumWeighting);
