@@ -111,6 +111,12 @@ uniform COMPAT_PRECISION float glow;
 
 void main()
 {
+
+/*
+  use hardware hack for 9-tap blur using linear and 5 passes, see:
+  https://www.rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/
+*/
+
 vec3 res0 = COMPAT_TEXTURE(Source,vTexCoord).rgb*w0;
      res0 += COMPAT_TEXTURE(Source,vTexCoord+psx*one).rgb*w1;
      res0 += COMPAT_TEXTURE(Source,vTexCoord-psx*one).rgb*w1;

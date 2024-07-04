@@ -30,16 +30,16 @@
   v1.1: switched to lanczos4 taps filter
 */
 
-#pragma parameter glow "Glow strength" 0.08 0.0 1.0 0.01
+#pragma parameter glow "Glow strength" 0.12 0.0 1.0 0.01
 #pragma parameter CURV "Curvature On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter scanl "Scanlines/Mask Low" 0.35 0.0 0.5 0.05
-#pragma parameter scanh "Scanlines/Mask High" 0.15 0.0 0.5 0.05
+#pragma parameter scanl "Scanlines/Mask Low" 0.3 0.0 0.5 0.05
+#pragma parameter scanh "Scanlines/Mask High" 0.1 0.0 0.5 0.05
 #pragma parameter SIZE "Mask Type, 2:Fine, 3:Coarse" 3.0 2.0 3.0 1.0
 #pragma parameter slotm "Slot Mask On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter slotw "Slot Mask Width" 3.0 2.0 3.0 1.0
 #pragma parameter bogus_col " [ COLORS ] " 0.0 0.0 0.0 0.0
 #pragma parameter Trin "CRT Colors" 0.0 0.0 1.0 1.0
-#pragma parameter boostd "Boost Dark Colors" 1.3 1.0 2.0 0.05
+#pragma parameter boostd "Boost Dark Colors" 1.45 1.0 2.0 0.05
 #pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
 #pragma parameter bogus_conv " [ CONVERGENCE ] " 0.0 0.0 0.0 0.0
 #pragma parameter RX "Convergence Horiz." 0.0 -2.0 2.0 0.05
@@ -150,7 +150,6 @@ COMPAT_VARYING float dx;
 // compatibility #defines
 #define Source Texture
 uniform sampler2D PassPrev3Texture;
-uniform sampler2D PassPrevTexture;
 #define vTexCoord TEX0.xy
 
 #ifdef PARAMETER_UNIFORM
@@ -209,7 +208,7 @@ else pos = vTexCoord;
   vec2 p = ogl2pos+0.5;
   vec2 i = floor(p);
   vec2 f = p - i;        // -0.5 to 0.5
-       f = f*f*f*(3.0-2.0*f);
+       f = f*f*f*(4.0-3.0*f);
        f.y *= f.y;
        p = (i + f-0.5)*ps;
 
@@ -225,32 +224,33 @@ else pos = vTexCoord;
   
   res = res*0.5 + 0.5*vec3(convrb.x,convg,convrb.y);   
 
- float w = dot(vec3(0.28),res);
- float scan = mix(scanl,scanh,w);
+ float w = dot(vec3(0.25),res);
+ float scan = mix(scanl,scanh,w)+x;
  float mask = scan*1.333;
 
 // apply vignette here
- float scn = (scan+x)*sin((ogl2pos.y+0.5)*tau)+1.0-scan+x;
+ float scn = scan*sin((ogl2pos.y+0.5)*tau)+1.0-scan;
  float msk = mask*sin(fragpos*pi)+1.0-mask;
     
     float sl = 1.0; vec2 xy = vec2(0.0);
     if (slotm == 1.0){
     xy = vTexCoord*OutputSize.xy*scale; 
     sl = slot(xy, mask);
+    msk = msk*sl;
     }
 
     if(Trin == 1.0) { 
     res *= vec3(1.0,0.92,1.08); 
     res = clamp(res,0.0,1.0);
     }
-
-    res *= scn*msk*sl;
-    float gray = dot(vec3(0.3,0.6,0.1),res);
-    res  = mix(vec3(gray),res,sat);
     res *= mix(boostd, 1.0, w);
     vec3 Glow = COMPAT_TEXTURE(Source,pos).rgb;
-    res = res + Glow*glow;
+    res = res + Glow*glow;  
+    res *= scn*msk;
+
     res = sqrt(res);
+    float gray = dot(vec3(0.3,0.6,0.1),res);
+    res  = mix(vec3(gray),res,sat);
     if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.0001 && CURV == 1.0 )res = vec3(0.0);
 
 FragColor.rgb = res;    
