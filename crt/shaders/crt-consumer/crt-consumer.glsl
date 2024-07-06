@@ -46,10 +46,10 @@ any later version.
 #pragma parameter nois "Noise" 0.0 0.0 1.0 0.01
 #pragma parameter WP "Color Temperature %" 0.0 -100.0 100.0 5.0 
 #pragma parameter sawtooth "Sawtooth Effect" 1.0 0.0 1.0 1.0
-#pragma parameter saw_static "Sawtooth Static" 1.0 0.0 1.0 1.0
-#pragma parameter saw_str "Sawtooth Stength" 0.5 0.0 1.0 0.05
+#pragma parameter saw_static "Sawtooth Static" 0.0 0.0 1.0 1.0
+#pragma parameter saw_str "Sawtooth Stength" 0.15 0.0 1.0 0.05
 #pragma parameter bleed "Color Bleed Effect" 1.0 0.0 1.0 1.0
-#pragma parameter bl_size "Color Bleed Size, less is more" 1.5 0.1 4.0 0.05
+#pragma parameter bl_size "Color Bleed Size, less is more" 2.0 0.1 4.0 0.05
 #pragma parameter alloff "Switch off shader" 0.0 0.0 1.0 1.0
 #define pi 6.28318
 
@@ -532,12 +532,12 @@ void main()
 	
 	vec3 color = sample2;
    //sawtooth effect
-float t = sin(float(FrameCount*2));  if(saw_static == 1.0) t= 1.0;
+float t = sin(float(FrameCount));  if(saw_static == 1.0) t= 1.0;
 if (sawtooth == 1.0){
-    if( mod( floor(pC4.y*SourceSize.y*1.0), 2.0 ) == 0.0 ) {
-        color += saw_str*COMPAT_TEXTURE( PassPrev3Texture, pC4 + vec2(SourceSize.z*0.5*t, 0.0) ).rgb;
+    if( mod( floor(pC4.y*525.0), 2.0 ) == 0.0 ) {
+        color += saw_str*COMPAT_TEXTURE( PassPrev3Texture, pC4 + vec2(SourceSize.z*t, 0.0) ).rgb;
     } else {
-        color += saw_str*COMPAT_TEXTURE( PassPrev3Texture, pC4 - vec2(SourceSize.z*0.5*t, 0.0) ).rgb;
+        color += saw_str*COMPAT_TEXTURE( PassPrev3Texture, pC4 - vec2(SourceSize.z*t, 0.0) ).rgb;
     }
     color /= 1.0+saw_str;}
 //end of sawtooth
