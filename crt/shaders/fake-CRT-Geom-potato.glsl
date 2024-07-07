@@ -142,8 +142,8 @@ vec2 f = pos*SourceSize.xy - near;
 
 pos.y = (near.y + 16.0*f.y*f.y*f.y*f.y*f.y)*SourceSize.w;    
 
-vec3 res = COMPAT_TEXTURE(Source,pos).rgb*1.3;
-     res -= 0.3*COMPAT_TEXTURE(Source,pos-vec2(SourceSize.z*0.75,0.0)).rgb;
+vec3 res = COMPAT_TEXTURE(Source,pos).rgb;
+    
 float l = dot(vec3(0.25),res);
 
 float scan_pow = mix(0.5,0.2,l);
