@@ -162,7 +162,7 @@ float h_ph, v_ph, mod0 = 0.0;
 if      (ph_mode == 0.0) {h_ph =  90.0*onedeg; v_ph = PI*0.6667; mod0 = 2.0;}
 else if (ph_mode == 1.0) {h_ph = 110.0*onedeg; v_ph = PI;        mod0 = 2.0;}
 else if (ph_mode == 2.0) {h_ph = 132.0*onedeg; v_ph = PI;        mod0 = 2.0;}
-else if (ph_mode == 3.0) {h_ph =  96.0*onedeg; v_ph = PI*0.6667; mod0 = 3.0;}
+else if (ph_mode == 3.0) {h_ph =  96.0*onedeg; v_ph = PI*0.5;    mod0 = 3.0;}
 else                     {h_ph =  90.0*onedeg; v_ph = PI;        mod0 = 1.0;}
 
 float phase = floor(vTexCoord.x*SourceSize.x + p)*h_ph + mod(floor(vTexCoord.y*SourceSize.y),mod0)*v_ph;
