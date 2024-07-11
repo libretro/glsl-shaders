@@ -1,9 +1,9 @@
 #version 110
 
 #pragma parameter ph_mode "Phase:-1 Custom, 1:ZX,2:MD,3:NES/SNES,4:Artifacts" 2.0 -1.0 4.0 1.0
-#pragma parameter h_deg "Custom Phase Horiz. Degrees" 120.0 0.0 180.0 2.5
+#pragma parameter h_deg "Custom Phase Horiz. Degrees" 120.0 0.0 180.0 0.5
 #pragma parameter v_deg "Custom Phase Vert. Degrees" 120.0 0.0 360.0 2.5
-#pragma parameter modulo "Custom Phase Modulo Steps" 3.0 0.0 12.0 1.0
+#pragma parameter modulo "Custom Phase Modulo Steps (360/Vert.Deg)" 3.0 0.0 12.0 1.0
 #pragma parameter mini_sharp "Resolution" 0.5 0.1 4.0 0.1
 #pragma parameter Fl "Freq. Cutoff" 0.2 0.01 1.0 0.01
 #pragma parameter lpass "Chroma Low Pass" 0.05 0.0 1.0 0.01
@@ -169,7 +169,7 @@ float w = exp(-lpass*p*p);
 
 float h_ph, v_ph, mod0 = 0.0;
 if      (ph_mode == 0.0) {h_ph =  90.0*onedeg; v_ph = PI*0.6667; mod0 = 2.0;}
-else if (ph_mode == 1.0) {h_ph = 110.0*onedeg; v_ph = PI;        mod0 = 2.0;}
+else if (ph_mode == 1.0) {h_ph = 135.0*onedeg; v_ph = PI;        mod0 = 2.0;}
 else if (ph_mode == 2.0) {h_ph = 132.0*onedeg; v_ph = PI;        mod0 = 2.0;}
 else if (ph_mode == 3.0) {h_ph = 120.0*onedeg; v_ph = PI*0.6667; mod0 = 3.0;}
 else if (ph_mode == 4.0) {h_ph =  90.0*onedeg; v_ph = PI;        mod0 = 1.0;}
