@@ -4,7 +4,7 @@
 #pragma parameter mini_sharp "Resolution" 1.0 0.1 4.0 0.1
 #pragma parameter Fl "Freq. Cutoff" 0.2 0.01 1.0 0.01
 #pragma parameter lpass "Chroma Low Pass" 0.05 0.0 1.0 0.01
-#pragma parameter d_crawl "Dot Crawl" 0.3 0.0 1.0 0.05
+#pragma parameter d_crawl "Dot Crawl" 0.0 0.0 1.0 1.0
 #pragma parameter mini_hue1 "Hue Shift I" 0.1 -6.0 6.0 0.05
 #pragma parameter mini_hue2 "Hue Shift Q" -0.1 -6.0 6.0 0.05
 #pragma parameter mini_sat "Saturation" 2.0 0.0 4.0 0.05
@@ -162,7 +162,7 @@ float h_ph, v_ph, mod0 = 0.0;
 if      (ph_mode == 0.0) {h_ph =  90.0*onedeg; v_ph = PI*0.6667; mod0 = 2.0;}
 else if (ph_mode == 1.0) {h_ph = 110.0*onedeg; v_ph = PI;        mod0 = 2.0;}
 else if (ph_mode == 2.0) {h_ph = 132.0*onedeg; v_ph = PI;        mod0 = 2.0;}
-else if (ph_mode == 3.0) {h_ph =  96.0*onedeg; v_ph = PI*0.5;    mod0 = 3.0;}
+else if (ph_mode == 3.0) {h_ph =  90.0*onedeg; v_ph = PI*0.6667;    mod0 = 3.0;}
 else                     {h_ph =  90.0*onedeg; v_ph = PI;        mod0 = 1.0;}
 
 float phase = floor(vTexCoord.x*SourceSize.x + p)*h_ph + mod(floor(vTexCoord.y*SourceSize.y),mod0)*v_ph;
@@ -180,4 +180,4 @@ yuv.gb /= sumc;
 
 FragColor.rgb = yuv*YUV2RGB;
 }
-#endif 
+#endif
