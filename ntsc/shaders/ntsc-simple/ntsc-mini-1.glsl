@@ -1,7 +1,10 @@
 #version 110
 
-#pragma parameter ph_mode "Phase: 1:ZX,2:MD,3:NES/SNES,4:Artifacts" 2.0 0.0 4.0 1.0
-#pragma parameter mini_sharp "Resolution" 1.0 0.1 4.0 0.1
+#pragma parameter ph_mode "Phase:-1 Custom, 1:ZX,2:MD,3:NES/SNES,4:Artifacts" 2.0 -1.0 4.0 1.0
+#pragma parameter h_deg "Custom Phase Horiz. Degrees" 120.0 0.0 180.0 2.5
+#pragma parameter v_deg "Custom Phase Vert. Degrees" 120.0 0.0 360.0 2.5
+#pragma parameter modulo "Custom Phase Modulo Steps" 3.0 0.0 12.0 1.0
+#pragma parameter mini_sharp "Resolution" 0.5 0.1 4.0 0.1
 #pragma parameter Fl "Freq. Cutoff" 0.2 0.01 1.0 0.01
 #pragma parameter lpass "Chroma Low Pass" 0.05 0.0 1.0 0.01
 #pragma parameter d_crawl "Dot Crawl" 0.0 0.0 1.0 1.0
@@ -103,6 +106,9 @@ uniform COMPAT_PRECISION float d_crawl;
 uniform COMPAT_PRECISION float mini_hue;
 uniform COMPAT_PRECISION float mini_sat;
 uniform COMPAT_PRECISION float mini_sharp;
+uniform COMPAT_PRECISION float h_deg;
+uniform COMPAT_PRECISION float v_deg;
+uniform COMPAT_PRECISION float modulo;
 
 #else
 #define ph_mode 90.0
@@ -112,6 +118,9 @@ uniform COMPAT_PRECISION float mini_sharp;
 #define mini_hue 0.0
 #define mini_sat 0.0
 #define mini_sharp 1.0
+#define h_deg 60.0
+#define v_deg 60.0
+#define modulo 1.0
 #endif
 
 #define PI   3.14159265358979323846
@@ -162,8 +171,9 @@ float h_ph, v_ph, mod0 = 0.0;
 if      (ph_mode == 0.0) {h_ph =  90.0*onedeg; v_ph = PI*0.6667; mod0 = 2.0;}
 else if (ph_mode == 1.0) {h_ph = 110.0*onedeg; v_ph = PI;        mod0 = 2.0;}
 else if (ph_mode == 2.0) {h_ph = 132.0*onedeg; v_ph = PI;        mod0 = 2.0;}
-else if (ph_mode == 3.0) {h_ph =  90.0*onedeg; v_ph = PI*0.6667;    mod0 = 3.0;}
-else                     {h_ph =  90.0*onedeg; v_ph = PI;        mod0 = 1.0;}
+else if (ph_mode == 3.0) {h_ph = 120.0*onedeg; v_ph = PI*0.6667; mod0 = 3.0;}
+else if (ph_mode == 4.0) {h_ph =  90.0*onedeg; v_ph = PI;        mod0 = 1.0;}
+else                     {h_ph =  h_deg*onedeg; v_ph = v_deg*onedeg; mod0 = modulo;}
 
 float phase = floor(vTexCoord.x*SourceSize.x + p)*h_ph + mod(floor(vTexCoord.y*SourceSize.y),mod0)*v_ph;
 phase += mini_hue;
