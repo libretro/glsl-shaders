@@ -91,6 +91,9 @@ uniform COMPAT_PRECISION float ph_mode;
 uniform COMPAT_PRECISION float d_crawl;
 uniform COMPAT_PRECISION float mini_hue1;
 uniform COMPAT_PRECISION float mini_hue2;
+uniform COMPAT_PRECISION float h_deg;
+uniform COMPAT_PRECISION float v_deg;
+uniform COMPAT_PRECISION float modulo;
 
 #else
 #define ph_mode 0.0
@@ -113,10 +116,11 @@ vec3 res = vec3(0.0);
 float h_ph, v_ph, mod0 = 0.0;
 
 if      (ph_mode == 0.0) {h_ph =  90.0*onedeg; v_ph = PI*0.6667; mod0 = 2.0;}
-else if (ph_mode == 1.0) {h_ph = 110.0*onedeg; v_ph = PI;        mod0 = 2.0;}
-else if (ph_mode == 2.0) {h_ph = 132.0*onedeg; v_ph = PI;        mod0 = 2.0;}
-else if (ph_mode == 3.0) {h_ph =  90.0*onedeg; v_ph = PI*0.6667;    mod0 = 3.0;}
-else                     {h_ph =  90.0*onedeg; v_ph = PI;        mod0 = 1.0;}
+else if (ph_mode == 1.0) {h_ph = 135.0*onedeg; v_ph = PI;        mod0 = 2.0;}
+else if (ph_mode == 2.0) {h_ph = 111.0*onedeg; v_ph = PI;        mod0 = 2.0;}
+else if (ph_mode == 3.0) {h_ph = 120.0*onedeg; v_ph = PI*0.6667; mod0 = 3.0;}
+else if (ph_mode == 4.0) {h_ph =  90.0*onedeg; v_ph = PI;        mod0 = 1.0;}
+else                     {h_ph =  h_deg*onedeg; v_ph = v_deg*onedeg; mod0 = modulo;}
 
 float phase = floor(vTexCoord.x*SourceSize.x)*h_ph + floor(vTexCoord.y*SourceSize.y)*v_ph;
 phase += d_crawl *sin(mod(float(FrameCount/2),2.0))*PI;
@@ -128,4 +132,4 @@ float signal = dot(vec3(1.0),res);
 
 FragColor.rgb = vec3(signal);
 }
-#endif 
+#endif
