@@ -10,8 +10,8 @@
 #pragma parameter LUMA_CUTOFF "Luma Cutoff" 0.2 0.0 1.0 0.005
 #pragma parameter stat_ph "Dot Crawl On/Off" 0.0 0.0 1.0 1.0
 #pragma parameter dummy " [ System Specific Tweaks] " 0.0 0.0 0.0 0.0
-#pragma parameter pi_mod "Phase-Horiz. Angle" 90.0 1.0 360.0 1.0
-#pragma parameter vert_scal "Phase-Vertical Scale" 0.6667 0.0 1.0 0.05555
+#pragma parameter pi_mod "Phase-Horiz. Angle" 96.0 1.0 360.0 1.0
+#pragma parameter vert_scal "Phase-Vertical Scale" 0.6667 0.0 2.0 0.05555
 
 #if defined(VERTEX)
 
@@ -215,7 +215,9 @@ if (fract(float(n+2)/4.0) == 0.0)
 
 for (int n=-i; n<i; n++) {
     vec2 pos = uv + vec2(float(n) / size.x, 0.0);
-    float phase = (floor(vTexCoord.x*SourceSize.x)+float(n))*pi_mod*onedeg + mod(floor(vTexCoord.y*SourceSize.y)*vert_scal,2.0)*PI; 
+    float modulo = 3.0; if (InputSize.x > 300.0) modulo == 2.0;
+
+    float phase = (floor(vTexCoord.x*SourceSize.x)+float(n))*pi_mod*onedeg + mod(floor(vTexCoord.y*SourceSize.y),modulo)*PI*vert_scal; 
     if (stat_ph == 1.0) phase += sin(mod(float(FrameCount),2.0))*PI;
 
     float r = exp(cutoff*float(n)*float(n));
