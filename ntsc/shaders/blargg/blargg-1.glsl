@@ -218,7 +218,7 @@ for (int n=-i; n<i; n++) {
     float modulo = 3.0; if (InputSize.x > 300.0) modulo == 2.0;
 
     float phase = (floor(vTexCoord.x*SourceSize.x)+float(n))*pi_mod*onedeg + mod(floor(vTexCoord.y*SourceSize.y),modulo)*PI*vert_scal; 
-    if (stat_ph == 1.0) phase += sin(mod(float(FrameCount),2.0))*PI;
+    if (stat_ph == 1.0) phase += sin(mod(float(FrameCount/2),2.0))*PI;
 
     float r = exp(cutoff*float(n)*float(n));
 
