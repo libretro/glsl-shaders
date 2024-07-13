@@ -197,7 +197,7 @@ void main()
  if (CURV == 1.0){
   pos = Warp(warpp);
   corn = min(pos, 1.0-pos);    // This is used to mask the rounded
-  corn.x = 0.0003/corn.x;     // corners later on
+  corn.x = 0.00003/corn.x;     // corners later on
   pos /= scale;
 }
 
@@ -251,7 +251,7 @@ else pos = vTexCoord;
     res = sqrt(res);
     float gray = dot(vec3(0.3,0.6,0.1),res);
     res  = mix(vec3(gray),res,sat);
-    if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.0001 && CURV == 1.0 )res = vec3(0.0);
+    if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.00003 && CURV == 1.0 )res = vec3(0.0);
 
 FragColor.rgb = res;    
 }
