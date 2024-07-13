@@ -8,6 +8,7 @@
 #pragma parameter Fl "Freq. Cutoff" 0.2 0.01 1.0 0.01
 #pragma parameter lpass "Chroma Low Pass" 0.05 0.0 1.0 0.01
 #pragma parameter d_crawl "Dot Crawl" 0.0 0.0 1.0 1.0
+#pragma parameter rf_audio "RF Audio Interference" 0.0 0.0 0.2 0.02
 #pragma parameter mini_hue1 "Hue Shift I" 0.1 -6.0 6.0 0.05
 #pragma parameter mini_hue2 "Hue Shift Q" -0.1 -6.0 6.0 0.05
 #pragma parameter mini_sat "Saturation" 2.0 0.0 4.0 0.05
@@ -179,7 +180,7 @@ else                     {h_ph =  h_deg*onedeg; v_ph = v_deg*onedeg; mod0 = modu
 
 float phase = floor(vTexCoord.x*SourceSize.x + p)*h_ph + mod(floor(vTexCoord.y*SourceSize.y),mod0)*v_ph;
 phase += mini_hue;
-phase += d_crawl *sin(mod(float(FrameCount/2),3.0))*PI*0.6667;
+phase += d_crawl *sin(mod(float(FrameCount),6.0))*PI*0.6667;
 
 vec2 qam = mini_sat*vec2(cos(phase),sin(phase));
 
