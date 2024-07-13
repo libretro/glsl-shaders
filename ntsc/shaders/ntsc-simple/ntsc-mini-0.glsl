@@ -113,8 +113,9 @@ void main() {
 
 vec3 res = vec3(0.0);
 
-float h_ph, v_ph, mod0 = 0.0;
+// snes loosely based on internet videos and blargg
 
+float h_ph, v_ph, mod0 = 0.0;
 if      (ph_mode == 0.0) {h_ph =  90.0*onedeg; v_ph = PI;        mod0 = 2.0;}
 else if (ph_mode == 1.0) {h_ph = 120.0*onedeg; v_ph = PI;        mod0 = 2.0;}
 else if (ph_mode == 2.0) {h_ph = 111.0*onedeg; v_ph = PI;        mod0 = 2.0;}
@@ -123,7 +124,7 @@ else if (ph_mode == 4.0) {h_ph =  45.0*onedeg; v_ph = PI*0.3333; mod0 = 2.0;}
 else                     {h_ph =  h_deg*onedeg; v_ph = v_deg*onedeg; mod0 = modulo;}
 
 float phase = floor(vTexCoord.x*SourceSize.x)*h_ph + floor(vTexCoord.y*SourceSize.y)*v_ph;
-phase += d_crawl *sin(mod(float(FrameCount/2),2.0))*PI;
+phase += d_crawl *sin(mod(float(FrameCount/2),3.0))*PI*0.6667;
 
 res = COMPAT_TEXTURE(Source,vTexCoord).rgb*RGBYUV;
 res.gb *=0.5*vec2(cos(phase+mini_hue1),sin(phase+mini_hue2));
