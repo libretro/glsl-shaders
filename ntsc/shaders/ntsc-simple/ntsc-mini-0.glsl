@@ -131,7 +131,7 @@ if      (ph_mode == 0.0) {h_ph =  90.0*onedeg; v_ph = PI;        mod0 = 2.0;}
 else if (ph_mode == 1.0) {h_ph = 120.0*onedeg; v_ph = PI;        mod0 = 2.0;}
 else if (ph_mode == 2.0) {h_ph = 111.0*onedeg; v_ph = PI;        mod0 = 2.0;}
 else if (ph_mode == 3.0) {h_ph = 120.0*onedeg; v_ph = PI*0.6667; mod0 = 3.0;}
-else if (ph_mode == 4.0) {h_ph =  45.0*onedeg; v_ph = PI*0.3333; mod0 = 2.0;}
+else if (ph_mode == 4.0) {h_ph =  45.0*onedeg; v_ph = 0.0; mod0 = 2.0;}
 else                     {h_ph =  h_deg*onedeg; v_ph = v_deg*onedeg; mod0 = modulo;}
 
 float phase = floor(vTexCoord.x*SourceSize.x)*h_ph + floor(vTexCoord.y*SourceSize.y)*v_ph+ noise(vTexCoord)*rf_audio*PI;
