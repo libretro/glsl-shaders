@@ -260,19 +260,20 @@ mat3 mix_mat = mat3(
 );
 
     float d = 0.1  / 50.0;
-    vec2 uv = vTexCoord;
-
+        vec2 uv = vTexCoord;
+        vec2 screenscale = SourceSize.xy/InputSize.xy;
+        float y = gl_FragCoord.y/screenscale.y/OutputSize.y;
     // Signal Quality calculation
     float s = signal_quality * grain(vec2(uv.x, uv.y * 777777777777777.0), TIME); // Sorry... 
     
     // Main tearing
     float e = min(0.30, pow(max(0.0, cos(uv.y * 4.0 + 0.3) - 0.75) * (s + 0.5) * 1.0, 3.0)) * 25.0;
-    s -= pow(COMPAT_TEXTURE(Source, vec2(0.01 + (uv.y * 32.0) / 32.0, 1.0)).r, 1.0);
+    s -= pow(COMPAT_TEXTURE(Source, vec2(0.01 + (y * 32.0) / 32.0, 1.0)).r, 1.0);
     uv.x += e * abs(s * 3.0)*TEAR/100.0;
     
-    // Bootom tearing, showing up, original shader using 0.0 at the bottom??
+    // Bootom tearing, showing up, original shader using 0.0 at the bottom
     float r = COMPAT_TEXTURE(NOISE, vec2(mod(TIME * 10.0, mod(TIME * 10.0, 256.0) * (1.0 / 256.0)), 0.0)).r * (2.0 * s);
-    uv.x += abs(r * pow(min(0.003, (uv.y - 0.15)) * bottom_strenth, 2.0));
+    uv.x += abs(r * pow(min(0.003, (y - 0.15)) * bottom_strenth, 2.0));
     
     // Apply blur
     d = 0.051 + abs(sin(s / 4.0));
