@@ -28,7 +28,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 ogl2pos;
 COMPAT_VARYING vec2 screenscale;
 COMPAT_VARYING float maskpos;
 
@@ -55,7 +54,6 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
-    ogl2pos = TEX0.xy*SourceSize.xy;
     screenscale = SourceSize.xy/InputSize.xy;
     maskpos = TEX0.x*OutputSize.x*screenscale.x*PI*size;
 }
@@ -90,7 +88,6 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 ogl2pos;
 COMPAT_VARYING float maskpos;
 COMPAT_VARYING vec2 screenscale;
 
