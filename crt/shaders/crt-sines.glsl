@@ -3,6 +3,7 @@
 /* 
   crt-sines, a work by DariusG 2023-24
 
+  v2.2 improved corner cut, speed-up Warp, cleanup here and there.
   v2.1 fixed glow properly: by studying how is done the correct way on Guest.r-Dr.Venom 
   v2.0b use hardware hack for 9-tap blur using linear and 5 passes, see:
   https://www.rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/
@@ -36,7 +37,7 @@
 #pragma parameter scanh "Scanlines/Mask High" 0.1 0.0 0.5 0.05
 #pragma parameter SIZE "Mask Type, 2:Fine, 3:Coarse" 3.0 2.0 3.0 1.0
 #pragma parameter slotm "Slot Mask On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter slotw "Slot Mask Width" 3.0 2.0 3.0 1.0
+#pragma parameter slotw "Slot Mask Width" 6.0 4.0 6.0 2.0
 #pragma parameter bogus_col " [ COLORS ] " 0.0 0.0 0.0 0.0
 #pragma parameter Trin "CRT Colors" 0.0 0.0 1.0 1.0
 #pragma parameter boostd "Boost Dark Colors" 1.45 1.0 2.0 0.05
@@ -105,7 +106,7 @@ void main()
     scale = TextureSize.xy/InputSize.xy;
     fragpos = TEX0.x*OutputSize.x*scale.x*2.0/SIZE;
     warp = TEX0.xy*scale;
-    warpp = warp*2.0-1.0;
+    warpp = warp-0.5;
     ps = 1.0/TextureSize.xy;
     dx = ps.x*RX;
 }   
@@ -176,15 +177,14 @@ uniform COMPAT_PRECISION float boostd;
 
 vec2 Warp(vec2 pos)
 {   
-    pos *= vec2(1.0 + pos.y*pos.y*0.02, 1.0 + pos.x*pos.x*0.03);
-    pos = pos*0.5 + 0.5;
-    return pos;
+    pos *= 1.0 + dot(pos,pos)*0.15;
+    return pos*0.97 + 0.5;
 }
 
 float slot(vec2 pos, float mask)
 {
     float odd = 1.0;
-    if (fract(pos.x/(slotw*2.0)) < 0.5) odd = 0.0;
+    if (fract(pos.x/slotw) < 0.5) odd = 0.0;
 
  return mask*sin((pos.y+odd)*pi)+1.0;
 }
@@ -193,11 +193,13 @@ void main()
 {
  vec2 pos;
  vec2 corn ;
-
+ float d;
  if (CURV == 1.0){
   pos = Warp(warpp);
-  corn = min(pos, 1.0-pos);    // This is used to mask the rounded
-  corn.x = 0.00003/corn.x;     // corners later on
+  corn = min(pos, 1.0-pos);    
+  corn = 0.02-min(corn,0.02);
+  d = sqrt(dot(corn,corn));
+  d = clamp( (0.02-d)*400.0, 0.0,1.0);
   pos /= scale;
 }
 
@@ -219,7 +221,7 @@ else pos = vTexCoord;
 
 
 // vignette  
-  float x = (warp.x-0.5);  // range -0.5 to 0.5, 0.0 being center of screen
+  float x = warpp.x;  // range -0.5 to 0.5, 0.0 being center of screen
   x = x*x*0.5;      // curved response: higher values (more far from center) get higher results.
   
   res = res*0.5 + 0.5*vec3(convrb.x,convg,convrb.y);   
@@ -232,11 +234,10 @@ else pos = vTexCoord;
  float scn = scan*sin((ogl2pos.y+0.5)*tau)+1.0-scan;
  float msk = mask*sin(fragpos*pi)+1.0-mask;
     
-    float sl = 1.0; vec2 xy = vec2(0.0);
+    vec2 xy = vec2(0.0);
     if (slotm == 1.0){
-    xy = vTexCoord*OutputSize.xy*scale; 
-    sl = slot(xy, mask);
-    msk = msk*sl;
+    xy = warp*OutputSize.xy; 
+    msk = msk*slot(xy, mask);
     }
 
     if(Trin == 1.0) { 
@@ -251,7 +252,7 @@ else pos = vTexCoord;
     res = sqrt(res);
     float gray = dot(vec3(0.3,0.6,0.1),res);
     res  = mix(vec3(gray),res,sat);
-    if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.00003 && CURV == 1.0 )res = vec3(0.0);
+    if (CURV == 1.0 )res *= d;
 
 FragColor.rgb = res;    
 }
