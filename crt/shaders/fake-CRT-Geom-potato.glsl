@@ -28,7 +28,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 ogl2pos;
 COMPAT_VARYING vec2 screenscale;
 COMPAT_VARYING float maskpos;
 
@@ -55,7 +54,6 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
-    ogl2pos = TEX0.xy*SourceSize.xy;
     screenscale = SourceSize.xy/InputSize.xy;
     maskpos = TEX0.x*OutputSize.x*screenscale.x*PI*size;
 }
@@ -90,7 +88,6 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 ogl2pos;
 COMPAT_VARYING float maskpos;
 COMPAT_VARYING vec2 screenscale;
 
@@ -111,34 +108,28 @@ uniform COMPAT_PRECISION float sharpness;
 
 vec2 Warp(vec2 coord)
 {
-        vec2 CURVATURE_DISTORTION = vec2(0.13, 0.25);
-        // Barrel distortion shrinks the display area a bit, this will allow us to counteract that.
-        vec2 barrelScale = vec2(0.985,0.945);
         coord -= vec2(0.5);
-        float rsq = coord.x*coord.x + coord.y*coord.y;
-        coord += coord * (CURVATURE_DISTORTION * rsq);
-        coord *= barrelScale;
-        if (abs(coord.x) >= 0.5 || abs(coord.y) >= 0.5)
-                coord = vec2(-1.0);             // If out of bounds, return an invalid value.
-        else
-        {
-                coord += vec2(0.5);
-        }
+        float rsq = dot(coord,coord);
+        // x and y axis distortion
+        coord += coord*(vec2(0.13, 0.23)*rsq);
+        // Barrel distortion shrinks the display area a bit, 
+        // this will allow us to counteract that.
+        coord *= vec2(0.99,0.95);
 
-        return coord;
+        return coord+0.5;
 }
 
 void main() 
 {
-vec2 pos = vTexCoord;
-pos = Warp(pos*screenscale);
+vec2 pos = Warp(vTexCoord*screenscale);
 
 vec2 corn = min(pos, 1.0-pos);    // This is used to mask the rounded
      corn.x = 0.0001/corn.x;      // corners later on
 pos /= screenscale;
-float scanpos = pos.y;
-vec2 near = floor(pos*SourceSize.xy)+0.5;
-vec2 f = pos*SourceSize.xy - near;
+
+vec2 spos = pos*SourceSize.xy;
+vec2 near = floor(spos)+0.5;
+vec2 f = spos - near;
 
 pos.y = (near.y + 16.0*f.y*f.y*f.y*f.y*f.y)*SourceSize.w;    
 
@@ -147,11 +138,11 @@ vec3 res = COMPAT_TEXTURE(Source,pos).rgb;
 float l = dot(vec3(0.25),res);
 
 float scan_pow = mix(0.5,0.2,l);
-float scn = scan_pow*sin((scanpos*SourceSize.y-0.25)*tau)+1.0-scan_pow;
+float scn = scan_pow*sin((spos.y-0.25)*tau)+1.0-scan_pow;
 float msk = 0.2*sin(maskpos)+0.8;
 
-res *= (scn*msk);
-res *= mix(1.45,1.35,l);
+res *= scn*msk;
+res *= mix(1.45,1.25,l);
 res = sqrt(res);
 if (corn.y <= corn.x || corn.x < 0.0001 )res = vec3(0.0);
 
