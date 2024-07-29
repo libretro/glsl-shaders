@@ -1,7 +1,7 @@
 #version 110
 
 /* 
-crt-consumer by DariusG 2022-2023
+crt-consumer by DariusG 2022-2024
 
 
 This program is free software; you can redistribute it and/or modify it
@@ -47,7 +47,7 @@ any later version.
 #pragma parameter WP "Color Temperature %" 0.0 -100.0 100.0 5.0 
 #pragma parameter sawtooth "Sawtooth Effect" 1.0 0.0 1.0 1.0
 #pragma parameter saw_static "Sawtooth Static" 0.0 0.0 1.0 1.0
-#pragma parameter saw_str "Sawtooth Stength" 0.3 0.0 1.0 0.05
+#pragma parameter saw_str "Sawtooth Stength" 0.5 0.0 1.0 0.05
 #pragma parameter bleed "Color Bleed Effect" 1.0 0.0 1.0 1.0
 #pragma parameter bl_size "Color Bleed Size, less is more" 2.0 0.1 4.0 0.05
 #pragma parameter alloff "Switch off shader" 0.0 0.0 1.0 1.0
@@ -532,12 +532,12 @@ void main()
 	
 	vec3 color = sample2;
    //sawtooth effect
-float t = sin(float(FrameCount));  if(saw_static == 1.0) t= 1.0;
+float t = sin(float(FrameCount*2));  if(saw_static == 1.0) t= 1.0;
 if (sawtooth == 1.0){
     if( mod( floor(pC4.y*SourceSize.y), 2.0 ) == 0.0 ) {
-        color += saw_str*COMPAT_TEXTURE( PassPrev3Texture, pC4 + vec2(SourceSize.z*t*0.5, 0.0) ).rgb;
+        color += saw_str*COMPAT_TEXTURE( PassPrev3Texture, pC4 + vec2(SourceSize.z*t*0.75, 0.0) ).rgb;
     } else {
-        color += saw_str*COMPAT_TEXTURE( PassPrev3Texture, pC4 - vec2(SourceSize.z*t*0.5, 0.0) ).rgb;
+        color += saw_str*COMPAT_TEXTURE( PassPrev3Texture, pC4 - vec2(SourceSize.z*t*0.75, 0.0) ).rgb;
     }
     color /= 1.0+saw_str;}
 //end of sawtooth
