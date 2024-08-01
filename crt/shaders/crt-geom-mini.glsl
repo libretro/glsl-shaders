@@ -23,7 +23,7 @@
    THE SOFTWARE.
 */
 #pragma parameter CURV "CRT-Geom Curvature" 1.0 0.0 1.0 1.0
-#pragma parameter scanlines "CRT-Geom Scanline Weight" 0.5 0.0 0.5 0.05
+#pragma parameter scanlines "CRT-Geom Scanline Weight" 0.45 0.0 0.5 0.05
 #pragma parameter MASK "CRT-Geom Dotmask Strength" 0.2 0.0 0.5 0.05
 #pragma parameter INTERL "CRT-Geom Interlacing Simulation" 1.0 0.0 1.0 1.0
 #pragma parameter SAT "CRT-Geom Saturation" 1.0 0.0 2.0 0.05
@@ -149,7 +149,7 @@ vec2 Warp(vec2 coord)
 {
         vec2 CURVATURE_DISTORTION = vec2(0.12, 0.25);
         // Barrel distortion shrinks the display area a bit, this will allow us to counteract that.
-        vec2 barrelScale = vec2(0.985,0.945);
+        vec2 barrelScale = vec2(0.97,0.945);
         coord -= vec2(0.5);
         float rsq = coord.x*coord.x + coord.y*coord.y;
         coord += coord * (CURVATURE_DISTORTION * rsq);
@@ -177,7 +177,7 @@ pos /= scale;
 else pos = vTexCoord;
 
 vec2 xy = pos;
-xy -= dx*3.0;
+xy -= dx*2.0;
 vec2 near = floor(pos*SourceSize.xy)+0.5;
 vec2 f = pos*SourceSize.xy - near;
 
@@ -190,8 +190,8 @@ res += COMPAT_TEXTURE(Source,xy+dx).rgb*5.6;
 res += COMPAT_TEXTURE(Source,xy+2.0*dx).rgb*-1.5;
     
 res /= 5.8;
-    float a = dot(vec3(0.2),res);
-    float s = mix(scanlines,scanlines*0.5,a);
+    float a = dot(vec3(0.25),res);
+    float s = mix(scanlines,scanlines*0.6,a);
 
     float texsize = 1.0;
     float fp = 0.25;
@@ -206,7 +206,7 @@ res /= 5.8;
     float scan = s*sin((pos.y*SourceSize.y*texsize-fp)*tau)+1.0-s;
     float mask = MASK*sin(maskpos)+1.0-MASK;
     res *= scan*mask;
-    res *= mix(1.45,1.05,a);
+    res *= 1.5;
     float l = dot(vec3(0.29, 0.6, 0.11), res);
     res  = mix(vec3(l), res, SAT);
     res = clamp(res,0.0,1.0);
