@@ -5629,6 +5629,6 @@ void main()
         color = float3(color_r.r, color_g.g, color_b.b);
     }
     //  Encode and output the blurred image:
-		FragColor = encode_output(float4(tex2D_linearize(ORIG_LINEARIZED, tex_uv)));
+    FragColor = vec4(color, 1.0);
 } 
 #endif
