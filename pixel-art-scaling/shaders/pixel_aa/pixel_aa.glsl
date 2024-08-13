@@ -1,7 +1,7 @@
 #version 130
 
 /*
-    Pixel AA v1.5 by fishku
+    Pixel AA v1.6 by fishku
     Copyright (C) 2023-2024
     Public domain license (CC0)
 
@@ -24,6 +24,7 @@
     subpixel anti-aliasing, results are identical to the "pixellate" shader.
 
     Changelog:
+    v1.6: Add "fast" version for low-end devices.
     v1.5: Optimize for embedded devices.
     v1.4: Enable subpixel sampling for all four pixel layout orientations,
           including rotated screens.
@@ -35,7 +36,7 @@
 */
 
 // clang-format off
-#pragma parameter PIX_AA_SETTINGS "=== Pixel AA v1.5 settings ===" 0.0 0.0 1.0 1.0
+#pragma parameter PIX_AA_SETTINGS "=== Pixel AA v1.6 settings ===" 0.0 0.0 1.0 1.0
 #pragma parameter PIX_AA_SHARP "Pixel AA sharpening amount" 1.5 0.0 2.0 0.05
 #pragma parameter PIX_AA_GAMMA "Enable gamma-correct blending" 1.0 0.0 1.0 1.0
 #pragma parameter PIX_AA_SUBPX "Enable subpixel AA" 0.0 0.0 1.0 1.0
