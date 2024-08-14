@@ -1,4 +1,4 @@
-#version 400
+#version 130
 
 // See main shader file for copyright and other information.
 
@@ -83,30 +83,19 @@ void main() {
     vec2 phase = modf(tx_coord, period);
     period = (period + 0.5) * tx_to_uv;
 
-    // vec3 samples[4] =
-    //     vec3[4](COMPAT_TEXTURE(Texture, period).rgb,
-    //             COMPAT_TEXTURE(Texture, period + vec2(tx_to_uv.x, 0.0)).rgb,
-    //             COMPAT_TEXTURE(Texture, period + vec2(0.0, tx_to_uv.y)).rgb,
-    //             COMPAT_TEXTURE(Texture, period + tx_to_uv).rgb);
-    // samples = vec3[4](samples[0] * samples[0], samples[1] * samples[1],
-    //                   samples[2] * samples[2], samples[3] * samples[3]);
+    vec3 samples[4] =
+        vec3[4](COMPAT_TEXTURE(Texture, period).rgb,
+                COMPAT_TEXTURE(Texture, period + vec2(tx_to_uv.x, 0.0)).rgb,
+                COMPAT_TEXTURE(Texture, period + vec2(0.0, tx_to_uv.y)).rgb,
+                COMPAT_TEXTURE(Texture, period + tx_to_uv).rgb);
 
-    vec4 r = textureGather(Texture, period, 0);
-    vec4 g = textureGather(Texture, period, 1);
-    vec4 b = textureGather(Texture, period, 2);
-
-    // Move this block just after textureGather to hide latency
     vec2 t = clamp((phase - 0.5) * px_per_tx + 0.5, 0.0, 1.0);
     vec2 offset = t * t * (3.0 - 2.0 * t);
 
-    r *= r;
-    g *= g;
-    b *= b;
-    vec3 samples[4] = vec3[4](vec3(r.w, g.w, b.w), vec3(r.z, g.z, b.z),
-                              vec3(r.x, g.x, b.x), vec3(r.y, g.y, b.y));
-
-    vec3 res = mix(mix(samples[0], samples[1], offset.x),
-                   mix(samples[2], samples[3], offset.x), offset.y);
+    vec3 res =
+        mix(mix(samples[0] * samples[0], samples[1] * samples[1], offset.x),
+            mix(samples[2] * samples[2], samples[3] * samples[3], offset.x),
+            offset.y);
     FragColor = vec4(sqrt(res), 1.0);
 }
 
