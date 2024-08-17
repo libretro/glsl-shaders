@@ -1,10 +1,9 @@
 #version 110
 
-#pragma parameter luma_cut "Luma Frequency Cut-Off" 0.15 0.01 1.0 0.01
-#pragma parameter chroma_cut "Chroma Frequency Cut-Off" 0.1 0.0 1.0 0.01
-#pragma parameter d_cr "Dot Crawl (snes,nes,pce)" 0.0 0.0 1.0 1.0
-#pragma parameter sim_ntsc "Saturation" 1.5 0.0 2.0 0.05
-
+#pragma parameter compo "Filter" 0.07 0.0 0.35 0.01 
+#pragma parameter n_sat "Saturation" 1.2 0.0 2.0 0.05
+#pragma parameter rf_signal "Dot Crawl (SNES:on)" 0.0 0.0 1.0 1.0
+#pragma parameter line_dl "SNES Line Delay" 0.0 0.0 1.0 1.0
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -28,6 +27,8 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING vec2 ogl2pos;
+COMPAT_VARYING float invdims;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -39,8 +40,6 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 // compatibility #defines
 #define vTexCoord TEX0.xy
-#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float WHATEVER;
@@ -52,6 +51,8 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
+    ogl2pos = TEX0.xy*TextureSize.xy;
+    invdims = 1.0/TextureSize.y;
 }
 
 #elif defined(FRAGMENT)
@@ -84,69 +85,56 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING vec2 ogl2pos;
+COMPAT_VARYING float invdims;
 
 // compatibility #defines
 #define vTexCoord TEX0.xy
 #define Source Texture
-#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float luma_cut;
-uniform COMPAT_PRECISION float chroma_cut;
-uniform COMPAT_PRECISION float d_cr;
-uniform COMPAT_PRECISION float sim_ntsc;
+uniform COMPAT_PRECISION float compo;
+uniform COMPAT_PRECISION float n_sat;
+uniform COMPAT_PRECISION float rf_signal;
+uniform COMPAT_PRECISION float line_dl;
+
 #else
-#define luma_cut 0.0
-#define chroma_cut 0.0
-#define d_cr 0.0
-#define sim_ntsc 0.0
+#define compo 1.0
+#define n_sat 1.0
+#define rf_signal 1.0
+#define line_dl 1.0
 #endif
-
-
 
 #define PI   3.14159265358979323846
 #define TAU  6.28318530717958647693
 
-const mat3 YUV2RGB = mat3(1.0, 0.0, 1.13983,
+const mat3 yiq_to_rgb = mat3(1.0, 0.0, 1.13983,
                           1.0, -0.39465, -0.58060,
                           1.0, 2.03211, 0.0);
 
+void main()
+{  
+    vec3 yiq = vec3(0.0);
+    float counter = 0.0;
+    for (int d = -8; d < 8; d++) 
+    {
+        float n = float(d);
+        float w = exp(-compo*n*n);
+        vec2 pos = vec2(vTexCoord.x + n/TextureSize.x*0.5, vTexCoord.y);
+        vec3 s = COMPAT_TEXTURE(Source, pos).rgb;
+        float crawl = 0.0;
+        if (rf_signal == 1.0) crawl = mod(float(FrameCount),2.0) * PI;
+        float delay = 0.0;
+        if (line_dl == 1.0) delay = vTexCoord.y*TextureSize.y*2.0;
+        float t = vTexCoord.x*TextureSize.x*2.0 + n - delay + crawl;
+        
+        yiq += w * s * vec3(1.0, n_sat*cos(t), n_sat*sin(t));
 
-float kaizer (float N, float p)
-{
-    // Compute sinc filter.
-    float k = sin(2.0 * luma_cut  * (N - (p - 1.0) / 2.0));
-    return k;
-}
+        counter += w;
+    }
 
-void main() {
-vec2 ps = vec2(SourceSize.z,0.0);
-vec3 res = vec3(0.0);
-float sum = 0.0;
-float sumc = 0.0;
-float phase = 0.0;
-
-vec2 carrier;
-for (int i=-8; i<8; i++)
-{
-float n = float(i);
-float w = kaizer(4.0,n);
-float cw = exp(-chroma_cut*n*n);
-
-float iTimer = 0.0 ;
-if (d_cr == 1.0) iTimer = mod(float(FrameCount/2),2.0);
-
-phase = ((vTexCoord.x*SourceSize.x + n))*PI*0.5 +  mod(vTexCoord.y*InputSize.y*4.0+iTimer,2.0)*PI;
-carrier = vec2(sim_ntsc*cos(phase),sim_ntsc*sin(phase));
-
-res.r += COMPAT_TEXTURE(Source,vTexCoord + n*ps*0.5).r*w;
-res.gb += COMPAT_TEXTURE(Source,vTexCoord + n*ps).gb*carrier*cw;
-sum += w;
-sumc += cw;
-}
-res.r /= sum;
-res.gb /= sumc;
-FragColor.rgb = res*YUV2RGB;
+    yiq /= counter;
+    
+    FragColor.rgb = yiq*yiq_to_rgb;
 }
 #endif
