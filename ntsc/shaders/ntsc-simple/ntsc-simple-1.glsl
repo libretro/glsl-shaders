@@ -111,13 +111,13 @@ const mat3 RGBYUV =  mat3(0.299, 0.587, 0.114,
 void main()
 {
     float altv = 0.0;
-    if (pal == 1.0) altv = mod(floor(vTexCoord.y * 312.0 + 0.5), 2.0) * PI;
+    if (pal == 1.0) altv = mod(floor(vTexCoord.y * TextureSize.y + 0.5), 2.0) * PI;
 
     float crawl = 0.0;
     if (d_crawl == 1.0) crawl = mod(float(FrameCount),2.0) * PI;
     float delay = 0.0;
     if (line_dl == 1.0) delay = vTexCoord.y*TextureSize.y*2.0;
-    float f = vTexCoord.x*TextureSize.x*2.0 + hue - delay + crawl;
+    float f = vTexCoord.x*TextureSize.x + hue - delay + crawl;
 
     // simulate I and Q bandwidth, I is about 4/10 of Y and Q is about 2/10 
     vec2 carrier = vec2(0.4*cos(f), 0.2*sin(f + altv));
