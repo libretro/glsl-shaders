@@ -91,13 +91,15 @@ COMPAT_VARYING float invdims;
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float hue;
-uniform COMPAT_PRECISION float rf_signal;
+uniform COMPAT_PRECISION float d_crawl;
 uniform COMPAT_PRECISION float line_dl;
+uniform COMPAT_PRECISION float pal;
 
 #else
 #define hue 1.0
-#define rf_signal 1.0
+#define d_crawl 1.0
 #define line_dl 0.0
+#define pal 0.0
 #endif
 
 #define PI   3.14159265358979323846
@@ -108,12 +110,17 @@ const mat3 RGBYUV =  mat3(0.299, 0.587, 0.114,
                          0.701, -0.587, -0.114);
 void main()
 {
+    float altv = 0.0;
+    if (pal == 1.0) altv = mod(floor(vTexCoord.y * 312.0 + 0.5), 2.0) * PI;
+
     float crawl = 0.0;
-    if (rf_signal == 1.0) crawl = mod(float(FrameCount),2.0) * PI;
+    if (d_crawl == 1.0) crawl = mod(float(FrameCount),2.0) * PI;
     float delay = 0.0;
     if (line_dl == 1.0) delay = vTexCoord.y*TextureSize.y*2.0;
     float f = vTexCoord.x*TextureSize.x*2.0 + hue - delay + crawl;
-    vec2 carrier = vec2(cos(f), sin(f));
+
+    // simulate I and Q bandwidth, I is about 4/10 of Y and Q is about 2/10 
+    vec2 carrier = vec2(0.4*cos(f), 0.2*sin(f + altv));
     vec3 res = COMPAT_TEXTURE(Source,vTexCoord).rgb*RGBYUV;
     res.gb *= carrier;
     float signal = dot(vec3(1.0),res);
