@@ -1,7 +1,7 @@
 #version 110
 
 #pragma parameter freq_cut "Filter Frequencies" 0.08 0.03 0.35 0.01 
-#pragma parameter n_sat "Saturation" 2.8 0.0 6.0 0.05
+#pragma parameter n_sat "Saturation" 2.0 0.0 6.0 0.05
 #pragma parameter d_crawl "Dot Crawl (SNES:on)" 0.0 0.0 1.0 1.0
 #pragma parameter line_dl "SNES Line Delay" 0.0 0.0 1.0 1.0
 #pragma parameter pal "PAL on/off" 0.0 0.0 1.0 1.0
@@ -119,7 +119,7 @@ const mat3 yiq_to_rgb = mat3(1.0, 0.0, 1.13983,
 void main()
 {  
     float altv = 0.0;
-    if (pal == 1.0) altv = mod(floor(vTexCoord.y * 312.0 + 0.5), 2.0) * PI;
+    if (pal == 1.0) altv = mod(floor(vTexCoord.y * TextureSize.y + 0.5), 2.0) * PI;
 
     vec3 yiq = vec3(0.0);
     float counter = 0.0;
@@ -127,13 +127,13 @@ void main()
     {
         float n = float(d);
         float w = exp(-freq_cut*n*n);
-        vec2 pos = vec2(vTexCoord.x + n/TextureSize.x*0.5, vTexCoord.y);
+        vec2 pos = vec2(vTexCoord.x + n/TextureSize.x, vTexCoord.y);
         vec3 s = COMPAT_TEXTURE(Source, pos).rgb;
         float crawl = 0.0;
         if (d_crawl == 1.0) crawl = mod(float(FrameCount),2.0) * PI;
         float delay = 0.0;
         if (line_dl == 1.0) delay = vTexCoord.y*TextureSize.y*2.0;
-        float t = vTexCoord.x*TextureSize.x*2.0 + n - delay + crawl;
+        float t = vTexCoord.x*TextureSize.x + n - delay + crawl;
         // compensate for Q small bandwidth
         yiq += w * s * vec3(1.0, n_sat*cos(t), 2.0*n_sat*sin(t+altv));
 
