@@ -1,7 +1,7 @@
 #version 110
 
 #pragma parameter freq_cut "Filter Frequencies" 0.08 0.03 0.35 0.01 
-#pragma parameter n_sat "Saturation" 1.6 0.0 2.0 0.05
+#pragma parameter n_sat "Saturation" 1.8 0.0 3.0 0.05
 #pragma parameter d_crawl "Dot Crawl (SNES:on)" 0.0 0.0 1.0 1.0
 #pragma parameter line_dl "SNES Line Delay" 0.0 0.0 1.0 1.0
 #pragma parameter pal "PAL on/off" 0.0 0.0 1.0 1.0
