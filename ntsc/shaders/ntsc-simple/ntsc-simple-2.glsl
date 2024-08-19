@@ -1,11 +1,11 @@
 #if defined(VERTEX)
 
-#pragma parameter bogus "0:nes/snes 1:md 2:pce 3:ms 4:ZXSp(pal) 5:c64-high 6:c64-low" 0.0 0.0 0.0 0.0
-
-#pragma parameter system_choose "System choose" 0.0 0.0 6.0 1.0
+#pragma parameter bogus "0:nes/snes 1:md 2:pce 3:ms 4:ZXSp 5:c64-high 6:c64-low 7:a2600" 0.0 0.0 0.0 0.0
+#pragma parameter system_choose "System choose" 0.0 0.0 7.0 1.0
 #pragma parameter steps "Filter Size (faster)" 4.0 1.0 16.0 1.0
 #pragma parameter ntsc_sharp "NTSC Sharpness" 0.1 0.0 1.0 0.01
 #pragma parameter ntsc_sat "NTSC Saturation" 2.5 0.0 4.0 0.05
+#pragma parameter anim_overr "Force Animate Artifacts" 0.0 0.0 1.0 1.0
 
 #if __VERSION__ >= 130
 #define COMPAT_VARYING out
@@ -82,11 +82,13 @@ uniform COMPAT_PRECISION float ntsc_sharp;
 uniform COMPAT_PRECISION float steps;
 uniform COMPAT_PRECISION float ntsc_sat;
 uniform COMPAT_PRECISION float system_choose;
+uniform COMPAT_PRECISION float anim_overr;
 #else
 #define ntsc_sharp 0.1
 #define steps 0.1
 #define ntsc_sat 0.1
 #define system_choose 0.0
+#define anim_overr 0.0
 #endif
 
 mat3 rgb2yuv = mat3(0.299, 0.587, 0.114,
@@ -106,10 +108,11 @@ void main()
     // ZX Spectrum PAL clock
     if (system_choose == 4.0) system_clock = PAL_CLOCK/7.0;
     // c64 high
-    if (system_choose == 5.0) system_clock = PAL_CLOCK/8.19;
+    if (system_choose == 5.0) system_clock = PAL_CLOCK/8.19; // 320*200 pal
     // c64 low
-    if (system_choose == 6.0) system_clock = PAL_CLOCK/8.19/2.0;
-
+    if (system_choose == 6.0) system_clock = PAL_CLOCK/8.19/2.0; // 160*200 pal
+    // Atari 2600
+    if (system_choose == 7.0) system_clock = 1.0; // A2600 is 1:1 ntsc clock
 
     float phase_alt = NTSC_CLOCK/system_clock;
     float v_phase_alt = phase_alt;
@@ -126,7 +129,10 @@ void main()
     if (system_choose == 5.0 || system_choose == 6.0) {v_phase_alt = 0.0; timer = 0.0; 
         altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}
     if (system_choose == 6.0) {v_phase_alt = 0.0; timer = 0.0;
-     altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}   
+     altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}  
+
+    if (anim_overr == 1.0) timer = mod(float(FrameCount),2.0);    
+      
     vec3 res = vec3(0.0);
     float sum = 0.0;
     vec2 ps = vec2(SourceSize.z,0.0);
