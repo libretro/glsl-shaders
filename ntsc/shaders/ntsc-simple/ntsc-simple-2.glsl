@@ -121,11 +121,12 @@ void main()
     if (system_choose == 2.0) {v_phase_alt = 1.0;}
     if (system_choose == 3.0) {v_phase_alt = 0.0; timer = 0.0;}
     float altv = 0.0;
-  if (system_choose == 4.0 || system_choose == 5.0) {v_phase_alt = 0.0; timer = 0.0; 
+    if (system_choose == 4.0 || system_choose == 5.0) {v_phase_alt = 0.0; timer = 0.0; 
         altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}
-  if (system_choose == 5.0 || system_choose == 6.0) {v_phase_alt = 0.0; timer = 0.0; 
+    if (system_choose == 5.0 || system_choose == 6.0) {v_phase_alt = 0.0; timer = 0.0; 
         altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}
-      
+    if (system_choose == 6.0) {v_phase_alt = 0.0; timer = 0.0;
+     altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}   
     vec3 res = vec3(0.0);
     float sum = 0.0;
     vec2 ps = vec2(SourceSize.z,0.0);
