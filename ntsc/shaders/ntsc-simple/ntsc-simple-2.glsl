@@ -1,10 +1,11 @@
-#version 110
-
-#pragma parameter compo "Filter" 0.07 0.0 0.35 0.01 
-#pragma parameter n_sat "Saturation" 1.2 0.0 2.0 0.05
-#pragma parameter rf_signal "Dot Crawl (SNES:on)" 0.0 0.0 1.0 1.0
-#pragma parameter line_dl "SNES Line Delay" 0.0 0.0 1.0 1.0
 #if defined(VERTEX)
+
+#pragma parameter bogus "0:nes/snes 1:md 2:pce 3:ms 4:ZXSp(pal) 5:c64-high 6:c64-low" 0.0 0.0 0.0 0.0
+
+#pragma parameter system_choose "System choose" 0.0 0.0 6.0 1.0
+#pragma parameter steps "Filter Size (faster)" 4.0 1.0 16.0 1.0
+#pragma parameter ntsc_sharp "NTSC Sharpness" 0.1 0.0 1.0 0.01
+#pragma parameter ntsc_sat "NTSC Saturation" 2.5 0.0 4.0 0.05
 
 #if __VERSION__ >= 130
 #define COMPAT_VARYING out
@@ -27,10 +28,7 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 ogl2pos;
-COMPAT_VARYING float invdims;
 
-vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
 uniform COMPAT_PRECISION int FrameDirection;
 uniform COMPAT_PRECISION int FrameCount;
@@ -38,21 +36,10 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 
-// compatibility #defines
-#define vTexCoord TEX0.xy
-
-#ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float WHATEVER;
-#else
-#define WHATEVER 0.0
-#endif
-
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
-    ogl2pos = TEX0.xy*TextureSize.xy;
-    invdims = 1.0/TextureSize.y;
 }
 
 #elif defined(FRAGMENT)
@@ -85,56 +72,76 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 ogl2pos;
-COMPAT_VARYING float invdims;
 
-// compatibility #defines
 #define vTexCoord TEX0.xy
 #define Source Texture
+#define SourceSize vec4(TextureSize,1.0/TextureSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float compo;
-uniform COMPAT_PRECISION float n_sat;
-uniform COMPAT_PRECISION float rf_signal;
-uniform COMPAT_PRECISION float line_dl;
-
+uniform COMPAT_PRECISION float ntsc_sharp;
+uniform COMPAT_PRECISION float steps;
+uniform COMPAT_PRECISION float ntsc_sat;
+uniform COMPAT_PRECISION float system_choose;
 #else
-#define compo 1.0
-#define n_sat 1.0
-#define rf_signal 1.0
-#define line_dl 1.0
+#define ntsc_sharp 0.1
+#define steps 0.1
+#define ntsc_sat 0.1
+#define system_choose 0.0
 #endif
 
-#define PI   3.14159265358979323846
-#define TAU  6.28318530717958647693
-
-const mat3 yiq_to_rgb = mat3(1.0, 0.0, 1.13983,
+mat3 rgb2yuv = mat3(0.299, 0.587, 0.114,
+                        -0.299, -0.587, 0.886, 
+                         0.701, -0.587, -0.114);
+mat3 yuv2rgb = mat3(1.0, 0.0, 1.13983,
                           1.0, -0.39465, -0.58060,
                           1.0, 2.03211, 0.0);
 
+#define pi 3.1415926
+#define NTSC_CLOCK 3.579545
+#define PAL_CLOCK 4.43361
 void main()
-{  
-    vec3 yiq = vec3(0.0);
-    float counter = 0.0;
-    for (int d = -8; d < 8; d++) 
-    {
-        float n = float(d);
-        float w = exp(-compo*n*n);
-        vec2 pos = vec2(vTexCoord.x + n/TextureSize.x*0.5, vTexCoord.y);
-        vec3 s = COMPAT_TEXTURE(Source, pos).rgb;
-        float crawl = 0.0;
-        if (rf_signal == 1.0) crawl = mod(float(FrameCount),2.0) * PI;
-        float delay = 0.0;
-        if (line_dl == 1.0) delay = vTexCoord.y*TextureSize.y*2.0;
-        float t = vTexCoord.x*TextureSize.x*2.0 + n - delay + crawl;
-        
-        yiq += w * s * vec3(1.0, n_sat*cos(t), n_sat*sin(t));
+{
+    float system_clock = 21.47727273/4.0; // nes & snes master clock, ppu needs 4 cycles per pixel
+    if (system_choose == 1.0) system_clock = NTSC_CLOCK/(15.0*NTSC_CLOCK/8.0);
+    // ZX Spectrum PAL clock
+    if (system_choose == 4.0) system_clock = PAL_CLOCK/7.0;
+    // c64 high
+    if (system_choose == 5.0) system_clock = PAL_CLOCK/8.19;
+    // c64 low
+    if (system_choose == 6.0) system_clock = PAL_CLOCK/8.19/2.0;
 
-        counter += w;
-    }
 
-    yiq /= counter;
+    float phase_alt = NTSC_CLOCK/system_clock;
+    float v_phase_alt = phase_alt;
+    float timer = mod(float(FrameCount),2.0);
     
-    FragColor.rgb = yiq*yiq_to_rgb;
-}
+    // md doesn't alternate every line, doesn't animate too
+    if (system_choose == 1.0) {v_phase_alt =0.0; timer = 0.0;}
+    // pce alternates every two lines
+    if (system_choose == 2.0) {v_phase_alt = 1.0;}
+    if (system_choose == 3.0) {v_phase_alt = 0.0; timer = 0.0;}
+    float altv = 0.0;
+    if (system_choose == 4.0 || system_choose == 5.0) {v_phase_alt = 0.0; timer = 0.0; 
+        altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}
+    if (system_choose == 5.0 || system_choose == 6.0) {v_phase_alt = 0.0; timer = 0.0; 
+        altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}
+    if (system_choose == 6.0) {v_phase_alt = 0.0; timer = 0.0;
+     altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}   
+    vec3 res = vec3(0.0);
+    float sum = 0.0;
+    vec2 ps = vec2(SourceSize.z,0.0);
+    int N = int(steps);
+for (int i=-N; i<N; i++)
+    {
+
+    float n = float(i);
+    float w = exp(-ntsc_sharp*n*n);
+    float phase = (vTexCoord.x*SourceSize.x+n)*pi*phase_alt - vTexCoord.y*SourceSize.y*pi*v_phase_alt + timer*pi + altv;
+    vec3 carrier = vec3(1.0,ntsc_sat*cos(phase),ntsc_sat*sin(phase));
+    res += w*COMPAT_TEXTURE(Source, vTexCoord + ps*n).rgb*carrier;
+    sum += w;
+    }
+    res /= sum;
+    FragColor.rgb = res * yuv2rgb;
+} 
 #endif
