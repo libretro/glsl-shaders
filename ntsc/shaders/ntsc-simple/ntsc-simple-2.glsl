@@ -142,7 +142,7 @@ for (int i=-N; i<N; i++)
 
     float n = float(i);
     float w = exp(-ntsc_sharp*n*n);
-    float phase = (vTexCoord.x*SourceSize.x+n)*pi*phase_alt - vTexCoord.y*SourceSize.y*pi*v_phase_alt + timer*pi + altv;
+    float phase = (vTexCoord.x*SourceSize.x+n)*pi*phase_alt - vTexCoord.y*SourceSize.y*pi*v_phase_alt + timer*pi*phase_alt + altv;
     vec3 carrier = vec3(1.0,ntsc_sat*cos(phase),ntsc_sat*sin(phase));
     res += w*COMPAT_TEXTURE(Source, vTexCoord + ps*n).rgb*carrier;
     sum += w;
