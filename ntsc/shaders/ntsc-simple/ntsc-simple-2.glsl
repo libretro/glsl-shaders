@@ -123,7 +123,7 @@ void main()
     // md doesn't alternate every line, doesn't animate too
     if (system_choose == 1.0) {v_phase_alt =0.0; timer = 0.0;}
     // pce alternates every two lines
-    if (system_choose == 2.0) {v_phase_alt = 1.0;}
+    if (system_choose == 2.0) {v_phase_alt = 1.0; timer = 0.0;}
     if (system_choose == 3.0) {v_phase_alt = 0.0; timer = 0.0;}
     float altv = 0.0;
     if (system_choose == 4.0 || system_choose == 5.0) {v_phase_alt = 0.0; timer = 0.0; 
