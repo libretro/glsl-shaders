@@ -133,7 +133,7 @@ void main()
     if (anim_overr == 1.0) timer = mod(float(FrameCount),2.0);    
     vec3 res = COMPAT_TEXTURE(Source, vTexCoord).rgb*rgb2yuv;
 
-    float phase =  vTexCoord.x*SourceSize.x*pi*phase_alt- vTexCoord.y*SourceSize.y*pi*v_phase_alt + timer*pi +altv ;
+    float phase =  vTexCoord.x*SourceSize.x*pi*phase_alt- vTexCoord.y*SourceSize.y*pi*v_phase_alt + timer*pi*phase_alt +altv ;
     vec3 carrier = vec3(1.0,0.5*cos(phase-ntsc_U+hue_u),0.5*sin(phase-ntsc_V+hue_v));
     float signal = dot(vec3(1.0),res*carrier); 
     FragColor.rgb = vec3(signal);
