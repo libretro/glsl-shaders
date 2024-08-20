@@ -129,7 +129,7 @@ void main()
         hue_v = -3.0; altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}
     if (system_choose == 6.0) {v_phase_alt = 0.0; timer = 0.0;hue_u = -1.0; 
         hue_v = -1.3; altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}
-    if (system_choose == 7.0) {hue_u = 1.6; hue_v = 1.8; }
+    if (system_choose == 7.0) {hue_u = 1.6; hue_v = 1.8;v_phase_alt = 0.0; timer = 0.0;}
     
     if (anim_overr == 1.0) timer = mod(float(FrameCount),2.0);    
     vec3 res = COMPAT_TEXTURE(Source, vTexCoord).rgb*rgb2yuv;
