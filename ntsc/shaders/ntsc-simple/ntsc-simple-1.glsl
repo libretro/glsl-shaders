@@ -1,7 +1,7 @@
 #if defined(VERTEX)
 
-#pragma parameter ntsc_U "U Hue" 0.8 -6.0 6.0 0.05
-#pragma parameter ntsc_V "V Hue" 1.0 -6.0 6.0 0.05
+#pragma parameter ntsc_U "U Hue (Purple to Yellow)" 0.8 -6.0 6.0 0.05
+#pragma parameter ntsc_V "V Hue (Red to Cyan)" 1.0 -6.0 6.0 0.05
 
 #if __VERSION__ >= 130
 #define COMPAT_VARYING out
