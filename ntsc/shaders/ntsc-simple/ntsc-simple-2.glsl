@@ -103,14 +103,16 @@ mat3 yuv2rgb = mat3(1.0, 0.0, 1.13983,
 #define PAL_CLOCK 4.43361
 void main()
 {
-    float system_clock = 21.47727273/4.0; // nes & snes master clock, ppu needs 4 cycles per pixel
+    // nes & snes master clock, ppu needs 4 cycles per pixel, pce too on 256px. 320px pce is 21.47/3.0
+    // ms too is the same clock
+    float system_clock = 21.47727273/4.0; 
     if (system_choose == 1.0) system_clock = NTSC_CLOCK/(15.0*NTSC_CLOCK/8.0);
     // ZX Spectrum PAL clock
     if (system_choose == 4.0) system_clock = PAL_CLOCK/7.0;
     // c64 high
-    if (system_choose == 5.0) system_clock = PAL_CLOCK/8.19; // 320*200 pal
+    if (system_choose == 5.0) system_clock = PAL_CLOCK/7.882; // 320*200 pal
     // c64 low
-    if (system_choose == 6.0) system_clock = PAL_CLOCK/8.19/2.0; // 160*200 pal
+    if (system_choose == 6.0) system_clock = PAL_CLOCK/7.882/2.0; // 160*200 pal
     // Atari 2600
     if (system_choose == 7.0) system_clock = 1.0; // A2600 is 1:1 ntsc clock
 
@@ -142,7 +144,7 @@ for (int i=-N; i<N; i++)
 
     float n = float(i);
     float w = exp(-ntsc_sharp*n*n);
-    float phase = (vTexCoord.x*SourceSize.x+n)*pi*phase_alt - vTexCoord.y*SourceSize.y*pi*v_phase_alt + timer*pi*phase_alt + altv;
+    float phase = (vTexCoord.x*SourceSize.x + n)*pi*phase_alt - vTexCoord.y*SourceSize.y*pi*v_phase_alt + timer*pi*phase_alt + altv;
     vec3 carrier = vec3(1.0,ntsc_sat*cos(phase),ntsc_sat*sin(phase));
     res += w*COMPAT_TEXTURE(Source, vTexCoord + ps*n).rgb*carrier;
     sum += w;
