@@ -132,6 +132,7 @@ void main()
         altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}
     if (system_choose == 6.0) {v_phase_alt = 0.0; timer = 0.0;
      altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}  
+    if (system_choose == 7.0) {v_phase_alt = 0.0; timer = 0.0; }
 
     if (anim_overr == 1.0) timer = mod(float(FrameCount),2.0);    
       
