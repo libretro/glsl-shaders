@@ -1,6 +1,6 @@
 #if defined(VERTEX)
 
-#pragma parameter bogus "0:nes/snes 1:md 2:pce 3:ms/md256 4:ZXSp 5:c64-high 6:a2600" 0.0 0.0 0.0 0.0
+#pragma parameter bogus "0:nes/snes 1:md 2:pce 3:ms/md256 4:ZXSp 5:c64 6:a2600" 0.0 0.0 0.0 0.0
 #pragma parameter system_choose "System choose" 0.0 0.0 6.0 1.0
 #pragma parameter steps "Filter Size (faster)" 4.0 1.0 16.0 1.0
 #pragma parameter ntsc_sharp "NTSC Sharpness" 0.1 0.0 1.0 0.01
