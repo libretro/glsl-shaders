@@ -1,11 +1,11 @@
 #if defined(VERTEX)
 
-#pragma parameter bogus "0:nes/snes 1:md 2:pce 3:ms 4:ZXSp(pal) 5:c64-high 6:c64-low" 0.0 0.0 0.0 0.0
-
-#pragma parameter system_choose "System choose" 0.0 0.0 6.0 1.0
+#pragma parameter bogus "0:nes/snes 1:md 2:pce 3:ms 4:ZXSp 5:c64-high 6:c64-low 7:a2600" 0.0 0.0 0.0 0.0
+#pragma parameter system_choose "System choose" 0.0 0.0 7.0 1.0
 #pragma parameter steps "Filter Size (faster)" 4.0 1.0 16.0 1.0
 #pragma parameter ntsc_sharp "NTSC Sharpness" 0.1 0.0 1.0 0.01
 #pragma parameter ntsc_sat "NTSC Saturation" 2.5 0.0 4.0 0.05
+#pragma parameter anim_overr "Force Animate Artifacts" 0.0 0.0 1.0 1.0
 
 #if __VERSION__ >= 130
 #define COMPAT_VARYING out
@@ -82,11 +82,13 @@ uniform COMPAT_PRECISION float ntsc_sharp;
 uniform COMPAT_PRECISION float steps;
 uniform COMPAT_PRECISION float ntsc_sat;
 uniform COMPAT_PRECISION float system_choose;
+uniform COMPAT_PRECISION float anim_overr;
 #else
 #define ntsc_sharp 0.1
 #define steps 0.1
 #define ntsc_sat 0.1
 #define system_choose 0.0
+#define anim_overr 0.0
 #endif
 
 mat3 rgb2yuv = mat3(0.299, 0.587, 0.114,
@@ -101,15 +103,18 @@ mat3 yuv2rgb = mat3(1.0, 0.0, 1.13983,
 #define PAL_CLOCK 4.43361
 void main()
 {
-    float system_clock = 21.47727273/4.0; // nes & snes master clock, ppu needs 4 cycles per pixel
+    // nes & snes master clock, ppu needs 4 cycles per pixel, pce too on 256px. 320px pce is 21.47/3.0
+    // ms too is the same clock
+    float system_clock = 21.47727273/4.0; 
     if (system_choose == 1.0) system_clock = NTSC_CLOCK/(15.0*NTSC_CLOCK/8.0);
     // ZX Spectrum PAL clock
     if (system_choose == 4.0) system_clock = PAL_CLOCK/7.0;
     // c64 high
-    if (system_choose == 5.0) system_clock = PAL_CLOCK/8.19;
+    if (system_choose == 5.0) system_clock = PAL_CLOCK/7.882; // 320*200 pal
     // c64 low
-    if (system_choose == 6.0) system_clock = PAL_CLOCK/8.19/2.0;
-
+    if (system_choose == 6.0) system_clock = PAL_CLOCK/7.882/2.0; // 160*200 pal
+    // Atari 2600
+    if (system_choose == 7.0) system_clock = 1.0; // A2600 is 1:1 ntsc clock
 
     float phase_alt = NTSC_CLOCK/system_clock;
     float v_phase_alt = phase_alt;
@@ -118,7 +123,7 @@ void main()
     // md doesn't alternate every line, doesn't animate too
     if (system_choose == 1.0) {v_phase_alt =0.0; timer = 0.0;}
     // pce alternates every two lines
-    if (system_choose == 2.0) {v_phase_alt = 1.0;}
+    if (system_choose == 2.0) {v_phase_alt = 1.0; timer = 0.0;}
     if (system_choose == 3.0) {v_phase_alt = 0.0; timer = 0.0;}
     float altv = 0.0;
     if (system_choose == 4.0 || system_choose == 5.0) {v_phase_alt = 0.0; timer = 0.0; 
@@ -126,7 +131,11 @@ void main()
     if (system_choose == 5.0 || system_choose == 6.0) {v_phase_alt = 0.0; timer = 0.0; 
         altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}
     if (system_choose == 6.0) {v_phase_alt = 0.0; timer = 0.0;
-     altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}   
+     altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}  
+    if (system_choose == 7.0) {v_phase_alt = 0.0; timer = 0.0; }
+
+    if (anim_overr == 1.0) timer = mod(float(FrameCount),2.0);    
+      
     vec3 res = vec3(0.0);
     float sum = 0.0;
     vec2 ps = vec2(SourceSize.z,0.0);
@@ -136,7 +145,7 @@ for (int i=-N; i<N; i++)
 
     float n = float(i);
     float w = exp(-ntsc_sharp*n*n);
-    float phase = (vTexCoord.x*SourceSize.x+n)*pi*phase_alt - vTexCoord.y*SourceSize.y*pi*v_phase_alt + timer*pi + altv;
+    float phase = (vTexCoord.x*SourceSize.x + n)*pi*phase_alt - vTexCoord.y*SourceSize.y*pi*v_phase_alt + timer*pi*phase_alt + altv;
     vec3 carrier = vec3(1.0,ntsc_sat*cos(phase),ntsc_sat*sin(phase));
     res += w*COMPAT_TEXTURE(Source, vTexCoord + ps*n).rgb*carrier;
     sum += w;
