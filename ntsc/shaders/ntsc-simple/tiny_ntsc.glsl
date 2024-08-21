@@ -2,6 +2,7 @@
 
 #pragma parameter comb "Comb Filter" 0.9 0.0 1.0 0.05
 #pragma parameter ln_delay "NES/SNES Line Delay" 1.0 0.0 1.0 1.0
+#pragma parameter sharp_pix "Sharper" 0.0 0.0 1.0 1.0
 
 #if defined(VERTEX)
 
@@ -92,10 +93,12 @@ COMPAT_VARYING vec4 TEX0;
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float comb;
 uniform COMPAT_PRECISION float ln_delay;
+uniform COMPAT_PRECISION float sharp_pix;
 
 #else
 #define comb 0.6
 #define ln_delay 1.0
+#define sharp_pix 0.0
 
 #endif
 
@@ -109,14 +112,15 @@ mat3 YUV2RGB = mat3(1.0, 0.0, 1.13983,
                           1.0, -0.39465, -0.58060,
                           1.0, 2.03211, 0.0);
 
-vec2 dxy = vec2(SourceSize.z*0.75,0.0);
-vec2 dy = vec2(0.0,SourceSize.w*0.125);
-
 // max 170.666 color "dots" per line
 #define NTSC_RES 170.6666
 
 void main() 
 {
+float pixsize = 0.75; 
+if (sharp_pix == 1.0) pixsize = 0.5;
+vec2 dxy = vec2(SourceSize.z*pixsize,0.0);
+vec2 dy = vec2(0.0,SourceSize.w*0.125);
 vec3 final = vec3(0.0);
 float sum = 0.0;
 int N = 2; 
