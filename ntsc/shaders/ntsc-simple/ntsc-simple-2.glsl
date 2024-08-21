@@ -1,10 +1,10 @@
 #if defined(VERTEX)
 
-#pragma parameter bogus "0:nes/snes 1:md 2:pce 3:ms 4:ZXSp 5:c64-high 6:c64-low 7:a2600" 0.0 0.0 0.0 0.0
-#pragma parameter system_choose "System choose" 0.0 0.0 7.0 1.0
+#pragma parameter bogus "0:nes/snes 1:md 2:pce 3:ms 4:ZXSp 5:c64-high 6:a2600" 0.0 0.0 0.0 0.0
+#pragma parameter system_choose "System choose" 0.0 0.0 6.0 1.0
 #pragma parameter steps "Filter Size (faster)" 4.0 1.0 16.0 1.0
 #pragma parameter ntsc_sharp "NTSC Sharpness" 0.1 0.0 1.0 0.01
-#pragma parameter ntsc_sat "NTSC Saturation" 2.5 0.0 4.0 0.05
+#pragma parameter ntsc_sat "NTSC Saturation" 2.0 0.0 4.0 0.05
 #pragma parameter anim_overr "Force Animate Artifacts" 0.0 0.0 1.0 1.0
 
 #if __VERSION__ >= 130
@@ -109,12 +109,10 @@ void main()
     if (system_choose == 1.0) system_clock = NTSC_CLOCK/(15.0*NTSC_CLOCK/8.0);
     // ZX Spectrum PAL clock
     if (system_choose == 4.0) system_clock = PAL_CLOCK/7.0;
-    // c64 high
-    if (system_choose == 5.0) system_clock = PAL_CLOCK/7.882; // 320*200 pal
-    // c64 low
-    if (system_choose == 6.0) system_clock = PAL_CLOCK/7.882/2.0; // 160*200 pal
+    // c64 runs 4*PAL/NTSC then divides 18 or 14(ntsc), feeds the cpu freq, then runs 8x times of cpu
+    if (system_choose == 5.0) system_clock = PAL_CLOCK/(PAL_CLOCK*4.0/18.0*8.0);
     // Atari 2600
-    if (system_choose == 7.0) system_clock = 1.0; // A2600 is 1:1 ntsc clock
+    if (system_choose == 6.0) system_clock = 1.0; // A2600 is 1:1 ntsc clock
 
     float phase_alt = NTSC_CLOCK/system_clock;
     float v_phase_alt = phase_alt;
@@ -130,9 +128,7 @@ void main()
         altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}
     if (system_choose == 5.0 || system_choose == 6.0) {v_phase_alt = 0.0; timer = 0.0; 
         altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}
-    if (system_choose == 6.0) {v_phase_alt = 0.0; timer = 0.0;
-     altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}  
-    if (system_choose == 7.0) {v_phase_alt = 0.0; timer = 0.0; }
+    if (system_choose == 6.0) {v_phase_alt = 0.0; timer = 0.0; }
 
     if (anim_overr == 1.0) timer = mod(float(FrameCount),2.0);    
       
