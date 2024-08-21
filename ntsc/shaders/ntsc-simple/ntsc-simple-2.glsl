@@ -108,7 +108,7 @@ void main()
     float system_clock = 21.47727273/4.0; 
     if (system_choose == 1.0) system_clock = NTSC_CLOCK/(15.0*NTSC_CLOCK/8.0);
     // ZX Spectrum PAL clock
-    if (system_choose == 4.0) system_clock = PAL_CLOCK/7.0;
+    if (system_choose == 4.0) system_clock = PAL_CLOCK/7.0/2.0;
     // c64 runs 4*PAL/NTSC then divides 18 or 14(ntsc), feeds the cpu freq, then runs 8x times of cpu
     if (system_choose == 5.0) system_clock = PAL_CLOCK/(PAL_CLOCK*4.0/18.0*8.0);
     // Atari 2600 is 1:1 ntsc
