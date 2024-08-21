@@ -1,6 +1,6 @@
 #version 110
 
-#pragma parameter comb "Comb Filter" 0.9 0.0 1.0 0.05
+#pragma parameter comb "Comb Filter" 0.7 0.0 1.0 0.05
 #pragma parameter ln_delay "NES/SNES Line Delay" 1.0 0.0 1.0 1.0
 #pragma parameter sharp_pix "Sharper" 0.0 0.0 1.0 1.0
 
