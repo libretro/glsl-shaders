@@ -103,7 +103,7 @@ void main()
     float system_clock = 21.47727273/4.0; 
     // md uses 15*ntsc clock and each pixel has 8 cycles
     if (system_choose == 1.0) system_clock = NTSC_CLOCK/(15.0*NTSC_CLOCK/8.0);
-    if (system_choose == 4.0) system_clock = PAL_CLOCK/7.0;
+    if (system_choose == 4.0) system_clock = PAL_CLOCK/7.0/2.0;
     // c64 runs 4*PAL/NTSC then divides 18 or 14(ntsc), feeds the cpu freq, then runs 8x times of cpu
     if (system_choose == 5.0) system_clock = PAL_CLOCK/(PAL_CLOCK*4.0/18.0*8.0);
     // Atari 2600 is 1:1 ntsc
@@ -121,8 +121,8 @@ void main()
     if (system_choose == 2.0) {v_phase_alt = 1.0; timer = 0.0;}
     if (system_choose == 3.0) {v_phase_alt = 0.0; timer = 0.0;}
     float altv = 0.0;
-    if (system_choose == 4.0) {v_phase_alt = 0.0; timer = 0.0;hue_u = -1.4; 
-        hue_v = -1.8; altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}
+    if (system_choose == 4.0) {v_phase_alt = 0.0; timer = 0.0;hue_u = 1.8; 
+        hue_v = 1.8; altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}
     if (system_choose == 5.0) {v_phase_alt = 0.0; timer = 0.0;hue_u = -3.2; 
         hue_v = -3.0; altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}
     if (system_choose == 6.0) {hue_u = -1.4;hue_v = -1.3;v_phase_alt = 1.0; timer = 0.0;}
