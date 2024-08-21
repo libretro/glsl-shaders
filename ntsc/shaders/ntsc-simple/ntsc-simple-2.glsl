@@ -116,7 +116,7 @@ void main()
 
     float phase_alt = NTSC_CLOCK/system_clock;
     float v_phase_alt = phase_alt;
-    float timer = mod(float(FrameCount),2.0);
+    float timer = mod(float(FrameCount/2),2.0);
     
     // md doesn't alternate every line, doesn't animate too
     if (system_choose == 1.0) {v_phase_alt =0.0; timer = 0.0;}
