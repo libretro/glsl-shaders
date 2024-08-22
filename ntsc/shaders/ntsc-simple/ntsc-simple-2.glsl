@@ -1,7 +1,7 @@
 #if defined(VERTEX)
 
-#pragma parameter bogus "0:nes/snes 1:md 2:pce 3:ms/md256 4:ZXSp 5:c64 6:a2600" 0.0 0.0 0.0 0.0
-#pragma parameter system_choose "System choose" 0.0 0.0 6.0 1.0
+#pragma parameter system_choose "SYSTEM CHOOSE" 0.0 0.0 6.0 1.0
+#pragma parameter bogus "[ 0:NINTENDO 1:GEN 2:PCE 3:MS-MD256 4:ZXSp 5:C=64 6:A26]" 0.0 0.0 1.0 1.0
 #pragma parameter steps "Filter Size (faster)" 4.0 1.0 16.0 1.0
 #pragma parameter ntsc_sharp "NTSC Sharpness" 0.1 0.0 1.0 0.01
 #pragma parameter ntsc_sat "NTSC Saturation" 2.0 0.0 4.0 0.05
@@ -130,7 +130,7 @@ void main()
         altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}
     if (system_choose == 6.0) {v_phase_alt = 0.0; timer = 0.0; }
 
-    if (anim_overr == 1.0) timer = mod(float(FrameCount),2.0);    
+    if (anim_overr == 1.0) timer = mod(float(FrameCount/2),2.0);    
       
     vec3 res = vec3(0.0);
     float sum = 0.0;
