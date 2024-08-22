@@ -119,7 +119,7 @@ void main()
     if (system_choose == 1.0) {v_phase_alt =0.0; timer = 0.0; hue_u = -3.0; hue_v = -3.0;}
     // pce alternates every two lines
     if (system_choose == 2.0) {v_phase_alt = 1.0; timer = 0.0;}
-    if (system_choose == 3.0) {v_phase_alt = 0.0; timer = 0.0;}
+    if (system_choose == 3.0) {hue_u = 1.0; hue_v = 0.8; v_phase_alt = 0.0; timer = 0.0;}
     float altv = 0.0;
     if (system_choose == 4.0) {v_phase_alt = 0.0; timer = 0.0;hue_u = 1.8; 
         hue_v = 1.8; altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}
@@ -127,7 +127,7 @@ void main()
         hue_v = -3.0; altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}
     if (system_choose == 6.0) {hue_u = -1.4;hue_v = -1.3;v_phase_alt = 1.0; timer = 0.0;}
     
-    if (anim_overr == 1.0) timer = mod(float(FrameCount),2.0);    
+    if (anim_overr == 1.0) timer = mod(float(FrameCount/2),2.0);    
     vec3 res = COMPAT_TEXTURE(Source, vTexCoord).rgb*rgb2yuv;
 
     float phase =  vTexCoord.x*SourceSize.x*pi*phase_alt- vTexCoord.y*SourceSize.y*pi*v_phase_alt + timer*pi*phase_alt +altv ;
