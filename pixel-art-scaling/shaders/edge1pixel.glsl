@@ -44,22 +44,11 @@ uniform COMPAT_PRECISION vec2 InputSize;
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    COL0 = COLOR;
     TEX0.xy = TexCoord.xy * TextureSize.xy; // NES x: [0; 256], y: [0; 240]
     INVERSE_SCALE_HALF = InputSize / OutputSize * 0.5;
 }
 
 #elif defined(FRAGMENT)
-
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
 
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
@@ -70,6 +59,16 @@ precision mediump float;
 #define COMPAT_PRECISION mediump
 #else
 #define COMPAT_PRECISION
+#endif
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out COMPAT_PRECISION vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
 #endif
 
 uniform COMPAT_PRECISION int FrameDirection;
@@ -118,7 +117,7 @@ void main()
 	}
 */
 
-	vec2 newCoord = isFractionInside * coordAtPixelCenter + (1 - isFractionInside) * coordBetweenPixels;
+	vec2 newCoord = isFractionInside * coordAtPixelCenter + (1.0 - isFractionInside) * coordBetweenPixels;
 	vec2 newTexCoord = newCoord * SourceSize.zw;
 	FragColor = vec4(COMPAT_TEXTURE(Source, newTexCoord).rgb, 1.0);
 
