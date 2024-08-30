@@ -1,9 +1,11 @@
 #version 130
 
-// Insert a single interpolated display (high-res)
-// pixel row between each pair of adjacent source (low-res) pixels.
+// Insert a configurable count (1, 2, 3...) of interpolated display (high-res)
+// pixel rows between each pair of adjacent source (low-res) pixels.
 // by decavoid
 
+
+#pragma parameter PixelCount "Pixel Count" 2.0 1.0 8.0 1.0
 
 #if defined(VERTEX)
 
@@ -28,7 +30,9 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 INVERSE_SCALE_HALF;
+COMPAT_VARYING vec4 sizeScale;
+COMPAT_VARYING vec2 interpolationRangeHalf;
+COMPAT_VARYING float stepPerRow;
 
 uniform mat4 MVPMatrix;
 uniform COMPAT_PRECISION int FrameDirection;
@@ -41,12 +45,21 @@ uniform COMPAT_PRECISION vec2 InputSize;
 #define vTexCoord TEX0.xy
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float PixelCount;
+#else
+#define PixelCount 2.0
+#endif
+
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy * TextureSize.xy; // NES x: [0; 256], y: [0; 240]
-    INVERSE_SCALE_HALF = InputSize / OutputSize * 0.5;
+
+    sizeScale = vec4(OutputSize / InputSize, InputSize / OutputSize);
+    interpolationRangeHalf = PixelCount * 0.5 * sizeScale.zw;
+    stepPerRow = 1.0 / (PixelCount + 1.0);
 }
 
 #elif defined(FRAGMENT)
@@ -79,7 +92,9 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 INVERSE_SCALE_HALF;
+COMPAT_VARYING vec4 sizeScale;
+COMPAT_VARYING vec2 interpolationRangeHalf;
+COMPAT_VARYING float stepPerRow;
 
 // fragment compatibility #defines
 #define Source Texture
@@ -87,43 +102,36 @@ COMPAT_VARYING vec2 INVERSE_SCALE_HALF;
 
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 
-vec2 isInside(vec2 v, vec2 left, vec2 right)
-{
-	return step(left, v) - step(right, v);
-}
 
 // uncomment to see a red grid of modified pixels
 //#define DEBUG_DRAW_EDGES
 
 void main()
 {
-	vec2 pixelCoords = vTexCoord;
-	vec2 iPixelCoords = floor(pixelCoords);
+	vec2 PixelCoords = vTexCoord;
+	vec2 iPixelCoords = floor(PixelCoords);
 	vec2 coordAtPixelCenter = iPixelCoords + vec2(0.5);
-	vec2 coordBetweenPixels = round(pixelCoords);
-	vec2 f = pixelCoords - iPixelCoords + vec2(1e-3);
-	vec2 isFractionInside = isInside(f, INVERSE_SCALE_HALF, 1.0 - INVERSE_SCALE_HALF);
+	vec2 coordBetweenPixels = round(PixelCoords);
+	vec2 origOffset = PixelCoords - coordBetweenPixels + 1e-3; // [-0.5; 0.5]
 
-/*
-	Equivalent:
-	if (isFractionInside.x)
-	{
-		// shift coord to the nearest pixel center to prevent interpolation
-		newCoord.x = coordAtPixelCenter.x;
-	}
-	else
-	{
-		// shift exactly between pixels for perfect interpolation
-		newCoord.x = coordBetweenPixels.x;
-	}
-*/
+	vec2 needInterpolate = step(abs(origOffset), interpolationRangeHalf);
 
-	vec2 newCoord = isFractionInside * coordAtPixelCenter + (1 - isFractionInside) * coordBetweenPixels;
+	// if needInterpolate == 0, disable interpolation, choose coordAtPixelCenter.
+	//
+	// if needInterpolate == 1, transform origOffset.x
+	// from range [-interpolationRangeHalf.x; interpolationRangeHalf.x]
+	// to range (-0.5; 0.5)
+	vec2 segmentIndex = floor((origOffset + interpolationRangeHalf) * sizeScale.xy);
+	vec2 transformedOffset = stepPerRow * (segmentIndex + 1) - 0.5;
+	vec2 interpolatedCoord = coordBetweenPixels + transformedOffset;
+
+	vec2 newCoord = (1 - needInterpolate) * coordAtPixelCenter + needInterpolate * interpolatedCoord;
 	vec2 newTexCoord = newCoord * SourceSize.zw;
+
 	FragColor = vec4(COMPAT_TEXTURE(Source, newTexCoord).rgb, 1.0);
 
 #ifdef DEBUG_DRAW_EDGES
-	if (isFractionInside.x + isFractionInside.y < 2)
+	if (needInterpolate.x + needInterpolate.y > 0)
 		FragColor.r = 1;
 #endif
 }
