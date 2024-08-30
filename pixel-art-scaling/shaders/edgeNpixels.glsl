@@ -54,7 +54,6 @@ uniform COMPAT_PRECISION float PixelCount;
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    COL0 = COLOR;
     TEX0.xy = TexCoord.xy * TextureSize.xy; // NES x: [0; 256], y: [0; 240]
 
     sizeScale = vec4(OutputSize / InputSize, InputSize / OutputSize);
@@ -63,16 +62,6 @@ void main()
 }
 
 #elif defined(FRAGMENT)
-
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
 
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
@@ -83,6 +72,16 @@ precision mediump float;
 #define COMPAT_PRECISION mediump
 #else
 #define COMPAT_PRECISION
+#endif
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
+out COMPAT_PRECISION vec4 FragColor;
+#else
+#define COMPAT_VARYING varying
+#define FragColor gl_FragColor
+#define COMPAT_TEXTURE texture2D
 #endif
 
 uniform COMPAT_PRECISION int FrameDirection;
@@ -122,10 +121,10 @@ void main()
 	// from range [-interpolationRangeHalf.x; interpolationRangeHalf.x]
 	// to range (-0.5; 0.5)
 	vec2 segmentIndex = floor((origOffset + interpolationRangeHalf) * sizeScale.xy);
-	vec2 transformedOffset = stepPerRow * (segmentIndex + 1) - 0.5;
+	vec2 transformedOffset = stepPerRow * (segmentIndex + 1.0) - 0.5;
 	vec2 interpolatedCoord = coordBetweenPixels + transformedOffset;
 
-	vec2 newCoord = (1 - needInterpolate) * coordAtPixelCenter + needInterpolate * interpolatedCoord;
+	vec2 newCoord = (1.0 - needInterpolate) * coordAtPixelCenter + needInterpolate * interpolatedCoord;
 	vec2 newTexCoord = newCoord * SourceSize.zw;
 
 	FragColor = vec4(COMPAT_TEXTURE(Source, newTexCoord).rgb, 1.0);
