@@ -85,11 +85,14 @@ uniform COMPAT_PRECISION float console_border_enable;
 
 void main()
 {
-	float video_scale_factor = floor(outsize.y / InputSize.y);
-	if (console_border_enable > 0.5) video_scale_factor = video_scale;
-	vec2 scaled_video_out = (InputSize.xy * vec2(video_scale_factor));
-    // Remaps position to integer scaled output
-    gl_Position = MVPMatrix * VertexCoord / vec4( vec2(outsize.xy / scaled_video_out), 1.0, 1.0 );
+    float scale_x = floor(outsize.x / InputSize.x);
+    float scale_y = floor(outsize.y / InputSize.y);
+    float video_scale_factor = min(scale_x, scale_y);
+    if (console_border_enable > 0.5) {
+        video_scale_factor = video_scale;
+    }
+    vec2 scaled_video_out = InputSize.xy * vec2(video_scale_factor);
+    gl_Position = MVPMatrix * VertexCoord / vec4(outsize.xy / scaled_video_out, 1.0, 1.0);
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy + half_pixel;
     dot_size = SourceSize.zw;
@@ -100,6 +103,7 @@ void main()
 ////////////////////////////////////////////////////////////////////////////////
 // Fragment shader                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
 
 #if __VERSION__ >= 130
 #define COMPAT_VARYING in
@@ -151,12 +155,13 @@ uniform COMPAT_PRECISION float color_toggle;
 uniform COMPAT_PRECISION float negative_toggle;
 uniform COMPAT_PRECISION float desaturate_toggle;
 #endif
+  
 
 void main()
 {
-    vec3 foreground_color = texture2D(COLOR_PALETTE, vec2(0.75, 0.5)).rgb;
+    vec3 foreground_color = COMPAT_TEXTURE(COLOR_PALETTE, vec2(0.75, 0.5)).rgb;
 
-    vec3 curr_rgb_original = texture2D(Texture, TEX0.xy).rgb;
+    vec3 curr_rgb_original = COMPAT_TEXTURE(Texture, TEX0.xy).rgb;
     vec3 curr_rgb_negative = vec3(1.0) - curr_rgb_original;
     vec3 curr_rgb = mix(curr_rgb_original, curr_rgb_negative, step(0.5, negative_toggle));
 
@@ -177,9 +182,9 @@ void main()
     
     vec3 final_color = mix(input_rgb, foreground_color, color_toggle);
 
-    // Cálculo de luminancia
+    // luminance calculation
     float luminance = dot(final_color, vec3(0.299, 0.587, 0.114));
-    final_color = mix(final_color, vec3(luminance), desaturate_toggle); // Mezcla con blanco y negro
+    final_color = mix(final_color, vec3(luminance), desaturate_toggle); // Mix color
 
     vec4 out_color = vec4(final_color, rgb_to_alpha);  
 
