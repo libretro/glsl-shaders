@@ -35,7 +35,7 @@ scale_y2 = "1.000000"
 
 
 textures = "COLOR_PALETTE;BACKGROUND"
-COLOR_PALETTE = shaders/gameboy/resources/sample-palettes/w-palette.png
+COLOR_PALETTE = shaders/gameboy/resources/sample-palettes/b-w-palette.png
 COLOR_PALETTE_linear = "false"
 COLOR_PALETTE_wrap_mode = "clamp_to_border"
 COLOR_PALETTE_mipmap = "false"
