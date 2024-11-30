@@ -1,4 +1,5 @@
-// Corners lifted from fake-crt-geom. Defaults set nicely
+// Corners lifted from fake-crt-geom. Defaults set nicely.
+// Parameter range extended to allow brightness compensation
 // by Rogalian aka cools
 // On sub-HD resolution devices, suggest Scanline Intensity: 0.0
 
@@ -31,8 +32,8 @@
 #pragma parameter crt_gamma "CRT Gamma" 2.5 1.0 4.0 0.05
 #pragma parameter monitor_gamma "Monitor Gamma" 2.2 1.0 4.0 0.05
 #pragma parameter SCANLINE_SINE_COMP_A "Scanline Sine Comp A" 0.0 0.0 0.10 0.01
-#pragma parameter SCANLINE_BASE_BRIGHTNESS "Scanline Base Brightness" 0.95 0.0 1.0 0.01
-#pragma parameter bsmooth "Border Smoothness" 200.0 100.0 1000.0 25.0
+#pragma parameter SCANLINE_BASE_BRIGHTNESS "Scanline Base Brightness" 0.95 0.0 3.0 0.01
+#pragma parameter bsmooth "Border Smoothness" 150.0 40.0 1000.0 25.0
 #pragma parameter a_corner "Corner Roundness" 0.03 0.0 0.2 0.01
 
 // prevent stupid behavior
