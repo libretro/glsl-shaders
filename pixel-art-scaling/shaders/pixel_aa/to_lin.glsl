@@ -22,8 +22,8 @@ in PREC_MED vec4 TexCoord;
 out PREC_MED vec2 tx_coord;
 
 void main() {
-  gl_Position = MVPMatrix * VertexCoord;
-  tx_coord = TexCoord.xy;
+    gl_Position = MVPMatrix * VertexCoord;
+    tx_coord = TexCoord.xy;
 }
 
 #elif defined(FRAGMENT)
@@ -43,8 +43,8 @@ in PREC_MED vec2 tx_coord;
 out PREC_LOW vec4 FragColor;
 
 void main() {
-  PREC_LOW vec3 s = texture(Texture, tx_coord).rgb;
-  FragColor = vec4(pow(s, vec3(2.2)), 1.0);
+    PREC_LOW vec3 s = texture(Texture, tx_coord).rgb;
+    FragColor = vec4(pow(s, vec3(2.2)), 1.0);
 }
 
 #endif
