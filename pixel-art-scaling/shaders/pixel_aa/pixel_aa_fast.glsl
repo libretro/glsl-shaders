@@ -6,15 +6,8 @@
 
 #if defined(VERTEX)
 
-#if __VERSION__ >= 130
 #define COMPAT_VARYING out
 #define COMPAT_ATTRIBUTE in
-#define COMPAT_TEXTURE texture
-#else
-#define COMPAT_VARYING varying
-#define COMPAT_ATTRIBUTE attribute
-#define COMPAT_TEXTURE texture2D
-#endif
 
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
@@ -22,20 +15,18 @@
 #define COMPAT_PRECISION
 #endif
 
-COMPAT_ATTRIBUTE vec4 VertexCoord;
-COMPAT_ATTRIBUTE vec4 TexCoord;
-
-COMPAT_VARYING vec2 tx_coord;
-COMPAT_VARYING vec2 tx_per_px;
-COMPAT_VARYING vec2 px_per_tx;
-COMPAT_VARYING vec2 tx_to_uv;
-
 uniform mat4 MVPMatrix;
-uniform COMPAT_PRECISION int FrameDirection;
-uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+
+in vec4 VertexCoord;
+in vec4 TexCoord;
+
+out vec2 tx_coord;
+out vec2 tx_per_px;
+out vec2 px_per_tx;
+out vec2 tx_to_uv;
 
 void main() {
     gl_Position = MVPMatrix * VertexCoord;
@@ -58,25 +49,14 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out COMPAT_PRECISION vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
-
-uniform COMPAT_PRECISION vec2 OutputSize;
-uniform COMPAT_PRECISION vec2 TextureSize;
-uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 
-COMPAT_VARYING vec2 tx_coord;
-COMPAT_VARYING vec2 tx_per_px;
-COMPAT_VARYING vec2 px_per_tx;
-COMPAT_VARYING vec2 tx_to_uv;
+in vec2 tx_coord;
+in vec2 tx_per_px;
+in vec2 px_per_tx;
+in vec2 tx_to_uv;
+
+out COMPAT_PRECISION vec4 FragColor;
 
 void main() {
     vec2 period;
@@ -84,10 +64,10 @@ void main() {
     period = (period + 0.5) * tx_to_uv;
 
     vec3 samples[4] =
-        vec3[4](COMPAT_TEXTURE(Texture, period).rgb,
-                COMPAT_TEXTURE(Texture, period + vec2(tx_to_uv.x, 0.0)).rgb,
-                COMPAT_TEXTURE(Texture, period + vec2(0.0, tx_to_uv.y)).rgb,
-                COMPAT_TEXTURE(Texture, period + tx_to_uv).rgb);
+        vec3[4](texture(Texture, period).rgb,
+                texture(Texture, period + vec2(tx_to_uv.x, 0.0)).rgb,
+                texture(Texture, period + vec2(0.0, tx_to_uv.y)).rgb,
+                texture(Texture, period + tx_to_uv).rgb);
 
     vec2 t = clamp((phase - 0.5) * px_per_tx + 0.5, 0.0, 1.0);
     vec2 offset = t * t * (3.0 - 2.0 * t);
