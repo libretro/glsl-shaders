@@ -1,41 +1,6 @@
 #version 130
 
-/*
-    Pixel AA by fishku
-    Copyright (C) 2023-2024
-    Public domain license (CC0)
-
-    Features:
-    - Sharp upscaling with anti-aliasing
-    - Subpixel upscaling
-    - Sharpness can be controlled
-    - Gamma correct blending
-    - Integer scales result in pixel-perfect scaling
-    - Can use bilinear filtering for max. performance
-
-    Inspired by:
-    https://www.shadertoy.com/view/MlB3D3
-    by d7samurai
-    and:
-    https://www.youtube.com/watch?v=d6tp43wZqps
-    by t3ssel8r
-
-    With sharpness = 1.0, using the same gamma-correct blending, and disabling
-    subpixel anti-aliasing, results are identical to the "pixellate" shader.
-
-    Changelog:
-    v1.7: Clean up. Optimize through precision specifiers and separate
-          linearization.
-    v1.6: Add "fast" version for low-end devices.
-    v1.5: Optimize for embedded devices.
-    v1.4: Enable subpixel sampling for all four pixel layout orientations,
-          including rotated screens.
-    v1.3: Account for screen rotation in subpixel sampling.
-    v1.2: Optimize and simplify algorithm. Enable sharpness < 1.0. Fix subpixel
-          sampling bug.
-    v1.1: Better subpixel sampling.
-    v1.0: Initial release.
-*/
+// See main shader file for copyright and other information.
 
 // clang-format off
 #pragma parameter PIX_AA_SETTINGS "=== Pixel AA v1.7 settings ===" 0.0 0.0 1.0 1.0
@@ -176,9 +141,8 @@ PREC_LOW vec3 pixel_aa(PREC_LOW sampler2D tex, PREC_MED vec2 tx_per_px,
 
 void main() {
   FragColor.rgb =
-      pow(pixel_aa(Texture, tx_per_px, tx_to_uv, tx_coord, PIX_AA_SHARP,
-                   PIX_AA_SUBPX > 0.5, int(PIX_AA_SUBPX_ORIENTATION), Rotation),
-          vec3(1.0 / 2.2));
+      pixel_aa(Texture, tx_per_px, tx_to_uv, tx_coord, PIX_AA_SHARP,
+               PIX_AA_SUBPX > 0.5, int(PIX_AA_SUBPX_ORIENTATION), Rotation);
 }
 
 #endif

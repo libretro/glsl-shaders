@@ -2,81 +2,60 @@
 
 // See main shader file for copyright and other information.
 
-#define FRAGMENT
+#ifdef GL_ES
+#define PREC_LOW lowp
+#define PREC_MED mediump
+#define PREC_HIGH highp
+#else
+#define PREC_LOW
+#define PREC_MED
+#define PREC_HIGH
+#endif
 
 #if defined(VERTEX)
 
-#define COMPAT_VARYING out
-#define COMPAT_ATTRIBUTE in
+uniform PREC_MED mat4 MVPMatrix;
+uniform PREC_MED vec2 OutputSize;
+uniform PREC_MED vec2 TextureSize;
+uniform PREC_MED vec2 InputSize;
 
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
+in PREC_MED vec4 VertexCoord;
+in PREC_MED vec4 TexCoord;
 
-uniform mat4 MVPMatrix;
-uniform COMPAT_PRECISION vec2 OutputSize;
-uniform COMPAT_PRECISION vec2 TextureSize;
-uniform COMPAT_PRECISION vec2 InputSize;
-
-in vec4 VertexCoord;
-in vec4 TexCoord;
-
-out vec2 tx_coord;
-out vec2 tx_per_px;
-out vec2 px_per_tx;
-out vec2 tx_to_uv;
+out PREC_MED vec2 tx_coord;
+out PREC_MED vec2 px_per_tx;
+out PREC_MED vec2 tx_to_uv;
 
 void main() {
-    gl_Position = MVPMatrix * VertexCoord;
-    tx_coord = TexCoord.xy * TextureSize - 0.5;
-    tx_per_px = InputSize / OutputSize;
-    px_per_tx = OutputSize / InputSize;
-    tx_to_uv = 1.0 / TextureSize;
+  gl_Position = MVPMatrix * VertexCoord;
+  tx_coord = TexCoord.xy * TextureSize - 0.5;
+  px_per_tx = OutputSize / InputSize;
+  tx_to_uv = 1.0 / TextureSize;
 }
 
 #elif defined(FRAGMENT)
 
 #ifdef GL_ES
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
 precision mediump float;
 #endif
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
 
-uniform sampler2D Texture;
+uniform PREC_LOW sampler2D Texture;
 
-in vec2 tx_coord;
-in vec2 tx_per_px;
-in vec2 px_per_tx;
-in vec2 tx_to_uv;
+in PREC_MED vec2 tx_coord;
+in PREC_MED vec2 px_per_tx;
+in PREC_MED vec2 tx_to_uv;
 
-out COMPAT_PRECISION vec4 FragColor;
+out PREC_LOW vec4 FragColor;
 
 void main() {
-    vec2 period;
-    vec2 phase = modf(tx_coord, period);
-    period = (period + 0.5) * tx_to_uv;
+  PREC_MED vec2 period;
+  PREC_MED vec2 phase = modf(tx_coord, period);
 
-    vec3 samples[4] =
-        vec3[4](texture(Texture, period).rgb,
-                texture(Texture, period + vec2(tx_to_uv.x, 0.0)).rgb,
-                texture(Texture, period + vec2(0.0, tx_to_uv.y)).rgb,
-                texture(Texture, period + tx_to_uv).rgb);
+  PREC_MED vec2 t = clamp((phase - 0.5) * px_per_tx + 0.5, 0.0, 1.0);
+  PREC_MED vec2 offset = t * t * (3.0 - 2.0 * t);
 
-    vec2 t = clamp((phase - 0.5) * px_per_tx + 0.5, 0.0, 1.0);
-    vec2 offset = t * t * (3.0 - 2.0 * t);
-
-    vec3 res =
-        mix(mix(samples[0] * samples[0], samples[1] * samples[1], offset.x),
-            mix(samples[2] * samples[2], samples[3] * samples[3], offset.x),
-            offset.y);
-    FragColor = vec4(sqrt(res), 1.0);
+  PREC_LOW vec3 res = texture(Texture, (period + 0.5 + offset) * tx_to_uv).rgb;
+  FragColor = vec4(sqrt(res), 1.0);
 }
 
 #endif
