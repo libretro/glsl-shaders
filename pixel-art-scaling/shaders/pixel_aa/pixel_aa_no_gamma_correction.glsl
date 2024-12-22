@@ -1,41 +1,6 @@
 #version 130
 
-/*
-    Pixel AA by fishku
-    Copyright (C) 2023-2024
-    Public domain license (CC0)
-
-    Features:
-    - Sharp upscaling with anti-aliasing
-    - Subpixel upscaling
-    - Sharpness can be controlled
-    - Gamma correct blending
-    - Integer scales result in pixel-perfect scaling
-    - Can use bilinear filtering for max. performance
-
-    Inspired by:
-    https://www.shadertoy.com/view/MlB3D3
-    by d7samurai
-    and:
-    https://www.youtube.com/watch?v=d6tp43wZqps
-    by t3ssel8r
-
-    With sharpness = 1.0, using the same gamma-correct blending, and disabling
-    subpixel anti-aliasing, results are identical to the "pixellate" shader.
-
-    Changelog:
-    v1.7: Clean up. Optimize through precision specifiers and separate
-          linearization.
-    v1.6: Add "fast" version for low-end devices.
-    v1.5: Optimize for embedded devices.
-    v1.4: Enable subpixel sampling for all four pixel layout orientations,
-          including rotated screens.
-    v1.3: Account for screen rotation in subpixel sampling.
-    v1.2: Optimize and simplify algorithm. Enable sharpness < 1.0. Fix subpixel
-          sampling bug.
-    v1.1: Better subpixel sampling.
-    v1.0: Initial release.
-*/
+// See main shader file for copyright and other information.
 
 // clang-format off
 #pragma parameter PIX_AA_SETTINGS "=== Pixel AA v1.7 settings ===" 0.0 0.0 1.0 1.0
@@ -99,8 +64,6 @@ in PREC_MED vec2 tx_to_uv;
 
 out PREC_LOW vec4 FragColor;
 
-// Similar to smoothstep, but has a configurable slope at x = 0.5.
-// Original smoothstep has a slope of 1.5 at x = 0.5
 PREC_MED vec2 slopestep(PREC_MED vec2 edge0, PREC_MED vec2 edge1, PREC_MED vec2 x,
                         PREC_MED float slope) {
     x = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
@@ -109,8 +72,6 @@ PREC_MED vec2 slopestep(PREC_MED vec2 edge0, PREC_MED vec2 edge1, PREC_MED vec2 
     return o - 0.5 * s * pow(2.0 * (o - s * x), vec2(slope));
 }
 
-// Function to get a pixel value, taking into consideration possible subpixel
-// interpolation.
 PREC_LOW vec3 pixel_aa(PREC_LOW sampler2D tex, PREC_MED vec2 tx_per_px, PREC_MED vec2 tx_to_uv,
                        PREC_MED vec2 tx_coord, PREC_MED float sharpness, bool sample_subpx,
                        PREC_LOW int subpx_orientation, PREC_LOW int screen_rotation) {
@@ -121,10 +82,6 @@ PREC_LOW vec3 pixel_aa(PREC_LOW sampler2D tex, PREC_MED vec2 tx_per_px, PREC_MED
 
     PREC_MED vec2 period, phase, offset;
     if (sample_subpx) {
-        // Subpixel sampling: Shift the sampling by 1/3rd of an output pixel for
-        // each subpixel, assuming that the output size is at monitor
-        // resolution.
-        // Compensate for possible rotation of the screen in certain cores.
         const vec4 rot_corr = vec4(1.0, 0.0, -1.0, 0.0);
         PREC_MED vec2 sub_tx_offset = tx_per_px / 3.0 *
                                       vec2(rot_corr[(screen_rotation + subpx_orientation) % 4],
@@ -150,30 +107,18 @@ PREC_LOW vec3 pixel_aa(PREC_LOW sampler2D tex, PREC_MED vec2 tx_per_px, PREC_MED
 
         return res;
     } else {
-        // The offset for interpolation is a periodic function with
-        // a period length of 1 texel.
-        // The input coordinate is shifted so that the center of the texel
-        // aligns with the start of the period.
-        // First, get the period and phase.
         period = floor(tx_coord - 0.5);
         phase = tx_coord - 0.5 - period;
-        // The function starts at 0, then starts transitioning at
-        // 0.5 - 0.5 / pixels_per_texel, then reaches 0.5 at 0.5,
-        // Then reaches 1 at 0.5 + 0.5 / pixels_per_texel.
-        // For sharpness values < 1.0, blend to bilinear filtering.
+
         offset = slopestep(sharp_lb, sharp_ub, phase, sharpness_lower);
 
-        // When the input is in linear color space, we can make use of a single tap
-        // using bilinear interpolation. The offsets are shifted back to the texel
-        // center before sampling.
         return texture(tex, (period + 0.5 + offset) * tx_to_uv).rgb;
     }
 }
 
 void main() {
-    FragColor.rgb = pow(pixel_aa(Texture, tx_per_px, tx_to_uv, tx_coord, PIX_AA_SHARP,
-                                 PIX_AA_SUBPX > 0.5, int(PIX_AA_SUBPX_ORIENTATION), Rotation),
-                        vec3(1.0 / 2.2));
+    FragColor.rgb = pixel_aa(Texture, tx_per_px, tx_to_uv, tx_coord, PIX_AA_SHARP,
+                             PIX_AA_SUBPX > 0.5, int(PIX_AA_SUBPX_ORIENTATION), Rotation);
 }
 
 #endif

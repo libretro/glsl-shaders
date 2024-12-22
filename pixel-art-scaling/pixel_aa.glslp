@@ -1,5 +1,9 @@
-shaders = 1
+shaders = 2
 
-shader0 = shaders/pixel_aa/pixel_aa.glsl
-filter_linear0 = true
-scale_type0 = viewport
+shader0 = shaders/pixel_aa/to_lin.glsl
+filter_linear0 = false
+scale_type0 = source
+
+shader1 = shaders/pixel_aa/pixel_aa.glsl
+filter_linear1 = true
+scale_type1 = viewport
