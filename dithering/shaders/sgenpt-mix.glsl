@@ -29,18 +29,16 @@
 #pragma parameter SGPT_ADJUST_VIEW  "    Adjust View"                                 0.0 0.0 1.0 1.0
 #pragma parameter SGPT_LINEAR_GAMMA "    Use Linear Gamma"                            1.0 0.0 1.0 1.0
 
-#define texCoord TEX0
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
-#define OUT out
-#define IN  in
-#define tex2D texture
+#define COMPAT_VARYING out
+#define COMPAT_ATTRIBUTE in
+#define COMPAT_TEXTURE texture
 #else
-#define OUT varying
-#define IN attribute
-#define tex2D texture2D
+#define COMPAT_VARYING varying 
+#define COMPAT_ATTRIBUTE attribute 
+#define COMPAT_TEXTURE texture2D
 #endif
 
 #ifdef GL_ES
@@ -49,37 +47,41 @@
 #define COMPAT_PRECISION
 #endif
 
-
-IN  vec4 VertexCoord;
-IN  vec4 Color;
-IN  vec2 TexCoord;
-OUT vec4 color;
-OUT vec2 texCoord;
+COMPAT_ATTRIBUTE vec4 VertexCoord;
+COMPAT_ATTRIBUTE vec4 COLOR;
+COMPAT_ATTRIBUTE vec4 TexCoord;
+COMPAT_VARYING vec4 COL0;
+COMPAT_VARYING vec4 TEX0;
 
 uniform mat4 MVPMatrix;
-uniform COMPAT_PRECISION int  FrameDirection;
-uniform COMPAT_PRECISION int  FrameCount;
+uniform COMPAT_PRECISION int FrameDirection;
+uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 
+// vertex compatibility #defines
+#define vTexCoord TEX0.xy
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
+#define outsize vec4(OutputSize, 1.0 / OutputSize)
+
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    color = Color;
-    texCoord = TexCoord;
+    COL0 = COLOR;
+    TEX0.xy = TexCoord.xy;
 }
 
 #elif defined(FRAGMENT)
 
 #if __VERSION__ >= 130
-#define IN in
-#define tex2D texture
+#define COMPAT_VARYING in
+#define COMPAT_TEXTURE texture
 out vec4 FragColor;
 #else
-#define IN varying
+#define COMPAT_VARYING varying
 #define FragColor gl_FragColor
-#define tex2D texture2D
+#define COMPAT_TEXTURE texture2D
 #endif
 
 #ifdef GL_ES
@@ -98,8 +100,15 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
-uniform sampler2D s_p;
-IN vec2 texCoord;
+uniform sampler2D Texture;
+COMPAT_VARYING vec4 TEX0;
+
+// fragment compatibility #defines
+#define Source Texture
+#define vTexCoord TEX0.xy
+
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
+#define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float SGPT_BLEND_OPTION;
@@ -124,13 +133,13 @@ vec3 max_s(vec3 central, vec3 adj1, vec3 adj2) {return max(central, min(adj1, ad
 
 void main()
 {
-	vec2 dx = vec2(1.0, 0.0)/TextureSize;
-	vec2 dy = vec2(0.0, 1.0)/TextureSize;
+	vec2 dx = vec2(1.0, 0.0)/SourceSize.xy;
+	vec2 dy = vec2(0.0, 1.0)/SourceSize.xy;
 
 	// Reading the texels.
-	vec3 C = GAMMA_IN(tex2D(s_p, texCoord    ).xyz);
-	vec3 L = GAMMA_IN(tex2D(s_p, texCoord -dx).xyz);
-	vec3 R = GAMMA_IN(tex2D(s_p, texCoord +dx).xyz);
+	vec3 C = GAMMA_IN(COMPAT_TEXTURE(Source, vTexCoord    ).xyz);
+	vec3 L = GAMMA_IN(COMPAT_TEXTURE(Source, vTexCoord -dx).xyz);
+	vec3 R = GAMMA_IN(COMPAT_TEXTURE(Source, vTexCoord +dx).xyz);
 
 	//  Get min/max samples
 	vec3 min_sample = min_s(C, L, R);
@@ -142,18 +151,18 @@ void main()
 
 	if (int(SGPT_BLEND_OPTION) == 2) // Only Vertical Lines
 	{
-		vec3 UL = GAMMA_IN(tex2D(s_p, texCoord -dx -dy).xyz);
-		vec3 UR = GAMMA_IN(tex2D(s_p, texCoord +dx -dy).xyz);
-		vec3 DL = GAMMA_IN(tex2D(s_p, texCoord -dx +dy).xyz);
-		vec3 DR = GAMMA_IN(tex2D(s_p, texCoord +dx +dy).xyz);
+		vec3 UL = GAMMA_IN(COMPAT_TEXTURE(Source, vTexCoord -dx -dy).xyz);
+		vec3 UR = GAMMA_IN(COMPAT_TEXTURE(Source, vTexCoord +dx -dy).xyz);
+		vec3 DL = GAMMA_IN(COMPAT_TEXTURE(Source, vTexCoord -dx +dy).xyz);
+		vec3 DR = GAMMA_IN(COMPAT_TEXTURE(Source, vTexCoord +dx +dy).xyz);
 
 		min_sample = max_s(min_sample, min_s(C, DL, DR), min_s(C, UL, UR));
 		max_sample = min_s(max_sample, max_s(C, DL, DR), max_s(C, UL, UR));
 	}
 	else if (int(SGPT_BLEND_OPTION) == 3) // Only Checkerboard
 	{
-		vec3 U = GAMMA_IN(tex2D(s_p, texCoord -dy).xyz);
-		vec3 D = GAMMA_IN(tex2D(s_p, texCoord +dy).xyz);
+		vec3 U = GAMMA_IN(COMPAT_TEXTURE(Source, vTexCoord -dy).xyz);
+		vec3 D = GAMMA_IN(COMPAT_TEXTURE(Source, vTexCoord +dy).xyz);
 
 		min_sample = max(min_sample, min_s(C, U, D));
 		max_sample = min(max_sample, max_s(C, U, D));
@@ -172,6 +181,7 @@ void main()
 
 	color = SGPT_ADJUST_VIEW > 0.5 ? vec3(dot(abs(C-color), vec3(1.0, 1.0, 1.0))) : color;
 
-	FragColor.xyz = GAMMA_OUT(color);
-}
+	FragColor = vec4(GAMMA_OUT(color), 1.0);
+
+} 
 #endif
