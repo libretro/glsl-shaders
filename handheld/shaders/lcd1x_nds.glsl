@@ -58,7 +58,7 @@ uniform COMPAT_PRECISION int FrameDirection;
 uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
-uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION vec2 OrigInputSize;
 
 /*
    VERTEX_SHADER
@@ -69,7 +69,7 @@ void main()
    gl_Position = MVPMatrix * VertexCoord;
    // Cache divisions here for efficiency...
    // (Assuming it is more efficient...?)
-   InvInputHeight = 1.0 / InputSize.y;
+   InvInputHeight = 1.0 / OrigInputSize.y;
 }
 
 #elif defined(FRAGMENT)
@@ -94,9 +94,10 @@ precision highp int;
 
 uniform COMPAT_PRECISION int FrameDirection;
 uniform COMPAT_PRECISION int FrameCount;
-uniform COMPAT_PRECISION vec2 OutputSize;
+uniform COMPAT_PRECISION vec2 OrigInputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION vec2 OutputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 varying COMPAT_PRECISION float InvInputHeight;
@@ -138,7 +139,10 @@ void main()
    //   scanlines occur *between* pixels
    // > Divide pixel coordinate by current scale factor
    //   (input_video_height / nds_screen_height)
-   COMPAT_PRECISION vec2 angle = 2.0 * PI * (((TEX0.xy * TextureSize.xy) * NDS_SCREEN_HEIGHT * InvInputHeight) - 0.25);
+   COMPAT_PRECISION vec2 angle = 2.0 * PI *
+                              (((TEX0.xy * OrigInputSize * TextureSize / InputSize) *
+                                NDS_SCREEN_HEIGHT * InvInputHeight) -
+                               0.25);
 
    COMPAT_PRECISION float yfactor = (BRIGHTEN_SCANLINES + sin(angle.y)) / (BRIGHTEN_SCANLINES + 1.0);
    COMPAT_PRECISION float xfactor = (BRIGHTEN_LCD + sin(angle.x)) / (BRIGHTEN_LCD + 1.0);
