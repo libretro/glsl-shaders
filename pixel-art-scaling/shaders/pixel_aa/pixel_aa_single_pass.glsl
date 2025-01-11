@@ -1,42 +1,10 @@
 #version 130
 
-/*
-    Pixel AA by fishku
-    Copyright (C) 2023-2025
-    Public domain license (CC0)
+// See main shader file for copyright and other information.
 
-    Features:
-    - Sharp upscaling with anti-aliasing
-    - Subpixel upscaling
-    - Sharpness can be controlled
-    - Gamma correct blending
-    - Integer scales result in pixel-perfect scaling
-    - Can use bilinear filtering for max. performance
-
-    Inspired by:
-    https://www.shadertoy.com/view/MlB3D3
-    by d7samurai
-    and:
-    https://www.youtube.com/watch?v=d6tp43wZqps
-    by t3ssel8r
-
-    With sharpness = 1.0, using the same gamma-correct blending, and disabling
-    subpixel anti-aliasing, results are identical to the "pixellate" shader.
-
-    Changelog:
-    v1.9: Sync GLSL version with Slang version 1.9.
-    v1.7: Clean up. Optimize through precision specifiers and separate
-          linearization.
-    v1.6: Add "fast" version for low-end devices.
-    v1.5: Optimize for embedded devices.
-    v1.4: Enable subpixel sampling for all four pixel layout orientations,
-          including rotated screens.
-    v1.3: Account for screen rotation in subpixel sampling.
-    v1.2: Optimize and simplify algorithm. Enable sharpness < 1.0. Fix subpixel
-          sampling bug.
-    v1.1: Better subpixel sampling.
-    v1.0: Initial release.
-*/
+// This single-pass variant mainly exists for best color precision on devices that do not support
+// float or srgb framebuffers, where a preliminary linearization pass loses information due to
+// quantization.
 
 // clang-format off
 #pragma parameter PIX_AA_SETTINGS "=== Pixel AA v1.9 settings ===" 0.0 0.0 1.0 1.0
@@ -86,10 +54,6 @@ void calculate_pixel_aa_params(PREC_MED vec2 tx_per_px, PREC_MED float sharpness
     trans_ub = 1.0 - sharpness_upper * (1.0 - (0.5 + 0.5 * tx_per_px));
     trans_slope = max(1.0, sharpness);
 
-    // Subpixel sampling: Shift the sampling by 1/3rd of an output pixel for
-    // each subpixel, assuming that the output size is at monitor
-    // resolution.
-    // Compensate for possible rotation of the screen in certain cores.
     PREC_MED const vec4 rot_corr = vec4(1.0, 0.0, -1.0, 0.0);
     sub_tx_offset = tx_per_px / 3.0 *
                     vec2(rot_corr[(rotation + subpx_orientation) % 4],
@@ -128,8 +92,6 @@ in PREC_MED float trans_slope;
 
 out PREC_LOW vec4 FragColor;
 
-// Similar to smoothstep, but has a configurable slope at x = 0.5.
-// Original smoothstep has a slope of 1.5 at x = 0.5
 PREC_MED vec2 slopestep(PREC_MED vec2 edge0, PREC_MED vec2 edge1, PREC_MED vec2 x,
                         PREC_MED float slope) {
     x = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
@@ -138,20 +100,32 @@ PREC_MED vec2 slopestep(PREC_MED vec2 edge0, PREC_MED vec2 edge1, PREC_MED vec2 
     return o - 0.5 * s * pow(2.0 * (o - s * x), vec2(slope));
 }
 
-PREC_LOW vec3 pixel_aa(PREC_LOW sampler2D tex, PREC_MED vec2 tx_coord, PREC_MED vec2 tx_to_uv,
-                       PREC_MED vec2 trans_lb, PREC_MED vec2 trans_ub, PREC_MED float trans_slope) {
+PREC_LOW vec3 to_lin(PREC_LOW vec3 x) { return pow(x, vec3(2.2)); }
+PREC_LOW vec4 to_lin(PREC_LOW vec4 x) { return pow(x, vec4(2.2)); }
+
+PREC_LOW vec3 to_srgb(PREC_LOW vec3 x) { return pow(x, vec3(1.0 / 2.2)); }
+
+PREC_LOW vec3 pixel_aa_gamma(PREC_LOW sampler2D tex, PREC_MED vec2 tx_coord, PREC_MED vec2 tx_to_uv,
+                             PREC_MED vec2 trans_lb, PREC_MED vec2 trans_ub,
+                             PREC_MED float trans_slope) {
     PREC_MED vec2 period = floor(tx_coord - 0.5);
     PREC_MED vec2 phase = tx_coord - 0.5 - period;
 
     PREC_MED vec2 offset = slopestep(trans_lb, trans_ub, phase, trans_slope);
 
-    return texture(tex, (period + 0.5 + offset) * tx_to_uv).rgb;
+    return to_srgb(
+        mix(mix(to_lin(texture(tex, (period + 0.5) * tx_to_uv).rgb),
+                to_lin(texture(tex, (period + vec2(1.5, 0.5)) * tx_to_uv).rgb), offset.x),
+            mix(to_lin(texture(tex, (period + vec2(0.5, 1.5)) * tx_to_uv).rgb),
+                to_lin(texture(tex, (period + 1.5) * tx_to_uv).rgb), offset.x),
+            offset.y));
 }
 
-PREC_LOW vec3 pixel_aa_subpx(PREC_LOW sampler2D tex, PREC_MED vec2 tx_coord,
-                             PREC_MED vec2 sub_tx_offset, PREC_MED vec2 tx_to_uv,
-                             PREC_MED vec2 trans_lb, PREC_MED vec2 trans_ub,
-                             PREC_MED float trans_slope) {
+PREC_LOW vec3 pixel_aa_subpx_gamma(PREC_LOW sampler2D tex, PREC_MED vec2 tx_coord,
+                                   PREC_MED vec2 sub_tx_offset, PREC_MED vec2 tx_to_uv,
+                                   PREC_MED vec2 trans_lb, PREC_MED vec2 trans_ub,
+                                   PREC_MED float trans_slope) {
+    PREC_LOW vec4 samples;
     PREC_LOW vec3 res;
     PREC_MED vec2 period, phase, offset;
 
@@ -159,27 +133,44 @@ PREC_LOW vec3 pixel_aa_subpx(PREC_LOW sampler2D tex, PREC_MED vec2 tx_coord,
     period = floor(tx_coord - sub_tx_offset - 0.5);
     phase = tx_coord - sub_tx_offset - 0.5 - period;
     offset = slopestep(trans_lb, trans_ub, phase, trans_slope);
-    res.r = texture(tex, (period + 0.5 + offset) * tx_to_uv).r;
+    samples = vec4(texture(tex, (period + 0.5) * tx_to_uv).r,
+                   texture(tex, (period + vec2(1.5, 0.5)) * tx_to_uv).r,
+                   texture(tex, (period + vec2(0.5, 1.5)) * tx_to_uv).r,
+                   texture(tex, (period + 1.5) * tx_to_uv).r);
+    samples = to_lin(samples);
+    res.r = mix(mix(samples.x, samples.y, offset.x), mix(samples.z, samples.w, offset.x), offset.y);
+
     // Green
     period = floor(tx_coord - 0.5);
     phase = tx_coord - 0.5 - period;
     offset = slopestep(trans_lb, trans_ub, phase, trans_slope);
-    res.g = texture(tex, (period + 0.5 + offset) * tx_to_uv).g;
+    samples = vec4(texture(tex, (period + 0.5) * tx_to_uv).g,
+                   texture(tex, (period + vec2(1.5, 0.5)) * tx_to_uv).g,
+                   texture(tex, (period + vec2(0.5, 1.5)) * tx_to_uv).g,
+                   texture(tex, (period + 1.5) * tx_to_uv).g);
+    samples = to_lin(samples);
+    res.g = mix(mix(samples.x, samples.y, offset.x), mix(samples.z, samples.w, offset.x), offset.y);
+
     // Blue
     period = floor(tx_coord + sub_tx_offset - 0.5);
     phase = tx_coord + sub_tx_offset - 0.5 - period;
     offset = slopestep(trans_lb, trans_ub, phase, trans_slope);
-    res.b = texture(tex, (period + 0.5 + offset) * tx_to_uv).b;
+    samples = vec4(texture(tex, (period + 0.5) * tx_to_uv).b,
+                   texture(tex, (period + vec2(1.5, 0.5)) * tx_to_uv).b,
+                   texture(tex, (period + vec2(0.5, 1.5)) * tx_to_uv).b,
+                   texture(tex, (period + 1.5) * tx_to_uv).b);
+    samples = to_lin(samples);
+    res.b = mix(mix(samples.x, samples.y, offset.x), mix(samples.z, samples.w, offset.x), offset.y);
 
-    return res;
+    return to_srgb(res);
 }
 
 void main() {
-    FragColor.rgb = PIX_AA_SUBPX < 0.5
-                        ? pixel_aa(Texture, tx_coord, tx_to_uv, trans_lb, trans_ub, trans_slope)
-                        : pixel_aa_subpx(Texture, tx_coord, sub_tx_offset, tx_to_uv, trans_lb,
-                                         trans_ub, trans_slope);
-    FragColor.rgb = pow(FragColor.rgb, vec3(1.0 / 2.2));
+    FragColor.rgb =
+        PIX_AA_SUBPX < 0.5
+            ? pixel_aa_gamma(Texture, tx_coord, tx_to_uv, trans_lb, trans_ub, trans_slope)
+            : pixel_aa_subpx_gamma(Texture, tx_coord, sub_tx_offset, tx_to_uv, trans_lb, trans_ub,
+                                   trans_slope);
 }
 
 #endif
