@@ -1,13 +1,13 @@
 #version 130
 
-// See main shader file for copyright and other information.
+// See the main shader file for copyright and other information.
 
 // This single-pass variant mainly exists for best color precision on devices that do not support
 // float or srgb framebuffers, where a preliminary linearization pass loses information due to
 // quantization.
 
 // clang-format off
-#pragma parameter PIX_AA_SETTINGS "=== Pixel AA v1.9 settings ===" 0.0 0.0 1.0 1.0
+#pragma parameter PIX_AA_SETTINGS "=== Pixel AA v1.10 settings ===" 0.0 0.0 1.0 1.0
 #pragma parameter PIX_AA_SHARP "Pixel AA sharpening amount" 1.5 0.0 2.0 0.05
 #pragma parameter PIX_AA_SUBPX "Enable subpixel AA" 0.0 0.0 1.0 1.0
 #pragma parameter PIX_AA_SUBPX_ORIENTATION "Subpixel layout (0=RGB, 1=RGB vert., 2=BGR, 3=BGR vert.)" 0.0 0.0 3.0 1.0
@@ -25,19 +25,19 @@
 
 #if defined(VERTEX)
 
-uniform PREC_MED mat4 MVPMatrix;
-uniform PREC_MED vec2 TextureSize;
-uniform PREC_MED vec2 InputSize;
-uniform PREC_MED vec2 OutputSize;
+uniform PREC_HIGH mat4 MVPMatrix;
+uniform PREC_HIGH vec2 TextureSize;
+uniform PREC_HIGH vec2 InputSize;
+uniform PREC_HIGH vec2 OutputSize;
 uniform PREC_LOW int Rotation;
 
 uniform PREC_MED float PIX_AA_SHARP;
 uniform PREC_MED float PIX_AA_SUBPX_ORIENTATION;
 
-in PREC_MED vec4 VertexCoord;
-in PREC_MED vec4 TexCoord;
+in PREC_HIGH vec4 VertexCoord;
+in PREC_HIGH vec4 TexCoord;
 
-out PREC_MED vec2 tx_coord;
+out PREC_HIGH vec2 tx_coord;
 out PREC_MED vec2 tx_to_uv;
 out PREC_MED vec2 trans_lb;
 out PREC_MED vec2 trans_ub;
@@ -46,15 +46,15 @@ out PREC_MED float trans_slope;
 
 void calculate_pixel_aa_params(PREC_MED vec2 tx_per_px, PREC_MED float sharpness,
                                PREC_LOW int subpx_orientation, PREC_LOW int rotation,
-                               PREC_MED inout vec2 trans_lb, PREC_MED inout vec2 trans_ub,
-                               PREC_MED inout float trans_slope,
-                               PREC_MED inout vec2 sub_tx_offset) {
+                               inout PREC_MED vec2 trans_lb, inout PREC_MED vec2 trans_ub,
+                               inout PREC_MED float trans_slope,
+                               inout PREC_MED vec2 sub_tx_offset) {
     PREC_MED float sharpness_upper = min(1.0, sharpness);
     trans_lb = sharpness_upper * (0.5 - 0.5 * tx_per_px);
     trans_ub = 1.0 - sharpness_upper * (1.0 - (0.5 + 0.5 * tx_per_px));
     trans_slope = max(1.0, sharpness);
 
-    PREC_MED const vec4 rot_corr = vec4(1.0, 0.0, -1.0, 0.0);
+    const PREC_MED vec4 rot_corr = vec4(1.0, 0.0, -1.0, 0.0);
     sub_tx_offset = tx_per_px / 3.0 *
                     vec2(rot_corr[(rotation + subpx_orientation) % 4],
                          rot_corr[(rotation + subpx_orientation + 3) % 4]);
@@ -83,7 +83,7 @@ uniform PREC_LOW sampler2D Texture;
 
 uniform PREC_LOW float PIX_AA_SUBPX;
 
-in PREC_MED vec2 tx_coord;
+in PREC_HIGH vec2 tx_coord;
 in PREC_MED vec2 tx_to_uv;
 in PREC_MED vec2 trans_lb;
 in PREC_MED vec2 trans_ub;
@@ -105,7 +105,7 @@ PREC_LOW vec4 to_lin(PREC_LOW vec4 x) { return pow(x, vec4(2.2)); }
 
 PREC_LOW vec3 to_srgb(PREC_LOW vec3 x) { return pow(x, vec3(1.0 / 2.2)); }
 
-PREC_LOW vec3 pixel_aa_gamma(PREC_LOW sampler2D tex, PREC_MED vec2 tx_coord, PREC_MED vec2 tx_to_uv,
+PREC_LOW vec3 pixel_aa_gamma(PREC_LOW sampler2D tex, PREC_HIGH vec2 tx_coord, PREC_MED vec2 tx_to_uv,
                              PREC_MED vec2 trans_lb, PREC_MED vec2 trans_ub,
                              PREC_MED float trans_slope) {
     PREC_MED vec2 period = floor(tx_coord - 0.5);
@@ -121,7 +121,7 @@ PREC_LOW vec3 pixel_aa_gamma(PREC_LOW sampler2D tex, PREC_MED vec2 tx_coord, PRE
             offset.y));
 }
 
-PREC_LOW vec3 pixel_aa_subpx_gamma(PREC_LOW sampler2D tex, PREC_MED vec2 tx_coord,
+PREC_LOW vec3 pixel_aa_subpx_gamma(PREC_LOW sampler2D tex, PREC_HIGH vec2 tx_coord,
                                    PREC_MED vec2 sub_tx_offset, PREC_MED vec2 tx_to_uv,
                                    PREC_MED vec2 trans_lb, PREC_MED vec2 trans_ub,
                                    PREC_MED float trans_slope) {
