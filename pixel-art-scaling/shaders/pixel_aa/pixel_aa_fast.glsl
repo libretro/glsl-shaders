@@ -1,6 +1,6 @@
 #version 130
 
-// See main shader file for copyright and other information.
+// See the main shader file for copyright and other information.
 
 #ifdef GL_ES
 #define PREC_LOW lowp
@@ -14,15 +14,15 @@
 
 #if defined(VERTEX)
 
-uniform PREC_MED mat4 MVPMatrix;
-uniform PREC_MED vec2 OutputSize;
-uniform PREC_MED vec2 TextureSize;
-uniform PREC_MED vec2 InputSize;
+uniform PREC_HIGH mat4 MVPMatrix;
+uniform PREC_HIGH vec2 OutputSize;
+uniform PREC_HIGH vec2 TextureSize;
+uniform PREC_HIGH vec2 InputSize;
 
-in PREC_MED vec4 VertexCoord;
-in PREC_MED vec4 TexCoord;
+in PREC_HIGH vec4 VertexCoord;
+in PREC_HIGH vec4 TexCoord;
 
-out PREC_MED vec2 tx_coord;
+out PREC_HIGH vec2 tx_coord;
 out PREC_MED vec2 px_per_tx;
 out PREC_MED vec2 tx_to_uv;
 
@@ -41,7 +41,7 @@ precision mediump float;
 
 uniform PREC_LOW sampler2D Texture;
 
-in PREC_MED vec2 tx_coord;
+in PREC_HIGH vec2 tx_coord;
 in PREC_MED vec2 px_per_tx;
 in PREC_MED vec2 tx_to_uv;
 

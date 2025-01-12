@@ -1,5 +1,10 @@
-shaders = 1
+shaders = 2
 
-shader0 = shaders/authentic_gbc/authentic_gbc.glsl
+shader0 = shaders/authentic_gbc/to_lin.glsl
 filter_linear0 = false
-scale_type0 = viewport
+scale_type0 = source
+float_framebuffer0 = true
+
+shader1 = shaders/authentic_gbc/authentic_gbc.glsl
+filter_linear1 = false
+scale_type1 = viewport
