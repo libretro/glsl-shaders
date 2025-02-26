@@ -6,5 +6,5 @@
 # Notice that any other extra presets called will override this background if BORDER
 # is defined there with other background.
 
-BORDER = "textures/borders/default.jpg"
+BORDER = "textures/borders/default.png"
 
