@@ -1,0 +1,41 @@
+# uborder-bezel-reflections
+
+shaders = "1"
+
+shader0 = "../../shaders/content_bezel_shaders/crt-nobody-bezel-reflections.glsl"
+filter_linear0 = "true"
+wrap_mode0 = "clamp_to_border"
+alias0 = ""
+scale_type_x0 = "viewport"
+scale_x0 = "1.000000"
+scale_type_y0 = "viewport"
+scale_y0 = "1.000000"
+
+textures = "BORDER"
+BORDER = "../../textures/borders/default.png"
+BORDER_linear = "true"
+BORDER_wrap_mode = "clamp_to_border"
+BORDER_mipmap = "false"
+
+
+fr_zoom = "37.800000"
+fr_i_scaling_fac = "0.000000"
+bz_ref_str = "0.350000"
+bz_inner_bezel_x = "0.000000"
+bz_inner_bezel_y = "0.000000"
+bz_middle_bezel_x = "0.060000"
+bz_middle_bezel_y = "0.037000"
+bz_outer_bezel_x = "0.000000"
+bz_outer_bezel_y = "0.000000"
+bz_radius = "0.015000"
+bz_red = "50.000000"
+bz_green = "50.000000"
+bz_blue = "50.000000"
+bz_shine = "0.150000"
+bz_shine_size = "0.850000"
+h_cornersize = "0.020000"
+
+CN_SCAN_SIZE = "0.950000"
+CN_MASK_STRENGTH = "0.500000"
+CN_VIG_TOGGLE = "1.000000"
+CN_VIG_EXP = "0.320000"

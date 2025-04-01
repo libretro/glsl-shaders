@@ -1,24 +1,6 @@
 #version 130
 
-/*
-    Authentic GBC by fishku
-    Copyright (C) 2024-2025
-    Public domain license (CC0)
-
-    Attempts to render GBC subpixels authentically.
-
-    Reference photos:
-    - https://gbcc.dev/technology/subpixels.jpg
-
-    Inspired by:
-    -
-   https://www.reddit.com/r/AnaloguePocket/comments/1azaxgd/ive_made_some_improvements_to_my_analogue_pocket/
-
-    Changelog:
-    v2.2: Bring Slang v2.1 to GLSL. Add single pass preset.
-    v1.1: Use OriginalSize instead of SourceSize to better work with combined presets.
-    v1.0: Initial release, ported from Slang.
-*/
+// See the main shader file for copyright and other information.
 
 // clang-format off
 #pragma parameter AUTH_GBC_SETTINGS "=== Authentic GBC v2.2 settings ===" 0.0 0.0 1.0 1.0
@@ -62,7 +44,7 @@ out PREC_MED vec2 subpx_offset_in_px;
 out PREC_MED vec2 tx_to_px;
 out PREC_MED vec2 tx_to_uv;
 out PREC_MED vec2 tx_orig_offs;
-out PREC_MED float eff_blur_in_px;
+out PREC_MED float half_px_size;
 
 void calculate_lcd_params(PREC_HIGH vec2 source_size, PREC_HIGH vec2 output_size,
                           PREC_LOW int rotation, PREC_MED float use_subpx,
@@ -108,8 +90,14 @@ void main() {
                          TexCoord.xy * TextureSize / InputSize, lcd_subpx_rect1, lcd_subpx_rect2,
                          subpx_offset_in_px, tx_coord, tx_to_px, tx_orig_offs);
 
-    // Blur strength is isotropic, so use the dimension that is most limiting.
-    eff_blur_in_px = AUTH_GBC_BLUR * min(tx_to_px.x, tx_to_px.y) * 0.5;
+    // In the "fast" version of the shader, instead of rendering a rectangle convolved with a
+    // Gaussian, we simply increase the pixel size and normalize. In effect, this achieves a box
+    // filter, approximating the Gaussian low-pass filter.
+    // We fudge the blur radius by a conversion factor, since the Gaussian kernel would appear
+    // sharper for the same radius because it concentrates more mass near the center.
+    // This requires an extra normalization step of the resulting color.
+    PREC_MED float eff_blur_in_px = 0.7 * AUTH_GBC_BLUR * min(tx_to_px.x, tx_to_px.y) * 0.5;
+    half_px_size = 0.5 * clamp(1.0 + eff_blur_in_px, 1.0, min(tx_to_px.x, tx_to_px.y));
 }
 
 #elif defined(FRAGMENT)
@@ -131,54 +119,30 @@ in PREC_MED vec2 subpx_offset_in_px;
 in PREC_MED vec2 tx_to_px;
 in PREC_MED vec2 tx_to_uv;
 in PREC_MED vec2 tx_orig_offs;
-in PREC_MED float eff_blur_in_px;
+in PREC_MED float half_px_size;
 
 out PREC_LOW vec4 FragColor;
 
-PREC_MED float intersect_blurred_rect_area(PREC_MED vec4 px_square, PREC_MED vec4 rect,
-                                           PREC_MED float blur) {
-    PREC_MED vec4 range = (rect.zw - rect.xy).xyxy;
-    PREC_MED vec4 linear = clamp(px_square - rect.xyxy, vec4(0.0), range);
-
-    // Early out: If blur is very small, return perfectly sharp rectangle intersection area.
-    if (blur < 1.0e-6) {
-        return (linear.z - linear.x) * (linear.w - linear.y);
-    }
-
-    PREC_MED vec4 center = (0.5 * (rect.xy + rect.zw)).xyxy;
-    PREC_MED vec4 dist_to_center = abs(px_square - center);
-    PREC_MED vec4 blur_vec = vec4(blur);
-
-    PREC_MED vec4 x_n =
-        max(0.5 * (max(range, blur_vec) + blur_vec) - dist_to_center, vec4(0.0)) / blur_vec;
-    // Quartic polynomial fit to function:
-    // x / 2 + exp(-x ^ 2 / 2) / sqrt(2 * pi) + x / 2 * erf(x / sqrt(2));
-    // Subject to y(0) = 0, y'(0) = 0, y(1) = 1/2, y'(1) = 1
-    const PREC_MED vec3 c = vec3(-0.3635, 0.727, 0.1365);
-    PREC_MED vec4 x_n2 = x_n * x_n;
-    PREC_MED vec4 poly = (c.xxxx * x_n2 + c.yyyy * x_n + c.zzzz) * x_n2 * min(range, blur_vec);
-    // Exploit point symmetry around center
-    PREC_MED vec4 transition = mix(poly, range - poly, step(center, px_square));
-
-    // Determine if we are in the linear or transitional part.
-    PREC_MED vec4 res = mix(linear, transition, step(0.5 * (range - blur_vec), dist_to_center));
-    return (res.z - res.x) * (res.w - res.y);
+PREC_MED float intersect_rect_area(PREC_MED vec4 px_square, PREC_MED vec4 rect) {
+    PREC_MED vec2 bl = max(px_square.xy, rect.xy);
+    PREC_MED vec2 tr = min(px_square.zw, rect.zw);
+    PREC_MED vec2 coverage = max(tr - bl, vec2(0.0));
+    return coverage.x * coverage.y;
 }
 
 PREC_MED float subpx_coverage(PREC_MED vec4 px_square, PREC_MED vec2 subpx_orig) {
     // To render the "notch" present in the original subpixels, compose two rectangles.
-    return intersect_blurred_rect_area(px_square, subpx_orig.xyxy + lcd_subpx_rect1,
-                                       eff_blur_in_px) +
-           intersect_blurred_rect_area(px_square, subpx_orig.xyxy + lcd_subpx_rect2,
-                                       eff_blur_in_px);
+    return intersect_rect_area(px_square, subpx_orig.xyxy + lcd_subpx_rect1) +
+           intersect_rect_area(px_square, subpx_orig.xyxy + lcd_subpx_rect2);
 }
 
 PREC_MED vec3 pixel_color(PREC_MED vec2 tx_orig) {
-    return vec3(subpx_coverage(vec4(-subpx_offset_in_px - 0.5, -subpx_offset_in_px + 0.5),
-                               tx_orig + vec2(tx_orig_offs.x - tx_to_px.x / 3.0, tx_orig_offs.y)),
-                subpx_coverage(vec4(vec2(-0.5), vec2(0.5)), tx_orig + tx_orig_offs),
-                subpx_coverage(vec4(subpx_offset_in_px - 0.5, subpx_offset_in_px + 0.5),
-                               tx_orig + vec2(tx_orig_offs.x + tx_to_px.x / 3.0, tx_orig_offs.y)));
+    return vec3(
+        subpx_coverage(vec4(-subpx_offset_in_px - half_px_size, -subpx_offset_in_px + half_px_size),
+                       tx_orig + vec2(tx_orig_offs.x - tx_to_px.x / 3.0, tx_orig_offs.y)),
+        subpx_coverage(vec4(vec2(-half_px_size), vec2(half_px_size)), tx_orig + tx_orig_offs),
+        subpx_coverage(vec4(subpx_offset_in_px - half_px_size, subpx_offset_in_px + half_px_size),
+                       tx_orig + vec2(tx_orig_offs.x + tx_to_px.x / 3.0, tx_orig_offs.y)));
 }
 
 void main() {
@@ -197,12 +161,13 @@ void main() {
 
     // The four nearest texels define a set of vector graphics which are rasterized.
     // The coordinate origin is shifted to px_coord = tx_coord * tx_to_px.
-    PREC_LOW vec3 res = pixel_color((tx_coord_offs[0] - tx_coord_f) * tx_to_px) * samples[0] +
-                        pixel_color((tx_coord_offs[1] - tx_coord_f) * tx_to_px) * samples[1] +
-                        pixel_color((tx_coord_offs[2] - tx_coord_f) * tx_to_px) * samples[2] +
-                        pixel_color((tx_coord_offs[3] - tx_coord_f) * tx_to_px) * samples[3];
+    PREC_LOW vec3 res = (pixel_color((tx_coord_offs[0] - tx_coord_f) * tx_to_px) * samples[0] +
+                         pixel_color((tx_coord_offs[1] - tx_coord_f) * tx_to_px) * samples[1] +
+                         pixel_color((tx_coord_offs[2] - tx_coord_f) * tx_to_px) * samples[2] +
+                         pixel_color((tx_coord_offs[3] - tx_coord_f) * tx_to_px) * samples[3]) /
+                        (4.0 * half_px_size * half_px_size);
 
-    FragColor = vec4(pow(res, vec3(1.0 / 2.2)), 1.0);
+    FragColor = vec4(sqrt(res), 1.0);
 }
 
 #endif

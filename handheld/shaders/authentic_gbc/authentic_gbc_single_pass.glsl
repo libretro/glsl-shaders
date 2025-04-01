@@ -1,24 +1,6 @@
 #version 130
 
-/*
-    Authentic GBC by fishku
-    Copyright (C) 2024-2025
-    Public domain license (CC0)
-
-    Attempts to render GBC subpixels authentically.
-
-    Reference photos:
-    - https://gbcc.dev/technology/subpixels.jpg
-
-    Inspired by:
-    -
-   https://www.reddit.com/r/AnaloguePocket/comments/1azaxgd/ive_made_some_improvements_to_my_analogue_pocket/
-
-    Changelog:
-    v2.2: Bring Slang v2.1 to GLSL. Add single pass preset.
-    v1.1: Use OriginalSize instead of SourceSize to better work with combined presets.
-    v1.0: Initial release, ported from Slang.
-*/
+// See the main shader file for copyright and other information.
 
 // clang-format off
 #pragma parameter AUTH_GBC_SETTINGS "=== Authentic GBC v2.2 settings ===" 0.0 0.0 1.0 1.0
@@ -194,6 +176,12 @@ void main() {
                texture(Texture, (tx_coord_i + tx_coord_offs[1] + 0.5) * tx_to_uv).rgb,
                texture(Texture, (tx_coord_i + tx_coord_offs[2] + 0.5) * tx_to_uv).rgb,
                texture(Texture, (tx_coord_i + tx_coord_offs[3] + 0.5) * tx_to_uv).rgb);
+
+    // Single pass version: Apply linearization.
+    samples[0] = pow(samples[0], vec3(2.2));
+    samples[1] = pow(samples[1], vec3(2.2));
+    samples[2] = pow(samples[2], vec3(2.2));
+    samples[3] = pow(samples[3], vec3(2.2));
 
     // The four nearest texels define a set of vector graphics which are rasterized.
     // The coordinate origin is shifted to px_coord = tx_coord * tx_to_px.

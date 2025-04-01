@@ -1,5 +1,10 @@
-shaders = 1
+shaders = 2
 
-shader0 = shaders/pixel_aa/pixel_aa_fast.glsl
+shader0 = shaders/pixel_aa/to_lin_fast.glsl
 filter_linear0 = false
-scale_type0 = viewport
+scale_type0 = source
+srgb_framebuffer0 = true
+
+shader1 = shaders/pixel_aa/pixel_aa_fast.glsl
+filter_linear1 = true
+scale_type1 = viewport

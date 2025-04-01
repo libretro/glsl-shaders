@@ -1,0 +1,10 @@
+# If you want to use another base preset, change the reference path here.
+
+#reference "base_presets/uborder-bezel-reflections/uborder-bezel-reflections-crt-nobody.glslp"
+
+# If you want to use another background texture, change the reference path here.
+# Notice that any other extra presets called will override this background if BORDER
+# is defined there with other background.
+
+BORDER = "textures/borders/default.png"
+
