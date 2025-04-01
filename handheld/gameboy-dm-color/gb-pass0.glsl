@@ -2,7 +2,7 @@
 //                                                                       //
 // Gameboy Color Dot Matrix v0.9                                         //
 //                                                                       //
-// Copyright (C) 2025 LuigiRa : ra.luigi@gmail.com                       //
+// Copyright (C) 2024 LuigiRa : ra.luigi@gmail.com                       //
 //                                                                       //
 // This program is free software: you can redistribute it and/or modify  //
 // it under the terms of the GNU General Public License as published by  //
@@ -22,7 +22,7 @@
 #pragma parameter baseline_alpha "Baseline Alpha" 1.0 0.0 1.0 0.01
 #pragma parameter console_border_enable "Console-Border Enable" 0.0 0.0 1.0 1.0
 #pragma parameter video_scale "Video Scale" 3.0 2.0 9.0 1.0
-#pragma parameter response_time "LCD Response Time" 0.0 0.0 0.777 0.111
+#pragma parameter response_time "LCD Response Time" 0.000 0.0 0.777 0.111
 #pragma parameter color_toggle "Color Toggle" 0.0 0.0 1.0 1.0
 #pragma parameter negative_toggle "Negative Toggle" 0.0 0.0 1.0 1.0
 #pragma parameter desaturate_toggle "Desaturate Toggle" 0.4 0.0 1.0 0.1

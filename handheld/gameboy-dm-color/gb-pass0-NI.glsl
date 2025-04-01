@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       //
-// Gameboy Color Dot Matrix v0.9                                         //
+// Gameboy Advance Dot Matrix White 720p v0.1                                         //
 //                                                                       //
 // Copyright (C) 2025 LuigiRa : ra.luigi@gmail.com                       //
 //                                                                       //
@@ -22,7 +22,7 @@
 #pragma parameter baseline_alpha "Baseline Alpha" 1.0 0.0 1.0 0.01
 #pragma parameter console_border_enable "Console-Border Enable" 0.0 0.0 1.0 1.0
 #pragma parameter video_scale "Video Scale" 3.0 2.0 9.0 1.0
-#pragma parameter response_time "LCD Response Time" 0.0 0.0 0.777 0.111
+#pragma parameter response_time "LCD Response Time" 0.000 0.0 0.777 0.111
 #pragma parameter color_toggle "Color Toggle" 0.0 0.0 1.0 1.0
 #pragma parameter negative_toggle "Negative Toggle" 0.0 0.0 1.0 1.0
 #pragma parameter desaturate_toggle "Desaturate Toggle" 0.4 0.0 1.0 0.1
@@ -78,23 +78,31 @@ uniform COMPAT_PRECISION float console_border_enable;
 ////////////////////////////////////////////////////////////////////////////////
 
 #define vTexCoord TEX0.xy
-#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
+#define SourceSize vec4(TextureSize, 1.0 / TextureSize) // Ensure TextureSize is correctly set
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 #define half_pixel (vec2(0.5) * outsize.zw) 
-//#define video_scale floor(outsize.y * SourceSize.w)
 
 void main()
 {
-    float scale_x = floor(outsize.x / InputSize.x);
-    float scale_y = floor(outsize.y / InputSize.y);
-    float video_scale_factor = min(scale_x, scale_y);
+    // Ensure proper scale calculation
+    float scale_x = max(outsize.x / InputSize.x, 1.0);
+    float scale_y = max(outsize.y / InputSize.y, 1.0);
+    float video_scale_factor = max(scale_x, scale_y);
+
+    // Override video scale factor if border is enabled
     if (console_border_enable > 0.5) {
-        video_scale_factor = video_scale;
+        video_scale_factor = max(video_scale, 1.0);
     }
+
+    // Compute the final output scaling
     vec2 scaled_video_out = InputSize.xy * vec2(video_scale_factor);
-    gl_Position = MVPMatrix * VertexCoord / vec4(outsize.xy / scaled_video_out, 1.0, 1.0);
+
+    // Assign vertex transformation and attributes
+    gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy + half_pixel;
+
+    // Define texel size based on final scale
     dot_size = SourceSize.zw;
     one_texel = 1.0 / (SourceSize.xy * video_scale_factor);
 }
@@ -201,17 +209,14 @@ void main()
 
     vec4 out_color = vec4(final_color, rgb_to_alpha);
 
-// Determine if all elements should be considered as "on dot" based on color_toggle
 if (color_toggle > 0.5) {
     out_color.a *= is_on_dot; // Treat all pixels as "on dot"
+} else if (dot(input_rgb, vec3(0.299, 0.587, 0.114)) > 0.99) {
+    out_color.a = 1.0; // Fully opaque if luminance is high enough
 } else {
-    // Adjust alpha transparency based on luminance threshold
-    if (dot(input_rgb, vec3(0.299, 0.587, 0.114)) > 0.85) {
-        out_color.a = 1.0; // Fully opaque if luminance is high enough
-    } else {
-        out_color.a *= is_on_dot; // Only apply dot masking if necessary
-    }
+    out_color.a *= is_on_dot; // Only apply dot masking if necessary
 }
+
 
     gl_FragColor = out_color;
 }

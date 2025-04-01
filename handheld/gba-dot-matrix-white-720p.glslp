@@ -1,13 +1,16 @@
 shaders = "3"
 
-shader0 = "shaders/gameboy-dm-color/gb-pass0.glsl"
+shader0 = "shaders/gameboy-dm-color/gb-pass0-NI.glsl"
 filter_linear0 = "false"
 wrap_mode0 = "clamp_to_border"
 mipmap_input0 = "false"
 alias0 = "PASS0"
-filter_linear0 = false
-scale_type0 = viewport
-scale0 = 1.0
+float_framebuffer0 = "false"
+srgb_framebuffer0 = "false"
+scale_type_x0 = "viewport"
+scale_x0 = "1.000000"
+scale_type_y0 = "viewport"
+scale_y0 = "1.000000"
 
 shader1 = "shaders/gameboy-dm-color/gb-pass1.glsl"
 filter_linear1 = "false"
@@ -35,7 +38,7 @@ scale_y2 = "1.000000"
 
 
 textures = "COLOR_PALETTE;BACKGROUND"
-COLOR_PALETTE = shaders/gameboy/resources/sample-palettes/dmg-palette-2.png
+COLOR_PALETTE = shaders/gameboy/resources/sample-palettes/b-w-palette.png
 COLOR_PALETTE_linear = "false"
 COLOR_PALETTE_wrap_mode = "clamp_to_border"
 COLOR_PALETTE_mipmap = "false"
@@ -43,10 +46,4 @@ BACKGROUND = shaders/gameboy/resources/sample-bgs/dmg-bg.png
 BACKGROUND_linear = "true"
 BACKGROUND_wrap_mode = "clamp_to_border"
 BACKGROUND_mipmap = "false"
-baseline_alpha = "0.100000"
-color_toggle = "1.000000"
-negative_toggle = "1.000000"
-desaturate_toggle = "0.800000"
-adjacent_texel_alpha_blending = "0.250000"
-contrast = "0.800000"
-screen_light = "0.800000"
+contrast = "0.45000"
