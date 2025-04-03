@@ -46,4 +46,5 @@ BACKGROUND = shaders/gameboy/resources/sample-bgs/paper-bg.png
 BACKGROUND_linear = "true"
 BACKGROUND_wrap_mode = "clamp_to_border"
 BACKGROUND_mipmap = "false"
-contrast = "0.60000"
+contrast = "0.45000"
+screen_light = "0.500000"

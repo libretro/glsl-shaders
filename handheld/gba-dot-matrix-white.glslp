@@ -46,4 +46,4 @@ BACKGROUND = shaders/gameboy/resources/sample-bgs/dmg-bg.png
 BACKGROUND_linear = "true"
 BACKGROUND_wrap_mode = "clamp_to_border"
 BACKGROUND_mipmap = "false"
-contrast = "0.50000"
+contrast = "0.45000"
