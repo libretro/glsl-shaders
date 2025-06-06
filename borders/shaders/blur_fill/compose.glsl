@@ -111,6 +111,7 @@ The following code is copied from:
     Input transformation library v1.2 by fishku
 
 See the original file for a full description.
+Added wider range of overscale parameter values.
 */
 
 vec2 get_rotated_size(vec2 x, int rotation) {
