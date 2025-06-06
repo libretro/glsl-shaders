@@ -59,48 +59,48 @@ uniform PREC_LOW int Rotation;
 
 // Pixel AA parameters
 uniform PREC_MED float PIX_AA_SHARP;
-uniform PREC_MED float PIX_AA_SUBPX;
+uniform PREC_LOW float PIX_AA_SUBPX;
 uniform PREC_MED float PIX_AA_SUBPX_ORIENTATION;
 
 // Input transform parameters - scaling section
-uniform PREC_MED float FORCE_ASPECT_RATIO;
-uniform PREC_MED float ASPECT_H;
-uniform PREC_MED float ASPECT_V;
-uniform PREC_MED float FORCE_INTEGER_SCALING_H;
-uniform PREC_MED float FORCE_INTEGER_SCALING_V;
+uniform PREC_LOW float FORCE_ASPECT_RATIO;
+uniform PREC_HIGH float ASPECT_H;
+uniform PREC_HIGH float ASPECT_V;
+uniform PREC_LOW float FORCE_INTEGER_SCALING_H;
+uniform PREC_LOW float FORCE_INTEGER_SCALING_V;
 uniform PREC_MED float OVERSCALE;
 
 // Input transform parameters - cropping section
-uniform PREC_MED float OS_CROP_TOP;
-uniform PREC_MED float OS_CROP_BOTTOM;
-uniform PREC_MED float OS_CROP_LEFT;
-uniform PREC_MED float OS_CROP_RIGHT;
+uniform PREC_HIGH float OS_CROP_TOP;
+uniform PREC_HIGH float OS_CROP_BOTTOM;
+uniform PREC_HIGH float OS_CROP_LEFT;
+uniform PREC_HIGH float OS_CROP_RIGHT;
 
 // Input transform parameters - moving section
-uniform PREC_MED float SHIFT_H;
-uniform PREC_MED float SHIFT_V;
-uniform PREC_MED float CENTER_AFTER_CROPPING;
+uniform PREC_HIGH float SHIFT_H;
+uniform PREC_HIGH float SHIFT_V;
+uniform PREC_LOW float CENTER_AFTER_CROPPING;
 
-in vec4 VertexCoord;
-in vec4 TexCoord;
+in PREC_HIGH vec4 VertexCoord;
+in PREC_HIGH vec4 TexCoord;
 
-out vec4 input_corners;
-out vec2 tx_coord;
-out vec2 tx_per_px;
-out vec2 sub_tx_offset;
-out vec2 trans_lb;
-out vec2 trans_ub;
-out float trans_slope;
+out PREC_HIGH vec4 input_corners;
+out PREC_HIGH vec2 tx_coord;
+out PREC_MED vec2 tx_per_px;
+out PREC_MED vec2 sub_tx_offset;
+out PREC_MED vec2 trans_lb;
+out PREC_MED vec2 trans_ub;
+out PREC_MED float trans_slope;
 
 // Rotation utility functions (from rotation.inc)
-vec2 get_rotated_size(vec2 x, int rotation) {
+PREC_HIGH vec2 get_rotated_size(PREC_HIGH vec2 x, PREC_LOW int rotation) {
     if (rotation == 1 || rotation == 3) {
         return x.yx;
     }
     return x;
 }
 
-vec4 get_rotated_crop(vec4 crop, int rotation) {
+PREC_HIGH vec4 get_rotated_crop(PREC_HIGH vec4 crop, PREC_LOW int rotation) {
     if (rotation == 1) {
         return crop.yzwx;
     } else if (rotation == 2) {
@@ -111,7 +111,7 @@ vec4 get_rotated_crop(vec4 crop, int rotation) {
     return crop;
 }
 
-vec2 get_rotated_vector(vec2 x, int rotation) {
+PREC_HIGH vec2 get_rotated_vector(PREC_HIGH vec2 x, PREC_LOW int rotation) {
     if (rotation == 1) {
         return vec2(-x.y, x.x);
     } else if (rotation == 2) {
@@ -125,7 +125,8 @@ vec2 get_rotated_vector(vec2 x, int rotation) {
 // Get 2 corners of input in texel space, spanning the input image.
 // corners.x and .y define the top-left corner, corners.z and .w define the
 // bottom-right corner.
-vec4 get_input_corners(vec2 input_size, vec4 crop, int rotation) {
+PREC_HIGH vec4 get_input_corners(PREC_HIGH vec2 input_size, PREC_HIGH vec4 crop,
+                                 PREC_LOW int rotation) {
     crop = get_rotated_crop(crop, rotation);
     return vec4(crop.y, crop.x, input_size.x - crop.w, input_size.y - crop.z);
 }
@@ -133,9 +134,11 @@ vec4 get_input_corners(vec2 input_size, vec4 crop, int rotation) {
 // Get adjusted center in input pixel (texel) coordinate system.
 // Crop is in input pixels (texels).
 // Shift is in output pixels.
-vec2 get_input_center(vec2 input_size, vec2 output_size, vec2 scale_i2o,
-                      vec4 crop, vec2 shift, int rotation,
-                      float center_after_cropping) {
+PREC_HIGH vec2 get_input_center(PREC_HIGH vec2 input_size,
+                                PREC_HIGH vec2 output_size,
+                                PREC_MED vec2 scale_i2o, PREC_HIGH vec4 crop,
+                                PREC_HIGH vec2 shift, PREC_LOW int rotation,
+                                PREC_LOW float center_after_cropping) {
     crop = get_rotated_crop(crop, rotation);
     shift = get_rotated_vector(shift, rotation);
     // If input and output sizes have different parity, shift by 1/2 of an
@@ -147,9 +150,11 @@ vec2 get_input_center(vec2 input_size, vec2 output_size, vec2 scale_i2o,
 }
 
 // Scaling from input to output space.
-vec2 get_scale_i2o(vec2 input_size, vec2 output_size, vec4 crop, int rotation,
-                   float center_after_cropping, float force_aspect_ratio,
-                   vec2 aspect, vec2 force_integer_scaling, float overscale) {
+PREC_MED vec2 get_scale_i2o(
+    PREC_HIGH vec2 input_size, PREC_HIGH vec2 output_size, PREC_HIGH vec4 crop,
+    PREC_LOW int rotation, PREC_LOW float center_after_cropping,
+    PREC_LOW float force_aspect_ratio, PREC_HIGH vec2 aspect,
+    PREC_LOW vec2 force_integer_scaling, PREC_MED float overscale) {
     crop = get_rotated_crop(crop, rotation);
     aspect = get_rotated_size(aspect, rotation);
     // Aspect ratio before cropping.
@@ -166,7 +171,7 @@ vec2 get_scale_i2o(vec2 input_size, vec2 output_size, vec4 crop, int rotation,
                       : 2.0 * vec2(min(crop.y, crop.w), min(crop.x, crop.z)));
 
     force_integer_scaling = get_rotated_size(force_integer_scaling, rotation);
-    vec2 scale;
+    PREC_MED vec2 scale;
     if (output_size.x / (input_size.x * aspect.x) <
         output_size.y / (input_size.y * aspect.y)) {
         // Scale will be limited by width. Calc x scale, then derive y scale
@@ -197,20 +202,22 @@ vec2 get_scale_i2o(vec2 input_size, vec2 output_size, vec4 crop, int rotation,
     return scale;
 }
 
-vec2 transform(vec2 x, vec2 input_center, vec2 scale, vec2 output_center) {
+PREC_HIGH vec2 transform(PREC_HIGH vec2 x, PREC_HIGH vec2 input_center,
+                         PREC_MED vec2 scale, PREC_HIGH vec2 output_center) {
     return (x - input_center) * scale + output_center;
 }
 
 void main() {
     gl_Position = MVPMatrix * VertexCoord;
 
-    vec4 crop = vec4(OS_CROP_TOP, OS_CROP_LEFT, OS_CROP_BOTTOM, OS_CROP_RIGHT);
-    vec2 scale_i2o = get_scale_i2o(
+    PREC_HIGH vec4 crop =
+        vec4(OS_CROP_TOP, OS_CROP_LEFT, OS_CROP_BOTTOM, OS_CROP_RIGHT);
+    PREC_MED vec2 scale_i2o = get_scale_i2o(
         OrigInputSize, OutputSize, crop, Rotation, CENTER_AFTER_CROPPING,
         FORCE_ASPECT_RATIO, vec2(ASPECT_H, ASPECT_V),
         vec2(FORCE_INTEGER_SCALING_H, FORCE_INTEGER_SCALING_V), OVERSCALE);
-    vec2 shift = vec2(SHIFT_H, SHIFT_V);
-    vec2 input_center =
+    PREC_HIGH vec2 shift = vec2(SHIFT_H, SHIFT_V);
+    PREC_HIGH vec2 input_center =
         get_input_center(OrigInputSize, OutputSize, scale_i2o, crop, shift,
                          Rotation, CENTER_AFTER_CROPPING);
     tx_coord = transform(TexCoord.xy * TextureSize / InputSize, vec2(0.5),
@@ -273,8 +280,8 @@ PREC_MED vec2 trapezoid(PREC_HIGH vec2 x, PREC_HIGH vec2 l, PREC_HIGH vec2 u,
 PREC_MED vec2 slopestep(PREC_MED vec2 edge0, PREC_MED vec2 edge1,
                         PREC_MED vec2 x, PREC_MED float slope) {
     x = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
-    vec2 s = sign(x - 0.5);
-    vec2 o = (1.0 + s) * 0.5;
+    PREC_MED vec2 s = sign(x - 0.5);
+    PREC_MED vec2 o = (1.0 + s) * 0.5;
     return o - 0.5 * s * pow(2.0 * (o - s * x), vec2(slope));
 }
 
