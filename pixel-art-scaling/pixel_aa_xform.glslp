@@ -7,4 +7,4 @@ float_framebuffer0 = true
 
 shader1 = shaders/pixel_aa/pixel_aa_xform.glsl
 filter_linear1 = true
-scale_type1 = viewport 
+scale_type1 = viewport
