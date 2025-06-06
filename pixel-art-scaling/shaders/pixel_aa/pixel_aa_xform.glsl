@@ -21,7 +21,7 @@
 #pragma parameter ASPECT_V "Vertical aspect ratio before crop (0 = unchanged)" 0.0 0.0 256.0 1.0
 #pragma parameter FORCE_INTEGER_SCALING_H "Force integer scaling horizontally" 0.0 0.0 1.0 1.0
 #pragma parameter FORCE_INTEGER_SCALING_V "Force integer scaling vertically" 0.0 0.0 1.0 1.0
-#pragma parameter OVERSCALE "Overscale (0 = full image, 1 = full screen)" 0.0 0.0 1.0 0.01
+#pragma parameter OVERSCALE "Overscale (0 = full image, 1 = full screen)" 0.0 -4.0 8.0 0.05
 
 // Cropping parameters
 #pragma parameter CROPPING_SETTINGS "= Cropping parameters =" 0.0 0.0 1.0 1.0
