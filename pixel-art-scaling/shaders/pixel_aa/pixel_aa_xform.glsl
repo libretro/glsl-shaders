@@ -4,7 +4,7 @@
     This is a port of the Slang pixel_aa_xform shader to GLSL.
     See the main shader file for copyright and other information.
 
-    Based on the input transformation library v1.3 by fishku (inlined).
+    Based on the input transformation library v1.4 by fishku (inlined).
 */
 
 // clang-format off
