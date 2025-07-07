@@ -1,5 +1,14 @@
 #version 110
 
+/*
+   A shader by DariusG 2024
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the Free
+   Software Foundation; either version 2 of the License, or (at your option)
+   any later version.
+*/
+
+
 #pragma parameter LOT_SHARP "SHARPNESS (RGB: ~0.9)" 0.5 0.0 1.0 0.05
 #pragma parameter LOT_CURV "CURVATURE OFF/ON/TRINITRON " 1.0 0.0 2.0 1.0
 #pragma parameter LOT_SCAN "SCANLINES STRENGTH" 0.3 0.0 0.5 0.05
