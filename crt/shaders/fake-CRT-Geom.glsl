@@ -1,5 +1,14 @@
 #version 110
 
+/*
+   A shader by DariusG 2023-24
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the Free
+   Software Foundation; either version 2 of the License, or (at your option)
+   any later version.
+*/
+
+
 #pragma parameter bogus1 " [ COLORS ] " 0.0 0.0 0.0 0.0
 #pragma parameter a_gamma_in "Gamma In" 2.45 1.0 4.0 0.05
 #pragma parameter a_gamma_out "Gamma Out" 2.25 1.0 4.0 0.05
