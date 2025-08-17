@@ -1,6 +1,9 @@
-shaders = 1
+shaders = 2
 
 shader0 = shaders/fxaa.glsl
 filter_linear0 = true
 scale_type0 = source
 scale0 = 1.0
+
+shader1 = ../stock.glsl
+filter_linear1 = true
