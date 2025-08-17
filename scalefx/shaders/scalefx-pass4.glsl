@@ -1,5 +1,3 @@
-#version 130
-
 /*
 	ScaleFX - Pass 4
 	by Sp00kyFox, 2017-03-01
