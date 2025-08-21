@@ -11,10 +11,10 @@ any later version.
 
 #pragma parameter comb "Comb Filter Strength" 0.8 0.0 1.0 0.05
 #pragma parameter c_lpf "Chroma Low Pass" 0.05 0.0 1.0 0.01
-#pragma parameter y_lpf "Luma Low Pass" 0.35 0.0 1.0 0.01
+#pragma parameter y_lpf "Luma Low Pass" 0.25 0.0 1.0 0.01
 #pragma parameter ln_delay "NES/SNES Line Delay" 1.0 0.0 1.0 1.0
 #pragma parameter d_crawl "NES/SNES Dot Crawl" 1.0 0.0 1.0 1.0
-#pragma parameter ntsc_sat "Saturation" 1.5 0.0 4.0 0.05
+#pragma parameter ntsc_sat "Saturation" 2.0 0.0 4.0 0.05
 
 #if defined(VERTEX)
 
