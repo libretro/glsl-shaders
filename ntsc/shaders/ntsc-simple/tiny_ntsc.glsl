@@ -1,9 +1,20 @@
 #version 110
 
+/*
+Tiny-NTSC DariusG 2024-2025
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2 of the License, or (at your option)
+any later version.
+*/
+
 #pragma parameter comb "Comb Filter Strength" 0.8 0.0 1.0 0.05
+#pragma parameter c_lpf "Chroma Low Pass" 0.05 0.0 1.0 0.01
+#pragma parameter y_lpf "Luma Low Pass" 0.25 0.0 1.0 0.01
 #pragma parameter ln_delay "NES/SNES Line Delay" 1.0 0.0 1.0 1.0
 #pragma parameter d_crawl "NES/SNES Dot Crawl" 1.0 0.0 1.0 1.0
-#pragma parameter sharp_pix "Sharper" 0.0 0.0 1.0 1.0
+#pragma parameter ntsc_sat "Saturation" 2.0 0.0 4.0 0.05
 
 #if defined(VERTEX)
 
@@ -97,13 +108,17 @@ COMPAT_VARYING vec2 ogl2pos;
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float comb;
 uniform COMPAT_PRECISION float ln_delay;
-uniform COMPAT_PRECISION float sharp_pix;
 uniform COMPAT_PRECISION float d_crawl;
+uniform COMPAT_PRECISION float ntsc_sat;
+uniform COMPAT_PRECISION float c_lpf;
+uniform COMPAT_PRECISION float y_lpf;
 #else
 #define comb 0.6
 #define ln_delay 1.0
-#define sharp_pix 0.0
 #define d_crawl 1.0
+#define ntsc_sat 1.0
+#define c_lpf 0.05
+#define y_lpf 0.35
 #endif
 
 #define PI   3.14159265358979323846
@@ -121,18 +136,20 @@ mat3 YUV2RGB = mat3(1.0, 0.0, 1.13983,
 
 void main() 
 {
-float pixsize = 0.75; 
-if (sharp_pix == 1.0) pixsize = 0.5;
+float pixsize = 0.5; 
 vec2 dxy = vec2(SourceSize.z*pixsize,0.0);
 vec2 dy = vec2(0.0,SourceSize.w*0.125);
 vec3 final = vec3(0.0);
 float sum = 0.0;
-float timer = 0.0; if (d_crawl == 1.0) timer = mod(float(FrameCount),3.0);
+float sumY = 0.0;
+float timer = 0.0; 
+if (d_crawl == 1.0) { InputSize.x<300.0? timer = mod(float(FrameCount+1),2.0) : timer = mod(float(FrameCount+1),3.0);}
 
-for (int i=0; i<2; i++)
+for (int i=-2; i<3; i++)
 {
-float n = float(i);
-float w = exp(-0.15*n*n); // gaussian low pass
+float n  = float(i);
+float w  = exp(-c_lpf*n*n); // Chroma low pass
+float wY = exp(-y_lpf*n*n); // Luma low pass
 
 float line_delay = 0.0;
 if (ln_delay == 1.0) line_delay = ogl2pos.y; // snes line delay
@@ -156,12 +173,14 @@ float lineup = dot(vec3(0.5),resup);
 float luma   = line + lineup;
 // comb chroma is line subtracting luma we already have!
 float chroma = line - luma*0.5*comb;
-final.r += luma*w;
-final.gb += 2.0*vec2(chroma)*carrier.yz*w;
+final.r += luma*wY;
+final.gb += ntsc_sat*vec2(chroma)*carrier.yz*w;
 sum += w;
+sumY += wY;
 }
 
-final.rgb /= sum;
+final.gb /= sum;
+final.r /= sumY;
 FragColor.rgb = final*YUV2RGB;
 }
 #endif
