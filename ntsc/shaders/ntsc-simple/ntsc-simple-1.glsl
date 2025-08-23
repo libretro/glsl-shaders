@@ -112,7 +112,7 @@ void main()
     float phase_alt = NTSC_CLOCK/system_clock;
 
     float v_phase_alt = phase_alt;
-    float timer = mod(float(FrameCount/2),2.0);
+    float timer = mod(float(FrameCount+1),2.0);
     float hue_u = 0.0; 
     float hue_v = 0.0;
     // md doesn't alternate every line, doesn't animate too
@@ -127,7 +127,7 @@ void main()
         hue_v = -3.0; altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}
     if (system_choose == 6.0) {hue_u = -1.4;hue_v = -1.3;v_phase_alt = 1.0; timer = 0.0;}
     
-    if (anim_overr == 1.0) timer = mod(float(FrameCount/2),2.0);    
+    if (anim_overr == 1.0) timer = mod(float(FrameCount+1),2.0);    
     vec3 res = COMPAT_TEXTURE(Source, vTexCoord).rgb*rgb2yuv;
 
     float phase =  vTexCoord.x*SourceSize.x*pi*phase_alt- vTexCoord.y*SourceSize.y*pi*v_phase_alt + timer*pi*phase_alt +altv ;
