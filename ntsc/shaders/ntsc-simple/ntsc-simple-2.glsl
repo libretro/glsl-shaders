@@ -116,7 +116,7 @@ void main()
 
     float phase_alt = NTSC_CLOCK/system_clock;
     float v_phase_alt = phase_alt;
-    float timer = mod(float(FrameCount/2),2.0);
+    float timer = mod(float(FrameCount+1),2.0);
     
     // md doesn't alternate every line, doesn't animate too
     if (system_choose == 1.0) {v_phase_alt =0.0; timer = 0.0;}
@@ -130,7 +130,7 @@ void main()
         altv = mod(floor(vTexCoord.y * SourceSize.y + 0.5), 2.0) * pi;}
     if (system_choose == 6.0) {v_phase_alt = 0.0; timer = 0.0; }
 
-    if (anim_overr == 1.0) timer = mod(float(FrameCount/2),2.0);    
+    if (anim_overr == 1.0) timer = mod(float(FrameCount+1),2.0);    
       
     vec3 res = vec3(0.0);
     float sum = 0.0;
