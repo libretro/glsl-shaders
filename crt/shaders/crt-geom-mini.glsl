@@ -184,7 +184,7 @@ vec2 near = floor(pos*SourceSize.xy)+0.5;
 vec2 f = pos*SourceSize.xy - near;
 
 xy.y = (near.y + 16.0*f.y*f.y*f.y*f.y*f.y)*SourceSize.w;    
-if (InputSize.y>300.0 && INTERL == 1.0) xy.y += SourceSize.z*timer;
+if (InputSize.y>300.0 && INTERL == 1.0) xy.y += SourceSize.w*timer;
 //kaizer precalculated
 res += COMPAT_TEXTURE(Source,xy-dx).rgb*-1.6;
 res += COMPAT_TEXTURE(Source,xy).rgb*3.3;
