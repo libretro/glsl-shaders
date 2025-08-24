@@ -131,13 +131,13 @@ mat3 YUV2RGB = mat3(1.0, 0.0, 1.13983,
                           1.0, -0.39465, -0.58060,
                           1.0, 2.03211, 0.0);
 
+
+void main()
+{
 //detect if 256x224 or 320x224 and define phase
 float ph_2_3 = InputSize.x<300.0? 3.0 :2.0;
 
 float timer =  mod(float(FrameCount+1),ph_2_3);
-
-void main()
-{
     vec2 p = vec2(SourceSize.z*lpf_w,0.0);
     vec2 pc = vec2(SourceSize.z*lpf_w_c,0.0);
     vec2 y = vec2(0.0,SourceSize.w*0.25);

@@ -145,6 +145,8 @@ float kaizer_x (float p)
     return k;
 }
 
+#define timer mod(float(FrameCount),2.0)
+
 vec2 Warp(vec2 coord)
 {
         vec2 CURVATURE_DISTORTION = vec2(0.12, 0.25);
@@ -182,7 +184,7 @@ vec2 near = floor(pos*SourceSize.xy)+0.5;
 vec2 f = pos*SourceSize.xy - near;
 
 xy.y = (near.y + 16.0*f.y*f.y*f.y*f.y*f.y)*SourceSize.w;    
-
+if (InputSize.y>300.0 && INTERL == 1.0) xy.y += SourceSize.w*timer;
 //kaizer precalculated
 res += COMPAT_TEXTURE(Source,xy-dx).rgb*-1.6;
 res += COMPAT_TEXTURE(Source,xy).rgb*3.3;
@@ -194,12 +196,12 @@ res /= 5.8;
     float s = mix(scanlines,scanlines*0.6,a);
 
     float texsize = 1.0;
-    float fp = 0.25;
-    if (InputSize.y > 400.0) texsize = 0.5;
+    float fp = 0.5;
+    if (InputSize.y > 300.0) texsize = 0.5;
 
-    if (INTERL == 1.0 && InputSize.y > 400.0) 
+    if (INTERL == 1.0 && InputSize.y > 300.0) 
     {
-    fp = mod(float(FrameCount),2.0) <1.0 ? 0.5+fp :fp;
+    fp = timer >0.0 ? 0.5+fp :0.5;
     }
 
 
