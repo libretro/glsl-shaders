@@ -180,7 +180,7 @@ else                     {h_ph =  h_deg*onedeg; v_ph = v_deg*onedeg; mod0 = modu
 
 float phase = floor(vTexCoord.x*SourceSize.x + p)*h_ph + mod(floor(vTexCoord.y*SourceSize.y),mod0)*v_ph;
 phase += mini_hue;
-phase += d_crawl *(mod(float(FrameCount),3.0))*PI*0.6667;
+phase += d_crawl *(mod(float(FrameCount),2.0))*h_ph;
 
 vec2 qam = mini_sat*vec2(cos(phase),sin(phase));
 
