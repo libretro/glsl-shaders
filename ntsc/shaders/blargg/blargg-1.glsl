@@ -8,10 +8,10 @@
 #pragma parameter afacts "Artifacts" 0.0 0.0 1.0 0.05
 #pragma parameter ntsc_bleed "Chroma Bleed" 0.0 -0.75 2.0 0.05
 #pragma parameter LUMA_CUTOFF "Luma Cutoff" 0.2 0.0 1.0 0.005
-#pragma parameter stat_ph "Dot Crawl On/Off" 0.0 0.0 1.0 1.0
+#pragma parameter stat_ph "Dot Crawl On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter dummy " [ System Specific Tweaks] " 0.0 0.0 0.0 0.0
 #pragma parameter pi_mod "Phase-Horiz. Angle" 96.0 1.0 360.0 1.0
-#pragma parameter vert_scal "Phase-Vertical Scale" 0.6667 0.0 2.0 0.05555
+#pragma parameter vert_scal "Phase-Vertical Scale:1.0" 0.6667 0.0 2.0 0.05555
 
 #if defined(VERTEX)
 
@@ -218,7 +218,7 @@ for (int n=-i; n<i; n++) {
     float modulo = 3.0; if (InputSize.x > 300.0) modulo == 2.0;
 
     float phase = (floor(vTexCoord.x*SourceSize.x)+float(n))*pi_mod*onedeg + mod(floor(vTexCoord.y*SourceSize.y),modulo)*PI*vert_scal; 
-    if (stat_ph == 1.0) phase += sin(mod(float(FrameCount/2),2.0))*PI;
+    if (stat_ph == 1.0) phase += sin(mod(float(FrameCount),2.0))*PI;
 
     float r = exp(cutoff*float(n)*float(n));
 
