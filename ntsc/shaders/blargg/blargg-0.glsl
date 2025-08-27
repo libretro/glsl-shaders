@@ -101,7 +101,7 @@ uniform COMPAT_PRECISION float vert_scal ;
 #define ntsc_bri 1.0
 #define ntsc_hue 0.0
 #define  stat_ph 1.0
-#define  pi_mod 90.0
+#define  pi_mod 96.0
 #define  vert_scal 0.6667
 #endif
 
@@ -120,7 +120,7 @@ void main()
     float modulo = 3.0; if (InputSize.x > 300.0) modulo == 2.0;
     float phase = floor(vTexCoord.x*SourceSize.x)*pi_mod*onedeg + mod(floor(vTexCoord.y*SourceSize.y),modulo)*PI*vert_scal; 
     phase += ntsc_hue;
-    if (stat_ph == 1.0) phase += sin(mod(float(FrameCount/2),2.0))*PI;
+    if (stat_ph == 1.0) phase += sin(mod(float(FrameCount),2.0))*PI;
     
     vec3 YUV = COMPAT_TEXTURE(Source,vTexCoord).rgb; 
     YUV = YUV*RGBYIQ;
