@@ -135,7 +135,7 @@ else if (ph_mode == 4.0) {h_ph =  45.0*onedeg; v_ph = 0.0; mod0 = 2.0;}
 else                     {h_ph =  h_deg*onedeg; v_ph = v_deg*onedeg; mod0 = modulo;}
 
 float phase = floor(vTexCoord.x*SourceSize.x)*h_ph + floor(vTexCoord.y*SourceSize.y)*v_ph+ noise(vTexCoord)*rf_audio*PI;
-phase += d_crawl *(mod(float(FrameCount),3.0))*PI*0.6667;
+phase += d_crawl *(mod(float(FrameCount),2.0))*h_ph;
 
 res = COMPAT_TEXTURE(Source,vTexCoord).rgb*RGBYUV;
 res.gb *=0.5*vec2(cos(phase+mini_hue1),sin(phase+mini_hue2));

@@ -8,14 +8,13 @@ under the terms of the GNU General Public License as published by the Free
 Software Foundation; either version 2 of the License, or (at your option)
 any later version.
 */
-#pragma parameter comb "Comb Filter Strength" 0.2 0.0 1.0 0.05
-#pragma parameter taps "Filter Taps (slower)" 6.0 3.0 12.0 1.0
+#pragma parameter comb "Comb Filter Strength" 0.4 0.0 1.0 0.05
+#pragma parameter taps "Filter Taps (slower)" 4.0 2.0 12.0 1.0
 #pragma parameter lpf_w "Low Pass Width Y" 0.5 0.25 2.0 0.25
-#pragma parameter lpf_w_c "Low Pass Width C" 1.5 0.25 4.0 0.25
-#pragma parameter c_lpf "Chroma Low Pass (bleed)" 0.1 0.0 1.0 0.01
-#pragma parameter y_lpf "Luma Low Pass (sharpness)" 0.35 0.0 1.0 0.01
+#pragma parameter lpf_w_c "Low Pass Width C" 1.0 0.25 4.0 0.25
+#pragma parameter c_lpf "Chroma Low Pass (bleed)" 0.3 0.0 1.0 0.01
+#pragma parameter y_lpf "Luma Low Pass (sharpness)" 0.15 0.0 1.0 0.01
 #pragma parameter ntsc_sat "Saturation" 1.5 0.0 4.0 0.05
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -122,7 +121,7 @@ uniform COMPAT_PRECISION float ntsc_sat;
 #endif
 
 #define PI 3.1415926
-#define tau 6.2831852
+
 mat3 RGBYUV = mat3(0.299, 0.587, 0.114,
                         -0.299, -0.587, 0.886, 
                          0.701, -0.587, -0.114);
@@ -134,10 +133,10 @@ mat3 YUV2RGB = mat3(1.0, 0.0, 1.13983,
 
 void main()
 {
-//detect if 256x224 or 320x224 and define phase
-float ph_2_3 = InputSize.x<300.0? 3.0 :2.0;
+float v_sync = PI*170.666/InputSize.x;
+float h_sync = v_sync;    
 
-float timer =  mod(float(FrameCount+1),ph_2_3);
+float timer =  mod(float(FrameCount),2.0);
     vec2 p = vec2(SourceSize.z*lpf_w,0.0);
     vec2 pc = vec2(SourceSize.z*lpf_w_c,0.0);
     vec2 y = vec2(0.0,SourceSize.w*0.25);
@@ -151,37 +150,39 @@ for (int i=-int(steps); i<int(steps+1); i++)
     float w  = exp(-c_lpf*n*n);
     float wY = exp(-y_lpf*n*n);
     // phase cycles every 3 pixels horizontally:
-    float phase_x = mod(vTexCoord.x*SourceSize.x, ph_2_3);
-// NTSC line-to-line subcarrier advance ≈ 0.5 cycles per line.
-    float phase_y =ph_2_3>2.0? mod(vTexCoord.y*SourceSize.y, 3.0) :0.0;
+    float phase_x = floor(vTexCoord.x*SourceSize.x + n)*h_sync;
+//detect if 256x224 or 320x224 and define phase
+    float phase_y = InputSize.x<300.0? floor(vTexCoord.y*SourceSize.y)*v_sync : 0.0;
 
-// Combined horizontal+vertical phase in 3-phase space:
-    float phase = mod(phase_x - phase_y + timer + n, 3.0);
-    vec3 carrier   = vec3(1.0, cos(phase/3.0*tau ), sin(phase/3.0*tau));
-    vec3 carrierup = vec3(1.0, cos(phase/3.0*tau +PI), sin(phase/3.0*tau + PI));
+// Combined horizontal + vertical phase in 3-phase space (NES):
+    float phase = phase_x - phase_y  + timer;
+    vec3 carrier   = vec3(1.0, cos(phase ),   sin(phase));
+    vec3 carrierup = vec3(1.0, cos(phase + PI), sin(phase + PI));
     
-    vec3 res   = COMPAT_TEXTURE(Source,vTexCoord + n*p).rgb*RGBYUV;
+    vec3 res    = COMPAT_TEXTURE(Source,vTexCoord + n*p).rgb*RGBYUV;
     vec3 resc   = COMPAT_TEXTURE(Source,vTexCoord + n*pc).rgb*RGBYUV;
-    vec3 resup = COMPAT_TEXTURE(Source,vTexCoord + n*p -y).rgb*RGBYUV;
+    vec3 resup  = COMPAT_TEXTURE(Source,vTexCoord + n*p -y).rgb*RGBYUV;
     vec3 resupc = COMPAT_TEXTURE(Source,vTexCoord + n*pc -y).rgb*RGBYUV;
     
     res   *= carrier;
-    resc   *= carrier;
+    resc  *= carrier;
     resup *= carrierup;
     resupc *= carrierup;
 
     //get composite sample
     float line = dot(res,vec3(0.5));
-    float linec = dot(resc,vec3(0.5));
     float lineup = dot(resup,vec3(0.5));
+
+    float linec = dot(resc,vec3(0.5));
     float lineupc = dot(resupc,vec3(0.5));
+
     // comb luma is line adding previous line, chroma is cancelled!
     float luma   = line + lineup;
     float lumac   = linec + lineupc;
     // comb chroma is line subtracting luma we already have!
     float chroma = linec - lumac*0.5*comb;
     // lowpass Y and C, Luma has more bandwidth than Chroma (sharper)
-    if (i>-(steps/3) && i<(steps/3 + 1))
+    if (i>-(steps/2) && i<(steps/2 + 1))
     {
     final.r  += luma*wY;
     sumY += wY;
