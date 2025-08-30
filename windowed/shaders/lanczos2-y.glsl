@@ -1,16 +1,12 @@
 /*
-   Lanczos3 - passX 
+   Lanczos2 - passY 
 
-   Multipass code by Hyllian 2022.
+   Multipass code by dariusG 2025.
 
 */
 
 
 /*
-   Copyright (C) 2010 Team XBMC
-   http://www.xbmc.org
-   Copyright (C) 2011 Stefanos A.
-   http://www.opentk.com
 
 This Program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,15 +24,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 http://www.gnu.org/copyleft/gpl.html
 */
 
-
-#pragma parameter LANCZOS3_ANTI_RINGING "Lanczos3 Anti-Ringing [ OFF | ON ]" 1.0 0.0 1.0 1.0
-#define AR_STRENGTH 0.8
-
-#define FIX(c) (max(abs(c), 1e-5))
-
 const float PI     = 3.1415926535897932384626433832795;
-const float radius = 3.0;
-
 
 #if defined(VERTEX)
 
