@@ -153,6 +153,11 @@ void main()
     w0 /= sum; w1 /= sum; w2 /= sum; w3 /= sum;
 
     vec3 color = C0*w0 + C1*w1 + C2*w2 + C3*w3;
+    
+    // --- Lightweight anti-ringing ---
+    vec3 min_sample = min(min(C0, C1), min(C2, C3));
+    vec3 max_sample = max(max(C0, C1), max(C2, C3));
+    color = clamp(color, min_sample, max_sample);
 
     FragColor = vec4(color, 1.0);
 }
