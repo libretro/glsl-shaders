@@ -24,8 +24,6 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 http://www.gnu.org/copyleft/gpl.html
 */
 
-const float PI     = 3.1415926535897932384626433832795;
-
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
