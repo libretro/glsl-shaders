@@ -23,7 +23,6 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 http://www.gnu.org/copyleft/gpl.html
 */
 
-const float PI     = 3.1415926535897932384626433832795;
 
 #if defined(VERTEX)
 
@@ -119,6 +118,7 @@ uniform COMPAT_PRECISION float LANCZOS3_ANTI_RINGING;
 // Lanczos2 horizontal pass (optimized for speed on handhelds)
 
 #define RADIUS 2.0
+#define PI 3.1415926
 
 // Cheaper weight function (Lanczos2: radius 2 instead of 3)
 float weight2(float x) {
