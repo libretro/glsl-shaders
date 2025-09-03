@@ -1,16 +1,16 @@
 #version 110
 
 /*
-   A shader by DariusG 2024
+   A shader by DariusG 2024-25
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the Free
    Software Foundation; either version 2 of the License, or (at your option)
    any later version.
 */
 
-
 #pragma parameter LOT_SHARP "SHARPNESS (RGB: ~0.9)" 0.5 0.0 1.0 0.05
-#pragma parameter LOT_CURV "CURVATURE OFF/ON/TRINITRON " 1.0 0.0 2.0 1.0
+#pragma parameter LOT_CURV "CURVATURE OFF/ON/TRINITRON" 1.0 0.0 2.0 1.0
+#pragma parameter border "BORDER SMOOTHNESS" 0.02 0.0 0.2 0.01
 #pragma parameter LOT_SCAN "SCANLINES STRENGTH" 0.3 0.0 0.5 0.05
 #pragma parameter shadowMask "SHADOWMASK" 2.0 0.0 4.0 1.0
 #pragma parameter maskDark "LOTTES MASK DARK" 0.5 0.0 2.0 0.05
@@ -112,6 +112,7 @@ uniform COMPAT_PRECISION float LOT_SCAN;
 uniform COMPAT_PRECISION float maskDark;
 uniform COMPAT_PRECISION float maskLight;
 uniform COMPAT_PRECISION float shadowMask;
+uniform COMPAT_PRECISION float border;
 
 #else
 #define LOT_SHARP 0.5
@@ -120,6 +121,7 @@ uniform COMPAT_PRECISION float shadowMask;
 #define maskDark 0.5
 #define maskLight 1.5
 #define shadowMask 0.0
+#define border 0.02
 
 
 #endif
@@ -226,8 +228,7 @@ vec2 Warp(vec2 coord)
 void main() {
 //This is just like "Quilez Scaling" but sharper
     vec2 pos = Warp(vTexCoord*scale);
-    vec2 corn = min(pos, 1.0-pos);    // This is used to mask the rounded
-    corn.x = 0.0001/corn.x;         // corners later on
+    vec2 cpos = pos;
     pos /= scale;
     
     vec2 p = pos * TextureSize;
@@ -252,11 +253,18 @@ final *= LOT_SCAN*sin((pos.y*SourceSize.y-0.25)*PI*2.0)+1.0-LOT_SCAN;
 final *= Mask(vTexCoord*OutputSize.xy*scale);
 final = mix(final,clean,l);
 
+float fade = 1.0;
 //corners cut
 if (LOT_CURV != 0.0){
-if (corn.y <= corn.x || corn.x < 0.0001 )final = vec4(0.0);
+// fade screen edges (linear falloff)
+float fade_x = smoothstep(0.0, border, cpos.x) *
+               smoothstep(0.0, border, 1.0 - cpos.x);
+float fade_y = smoothstep(0.0, border, cpos.y) *
+               smoothstep(0.0, border, 1.0 - cpos.y);
+// combine fades
+fade = fade_x * fade_y;
 }
 
-FragColor = final;
+FragColor = final*fade;
 }
 #endif
