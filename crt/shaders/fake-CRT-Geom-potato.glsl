@@ -1,14 +1,9 @@
 #version 110
 
-/*
-   A shader by DariusG 2023
-   This program is free software; you can redistribute it and/or modify it
-   under the terms of the GNU General Public License as published by the Free
-   Software Foundation; either version 2 of the License, or (at your option)
-   any later version.
-*/
-
-#pragma parameter size "Mask Size" 1.0 0.6667 1.0 0.3333
+#pragma parameter size "Mask Size" 2.0 2.0 3.0 1.0
+#pragma parameter warp "Curvature" 0.12 0.0 0.3 0.01
+#pragma parameter border "Border Smoothness" 0.03 0.0 0.2 0.01
+#pragma parameter hheld_mode "Handheld mode" 0.0 0.0 1.0 1.0
 
 #define PI   3.14159265358979323846
 #define tau  6.283185
@@ -63,7 +58,7 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
     screenscale = SourceSize.xy/InputSize.xy;
-    maskpos = TEX0.x*OutputSize.x*screenscale.x*PI*size;
+    maskpos = TEX0.x*OutputSize.x*screenscale.x;
 }
 
 #elif defined(FRAGMENT)
@@ -106,34 +101,33 @@ COMPAT_VARYING vec2 screenscale;
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float sharpness;
+uniform COMPAT_PRECISION float border;
+uniform COMPAT_PRECISION float size;
+uniform COMPAT_PRECISION float warp;
+uniform COMPAT_PRECISION float hheld_mode;
 
 
 #else
-#define sharpness 0.0
+#define border 0.02
+#define size 2.0
+#define warp 0.12
+#define hheld_mode 0.0
 
 #endif
 
-vec2 Warp(vec2 coord)
-{
-        coord -= vec2(0.5);
-        float rsq = dot(coord,coord);
-        // x and y axis distortion
-        coord += coord*(vec2(0.13, 0.23)*rsq);
-        // Barrel distortion shrinks the display area a bit, 
-        // this will allow us to counteract that.
-        coord *= vec2(0.99,0.95);
-
-        return coord+0.5;
-}
 
 void main() 
 {
-vec2 pos = Warp(vTexCoord*screenscale);
+vec2 pos = vTexCoord*screenscale; // 0.0 to 1.0 range
 
-vec2 corn = min(pos, 1.0-pos);    // This is used to mask the rounded
-     corn.x = 0.0001/corn.x;      // corners later on
-pos /= screenscale;
+// curve horizontally & vertically
+COMPAT_PRECISION float cx = pos.x - 0.5; // -0.5 to 0.5
+COMPAT_PRECISION float cy = pos.y - 0.5; // -0.5 to 0.5
+pos.x = pos.x + (cy * cy * warp * cx);
+pos.y = pos.y + (cx * cx * warp * cy);
+vec2 cpos = pos;
+
+pos /= screenscale; 
 
 vec2 spos = pos*SourceSize.xy;
 vec2 near = floor(spos)+0.5;
@@ -145,15 +139,32 @@ vec3 res = COMPAT_TEXTURE(Source,pos).rgb;
     
 float l = dot(vec3(0.25),res);
 
-float scan_pow = mix(0.5,0.2,l);
-float scn = scan_pow*sin((spos.y-0.25)*tau)+1.0-scan_pow;
-float msk = 0.2*sin(maskpos)+0.8;
+// get pixel position in screen space
+float pix = floor(maskpos);
+// Mask out every other line
+if (mod(pix, size) == 0.0) {
+    res.rgb *= 0.7; // mask
+}
 
-res *= scn*msk;
+float scan_pow = 1.0;
+float scn = 1.0;
+
+if (hheld_mode == 0.0){
+scan_pow = mix(0.5,0.2,l);    
+scn = scan_pow*sin((spos.y-0.25)*tau)+1.0-scan_pow;
+res *= scn;    
+}
+
 res *= mix(1.45,1.25,l);
 res = sqrt(res);
-if (corn.y <= corn.x || corn.x < 0.0001 )res = vec3(0.0);
-
+// fade screen edges (linear falloff)
+float fade_x = smoothstep(0.0, border, cpos.x) *
+               smoothstep(0.0, border, 1.0 - cpos.x);
+float fade_y = smoothstep(0.0, border, cpos.y) *
+               smoothstep(0.0, border, 1.0 - cpos.y);
+// combine fades
+float fade = fade_x * fade_y;
+res *= fade;
 FragColor.rgb = res;
 }
 #endif
