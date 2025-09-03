@@ -1,5 +1,13 @@
 #version 110
 
+/*
+   A shader by DariusG 2023
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the Free
+   Software Foundation; either version 2 of the License, or (at your option)
+   any later version.
+*/
+
 #pragma parameter size "Mask Size" 2.0 2.0 3.0 1.0
 #pragma parameter warp "Curvature" 0.12 0.0 0.3 0.01
 #pragma parameter border "Border Smoothness" 0.03 0.0 0.2 0.01
