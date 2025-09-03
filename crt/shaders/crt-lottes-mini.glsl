@@ -10,7 +10,7 @@
 
 #pragma parameter LOT_SHARP "SHARPNESS (RGB: ~0.9)" 0.5 0.0 1.0 0.05
 #pragma parameter LOT_CURV "CURVATURE OFF/ON/TRINITRON" 1.0 0.0 2.0 1.0
-#pragma parameter border "BORDER SMOOTHNESS" 0.02 0.0 0.2 0.01
+#pragma parameter border "BORDER SMOOTHNESS" 0.015 0.0 0.2 0.005
 #pragma parameter LOT_SCAN "SCANLINES STRENGTH" 0.3 0.0 0.5 0.05
 #pragma parameter shadowMask "SHADOWMASK" 2.0 0.0 4.0 1.0
 #pragma parameter maskDark "LOTTES MASK DARK" 0.5 0.0 2.0 0.05
