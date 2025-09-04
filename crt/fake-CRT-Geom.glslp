@@ -1,5 +1,5 @@
-shaders = "1"
+shaders = "2"
 feedback_pass = "0"
-shader0 = shaders/fake-CRT-Geom.glsl
-filter_linear0 = "true"
-
+shader0 = "shaders/crt-consumer/linearize.glsl"
+shader1 = "shaders/fake-CRT-Geom.glsl"
+g_in = "2.200000"
