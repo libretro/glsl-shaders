@@ -10,7 +10,7 @@
 
 #pragma parameter size "Mask Size" 2.0 2.0 3.0 1.0
 #pragma parameter warp "Curvature" 0.12 0.0 0.3 0.01
-#pragma parameter border "Border Smoothness" 0.03 0.0 0.2 0.01
+#pragma parameter border "Border Smoothness" 0.02 0.0 0.2 0.005
 #pragma parameter hheld_mode "Handheld mode" 0.0 0.0 1.0 1.0
 
 #define PI   3.14159265358979323846

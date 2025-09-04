@@ -1,37 +1,32 @@
 #version 110
 
 /*
-   A shader by DariusG 2023-24
+   A shader by DariusG 2023-24-25
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the Free
    Software Foundation; either version 2 of the License, or (at your option)
    any later version.
 */
 
-
 #pragma parameter bogus1 " [ COLORS ] " 0.0 0.0 0.0 0.0
-#pragma parameter a_gamma_in "Gamma In" 2.45 1.0 4.0 0.05
-#pragma parameter a_gamma_out "Gamma Out" 2.25 1.0 4.0 0.05
 #pragma parameter a_col_temp "Color Temperature (0.01 ~ 200K)" 0.0 -0.15 0.15 0.01
 #pragma parameter a_sat "Saturation" 1.0 0.0 2.0 0.05
-#pragma parameter a_boostd "Bright Boost Dark" 1.3 0.0 2.0 0.05
-#pragma parameter a_boostb "Bright Boost Bright" 1.05 0.0 2.0 0.05
+#pragma parameter a_boostd "Bright Boost Dark" 1.45 1.0 2.0 0.05
+#pragma parameter a_boostb "Bright Boost Bright" 1.05 1.0 2.0 0.05
 #pragma parameter bogus2 " [ SCANLINES/MASK ] " 0.0 0.0 0.0 0.0
-#pragma parameter scanl "Scanlines Low" 0.4 0.0 0.5 0.05
-#pragma parameter scanh "Scanlines High" 0.2 0.0 0.5 0.05
+#pragma parameter scanl "Scanlines Low" 0.5 0.0 0.5 0.05
+#pragma parameter scanh "Scanlines High" 0.35 0.0 0.5 0.05
 #pragma parameter a_interlace "Interlace On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter a_MTYPE "Mask Type, Fine/Coarse/LCD" 0.0 0.0 2.0 1.0
 #pragma parameter a_MSIZE "Mask Size" 1.0 1.0 2.0 1.0
 #pragma parameter a_MASK "Mask Strength" 0.2 0.0 0.5 0.05
 #pragma parameter bogus3 " [ GEOMETRY ] " 0.0 0.0 0.0 0.0
-#pragma parameter a_sharper "Sharp Image" 0.0 0.0 1.0 1.0
-#pragma parameter a_lanc "Lanczos Fake Artifacts" 1.0 0.0 1.0 1.0
 #pragma parameter warpx "Curvature Horizontal" 0.03 0.0 0.2 0.01
 #pragma parameter warpy "Curvature Vertical" 0.04 0.0 0.2 0.01
 #pragma parameter a_corner "Corner Roundness" 0.03 0.0 0.2 0.01
-#pragma parameter bsmooth "Border Smoothness" 600.0 100.0 1000.0 25.0
+#pragma parameter bsmooth "Border Smoothness" 250.0 100.0 1000.0 25.0
 #pragma parameter a_vignette "Vignette On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter a_vigstr "Vignette Strength" 0.4 0.0 1.0 0.05
+#pragma parameter a_vigstr "Vignette Strength" 0.5 0.0 1.0 0.05
 
 #define SourceSize vec4(TextureSize.xy, 1.0/TextureSize.xy)
 #define scale vec2(SourceSize.xy/InputSize.xy)
@@ -62,6 +57,7 @@ COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 ps;
 COMPAT_VARYING float maskpos;
+
 
 vec4 _oPosition1;
 uniform mat4 MVPMatrix;
@@ -124,6 +120,7 @@ COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 ps;
 COMPAT_VARYING float maskpos;
 
+
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
@@ -133,8 +130,6 @@ uniform COMPAT_PRECISION float warpx;
 uniform COMPAT_PRECISION float warpy;
 uniform COMPAT_PRECISION float a_vignette;
 uniform COMPAT_PRECISION float a_vigstr;
-uniform COMPAT_PRECISION float a_gamma_in;
-uniform COMPAT_PRECISION float a_gamma_out;
 uniform COMPAT_PRECISION float a_col_temp;
 uniform COMPAT_PRECISION float a_sat;
 uniform COMPAT_PRECISION float a_boostd;
@@ -146,16 +141,12 @@ uniform COMPAT_PRECISION float a_MASK;
 uniform COMPAT_PRECISION float a_MTYPE;
 uniform COMPAT_PRECISION float a_corner;
 uniform COMPAT_PRECISION float bsmooth;
-uniform COMPAT_PRECISION float a_sharper;
-uniform COMPAT_PRECISION float a_lanc;
 #else
 
 #define warpx 0.0
 #define warpy 0.0
 #define a_vignette 0.0
 #define a_vigstr 0.0
-#define a_gamma_in 2.4
-#define a_gamma_out 2.2
 #define a_col_temp 0.0
 #define a_sat 1.0
 #define a_boostd 1.0
@@ -167,9 +158,10 @@ uniform COMPAT_PRECISION float a_lanc;
 #define a_MTYPE 1.0
 #define a_corner 0.03
 #define bsmooth 600.0
-#define a_sharper 1.0
-#define a_lanc 1.0
 #endif
+
+#define TEX2D(c) COMPAT_TEXTURE(Texture,(c))
+#define FIX(c) max(abs(c), 1e-5)
 
 vec2 Warp(vec2 pos)
 {
@@ -195,33 +187,37 @@ vec2 cpos = pos;
 pos /= scale;
 
 // filter
-vec2 ogl2pos = pos*SourceSize.xy;
-vec2 xy = floor(ogl2pos)+0.5;
-vec2 near = xy*ps;
-vec2 d = ogl2pos-xy;
-d = d*d*d*4.0*ps;
-d = near+d;
+  vec2 ogl2pos = pos*SourceSize.xy;
 
-// blurrier option
-if (a_sharper == 0.0) d = vec2(pos.x,d.y);
+  vec2 ratio_scale = ogl2pos - vec2(0.5); ;
+  vec2 uv_ratio = fract(ratio_scale);
+  vec2 xy = (floor(ratio_scale) + vec2(0.5))*ps;
+  // Horizontal Lanczos2 coeffs (4 taps)
+  vec4 coeffs = pi * vec4(1.0 + uv_ratio.x, uv_ratio.x, 1.0 - uv_ratio.x, 2.0 - uv_ratio.x);
+  coeffs = FIX(coeffs);
+  coeffs = 2.0 * sin(coeffs) * sin(coeffs*0.5) / (coeffs*coeffs);
+  coeffs /= dot(coeffs, vec4(1.0));
 
-vec3 res = COMPAT_TEXTURE(Source,d).rgb;
+  // Fetch 4 samples from current and next scanline
+  vec4 c0 = TEX2D(xy + vec2(-ps.x, 0.0));
+  vec4 c1 = TEX2D(xy + vec2( 0.0 , 0.0));
+  vec4 c2 = TEX2D(xy + vec2( ps.x, 0.0));
+  vec4 c3 = TEX2D(xy + vec2( 2.0*ps.x, 0.0));
+  vec4 res  = clamp(mat4(c0,c1,c2,c3) * coeffs, 0.0, 1.0);
 
-// fake Lanczos artifacts
-vec3 resl = COMPAT_TEXTURE(Source,d + vec2(ps.x,0.0)).rgb;
-vec3 resr = COMPAT_TEXTURE(Source,d - vec2(ps.x,0.0)).rgb;
-vec3 lanc = resl*0.5+resr*0.5;
-lanc *= lanc;
+float w = dot(vec3(0.33),res.rgb);
 
-float w = dot(vec3(0.33),res);
-
-if (a_sharper == 0.0 && a_lanc == 1.0) {res -= 0.2*lanc; res *= 1.15; res = clamp(res,0.0,1.0); } 
 // color temp approximate
-res *= vec3(1.0+a_col_temp,1.0-a_col_temp*0.2,1.0-a_col_temp);
+res.rgb *= vec3(1.0 + a_col_temp, 1.0 - a_col_temp * 0.2, 1.0 - a_col_temp);
 
-float scan = mix(scanl,scanh,w);
+float scan = mix(scanl, scanh,w);
 
-res = pow(res, vec3(a_gamma_in));
+// masks
+float sz = 1.0;
+float m_m = maskpos;
+if (a_MTYPE == 1.0) sz = 0.6666;
+if (a_MTYPE == 2.0) m_m = ogl2pos.x*2.0*pi;
+res *= a_MASK*sin(m_m*sz)+1.0-a_MASK;
 
 float vig = 0.0;
 if (a_vignette == 1.0){
@@ -233,22 +229,13 @@ if (InputSize.y>400.0) {ogl2pos /= 2.0;
 if (mod(float(FrameCount),2.0) > 0.0 && a_interlace == 1.0) ogl2pos += 0.5;
 }
 
-res *= (scan+vig)*sin((ogl2pos.y-0.25)*2.0*pi)+(1.0-scan-vig);
-// masks
-float sz = 1.0;
-float m_m = maskpos;
-if (a_MTYPE == 1.0) sz = 0.6666;
-if (a_MTYPE == 2.0) m_m = ogl2pos.x*2.0*pi;
-res *= a_MASK*sin(m_m*sz)+1.0-a_MASK;
+res *= (scan+vig)*sin((ogl2pos.y+0.25)*2.0*pi)+(1.0-scan-vig);
 
-res = pow(res,vec3(1.0/a_gamma_out));
-
-float l = dot(res,vec3(0.3,0.6,0.1));
-res = mix(vec3(l),res,a_sat);
+float l = dot(res.rgb,vec3(0.3,0.6,0.1));
+res.rgb = mix(vec3(l),res.rgb,a_sat);
 
 res *= mix(a_boostd,a_boostb,l);
 
-if (a_corner >0.0) res *= corner(cpos);
-FragColor.rgb = res;
+FragColor.rgb = sqrt(res.rgb)*corner(cpos);
 }
 #endif
