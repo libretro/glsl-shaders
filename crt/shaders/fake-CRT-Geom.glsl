@@ -15,18 +15,18 @@
 #pragma parameter a_boostb "Bright Boost Bright" 1.05 1.0 2.0 0.05
 #pragma parameter bogus2 " [ SCANLINES/MASK ] " 0.0 0.0 0.0 0.0
 #pragma parameter scanl "Scanlines Low" 0.5 0.0 0.5 0.05
-#pragma parameter scanh "Scanlines High" 0.35 0.0 0.5 0.05
+#pragma parameter scanh "Scanlines High" 0.4 0.0 0.5 0.05
 #pragma parameter a_interlace "Interlace On/Off" 1.0 0.0 1.0 1.0
 #pragma parameter a_MTYPE "Mask Type, Fine/Coarse/LCD" 0.0 0.0 2.0 1.0
 #pragma parameter a_MSIZE "Mask Size" 1.0 1.0 2.0 1.0
-#pragma parameter a_MASK "Mask Strength" 0.2 0.0 0.5 0.05
+#pragma parameter a_MASK "Mask Strength" 0.15 0.0 0.5 0.05
 #pragma parameter bogus3 " [ GEOMETRY ] " 0.0 0.0 0.0 0.0
 #pragma parameter warpx "Curvature Horizontal" 0.03 0.0 0.2 0.01
 #pragma parameter warpy "Curvature Vertical" 0.04 0.0 0.2 0.01
 #pragma parameter a_corner "Corner Roundness" 0.03 0.0 0.2 0.01
 #pragma parameter bsmooth "Border Smoothness" 250.0 100.0 1000.0 25.0
 #pragma parameter a_vignette "Vignette On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter a_vigstr "Vignette Strength" 0.5 0.0 1.0 0.05
+#pragma parameter a_vigstr "Vignette Strength" 0.3 0.0 1.0 0.05
 
 #define SourceSize vec4(TextureSize.xy, 1.0/TextureSize.xy)
 #define scale vec2(SourceSize.xy/InputSize.xy)
@@ -188,10 +188,15 @@ pos /= scale;
 
 // filter
   vec2 ogl2pos = pos*SourceSize.xy;
-
+// use "Quilez" sharper scaling for Y axis
+    COMPAT_PRECISION float y = ogl2pos.y;
+    COMPAT_PRECISION float i = floor(y) + 0.50;
+    COMPAT_PRECISION float f = y - i;
+    y = (i + 16.0*f*f*f*f*f)*ps.y;
   vec2 ratio_scale = ogl2pos - vec2(0.5); ;
   vec2 uv_ratio = fract(ratio_scale);
   vec2 xy = (floor(ratio_scale) + vec2(0.5))*ps;
+  xy.y = y;
   // Horizontal Lanczos2 coeffs (4 taps)
   vec4 coeffs = pi * vec4(1.0 + uv_ratio.x, uv_ratio.x, 1.0 - uv_ratio.x, 2.0 - uv_ratio.x);
   coeffs = FIX(coeffs);
@@ -229,7 +234,7 @@ if (InputSize.y>400.0) {ogl2pos /= 2.0;
 if (mod(float(FrameCount),2.0) > 0.0 && a_interlace == 1.0) ogl2pos += 0.5;
 }
 
-res *= (scan+vig)*sin((ogl2pos.y+0.25)*2.0*pi)+(1.0-scan-vig);
+res *= (scan+vig)*sin((ogl2pos.y-0.25)*2.0*pi)+(1.0-scan-vig);
 
 float l = dot(res.rgb,vec3(0.3,0.6,0.1));
 res.rgb = mix(vec3(l),res.rgb,a_sat);
