@@ -1,13 +1,12 @@
 #version 110
 
-#pragma parameter ph_mode "Phase:-1 Custom,0:blend,1:ZX,2:MD,3:NES/SNES,4:CGA/AppleII" 2.0 -1.0 4.0 1.0
+#pragma parameter ph_mode "-1:Custom,0:blend,1:PCE,2:MD,3:NES/SNES,4:CGA/AppleII" 3.0 -1.0 4.0 1.0
 #pragma parameter h_deg "Custom Phase Horiz. Degrees" 120.0 0.0 180.0 0.5
 #pragma parameter v_deg "Custom Phase Vert. Degrees" 120.0 0.0 360.0 2.5
-#pragma parameter modulo "Custom Phase Modulo Steps (360/Vert.Deg)" 3.0 0.0 12.0 1.0
-#pragma parameter mini_sharp "Resolution" 0.5 0.1 4.0 0.1
+#pragma parameter mini_sharp "Resolution" 0.75 0.1 2.0 0.05
 #pragma parameter Fl "Freq. Cutoff" 0.2 0.01 1.0 0.01
 #pragma parameter lpass "Chroma Low Pass" 0.05 0.0 1.0 0.01
-#pragma parameter d_crawl "Dot Crawl" 0.0 0.0 1.0 1.0
+#pragma parameter d_crawl "Dot Crawl" 1.0 0.0 1.0 1.0
 #pragma parameter rf_audio "RF Audio Interference" 0.0 0.0 0.2 0.02
 #pragma parameter mini_hue1 "Hue Shift I" 0.1 -6.0 6.0 0.05
 #pragma parameter mini_hue2 "Hue Shift Q" -0.1 -6.0 6.0 0.05
@@ -109,7 +108,6 @@ uniform COMPAT_PRECISION float mini_sat;
 uniform COMPAT_PRECISION float mini_sharp;
 uniform COMPAT_PRECISION float h_deg;
 uniform COMPAT_PRECISION float v_deg;
-uniform COMPAT_PRECISION float modulo;
 
 #else
 #define ph_mode 90.0
@@ -121,11 +119,9 @@ uniform COMPAT_PRECISION float modulo;
 #define mini_sharp 1.0
 #define h_deg 60.0
 #define v_deg 60.0
-#define modulo 1.0
 #endif
 
 #define PI   3.14159265358979323846
-#define TAU  6.28318530717958647693
 #define s 1.0
 #define onedeg 0.017453
 
@@ -146,14 +142,13 @@ vec3 yuv = vec3(0.0);
 vec2 ps = vec2(SourceSize.z,0.0);
 float sum = 0.0; float sumc = 0.0;
 
-
 // luma
-for (int i=0; i<4; i++)
+for (int i=-1; i<=1; i++)
 {
 float p = float (i);
 vec2 pos = vTexCoord + ps*p/mini_sharp -ps;
 // Window
-float w = kaizer(4.0,p);
+float w = kaizer(3.0,p);
 yuv.r += COMPAT_TEXTURE(Source,pos).r*w;
 sum += w;
 }
@@ -170,17 +165,17 @@ float w = exp(-lpass*p*p);
 
 // snes loosely based on internet videos and blargg
 
-float h_ph, v_ph, mod0 = 0.0;
-if      (ph_mode == 0.0) {h_ph =  90.0*onedeg; v_ph = PI;        mod0 = 2.0;}
-else if (ph_mode == 1.0) {h_ph = 120.0*onedeg; v_ph = PI;        mod0 = 2.0;}
-else if (ph_mode == 2.0) {h_ph = 48.0*onedeg; v_ph = 0.0;        mod0 = 2.0;}
-else if (ph_mode == 3.0) {h_ph = 120.0*onedeg; v_ph = PI*0.6667; mod0 = 3.0;}
-else if (ph_mode == 4.0) {h_ph =  45.0*onedeg; v_ph = 0.0; mod0 = 2.0;}
-else                     {h_ph =  h_deg*onedeg; v_ph = v_deg*onedeg; mod0 = modulo;}
+float h_ph, v_ph;
+if      (ph_mode == 0.0) {h_ph =  90.0*onedeg; v_ph = PI;        }
+else if (ph_mode == 1.0) {h_ph = 120.0*onedeg; v_ph = PI;        }
+else if (ph_mode == 2.0) {h_ph = 96.0*onedeg; v_ph = 0.0;        }
+else if (ph_mode == 3.0) {h_ph = 120.0*onedeg; v_ph = PI*0.6667; }
+else if (ph_mode == 4.0) {h_ph =  90.0*onedeg; v_ph = 0.0; }
+else                     {h_ph =  h_deg*onedeg; v_ph = v_deg*onedeg;}
 
-float phase = floor(vTexCoord.x*SourceSize.x + p)*h_ph + mod(floor(vTexCoord.y*SourceSize.y),mod0)*v_ph;
-phase += mini_hue;
-phase += d_crawl *(mod(float(FrameCount),2.0))*h_ph;
+float phase = (vTexCoord.x*SourceSize.x + p)*h_ph + 
+              (vTexCoord.y*SourceSize.y)*v_ph + 
+              d_crawl *(mod(float(FrameCount),2.0))*h_ph;
 
 vec2 qam = mini_sat*vec2(cos(phase),sin(phase));
 

@@ -93,7 +93,6 @@ uniform COMPAT_PRECISION float mini_hue1;
 uniform COMPAT_PRECISION float mini_hue2;
 uniform COMPAT_PRECISION float h_deg;
 uniform COMPAT_PRECISION float v_deg;
-uniform COMPAT_PRECISION float modulo;
 uniform COMPAT_PRECISION float rf_audio;
 
 #else
@@ -102,6 +101,8 @@ uniform COMPAT_PRECISION float rf_audio;
 #define mini_hue2 0.0
 #define mini_hue1 0.0
 #define rf_audio 0.0
+#define h_deg 0.0
+#define v_deg 0.0
 
 #endif
 
@@ -109,7 +110,7 @@ uniform COMPAT_PRECISION float rf_audio;
 
 #define onedeg 0.017453
 #define PI   3.14159265358979323846
-#define TAU  6.28318530717958647693
+
 const mat3 RGBYUV = mat3(0.299, 0.587, 0.114,
                         -0.299, -0.587, 0.886, 
                          0.701, -0.587, -0.114);
@@ -126,22 +127,24 @@ vec3 res = vec3(0.0);
 
 // snes loosely based on internet videos and blargg
 
-float h_ph, v_ph, mod0 = 0.0;
-if      (ph_mode == 0.0) {h_ph =  90.0*onedeg; v_ph = PI;        mod0 = 2.0;}
-else if (ph_mode == 1.0) {h_ph = 120.0*onedeg; v_ph = PI;        mod0 = 2.0;}
-else if (ph_mode == 2.0) {h_ph = 48.0*onedeg; v_ph = 0.0;        mod0 = 2.0;}
-else if (ph_mode == 3.0) {h_ph = 120.0*onedeg; v_ph = PI*0.6667; mod0 = 3.0;}
-else if (ph_mode == 4.0) {h_ph =  45.0*onedeg; v_ph = 0.0; mod0 = 2.0;}
-else                     {h_ph =  h_deg*onedeg; v_ph = v_deg*onedeg; mod0 = modulo;}
+float h_ph, v_ph; 
 
-float phase = floor(vTexCoord.x*SourceSize.x)*h_ph + floor(vTexCoord.y*SourceSize.y)*v_ph+ noise(vTexCoord)*rf_audio*PI;
-phase += d_crawl *(mod(float(FrameCount),2.0))*h_ph;
+if      (ph_mode == 0.0) {h_ph =  90.0*onedeg; v_ph = PI;        }
+else if (ph_mode == 1.0) {h_ph = 120.0*onedeg; v_ph = PI;        }
+else if (ph_mode == 2.0) {h_ph = 96.0*onedeg; v_ph = 0.0;        }
+else if (ph_mode == 3.0) {h_ph = 120.0*onedeg; v_ph = PI*0.6667; }
+else if (ph_mode == 4.0) {h_ph =  90.0*onedeg; v_ph = 0.0; }
+else                     {h_ph =  h_deg*onedeg; v_ph = v_deg*onedeg; }
+
+float phase = (vTexCoord.x*SourceSize.x)*h_ph + 
+              (vTexCoord.y*SourceSize.y)*v_ph + 
+                noise(vTexCoord)*rf_audio*PI + 
+              d_crawl *(mod(float(FrameCount),2.0))*h_ph;
 
 res = COMPAT_TEXTURE(Source,vTexCoord).rgb*RGBYUV;
-res.gb *=0.5*vec2(cos(phase+mini_hue1),sin(phase+mini_hue2));
+res.gb *= 0.5*vec2(cos(phase + mini_hue1), sin(phase + mini_hue2));
 
 float signal = dot(vec3(1.0),res);
-signal *= 1.0 ;
 
 FragColor.rgb = vec3(signal);
 }
