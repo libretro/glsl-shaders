@@ -1,7 +1,7 @@
 #version 110
 
 /*
-   Kaizer-window CRT-Geom replica by DariusG 2024.
+   CRT-Geom replica by DariusG 2024.
    This shader should run well on gpu's with around 60-70 gflops.
    
    Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,9 +23,10 @@
    THE SOFTWARE.
 */
 #pragma parameter CURV "CRT-Geom Curvature" 1.0 0.0 1.0 1.0
-#pragma parameter scanlines "CRT-Geom Scanline Weight" 0.45 0.0 0.5 0.05
-#pragma parameter MASK "CRT-Geom Dotmask Strength" 0.2 0.0 0.5 0.05
+#pragma parameter scanlines "CRT-Geom Scanline Weight" 0.3 0.0 0.5 0.05
+#pragma parameter MASK "CRT-Geom Dotmask Strength" 0.15 0.0 0.5 0.05
 #pragma parameter INTERL "CRT-Geom Interlacing Simulation" 1.0 0.0 1.0 1.0
+#pragma parameter lum "CRTGeom Luminance" 0.0 0.0 1.0 0.01
 #pragma parameter SAT "CRT-Geom Saturation" 1.0 0.0 2.0 0.05
 
 #define pi 3.1415926
@@ -128,22 +129,15 @@ uniform COMPAT_PRECISION float CURV;
 uniform COMPAT_PRECISION float MASK;
 uniform COMPAT_PRECISION float SAT;
 uniform COMPAT_PRECISION float INTERL;
+uniform COMPAT_PRECISION float lum;
 #else
 #define scanlines 0.5
 #define CURV 1.0
 #define MASK 0.2
 #define SAT 1.0
 #define INTERL 1.0
+#define lum 0.0
 #endif
-
-// Configuration.
-
-float kaizer_x (float p)
-{
-    // Compute sinc filter.
-    float k = sin(1.3* ((p - 1.0) / 2.0));
-    return k;
-}
 
 #define timer mod(float(FrameCount),2.0)
 
@@ -165,10 +159,20 @@ vec2 Warp(vec2 coord)
 
         return coord;
 }
+
+#define one 1.384615
+#define two 3.230769
+// precalculated Lanczos weight (approximate)
+#define w0   1.174
+#define w1  -0.095
+#define w2   0.007
+
+#define TEX(p) COMPAT_TEXTURE(Source,p).rgb
+
 void main()
 {
 vec3 res = vec3(0.0);
-vec2 dx = vec2(SourceSize.z*0.5,0.0); //sharpness
+vec2 dx = vec2(SourceSize.z,0.0); //sharpness
 vec2 pos, corn;
 if(CURV == 1.0){
  pos = Warp(vTexCoord*scale);
@@ -179,19 +183,21 @@ pos /= scale;
 else pos = vTexCoord;
 
 vec2 xy = pos;
-xy -= dx*2.0;
+xy -= dx;
 vec2 near = floor(pos*SourceSize.xy)+0.5;
 vec2 f = pos*SourceSize.xy - near;
 
 xy.y = (near.y + 16.0*f.y*f.y*f.y*f.y*f.y)*SourceSize.w;    
 if (InputSize.y>300.0 && INTERL == 1.0) xy.y += SourceSize.w*timer;
-//kaizer precalculated
-res += COMPAT_TEXTURE(Source,xy-dx).rgb*-1.6;
-res += COMPAT_TEXTURE(Source,xy).rgb*3.3;
-res += COMPAT_TEXTURE(Source,xy+dx).rgb*5.6;
-res += COMPAT_TEXTURE(Source,xy+2.0*dx).rgb*-1.5;
-    
-res /= 5.8;
+//  lanczos approximation in 5 taps
+    res += TEX(xy)*w0;
+    res += TEX(xy - one*dx).rgb*w1; 
+    res += TEX(xy + one*dx).rgb*w1;
+    res += TEX(xy + two*dx).rgb*w2;
+    res += TEX(xy - two*dx).rgb*w2;
+
+    res = clamp(res,vec3(0.0),vec3(1.0));
+
     float a = dot(vec3(0.25),res);
     float s = mix(scanlines,scanlines*0.6,a);
 
@@ -204,15 +210,16 @@ res /= 5.8;
     fp = timer >0.0 ? 0.5+fp :0.5;
     }
 
-
-    float scan = s*sin((pos.y*SourceSize.y*texsize-fp)*tau)+1.0-s;
     float mask = MASK*sin(maskpos)+1.0-MASK;
-    res *= scan*mask;
-    res *= 1.5;
+    res *= mask;
+    res = sqrt(res);
+    float scan = s*sin(((pos.y*SourceSize.y+0.15)*texsize-fp)*tau)+1.0-s+lum;
+    res *= scan;
+    //res *= 1.5;
     float l = dot(vec3(0.29, 0.6, 0.11), res);
     res  = mix(vec3(l), res, SAT);
-    res = clamp(res,0.0,1.0);
+    
     if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.0001 && CURV ==1.0 )res = vec3(0.0);
-    FragColor.rgb = sqrt(res);
+    FragColor.rgb = (res);
 }
 #endif
