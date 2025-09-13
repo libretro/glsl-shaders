@@ -163,10 +163,11 @@ vec2 Warp(vec2 coord)
 #define one 1.384615
 #define two 3.230769
 // precalculated Lanczos weight (approximate)
-#define w0   1.162
+#define w0   1.174
 #define w1  -0.095
-#define w2   0.014
+#define w2   0.007
 
+#define TEX(p) COMPAT_TEXTURE(Source,p).rgb
 
 void main()
 {
@@ -189,13 +190,13 @@ vec2 f = pos*SourceSize.xy - near;
 xy.y = (near.y + 16.0*f.y*f.y*f.y*f.y*f.y)*SourceSize.w;    
 if (InputSize.y>300.0 && INTERL == 1.0) xy.y += SourceSize.w*timer;
 //  lanczos approximation in 5 taps
-    res += COMPAT_TEXTURE(Source,xy).rgb*w0;
-    res += COMPAT_TEXTURE(Source,xy - one*dx).rgb*w1;
-    res += COMPAT_TEXTURE(Source,xy + one*dx).rgb*w1;
-    res += COMPAT_TEXTURE(Source,xy + two*dx).rgb*w2;
-    res += COMPAT_TEXTURE(Source,xy - two*dx).rgb*w2;
+    res += TEX(xy)*w0;
+    res += TEX(xy - one*dx).rgb*w1; 
+    res += TEX(xy + one*dx).rgb*w1;
+    res += TEX(xy + two*dx).rgb*w2;
+    res += TEX(xy - two*dx).rgb*w2;
 
-    res = clamp(res,0.0,1.0);
+    res = clamp(res,vec3(0.0),vec3(1.0));
 
     float a = dot(vec3(0.25),res);
     float s = mix(scanlines,scanlines*0.6,a);
