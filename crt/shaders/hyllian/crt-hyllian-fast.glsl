@@ -28,11 +28,11 @@
 #pragma parameter MASK_INTENSITY "MASK INTENSITY" 0.5 0.0 1.0 0.1
 #pragma parameter InputGamma "INPUT GAMMA" 2.4 0.0 5.0 0.1
 #pragma parameter OutputGamma "OUTPUT GAMMA" 2.2 0.0 5.0 0.1
-#pragma parameter BRIGHTBOOST "BRIGHT BOOST" 1.5 0.0 2.0 0.1
+#pragma parameter BRIGHTBOOST "BRIGHT BOOST" 1.5 1.0 2.0 0.1
 #pragma parameter SCANLINES "SCANLINES STRENGTH" 0.72 0.0 1.0 0.02
 
-#define GAMMA_IN(color)     pow(color, vec3(InputGamma, InputGamma, InputGamma))
-#define GAMMA_OUT(color)    pow(color, vec3(1.0 / OutputGamma, 1.0 / OutputGamma, 1.0 / OutputGamma))
+#define GAMMA_IN(color)   pow(color, vec3(InputGamma))
+#define GAMMA_OUT(color)  pow(color, vec3(1.0 / OutputGamma))
 
 #if defined(VERTEX)
 
@@ -56,6 +56,8 @@ COMPAT_ATTRIBUTE vec4 VertexCoord;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 ps;
+COMPAT_VARYING float mod_factor;
+COMPAT_VARYING float MASK;
 
 uniform mat4 MVPMatrix;
 uniform COMPAT_PRECISION int FrameDirection;
@@ -71,8 +73,10 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float SHARPNESS;
+uniform COMPAT_PRECISION float MASK_INTENSITY;
 #else
 #define SHARPNESS 1.0
+#define MASK_INTENSITY 0.5
 #endif
 
 void main()
@@ -81,6 +85,8 @@ void main()
    vec2 tex_size = vec2(TextureSize.x * SHARPNESS, TextureSize.y);
    ps = 1.0/tex_size;
    TEX0.xy = TexCoord.xy + ps * vec2(-0.49999, 0.0);
+   mod_factor = TEX0.x * OutputSize.x * TextureSize.x / InputSize.x;
+   MASK = 1.0-MASK_INTENSITY;
 }
 
 #elif defined(FRAGMENT)
@@ -114,6 +120,8 @@ uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 ps;
+COMPAT_VARYING float mod_factor;
+COMPAT_VARYING float MASK;
 
 // compatibility #defines
 #define Source Texture
@@ -141,16 +149,20 @@ void main()
    vec2 dx = vec2(ps.x, 0.0);
    vec2 dy = vec2(0.0, ps.y);
    
-   vec2 tc = (floor(vTexCoord.xy * SourceSize.xy) + vec2(0.49999, 0.49999)) / SourceSize.xy;
+   vec2 tc = (floor(vTexCoord.xy * SourceSize.xy) + vec2(0.49999, 0.)) / SourceSize.xy;
    
    vec2 fp = fract(vTexCoord.xy * SourceSize.xy);
    
    vec3 c10 = COMPAT_TEXTURE(Source, tc -       dx).xyz;
+   c10 = GAMMA_IN(c10);
    vec3 c11 = COMPAT_TEXTURE(Source, tc           ).xyz;
+   c11 = GAMMA_IN(c11);
    vec3 c12 = COMPAT_TEXTURE(Source, tc +       dx).xyz;
+   c12 = GAMMA_IN(c12);
    vec3 c13 = COMPAT_TEXTURE(Source, tc + 2.0 * dx).xyz;
-	
-   vec4 lobes = vec4(fp.x*fp.x*fp.x, fp.x*fp.x, fp.x, 1.0);
+	c13 = GAMMA_IN(c13);
+   float FF = fp.x*fp.x;
+   vec4 lobes = vec4(FF*fp.x, FF, fp.x, 1.0);
 
    vec4 InvX = vec4(0.0);
 // Horizontal cubic filter
@@ -163,26 +175,21 @@ void main()
 		 color+= InvX.y*c11.xyz;
 		 color+= InvX.z*c12.xyz;
 		 color+= InvX.w*c13.xyz;
-	
-	
-	color = GAMMA_IN(color);
-	
-    float pos1 = 1.5-SCANLINES - abs(fp.y - 0.5);
-    float d1 = max(0.0, min(1.0, pos1));
-    float d = d1*d1*(3.0+BRIGHTBOOST - (2.0*d1));
-	
-    color = color*d;
-    
+	 color = clamp(color,vec3(0.0),vec3(1.0));	
+    float pos1 = 1.5-SCANLINES - abs(fp.y-0.5);
+    float d1 = clamp(pos1,0.0,1.0);
+    float d  = d1*d1*(3.0 + BRIGHTBOOST-(2.0*d1));
+    color *= d;
 // dotmask
-    float mod_factor = TEX0.x * OutputSize.x * TextureSize.x / InputSize.x;
-    vec4 dotMaskWeights = mix(
-                                 vec4(1.0, 1.0-MASK_INTENSITY, 1.0, 1.),
-                                 vec4(1.0-MASK_INTENSITY, 1.0, 1.0-MASK_INTENSITY, 1.),
-                                 floor(mod(mod_factor, 2.0))
-                                  );
-    color *=vec3(dotMaskWeights.x,dotMaskWeights.y,dotMaskWeights.z);
+    vec3 dotMaskWeights = mix(
+                           vec3(1.0, MASK, 1.0),
+                           vec3(MASK, 1.0, MASK),
+                           mod(floor(mod_factor), 2.0)
+                           );
+    color *= dotMaskWeights;
 
-    color  = GAMMA_OUT(color);
+    color  = GAMMA_OUT(color);    
+
     FragColor = vec4(color.r, color.g, color.b, 1.0);
 } 
 #endif
