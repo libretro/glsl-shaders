@@ -8,12 +8,12 @@ under the terms of the GNU General Public License as published by the Free
 Software Foundation; either version 2 of the License, or (at your option)
 any later version.
 */
-#pragma parameter comb "Comb Filter Strength" 0.4 0.0 1.0 0.05
+#pragma parameter comb "Comb Filter Strength" 0.6 0.0 1.0 0.05
 #pragma parameter taps "Filter Taps (slower)" 4.0 2.0 12.0 1.0
 #pragma parameter lpf_w "Low Pass Width Y" 0.5 0.25 2.0 0.25
 #pragma parameter lpf_w_c "Low Pass Width C" 1.0 0.25 4.0 0.25
-#pragma parameter c_lpf "Chroma Low Pass (bleed)" 0.3 0.0 1.0 0.01
-#pragma parameter y_lpf "Luma Low Pass (sharpness)" 0.15 0.0 1.0 0.01
+#pragma parameter c_lpf "Chroma Low Pass (bleed)" 0.2 0.0 1.0 0.01
+#pragma parameter y_lpf "Luma Low Pass (sharpness)" 0.3 0.0 1.0 0.01
 #pragma parameter ntsc_sat "Saturation" 1.5 0.0 4.0 0.05
 #if defined(VERTEX)
 
@@ -38,6 +38,7 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING vec2 ogl2pos;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -62,6 +63,7 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy*1.0001;
+    ogl2pos = TEX0.xy*TextureSize;
 }
 
 #elif defined(FRAGMENT)
@@ -94,6 +96,7 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING vec2 ogl2pos;
 
 // compatibility #defines
 #define vTexCoord TEX0.xy
@@ -121,6 +124,7 @@ uniform COMPAT_PRECISION float ntsc_sat;
 #endif
 
 #define PI 3.1415926
+#define timer  mod(float(FrameCount),2.0)
 
 mat3 RGBYUV = mat3(0.299, 0.587, 0.114,
                         -0.299, -0.587, 0.886, 
@@ -136,7 +140,6 @@ void main()
 float v_sync = PI*170.666/InputSize.x;
 float h_sync = v_sync;    
 
-float timer =  mod(float(FrameCount),2.0);
     vec2 p = vec2(SourceSize.z*lpf_w,0.0);
     vec2 pc = vec2(SourceSize.z*lpf_w_c,0.0);
     vec2 y = vec2(0.0,SourceSize.w*0.25);
@@ -144,26 +147,48 @@ float timer =  mod(float(FrameCount),2.0);
     float sum = 0.0;
     float sumY = 0.0;
     int steps = int(taps); 
-for (int i=-int(steps); i<int(steps+1); i++)
+
+vec2 GL2pos = floor(ogl2pos);
+//detect if 256x224 or 320x224 and define phase
+float phase_y = InputSize.x<300.0? GL2pos.y*v_sync : 0.0;
+
+for (int i=-int(steps); i<=int(steps); i++)
 {
     float n = float(i);    
     float w  = exp(-c_lpf*n*n);
     float wY = exp(-y_lpf*n*n);
     // phase cycles every 3 pixels horizontally:
-    float phase_x = floor(vTexCoord.x*SourceSize.x + n)*h_sync;
-//detect if 256x224 or 320x224 and define phase
-    float phase_y = InputSize.x<300.0? floor(vTexCoord.y*SourceSize.y)*v_sync : 0.0;
+    float phase_x = (GL2pos.x + n)*h_sync;
 
 // Combined horizontal + vertical phase in 3-phase space (NES):
     float phase = phase_x - phase_y  + timer;
-    vec3 carrier   = vec3(1.0, cos(phase ),   sin(phase));
-    vec3 carrierup = vec3(1.0, cos(phase + PI), sin(phase + PI));
-    
-    vec3 res    = COMPAT_TEXTURE(Source,vTexCoord + n*p).rgb*RGBYUV;
-    vec3 resc   = COMPAT_TEXTURE(Source,vTexCoord + n*pc).rgb*RGBYUV;
-    vec3 resup  = COMPAT_TEXTURE(Source,vTexCoord + n*p -y).rgb*RGBYUV;
-    vec3 resupc = COMPAT_TEXTURE(Source,vTexCoord + n*pc -y).rgb*RGBYUV;
-    
+    float c = cos(phase);
+    float s = sin(phase);
+    vec3 carrier   = vec3(1.0, c, s);
+    vec3 carrierup = vec3(1.0, -c, -s);
+
+// manual calculation, 3 calc instead of 9 for each texel    
+    vec3 res    = COMPAT_TEXTURE(Source,vTexCoord + n*p).rgb;
+    float R = res.r;
+    res.r  = dot(res, vec3(0.299, 0.587, 0.114));
+    res.g  = res.b - res.r;
+    res.b  = R - res.r;
+    vec3 resc   = COMPAT_TEXTURE(Source,vTexCoord + n*pc).rgb;
+    float Rc = resc.r;
+    resc.r  = dot(resc, vec3(0.299, 0.587, 0.114));
+    resc.g  = resc.b - resc.r;
+    resc.b  = Rc - resc.r;
+    vec3 resup  = COMPAT_TEXTURE(Source,vTexCoord + n*p -y).rgb;
+    float Rup = resup.r;
+    resup.r  = dot(resup, vec3(0.299, 0.587, 0.114));
+    resup.g  = resup.b - resup.r;
+    resup.b  = resup.r - resup.r;
+    vec3 resupc = COMPAT_TEXTURE(Source,vTexCoord + n*pc -y).rgb;
+    float Rupc = resupc.r;
+    resupc.r  = dot(resupc, vec3(0.299, 0.587, 0.114));
+    resupc.g  = resupc.b - resupc.r;
+    resupc.b  = Rupc- resupc.r;
+// add color signal
     res   *= carrier;
     resc  *= carrier;
     resup *= carrierup;
@@ -193,6 +218,12 @@ for (int i=-int(steps); i<int(steps+1); i++)
 }
     final.r  /= sumY;
     final.gb /= sum;
-    FragColor.rgb = final*YUV2RGB;
+vec3 rgb;
+rgb.r = final.r + 1.13983 * final.b;
+rgb.g = final.r - 0.39465 * final.g - 0.58060 * final.b;
+rgb.b = final.r + 2.03211 * final.g;
+
+
+    FragColor.rgb = rgb;
 }
 #endif
