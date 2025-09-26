@@ -175,11 +175,15 @@ void main()
 		 color+= InvX.y*c11.xyz;
 		 color+= InvX.z*c12.xyz;
 		 color+= InvX.w*c13.xyz;
+
 	 color = clamp(color,vec3(0.0),vec3(1.0));	
-    float pos1 = 1.5-SCANLINES - abs(fp.y-0.5);
-    float d1 = clamp(pos1,0.0,1.0);
-    float d  = d1*d1*(3.0 + BRIGHTBOOST-(2.0*d1));
-    color *= d;
+    
+// for smoothstep (initially) to work we need a 0 to 1 range,
+// and 0 being the center of the "beam"    
+    float pos1 = 1.0 - abs(fp.y*2.0-1.0); // now 0 is our center
+    float d1 = pos1;
+    float d  = d1*d1*(3.0-(2.0*d1)); // smoothstep
+    color *= d*BRIGHTBOOST/SCANLINES;
 // dotmask
     vec3 dotMaskWeights = mix(
                            vec3(1.0, MASK, 1.0),
