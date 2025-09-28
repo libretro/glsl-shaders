@@ -1,3 +1,5 @@
-shaders = "1"
-shader0 = "shaders/zfast_crt_composite.glsl"
-filter_linear0 = "true"
+shaders = "2"
+shader0 = "shaders/crt-consumer/linearize.glsl"
+shader1 = "shaders/zfast_crt_composite.glsl"
+filter_linear1 = "true"
+g_in = 2.0
