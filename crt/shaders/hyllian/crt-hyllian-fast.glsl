@@ -31,8 +31,12 @@
 #pragma parameter BRIGHTBOOST "BRIGHT BOOST" 1.5 1.0 2.0 0.1
 #pragma parameter SCANLINES "SCANLINES STRENGTH" 0.72 0.0 1.0 0.02
 
-#define GAMMA_IN(color)   pow(color, vec3(InputGamma))
-#define GAMMA_OUT(color)  pow(color, vec3(1.0 / OutputGamma))
+// much faster Gamma, gain a ton of fps
+#define FAKE_GAMMA 1.0
+
+#define GAMMA_IN(color)   (FAKE_GAMMA == 1.0)? color*color : pow(color, vec3(InputGamma))
+#define GAMMA_OUT(color)  (FAKE_GAMMA == 1.0)? sqrt(color) : pow(color, vec3(1.0/OutputGamma))
+
 
 #if defined(VERTEX)
 
@@ -144,6 +148,7 @@ uniform COMPAT_PRECISION float SCANLINES;
 #define SCANLINES 0.5
 #endif
 
+
 void main()
 {
    vec2 dx = vec2(ps.x, 0.0);
@@ -183,7 +188,7 @@ void main()
     float pos1 = 1.0 - abs(fp.y*2.0-1.0); // now 0 is our center
     float d1 = pos1;
     float d  = d1*d1*(3.0-(2.0*d1)); // smoothstep
-    color *= d*BRIGHTBOOST/SCANLINES;
+    color *= SCANLINES*d*BRIGHTBOOST + 1.0-SCANLINES;
 // dotmask
     vec3 dotMaskWeights = mix(
                            vec3(1.0, MASK, 1.0),
