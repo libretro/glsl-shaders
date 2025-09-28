@@ -1,8 +1,7 @@
 #version 110
 
 /*
-    zfast_crt_composite, A very simple CRT shader
-    by metallic 77.
+    zfast_crt_composite, A simple CRT shader by metallic 77.
 
     This program is free software; you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by the Free
@@ -11,22 +10,15 @@
     
 */
 
-#pragma parameter Curvature "Curvature On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter blurx "Convergence X-Axis" 0.6 -2.0 2.0 0.05
-#pragma parameter blury "Convergence Y-Axis" -0.10 -2.0 2.0 0.05
-#pragma parameter scan "Scanlines Strength" 0.4 0.0 0.5 0.05
-#pragma parameter maskc "Mask Strength" 0.35 0.0 0.5 0.05
-#pragma parameter mask "Slot Strength" 0.3 0.0 0.5 0.05
-#pragma parameter slotx "Mask Width" 3.0 2.0 3.0 1.0
-#pragma parameter sat "Saturation" 1.0 0.0 2.0 0.05
-#pragma parameter ntsc_j "NTSC-J colors" 0.0 0.0 1.0 1.0
-
-#define pi 3.14159265
-#define SourceSize vec4(TextureSize.xy,1.0/TextureSize.xy)
-#define scale  vec2(SourceSize.xy/InputSize.xy)
-#define maskpos TEX0.x*OutputSize.x*scale.x
-#define blur_y blury/(SourceSize.y*2.0)
-#define blur_x blurx/(SourceSize.x*2.0)
+#pragma parameter WARP "Curvature" 0.08 0.0 0.3 0.01
+#pragma parameter BORDER "Border Smooth" 0.02 0.0 0.1 0.005
+#pragma parameter U_CONVERG "Convergence" 0.8 0.0 3.0 0.05
+#pragma parameter SCANLINE "Scanline Brightness" 0.25 0.0 0.5 0.05
+#pragma parameter MASK "Mask Brightness" 0.35 0.0 0.5 0.05
+#pragma parameter MASK_WID "Mask: CGWG, Slot2, Slot3" 1.0 1.0 3.0 1.0
+#pragma parameter U_NOISE "Glass Dust/Noise" 0.15 0.0 1.0 0.05
+#pragma parameter U_SAT "Saturation" 1.0 0.0 2.0 0.05
+#pragma parameter NTSC_J "NTSC-J colors" 1.0 0.0 1.0 1.0
 
 #if defined(VERTEX)
 
@@ -41,9 +33,9 @@
 #endif
 
 #ifdef GL_ES
-    #define COMPAT_PRECISION mediump
+#define COMPAT_PRECISION mediump
 #else
-    #define COMPAT_PRECISION
+#define COMPAT_PRECISION
 #endif
 
 COMPAT_ATTRIBUTE vec4 VertexCoord;
@@ -51,10 +43,11 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 warp;
+COMPAT_VARYING vec2 ogl2pos;
+COMPAT_VARYING vec2 invdims;
+COMPAT_VARYING vec2 maskpos;
+COMPAT_VARYING vec2 scale;
 
-
-vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
 uniform COMPAT_PRECISION int FrameDirection;
 uniform COMPAT_PRECISION int FrameCount;
@@ -62,23 +55,16 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 
-// compatibility #defines
-#define vTexCoord TEX0.xy
-
-#ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float SIZE;
-
-#else
-#define SIZE     2.0 
-     
-#endif
 
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
-    TEX0.xy = TexCoord.xy*1.0001;
-    warp = TEX0.xy*scale;
-}   
+    TEX0.xy = TexCoord.xy;
+    ogl2pos = TEX0.xy*TextureSize;
+    invdims = 1.0/TextureSize*1.0001;
+    scale = TextureSize/InputSize;
+    maskpos = TEX0.xy*scale*OutputSize.xy;
+}
 
 #elif defined(FRAGMENT)
 
@@ -93,64 +79,60 @@ out vec4 FragColor;
 #endif
 
 #ifdef GL_ES
-    #ifdef GL_FRAGMENT_PRECISION_HIGH
-        precision highp float;
-    #else
-        precision mediump float;
-    #endif
-
-    #define COMPAT_PRECISION mediump
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
 #else
-    #define COMPAT_PRECISION
+precision mediump float;
 #endif
+#define COMPAT_PRECISION mediump
+#else
+#define COMPAT_PRECISION
+#endif
+
+
+uniform sampler2D Texture;
+COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING vec2 ogl2pos;
+COMPAT_VARYING vec2 invdims;
+COMPAT_VARYING vec2 maskpos;
+COMPAT_VARYING vec2 scale;
+
+#define Source Texture
+#define vTexCoord TEX0.xy
 
 uniform COMPAT_PRECISION int FrameDirection;
 uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
-uniform sampler2D Texture;
-COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 warp;
-
-// compatibility #defines
-#define Source Texture
-#define vTexCoord TEX0.xy
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float slotx;
-uniform COMPAT_PRECISION float maskc;
-uniform COMPAT_PRECISION float mask;
-uniform COMPAT_PRECISION float ntsc_j;
-uniform COMPAT_PRECISION float scan;
-uniform COMPAT_PRECISION float sat;
-uniform COMPAT_PRECISION float Curvature;
-uniform COMPAT_PRECISION float blurx;
-uniform COMPAT_PRECISION float blury;
+uniform COMPAT_PRECISION float WARP;
+uniform COMPAT_PRECISION float SCANLINE;
+uniform COMPAT_PRECISION float MASK;
+uniform COMPAT_PRECISION float MASK_WID;
+uniform COMPAT_PRECISION float BORDER;
+uniform COMPAT_PRECISION float U_NOISE;
+uniform COMPAT_PRECISION float U_CONVERG;
+uniform COMPAT_PRECISION float NTSC_J;
+uniform COMPAT_PRECISION float U_SAT;
 #else
-#define slotx  3.0     
-#define maskc  0.2     
-#define mask  0.2     
-#define  ntsc_j  1.0     
-#define  scan  0.4    
-#define  sat  1.15    
-#define  Curvature  1.0   
-#define blurx 0.45
-#define blury -0.15  
+#define WARP 0.12
+#define SCANLINE  0.25
+#define MASK  0.15
+#define MASK_WID  2.0
+#define BORDER  0.02
+#define U_NOISE  0.3
+#define U_CONVERG  0.3
+#define NTSC_J  1.0
+#define U_SAT  1.0
 #endif
 
-vec2 Warp (vec2 pos)
-{
-    pos = pos*2.0-1.0;
-    pos *= vec2(1.0+pos.y*pos.y*0.03, 1.0+pos.x*pos.x*0.04);
-    pos = pos*0.5+0.5;
-    return pos;
-}
-
-// GLES after Google Pixel Primaries:
-// R 0.66, 0.34
-// G 0.23, 0.72
-// B 0.14, 0.01
+#define GAMMAIN(color) color*color 
+#define PI 3.14159265358979323846 
+#define TAU 6.2831852
+#define u_time float(FrameCount)/60.0
+#define pix 1.0/OutputSize.xy
 
 #if defined GL_ES
 
@@ -167,64 +149,80 @@ mat3 hue = mat3(
 
 #endif
 
+float rand(vec2 co) {
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
 
 void main()
-{ 
-    vec2 pos, corn;
-    
-    if (Curvature == 1.0){
-    pos = Warp(warp);
-    
-    corn = min(pos,vec2(1.0)-pos);      
-    corn.x = 0.000015/corn.x;  
-    
-    pos /= scale;  
+{
+// 0.0 to 1.0 range
+vec2 pos = vTexCoord*scale*(1.0-WARP*0.12) + WARP*vec2(0.06,0.); 
+
+// curve horizontally & vertically
+float cx = pos.x - 0.5; // -0.5 to 0.5
+float cy = pos.y - 0.5; // -0.5 to 0.5
+    pos.x = pos.x + (cy * cy * WARP * cx);
+    pos.y = pos.y + (cx * cx * WARP*2.0 * cy);
+vec2 cpos = pos;
+
+    pos /= scale; 
+float spos = pos.y*TextureSize.y;    
+
+    pos = pos*TextureSize + 0.5;
+vec2 i = floor(pos);
+vec2 f = pos - i;        // -0.5 to 0.5
+float s1 = f.y;
+float s2 = 1.0-f.y;
+    f = f*f*(3.0-2.0*f);
+    f.y *= f.y*f.y*f.y;
+    pos = (i + f - 0.5)*invdims;
+
+vec3 rgb = COMPAT_TEXTURE(Source,pos).rgb;
+
+// shift red and blue sideways (simulate chroma smear)
+float shift = U_CONVERG * 1.5; // adjustable bleed amount in pixels
+// optional blur on chroma to get softer smear
+if (U_CONVERG > 0.01) {
+    vec3 r_blur = COMPAT_TEXTURE(Source, pos + vec2(pix.x * shift * 0.5, 0.0)).rgb;
+    vec3 g_blur = COMPAT_TEXTURE(Source, pos - vec2(pix.x * shift * 0.5, 0.0)).rgb;
+    vec3 b_blur = COMPAT_TEXTURE(Source, pos + vec2(pix.x * shift * 0.5, 0.0)).rgb;
+        rgb.r = mix(rgb.r, r_blur.r, 0.5 * U_CONVERG);
+        rgb.g = mix(rgb.g, g_blur.g, 0.5 * U_CONVERG);
+        rgb.b = mix(rgb.b, b_blur.b, 0.5 * U_CONVERG);
     }
-    else pos = vTexCoord;
-    vec2 ogl2pos = pos*SourceSize.xy;
-    vec2 p = ogl2pos+0.5;
-    vec2 i = floor(p);
-    vec2 f = p - i;       // -0.5 to 0.5
-       f = f*f*(3.0-2.0*f);
-       f.y *= f.y*f.y;    //sharper y
-       p = (i + f-0.5)*SourceSize.zw;
-    
-     vec3 sample1 =  COMPAT_TEXTURE(Source,vec2(p.x + blur_x, p.y - blur_y)).rgb;
-     vec3 res =  0.5*COMPAT_TEXTURE(Source,p).rgb;
-     vec3 sample3 =  COMPAT_TEXTURE(Source,vec2(p.x - blur_x, p.y + blur_y)).rgb;
-    
-      res = vec3 (sample1.r*0.5  + res.r, 
-                  sample1.g*0.25 + res.g + sample3.g*0.25, 
-                                   res.b + sample3.b*0.5);
-    vec3 clean = res;
-    float w = max(max(res.r,res.g),res.b)*0.5;
 
-res *=res;
-if (ntsc_j == 1.0) {res *= hue; 
-    res /= vec3(0.24,0.69,0.07);
-    res *= vec3(0.3,0.6,0.1); 
-    res = clamp(res,0.0,1.0);}
-// mask
-res *= maskc*sin(maskpos*pi*2.0/slotx)+1.0-maskc;
+ // Subtle noise/dust
+if (U_NOISE > 0.001) {
+    float nval = rand(vec2(0.0, pos.y * TextureSize.y + u_time));
+    float dust = smoothstep(0.9 - U_NOISE * 0.2, 1.0, nval) * 0.08 * U_NOISE;
+        rgb += dust;
+    } 
 
-// slot mask calculations
-float oddx = mod(maskpos,2.0*slotx) < slotx ? 1.0 : 0.0;
-res *= mask*sin((ogl2pos.y*4.0+oddx)*pi)+1.1-mask;
+if (NTSC_J == 1.0) {rgb *= hue;}
+// calc scanlines
+vec3 lumS = SCANLINE*rgb;
+vec3 scan = 0.5-lumS;
+    rgb *= scan*sin((spos+0.5)*TAU)+0.5+lumS;
 
-// scanlines
-res *= scan*sin(((ogl2pos.y+0.5)*2.0)*pi)+1.0-scan;
-res = sqrt(res);
+// calc mask
+vec3 lumM = MASK*rgb;
+vec3 mask = 0.5-lumM;
+float slot = MASK_WID > 1.0? floor(maskpos.y): 0.0;
+float mpos = mod(floor(maskpos.x/MASK_WID) + slot ,2.0) ;
+    rgb *= mix(vec3(1.0),0.5+lumM,mpos);
 
-res = mix(res, clean, w);
 
-float lum = dot(vec3(0.3,0.6,0.1),res);
-res = mix(vec3(lum),res, sat);
+float l = dot(vec3(0.3,0.6,0.1),rgb);
+rgb = mix(vec3(l),rgb, U_SAT);
+ 
+// fade screen edges (linear falloff)
+float fade_x = smoothstep(0.0, BORDER, cpos.x) *
+               smoothstep(0.0, BORDER, 1.0 - cpos.x);
+float fade_y = smoothstep(0.0, BORDER*1.5, cpos.y) *
+               smoothstep(0.0, BORDER*1.5, 1.0 - cpos.y);
+// combine fades
+float fade = fade_x * fade_y; 
 
-res *= mix(1.45, 1.05, w);
-
-if (Curvature == 1.0 && corn.y < corn.x || Curvature == 1.0 && corn.x < 0.00001 )
-    res = vec3(0.0); 
-
-    FragColor.rgb = res;
+    FragColor.rgb = sqrt(rgb)*fade;
 }
 #endif
