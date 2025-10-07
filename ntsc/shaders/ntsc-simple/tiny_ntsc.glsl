@@ -23,7 +23,7 @@
 */
 #pragma parameter u_comb "Comb Filter Strength" 0.7 0.0 1.0 0.05
 #pragma parameter LPY "Luma Bandwidth" 0.95 0.0 1.0 0.01
-#pragma parameter LPC "Chroma Bandwidth" 0.3 0.0 1.0 0.01
+#pragma parameter LPC "Chroma Bandwidth" 0.1 0.0 1.0 0.01
 #pragma parameter c_gain "Chroma Gain" 1.8 0.0 3.0 0.05
 #pragma parameter d_crawl "Dot Crawl" 1.0 0.0 1.0 1.0
 
