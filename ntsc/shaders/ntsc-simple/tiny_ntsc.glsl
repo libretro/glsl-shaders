@@ -143,6 +143,7 @@ uniform COMPAT_PRECISION float d_crawl;
 #endif
 
 #define phase_choose  (InputSize.x < 300.0 ? 3.0 :2.0)
+#define h_phase_choose  (InputSize.x < 300.0 ? 1.0 :2.0)
 #define gamma(c) c*c
 
 #define timer (d_crawl== 1.0? mod(float(FrameCount),phase_choose):0.0)
@@ -176,7 +177,7 @@ void main()
         float wC = exp(-LPC*n*n);
         // we'll always have 170.666 color samples per line (3.579545 mhz)
         // fix retroarch glsl vTexCoord 0.0 to 1.0 by multiply "scale"
-        float phase = ((vTexCoord.x + n*invdims.x)*scale.x*170.666 )*TAU/phase_choose;
+        float phase = ((vTexCoord.x + n*invdims.x)*scale.x*170.666 )*TAU/h_phase_choose;
         phase += timer*PI;
         phase += line_phase;
         float cs = cos(phase);
