@@ -146,7 +146,7 @@ uniform COMPAT_PRECISION float d_crawl;
 #define h_phase_choose  (InputSize.x < 300.0 ? 1.0 :2.0)
 #define gamma(c) c*c
 
-#define timer (d_crawl== 1.0? mod(float(FrameCount),phase_choose)*TAU/phase_choose : 0.0)
+#define timer (d_crawl== 1.0? mod(float(FrameCount),2.0)*TAU/phase_choose : 0.0)
 
 vec3 rgb2yiq(vec3 rgb) {
     float y = dot(rgb, vec3(0.299, 0.587, 0.114));
