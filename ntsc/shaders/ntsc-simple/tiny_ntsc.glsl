@@ -22,9 +22,9 @@
    THE SOFTWARE.
 */
 #pragma parameter u_comb "Comb Filter Strength" 0.7 0.0 1.0 0.05
-#pragma parameter LPY "Luma Bandwidth" 0.95 0.0 1.0 0.01
+#pragma parameter LPY "Luma Bandwidth" 1.3 0.0 2.0 0.02
 #pragma parameter LPC "Chroma Bandwidth" 0.1 0.0 1.0 0.01
-#pragma parameter c_gain "Chroma Gain" 1.3 0.0 3.0 0.05
+#pragma parameter c_gain "Chroma Gain" 1.5 0.0 3.0 0.05
 #pragma parameter d_crawl "Dot Crawl" 1.0 0.0 1.0 1.0
 
 #define PI 3.1415926
@@ -146,7 +146,7 @@ uniform COMPAT_PRECISION float d_crawl;
 #define h_phase_choose  (InputSize.x < 300.0 ? 1.0 :2.0)
 #define gamma(c) c*c
 
-#define timer (d_crawl== 1.0? mod(float(FrameCount),phase_choose):0.0)
+#define timer (d_crawl== 1.0? mod(float(FrameCount),phase_choose)*TAU/phase_choose : 0.0)
 
 vec3 rgb2yiq(vec3 rgb) {
     float y = dot(rgb, vec3(0.299, 0.587, 0.114));
@@ -176,9 +176,9 @@ void main()
         float wY = exp(-LPY*n*n);
         float wC = exp(-LPC*n*n);
         // we'll always have 170.666 color samples per line (3.579545 mhz)
-        // fix retroarch glsl vTexCoord 0.0 to 1.0 by multiply "scale"
+        // fix retroarch glsl vTexCoord [0.0,1.0] by multiplying "scale"
         float phase = ((vTexCoord.x + n*invdims.x)*scale.x*170.666 )*TAU/h_phase_choose;
-        phase += timer*PI;
+        phase += timer;
         phase += line_phase;
         float cs = cos(phase);
         float sn = sin(phase);
