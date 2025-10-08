@@ -1,8 +1,0 @@
-#reference "plain.glslp"
-CS = "3.000000"
-TEMP = "8663.000000"
-zoomy = "-0.030000"
-zoomx = "-0.010000"
-centerx = "0.3"
-centery = "0.8"
-SATURATION = "1.100000"
