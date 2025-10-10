@@ -1,0 +1,6 @@
+shaders = "3"
+feedback_pass = "0"
+shader0 = "shaders/crt-consumer/linear.glsl"
+shader1 = "shaders/crt-consumer/ntsc_module.glsl"
+shader2 = "shaders/crt-consumer/crt-consumer-1w.glsl"
+filter_linear2 = "true"
