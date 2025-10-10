@@ -144,19 +144,20 @@ vec3 toGamma(vec3 c) { return sqrt(c); }
 void main() {
     // uv in [0,1]
     vec2 uv = TEX0*scale;
-    
+    // keep "crt frame" stable regardless of overscan
+    vec2 pos = uv;
     // --- Barrel warp ---
     // normalized coords centered at 0
     vec2 n = uv * 2.0 - 1.0;
     // polynomial warp
     float rsq = dot(n, n);
-    n *= 1.0 + u_warp * rsq*1.5;
+    n *= 1.0 + u_warp*rsq*1.5;
     n -= n*(barrel*u_warp);
     n *= barrel;
     uv = (n + 1.0) * 0.5;
+    vec2 corn   = min(pos, 1.0-pos); // This is used to mask the rounded
+         corn.x = 0.0008/corn.x;   // corners later on 
 
-    vec2 corn   = min(uv, 1.0-uv); // This is used to mask the rounded
-         corn.x = 0.0003/corn.x;   // corners later on    
     uv /= scale;
     
     // pixel size for subpixel offsets
