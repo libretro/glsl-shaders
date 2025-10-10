@@ -12,9 +12,10 @@
 #pragma parameter u_warp "Curvature" 0.04 0.0 0.15 0.01
 #pragma parameter u_overscanx "Overscan Horiz." 0.3 0.3 2.0 0.05
 #pragma parameter u_overscany "Overscan Vertic." 0.3 0.3 2.0 0.05
-#pragma parameter u_scan "Scanlines/Mask Strength" 0.35 0.0 1.0 0.05
+#pragma parameter u_scan "Scanlines Strength" 0.35 0.0 1.0 0.05
+#pragma parameter u_mask "Mask Strength" 0.25 0.0 1.0 0.05
 #pragma parameter u_wid "Mask Fine/Coarse" 2.0 2.0 3.0 1.0
-#pragma parameter u_deconv "De-Convergence Horiz." 0.5 -2.0 2.0 0.05
+#pragma parameter u_deconv "De-Convergence Horiz." 0.3 -2.0 2.0 0.05
 #pragma parameter u_brightb "Bright Boost" 1.35 1.0 2.0 0.05
 #pragma parameter u_vignette "Vignette" 0.15 0.0 0.5 0.01
 
@@ -127,10 +128,13 @@ uniform COMPAT_PRECISION float u_brightb;
 uniform COMPAT_PRECISION float u_scan;
 uniform COMPAT_PRECISION float u_vignette;
 uniform COMPAT_PRECISION float u_warp;
+uniform COMPAT_PRECISION float u_mask;
 #else
 #define u_brightb 1.25
 #define u_scan 0.3
 #define u_vignette 0.1
+#define u_warp 0.1
+#define u_mask 0.3
 
 #endif
 
@@ -156,7 +160,7 @@ void main() {
     n *= barrel;
     uv = (n + 1.0) * 0.5;
     vec2 corn   = min(pos, 1.0-pos); // This is used to mask the rounded
-         corn.x = 0.0015/corn.x;   // corners later on 
+         corn.x = 0.0012/corn.x;   // corners later on 
 
     uv /= scale;
     
@@ -177,8 +181,10 @@ void main() {
 
     // --- Scanlines / Mask ---
     float scan = 0.5*sin((uv.y*TextureSize.y-0.25)*TAU)+0.5;
-    float mask = 0.5*cos(maskpos.x*PI)+0.5;
-    col *= mix(u_brightb, scan*mask, u_scan);
+    float mask = 0.5*cos((maskpos.x)*PI)+0.5;
+    col *= mix(u_brightb, scan, u_scan);
+    col *= mix(1.0, mask, u_mask);
+
 
     // --- Vignette ---
     float vig = 1.0 - u_vignette * pow(length(n), 1.5);
