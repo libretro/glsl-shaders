@@ -10,6 +10,7 @@
     
 */
 #pragma parameter u_warp "Curvature" 0.04 0.0 0.15 0.01
+#pragma parameter u_overscan "Overscan" 0.3 0.3 2.0 0.05
 #pragma parameter u_scan "Scanlines/Mask Strength" 0.35 0.0 1.0 0.05
 #pragma parameter u_wid "Mask Fine/Coarse" 2.0 2.0 3.0 1.0
 #pragma parameter u_deconv "De-Convergence Horiz." 0.5 -2.0 2.0 0.05
@@ -43,6 +44,7 @@ COMPAT_VARYING vec2 ogl2pos;
 COMPAT_VARYING vec2 invdims;
 COMPAT_VARYING vec2 maskpos;
 COMPAT_VARYING vec2 scale;
+COMPAT_VARYING float barrel;
 
 uniform mat4 MVPMatrix;
 uniform COMPAT_PRECISION int FrameDirection;
@@ -54,9 +56,13 @@ uniform COMPAT_PRECISION vec2 InputSize;
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float u_deconv;
 uniform COMPAT_PRECISION float u_wid;
+uniform COMPAT_PRECISION float u_warp;
+uniform COMPAT_PRECISION float u_overscan;
 #else
 #define u_deconv 0.5
 #define u_wid 2.0
+#define u_warp 0.05
+#define u_overscan 0.3
 
 #endif
 
@@ -68,6 +74,8 @@ void main()
     invdims = u_deconv/TextureSize;
     scale = TextureSize/InputSize;
     maskpos = TEX0.xy*scale*OutputSize.xy*2.0/u_wid;
+    barrel = 1.0-u_warp*u_overscan;
+
 }
 
 #elif defined(FRAGMENT)
@@ -100,6 +108,7 @@ COMPAT_VARYING vec2 ogl2pos;
 COMPAT_VARYING vec2 invdims;
 COMPAT_VARYING vec2 maskpos;
 COMPAT_VARYING vec2 scale;
+COMPAT_VARYING float barrel;
 
 #define Source Texture
 #define vTexCoord TEX0.xy
@@ -119,7 +128,6 @@ uniform COMPAT_PRECISION float u_warp;
 #define u_brightb 1.25
 #define u_scan 0.3
 #define u_vignette 0.1
-#define u_warp 0.05
 
 #endif
 
@@ -132,13 +140,18 @@ vec3 toGamma(vec3 c) { return sqrt(c); }
 
 void main() {
     // uv in [0,1]
-    vec2 uv = TEX0*scale*(1.0-u_warp)+(u_warp*0.5);
+    vec2 uv = TEX0*scale;
+    
     // --- Barrel warp ---
     // normalized coords centered at 0
     vec2 n = uv * 2.0 - 1.0;
     // polynomial warp
-    n *= 1.0 + u_warp * dot(n, n);
+    float rsq = dot(n, n);
+    n *= 1.0 + u_warp * rsq*1.5;
+    n -= n*(barrel*u_warp);
+    n *= barrel;
     uv = (n + 1.0) * 0.5;
+
     vec2 corn   = min(uv, 1.0-uv); // This is used to mask the rounded
          corn.x = 0.0003/corn.x;   // corners later on    
     uv /= scale;
