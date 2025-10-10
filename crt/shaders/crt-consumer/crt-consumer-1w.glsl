@@ -10,7 +10,8 @@
     
 */
 #pragma parameter u_warp "Curvature" 0.04 0.0 0.15 0.01
-#pragma parameter u_overscan "Overscan" 0.3 0.3 2.0 0.05
+#pragma parameter u_overscanx "Overscan Horiz." 0.3 0.3 2.0 0.05
+#pragma parameter u_overscany "Overscan Vertic." 0.3 0.3 2.0 0.05
 #pragma parameter u_scan "Scanlines/Mask Strength" 0.35 0.0 1.0 0.05
 #pragma parameter u_wid "Mask Fine/Coarse" 2.0 2.0 3.0 1.0
 #pragma parameter u_deconv "De-Convergence Horiz." 0.5 -2.0 2.0 0.05
@@ -44,7 +45,7 @@ COMPAT_VARYING vec2 ogl2pos;
 COMPAT_VARYING vec2 invdims;
 COMPAT_VARYING vec2 maskpos;
 COMPAT_VARYING vec2 scale;
-COMPAT_VARYING float barrel;
+COMPAT_VARYING vec2 barrel;
 
 uniform mat4 MVPMatrix;
 uniform COMPAT_PRECISION int FrameDirection;
@@ -57,12 +58,14 @@ uniform COMPAT_PRECISION vec2 InputSize;
 uniform COMPAT_PRECISION float u_deconv;
 uniform COMPAT_PRECISION float u_wid;
 uniform COMPAT_PRECISION float u_warp;
-uniform COMPAT_PRECISION float u_overscan;
+uniform COMPAT_PRECISION float u_overscanx;
+uniform COMPAT_PRECISION float u_overscany;
 #else
 #define u_deconv 0.5
 #define u_wid 2.0
 #define u_warp 0.05
-#define u_overscan 0.3
+#define u_overscanx 0.3
+#define u_overscany 0.3
 
 #endif
 
@@ -74,7 +77,7 @@ void main()
     invdims = u_deconv/TextureSize;
     scale = TextureSize/InputSize;
     maskpos = TEX0.xy*scale*OutputSize.xy*2.0/u_wid;
-    barrel = 1.0-u_warp*u_overscan;
+    barrel = vec2(1.0-u_warp*u_overscanx, 1.0-u_warp*u_overscany);
 
 }
 
@@ -108,7 +111,7 @@ COMPAT_VARYING vec2 ogl2pos;
 COMPAT_VARYING vec2 invdims;
 COMPAT_VARYING vec2 maskpos;
 COMPAT_VARYING vec2 scale;
-COMPAT_VARYING float barrel;
+COMPAT_VARYING vec2 barrel;
 
 #define Source Texture
 #define vTexCoord TEX0.xy
