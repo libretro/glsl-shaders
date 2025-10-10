@@ -156,7 +156,7 @@ void main() {
     n *= barrel;
     uv = (n + 1.0) * 0.5;
     vec2 corn   = min(pos, 1.0-pos); // This is used to mask the rounded
-         corn.x = 0.0008/corn.x;   // corners later on 
+         corn.x = 0.0015/corn.x;   // corners later on 
 
     uv /= scale;
     
