@@ -9,7 +9,7 @@
     
 */
 
-#pragma parameter u_gamma "Gamma" 1.5 1.0 2.0 0.05
+#pragma parameter u_gamma "Gamma" 1.25 1.0 2.0 0.05
 
 #if defined(VERTEX)
 
