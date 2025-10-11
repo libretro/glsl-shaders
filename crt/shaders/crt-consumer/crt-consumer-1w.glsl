@@ -9,6 +9,7 @@
     any later version.
     
 */
+#pragma parameter u_sharp "Reverse Sharpness" 0.25 0.0 0.5 0.01
 #pragma parameter u_warp "Curvature" 0.04 0.0 0.15 0.01
 #pragma parameter u_overscanx "Overscan Horiz." 0.3 0.3 2.0 0.05
 #pragma parameter u_overscany "Overscan Vertic." 0.3 0.3 2.0 0.05
@@ -129,18 +130,20 @@ uniform COMPAT_PRECISION float u_scan;
 uniform COMPAT_PRECISION float u_vignette;
 uniform COMPAT_PRECISION float u_warp;
 uniform COMPAT_PRECISION float u_mask;
+uniform COMPAT_PRECISION float u_sharp;
 #else
 #define u_brightb 1.25
 #define u_scan 0.3
 #define u_vignette 0.1
 #define u_warp 0.1
 #define u_mask 0.3
+#define u_sharp 0.15
 
 #endif
 
-#define GAMMAIN(color) color*color 
 #define PI 3.14159265358979323846 
 #define TAU 6.2831852
+#define pixel 1.0/TextureSize
 
 vec3 toLinear(vec3 c) { return c * c; }
 vec3 toGamma(vec3 c) { return sqrt(c); }
@@ -169,6 +172,7 @@ void main() {
     // chroma separation: shift R and B horizontally by +/- small amounts
     vec2 offR = vec2(  px, 0.0);
     vec2 offB = vec2(- px, 0.0);
+    vec2 dx = vec2(pixel.x, 0.0);
 
     // fetch center (G), left/right for R/B
     vec3 colG = COMPAT_TEXTURE(Texture, uv).rgb;
@@ -178,6 +182,12 @@ void main() {
     // reconstruct approximate RGB (we sampled full RGB for each tap,
     // but treat them as subpixel contributions)
     vec3 col = vec3(colR.r, colG.g, colB.b);
+    vec3 sharpl  = COMPAT_TEXTURE(Texture, uv      -dx).rgb*(-u_sharp);
+    vec3 sharpl2 = COMPAT_TEXTURE(Texture, uv - 2.0*dx).rgb*(u_sharp*0.1);
+    vec3 sharpr  = COMPAT_TEXTURE(Texture, uv     + dx).rgb*(-u_sharp);
+    vec3 sharpr2 = COMPAT_TEXTURE(Texture, uv + 2.0*dx).rgb*(u_sharp*0.1);
+    
+col = col*(1.0 + u_sharp*1.8) + sharpl+sharpr+sharpl2+sharpr2;
 
     // --- Scanlines / Mask ---
     float scan = 0.5*sin((uv.y*TextureSize.y-0.25)*TAU)+0.5;
