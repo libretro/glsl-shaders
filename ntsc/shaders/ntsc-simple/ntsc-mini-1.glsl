@@ -5,12 +5,12 @@
 #pragma parameter v_deg "Custom Phase Vert. Degrees" 120.0 0.0 360.0 2.5
 #pragma parameter mini_sharp "Resolution" 0.75 0.1 2.0 0.05
 #pragma parameter Fl "Freq. Cutoff" 0.2 0.01 1.0 0.01
-#pragma parameter lpass "Chroma Low Pass" 0.05 0.0 1.0 0.01
-#pragma parameter d_crawl "Dot Crawl" 1.0 0.0 1.0 1.0
+#pragma parameter lpass "Chroma Low Pass" 0.1 0.0 1.0 0.01
+#pragma parameter d_crawl "Dot Crawl, SNES:ON" 1.0 0.0 1.0 1.0
 #pragma parameter rf_audio "RF Audio Interference" 0.0 0.0 0.2 0.02
 #pragma parameter mini_hue1 "Hue Shift I" 0.1 -6.0 6.0 0.05
 #pragma parameter mini_hue2 "Hue Shift Q" -0.1 -6.0 6.0 0.05
-#pragma parameter mini_sat "Saturation" 2.0 0.0 4.0 0.05
+#pragma parameter mini_sat "Saturation" 1.5 0.0 4.0 0.05
 
 #if defined(VERTEX)
 
@@ -148,7 +148,7 @@ for (int i=-1; i<=1; i++)
 float p = float (i);
 vec2 pos = vTexCoord + ps*p/mini_sharp -ps;
 // Window
-float w = kaizer(3.0,p);
+float w = kaizer(3.0, p );
 yuv.r += COMPAT_TEXTURE(Source,pos).r*w;
 sum += w;
 }
@@ -167,9 +167,9 @@ float w = exp(-lpass*p*p);
 
 float h_ph, v_ph;
 if      (ph_mode == 0.0) {h_ph =  90.0*onedeg; v_ph = PI;        }
-else if (ph_mode == 1.0) {h_ph = 120.0*onedeg; v_ph = PI;        }
-else if (ph_mode == 2.0) {h_ph = 96.0*onedeg; v_ph = 0.0;        }
-else if (ph_mode == 3.0) {h_ph = 120.0*onedeg; v_ph = PI*0.6667; }
+else if (ph_mode == 1.0) {h_ph = 240.0*onedeg; v_ph = PI;        }
+else if (ph_mode == 2.0) {h_ph =  96.0*onedeg; v_ph = 0.0;        }
+else if (ph_mode == 3.0) {h_ph = 240.0*onedeg; v_ph = PI*1.3333; }
 else if (ph_mode == 4.0) {h_ph =  90.0*onedeg; v_ph = 0.0; }
 else                     {h_ph =  h_deg*onedeg; v_ph = v_deg*onedeg;}
 
