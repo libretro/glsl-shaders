@@ -11,11 +11,11 @@
 */
 #pragma parameter dummy1 " [ ----NTSC---- ]" 0.0 0.0 0.0 0.0 
 #pragma parameter u_svideo "S-Video" 0.0 0.0 1.0 1.0
-#pragma parameter u_system "Clock: NES, MD, PCE(NTSC)" 0.0 0.0 2.0 1.0
+#pragma parameter u_system "Clock: SNES, MD/PCE/PS1" 0.0 0.0 1.0 1.0
 #pragma parameter u_comb "Comb Filter Strength" 0.6 0.0 1.0 0.05
 #pragma parameter u_chroma "Chroma Gain" 1.5 0.0 3.0 0.05
-#pragma parameter LPY "Luma Resolution" 1.3 0.0 2.0 0.02
-#pragma parameter LPC "Chroma Resolution" 0.2 0.0 0.4 0.01
+#pragma parameter LPY "Luma Resolution" 1.6 0.0 3.0 0.02
+#pragma parameter LPC "Chroma Resolution" 0.32 0.0 0.8 0.01
 #pragma parameter u_res "Taps" 3.0 1.0 3.0 1.0
 #pragma parameter dummy2 " [ ----NTSC---- ]" 0.0 0.0 0.0 0.0 
 
@@ -127,89 +127,66 @@ uniform COMPAT_PRECISION float u_svideo;
 
 #define GAMMAIN(color) color*color 
 #define PI 3.14159265358979323846 
+#define TAU 6.2831852
+#define cycles 170.666/InputSize.x
+#define crawl (u_system == 0.0? mod(float(FrameCount),2.0)*TAU*cycles : 0.0);
 
-// --- YIQ conversion ---
-vec3 rgb2yiq(vec3 rgb) {
-    return vec3(
-        dot(rgb, vec3(0.299, 0.587, 0.114)),
-        dot(rgb, vec3(0.595716, -0.274453, -0.321263)),
-        dot(rgb, vec3(0.211456, -0.522591, 0.311135))
-    );
+vec3 yiq(vec3 c) {
+  float Y = 0.299*c.r + 0.587*c.g + 0.114*c.b;
+  float I = 0.5959*c.r - 0.2746*c.g - 0.3213*c.b;
+  float Q = 0.2115*c.r - 0.5227*c.g + 0.3112*c.b;
+  return vec3(Y,I,Q);
 }
-vec3 yiq2rgb(vec3 yiq) {
-    return vec3(
-        yiq.x + 0.9563*yiq.y + 0.6210*yiq.z,
-        yiq.x - 0.2721*yiq.y - 0.6474*yiq.z,
-        yiq.x - 1.1070*yiq.y + 1.7046*yiq.z
-    );
-}
-
-// NTSC constants
-const float NTSC_FREQ = 3.579545e6;
-const float TAU = 6.28318530718;
-// Example per-u_system pixel clocks (approx)
-const float SNES_CLOCK = 5.369317e6;
-const float MD_CLOCK   = 6.713e6;
-const float PCE_CLOCK  = 7.15909e6;
-
-
-// Compute subcarrier phase for a pixel coordinate
-float ntsc_phase(float x, float y, float pixel_clock) {
-    // Per-pixel phase drift
-    float per_pixel = (NTSC_FREQ / pixel_clock * PI) * x ;
-
-// u_system: 0.0 = SNES (not locked), 1.0 = MD/PCE (locked)
-float per_line;
-if (u_system == 0.0) {
-    float framePhase = (mod(float(FrameCount), 2.0) < 1.0) ? ((8.0/12.0) * TAU) : 0.0;
-    per_line = mod(y , 3.0)*TAU*0.666 + framePhase;
-} else {
-    // Locked systems: NTSC phase flips every line (180°)
-    per_line = mod(y, 4.0)*NTSC_FREQ / pixel_clock * TAU;
+vec3 rgb(vec3 yiq) {
+  float Y = yiq.x, I = yiq.y, Q = yiq.z;
+  float R = Y + 0.9563*I + 0.6210*Q;
+  float G = Y - 0.2721*I - 0.6474*Q;
+  float B = Y - 1.1069*I + 1.7046*Q;
+  return vec3(R,G,B);
 }
 
-    // Total phase
-    return per_pixel + per_line;
-}
-
-vec3 tex(vec2 uv) { return COMPAT_TEXTURE(Source, uv).rgb; }
 #define taps int(u_res)
-void main() {
-    vec2 dx = vec2(invdims.x,0.0);
-    vec2 dy = vec2(0.0,invdims.y*0.5);
-    float px = (ogl2pos.x);
-    float py = floor(ogl2pos.y);
-    float sumY = 0.0;
-    float sumC = 0.0;
+void main()
+{   
     vec3 final = vec3(0.0);
+    vec2 dx = vec2(invdims.x,0.0);
+    vec2 dy = vec2(0.0,invdims.y*0.25);
+    float sumY = 0.0;
+    float sumI = 0.0;
+    float sumQ = 0.0;
 
+    float line = u_system == 0.0? floor(ogl2pos.y)*TAU*cycles :floor(ogl2pos.y)*PI;
 
-
-for (int i=-taps; i<taps+1; i++)
-{
+    for (int i=-taps; i<taps+1; i++)
+    {
     float n = float(i);
-    float wY = exp(-LPY*n*n);
-    float wC = exp(-LPC*n*n);
-    sumY += wY;
-    sumC += wC;
-    float phase = ntsc_phase(px + n, py, u_system == 0.0 ? SNES_CLOCK : u_system == 1.0 ? MD_CLOCK : PCE_CLOCK);
+    float p = n - fract(ogl2pos.x);
+    float wY = exp(-LPY*p*p);
+    float wI = exp(-LPC*p*p);
+    float wQ = exp(-LPC*p*p);
+    sumY += wY;    
+    sumI += wI;    
+    sumQ += wQ;    
+    float phase = (ogl2pos.x + n)*cycles*PI + line + crawl;
     float cs = cos(phase);
     float sn = sin(phase);
-    vec2 burst1 = vec2( cs, sn);
-    vec2 burst2 = vec2(-cs,-sn);
-    vec3 res1 =rgb2yiq(tex(vTexCoord + n*dx));
-    vec3 res2 =rgb2yiq(tex(vTexCoord + n*dx - dy));
-    res1.gb *= burst1;
-    res2.gb *= burst2;
-    float comp1 = u_svideo == 0.0 ? dot(res1,vec3(1.0)) : dot(res1.gb,vec2(1.0)) ;
-    float comp2 = u_svideo == 0.0 ? dot(res2,vec3(1.0)) : dot(res2.gb,vec2(1.0)) ;
-    float luma =   u_svideo == 0.0 ? (comp1 + comp2)*0.5 : res1.r;
+    vec3 burst1 = vec3(1.0,cs,sn);
+    vec3 burst2 = vec3(1.0,-cs,-sn);
+    vec3 res1 = yiq(COMPAT_TEXTURE(Source,vTexCoord + dx*n).rgb)*burst1;
+    vec3 res2 = yiq(COMPAT_TEXTURE(Source,vTexCoord + dx*n - dy).rgb)*burst2;
+    float signal1 = u_svideo == 0.0 ? dot(vec3(1.0),res1) : dot(vec2(1.0),res1.gb);
+    float signal2 = dot(vec3(1.0),res2);
+    float luma = u_svideo == 0.0 ? (signal1 + signal2)*0.5 : res1.r;
     final.r += luma*wY;
-    final.gb +=  u_svideo == 0.0 ? (comp1-luma*u_comb)*wC*burst1*u_chroma : comp1*wC*burst1*u_chroma;
-
-}
+    final.g += u_svideo == 0.0 ? (signal1 - luma*u_comb)*wI*burst1.g*u_chroma :
+    signal1 * wI*burst1.g*u_chroma;
+    final.b += u_svideo == 0.0 ? (signal1 - luma*u_comb)*wQ*burst1.b*u_chroma :
+    signal1 * wQ*burst1.b*u_chroma;
+    }   
     final.r /= sumY;
-    final.gb /= sumC;
-    FragColor.rgb = yiq2rgb(final);
+    final.g += final.b*0.2;
+    final.g /= sumI;
+    final.b /= sumQ;
+    FragColor.rgb = rgb(final);
 }
 #endif
