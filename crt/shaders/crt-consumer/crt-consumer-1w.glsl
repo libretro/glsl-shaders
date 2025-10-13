@@ -131,6 +131,7 @@ uniform COMPAT_PRECISION float u_vignette;
 uniform COMPAT_PRECISION float u_warp;
 uniform COMPAT_PRECISION float u_mask;
 uniform COMPAT_PRECISION float u_sharp;
+
 #else
 #define u_brightb 1.25
 #define u_scan 0.3
@@ -187,7 +188,7 @@ void main() {
     vec3 sharpr  = COMPAT_TEXTURE(Texture, uv     + dx).rgb*(-u_sharp);
     vec3 sharpr2 = COMPAT_TEXTURE(Texture, uv + 2.0*dx).rgb*(u_sharp*0.1);
     
-col = col*(1.0 + u_sharp*1.8) + sharpl+sharpr+sharpl2+sharpr2;
+    col = col*(1.0 + u_sharp*1.8) + sharpl+sharpr+sharpl2+sharpr2;
 
     // --- Scanlines / Mask ---
     float scan = 0.5*sin((uv.y*TextureSize.y-0.25)*TAU)+0.5;
