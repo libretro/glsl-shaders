@@ -161,7 +161,7 @@ void main()
     {
     float n = float(i);
     float p = n - fract(ogl2pos.x);
-    float wY = exp(-LPY*p*p);
+    float wY = exp(-LPY*n*n);
     float wI = exp(-LPC*p*p);
     float wQ = exp(-LPC*p*p);
     sumY += wY;    
