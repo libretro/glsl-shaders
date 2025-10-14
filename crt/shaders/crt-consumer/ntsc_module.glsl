@@ -160,7 +160,7 @@ void main()
     for (int i=-taps; i<taps+1; i++)
     {
     float n = float(i);
-    float p = n - fract(ogl2pos.x);
+    float p = n;
     float wY = exp(-LPY*n*n);
     float wI = exp(-LPC*p*p);
     float wQ = exp(-LPC*p*p);
