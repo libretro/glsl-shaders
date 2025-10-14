@@ -192,9 +192,9 @@ void main() {
 
     // --- Scanlines / Mask ---
     float scan = 0.5*sin((uv.y*TextureSize.y-0.25)*TAU)+0.5;
-    float mask = 0.5*cos((maskpos.x)*PI)+0.5;
-    col *= mix(u_brightb, scan, u_scan);
-    col *= mix(1.0, mask, u_mask);
+    float mask = 0.5*sin((maskpos.x)*PI)+0.5;
+    col *= mix(1.0, scan, u_scan);
+    col *= mix(u_brightb, mask, u_mask);
 
 
     // --- Vignette ---
