@@ -11,7 +11,7 @@
 */
 #pragma parameter dummy1 " [ ----NTSC---- ]" 0.0 0.0 0.0 0.0 
 #pragma parameter u_svideo "S-Video" 0.0 0.0 1.0 1.0
-#pragma parameter u_system "Clock: SNES/PS1-256, MD/PCE/PS1-320" 0.0 0.0 1.0 1.0
+#pragma parameter u_system "Clock: NINT, MD/PS 320, MD/PCE/PS 256" 0.0 0.0 2.0 1.0
 #pragma parameter u_comb "Comb Filter Strength" 0.6 0.0 1.0 0.05
 #pragma parameter u_chroma "Chroma Gain" 1.5 0.0 3.0 0.05
 #pragma parameter LPY "Luma Resolution" 1.6 0.0 3.0 0.02
