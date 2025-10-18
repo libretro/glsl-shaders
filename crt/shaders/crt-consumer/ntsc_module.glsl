@@ -11,7 +11,7 @@
 */
 #pragma parameter dummy1 " [ ----NTSC---- ]" 0.0 0.0 0.0 0.0 
 #pragma parameter u_svideo "S-Video" 0.0 0.0 1.0 1.0
-#pragma parameter u_system "Clock: SNES, MD/PCE/PS1" 0.0 0.0 1.0 1.0
+#pragma parameter u_system "Clock: SNES/PS1-256, MD/PCE/PS1-320" 0.0 0.0 1.0 1.0
 #pragma parameter u_comb "Comb Filter Strength" 0.6 0.0 1.0 0.05
 #pragma parameter u_chroma "Chroma Gain" 1.5 0.0 3.0 0.05
 #pragma parameter LPY "Luma Resolution" 1.6 0.0 3.0 0.02
@@ -125,11 +125,12 @@ uniform COMPAT_PRECISION float u_svideo;
 
 #endif
 
-#define GAMMAIN(color) color*color 
 #define PI 3.14159265358979323846 
 #define TAU 6.2831852
-#define cycles 170.666/InputSize.x
-#define crawl (u_system == 0.0? mod(float(FrameCount),2.0)*TAU*cycles : 0.0);
+// NES/SNES/PCE 5.369Mhz in 256 mode, 13.42Mhz for MD/PS1 (actual PS1 is 13.5)
+#define pix_clock (u_system == 0.0 || u_system == 2.0 ? 5.369e6 : 13.42e6)
+#define CYCLES 3.5795e6/pix_clock
+#define crawl ((u_system == 0.0) ? mod(float(FrameCount), 2.0)*0.5*TAU*CYCLES: 0.0)
 
 vec3 yiq(vec3 c) {
   float Y = 0.299*c.r + 0.587*c.g + 0.114*c.b;
@@ -146,6 +147,7 @@ vec3 rgb(vec3 yiq) {
 }
 
 #define taps int(u_res)
+
 void main()
 {   
     vec3 final = vec3(0.0);
@@ -154,20 +156,20 @@ void main()
     float sumY = 0.0;
     float sumI = 0.0;
     float sumQ = 0.0;
-
-    float line = u_system == 0.0? floor(ogl2pos.y)*TAU*cycles :floor(ogl2pos.y)*PI;
+    float nin_delay = u_system == 0.0 ? 3.0 : 2.0;
+    float line = mod(floor(ogl2pos.y)*2.0,nin_delay)*TextureSize.x ;
 
     for (int i=-taps; i<taps+1; i++)
     {
     float n = float(i);
-    float p = n;
+    float p = n; 
     float wY = exp(-LPY*n*n);
     float wI = exp(-LPC*p*p);
     float wQ = exp(-LPC*p*p);
     sumY += wY;    
     sumI += wI;    
     sumQ += wQ;    
-    float phase = (ogl2pos.x + n)*cycles*PI + line + crawl;
+    float phase = (ogl2pos.x + n + line + crawl)*CYCLES*TAU ;
     float cs = cos(phase);
     float sn = sin(phase);
     vec3 burst1 = vec3(1.0,cs,sn);
