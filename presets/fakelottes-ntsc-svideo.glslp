@@ -1,6 +1,9 @@
 shaders = "2"
 shader0 = "../crt/shaders/crt-consumer/ntsc_module.glsl"
 shader1 = "../crt/shaders/fakelottes.glsl"
+
 filter_linear1 = "true"
 
 u_svideo = "1.000000"
+
+u_chroma = "2.000000"
