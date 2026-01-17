@@ -1,0 +1,9 @@
+shaders = 2
+
+shader0 = ../../handheld/shaders/zfast_lcd.glsl
+filter_linear0 = true
+scale_type0 = viewport
+
+shader1 = ../../handheld/shaders/pixel_transparency.glsl
+filter_linear1 = false
+scale_type1 = viewport
