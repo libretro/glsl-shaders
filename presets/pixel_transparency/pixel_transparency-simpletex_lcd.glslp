@@ -1,0 +1,25 @@
+shaders = 2
+
+shader0 = ../../handheld/shaders/simpletex_lcd/simpletex_lcd.glsl
+filter_linear0 = true
+wrap_mode0 = clamp_to_border
+mipmap_input0 = false
+float_framebuffer0 = false
+srgb_framebuffer0 = false
+scale_type0 = viewport
+
+shader1 = ../../handheld/shaders/pixel_transparency.glsl
+filter_linear1 = false
+scale_type1 = viewport
+
+textures = "BACKGROUND"
+BACKGROUND = ../../handheld/shaders/simpletex_lcd/png/2k/textured_paper.png
+BACKGROUND_linear = false
+
+parameters = "GRID_INTENSITY;GRID_WIDTH;GRID_BIAS;DARKEN_GRID;DARKEN_COLOUR;BACKGROUND_INTENSITY"
+GRID_INTENSITY = "0.65"
+GRID_WIDTH = "0.65"
+GRID_BIAS = "0.6"
+DARKEN_GRID = "0.0"
+DARKEN_COLOUR = "0.05"
+BACKGROUND_INTENSITY = "0.0"

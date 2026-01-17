@@ -1,6 +1,7 @@
 shaders = "1"
 
 shader0 = "shaders/simpletex_lcd/simpletex_lcd+gba-color-4k.glsl"
+scale_type0 = "viewport"
 
 filter_linear0 = "true"
 wrap_mode0 = "clamp_to_border"

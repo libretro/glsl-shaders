@@ -1,4 +1,5 @@
 shaders = 1
 
 shader0 = shaders/zfast_lcd.glsl
+scale_type0 = viewport
 filter_linear0 = true

@@ -1,6 +1,7 @@
 shaders = "1"
 
 shader0 = "shaders/lcd1x_nds.glsl"
+scale_type0 = "viewport"
 
 filter_linear0 = "false"
 wrap_mode0 = "clamp_to_border"
