@@ -49,6 +49,9 @@
 #pragma parameter PT_SHADOW_OFFSET_X "     ↳ Shadow X offset" 3.0 -30.0 30.0 0.5
 #pragma parameter PT_SHADOW_OFFSET_Y "     ↳ Shadow Y offset" 3.0 -30.0 30.0 0.5
 #pragma parameter PT_SHADOW_OPACITY "     ↳ Shadow opacity" 0.5 0.0 1.0 0.01
+
+// Shadow blur
+#pragma parameter PT_SHADOW_BLUR_MODE "== Shadow blur (impacts performance) == (0=OFF,1=Lite,2=Full)" 1.0 0.0 2.0 1.0
 #pragma parameter PT_SHADOW_BLUR "     ↳ Shadow blur amount" 1.0 0.0 5.0 0.1
 
 #if defined(VERTEX)
@@ -167,6 +170,7 @@ uniform COMPAT_PRECISION float PT_SHADOW_OFFSET_X;
 uniform COMPAT_PRECISION float PT_SHADOW_OFFSET_Y;
 uniform COMPAT_PRECISION float PT_SHADOW_OPACITY;
 uniform COMPAT_PRECISION float PT_SHADOW_BLUR;
+uniform COMPAT_PRECISION float PT_SHADOW_BLUR_MODE;
 #else
 #define PT_ENABLE 1.0
 #define PT_BRIGHTNESS_GRID 1.0
@@ -185,6 +189,7 @@ uniform COMPAT_PRECISION float PT_SHADOW_BLUR;
 #define PT_SHADOW_OFFSET_Y 3.0
 #define PT_SHADOW_OPACITY 0.5
 #define PT_SHADOW_BLUR 1.0
+#define PT_SHADOW_BLUR_MODE 2.0
 #endif
 
 // Gambatte luminance constants (ITU-R BT.709 standard)
@@ -307,16 +312,18 @@ void main()
             float shadow_source_brightness = getBrightness(shadow_source);
             float shadow_strength = (1.0 - shadow_source_brightness) * PT_SHADOW_OPACITY;
 
-            if (PT_SHADOW_BLUR > 0.1) {
+            // Blur modes: 0=Off, 1=Lite (5-sample), 2=Full (9-sample)
+            if (PT_SHADOW_BLUR_MODE > 0.5 && PT_SHADOW_BLUR > 0.1) {
                 float blur_distance = PT_SHADOW_BLUR * shadow_scale_factor * OrigInputSize.x / (OutputSize.x * OrigTextureSize.x);
                 float blurred_shadow = 0.0;
                 vec2 base_pos = orig_coord + shadow_offset;
                 vec3 blur_sample;
 
-                // Unrolled 9-sample blur pattern
+                // Center sample (used by both Lite and Full modes)
                 blur_sample = COMPAT_TEXTURE(Original, base_pos).rgb;
                 blurred_shadow = blurred_shadow + (1.0 - getBrightness(blur_sample));
 
+                // Cardinal samples (used by both Lite and Full modes)
                 blur_sample = COMPAT_TEXTURE(Original, base_pos + vec2(-blur_distance, 0.0)).rgb;
                 blurred_shadow = blurred_shadow + (1.0 - getBrightness(blur_sample));
 
@@ -329,19 +336,25 @@ void main()
                 blur_sample = COMPAT_TEXTURE(Original, base_pos + vec2(0.0, blur_distance)).rgb;
                 blurred_shadow = blurred_shadow + (1.0 - getBrightness(blur_sample));
 
-                blur_sample = COMPAT_TEXTURE(Original, base_pos + vec2(-blur_distance, -blur_distance)).rgb;
-                blurred_shadow = blurred_shadow + (1.0 - getBrightness(blur_sample));
+                // Diagonal samples (Full mode only - 9 samples total)
+                if (PT_SHADOW_BLUR_MODE > 1.5) {
+                    blur_sample = COMPAT_TEXTURE(Original, base_pos + vec2(-blur_distance, -blur_distance)).rgb;
+                    blurred_shadow = blurred_shadow + (1.0 - getBrightness(blur_sample));
 
-                blur_sample = COMPAT_TEXTURE(Original, base_pos + vec2(blur_distance, -blur_distance)).rgb;
-                blurred_shadow = blurred_shadow + (1.0 - getBrightness(blur_sample));
+                    blur_sample = COMPAT_TEXTURE(Original, base_pos + vec2(blur_distance, -blur_distance)).rgb;
+                    blurred_shadow = blurred_shadow + (1.0 - getBrightness(blur_sample));
 
-                blur_sample = COMPAT_TEXTURE(Original, base_pos + vec2(-blur_distance, blur_distance)).rgb;
-                blurred_shadow = blurred_shadow + (1.0 - getBrightness(blur_sample));
+                    blur_sample = COMPAT_TEXTURE(Original, base_pos + vec2(-blur_distance, blur_distance)).rgb;
+                    blurred_shadow = blurred_shadow + (1.0 - getBrightness(blur_sample));
 
-                blur_sample = COMPAT_TEXTURE(Original, base_pos + vec2(blur_distance, blur_distance)).rgb;
-                blurred_shadow = blurred_shadow + (1.0 - getBrightness(blur_sample));
+                    blur_sample = COMPAT_TEXTURE(Original, base_pos + vec2(blur_distance, blur_distance)).rgb;
+                    blurred_shadow = blurred_shadow + (1.0 - getBrightness(blur_sample));
 
-                shadow_strength = (blurred_shadow / 9.0) * PT_SHADOW_OPACITY;
+                    shadow_strength = (blurred_shadow / 9.0) * PT_SHADOW_OPACITY;
+                } else {
+                    // Lite mode: 5 samples
+                    shadow_strength = (blurred_shadow / 5.0) * PT_SHADOW_OPACITY;
+                }
             }
 
             background.rgb = mix(background.rgb, background.rgb * 0.2, shadow_strength);
