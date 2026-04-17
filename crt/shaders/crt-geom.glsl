@@ -21,7 +21,7 @@
 */
 
 #pragma parameter CRTgamma "CRTGeom Target Gamma" 2.4 0.1 5.0 0.1
-#pragma parameter INV "Inverse Gamma/CRT-Geom Gamma out" 1.0 0.0 1.0 1.0
+#pragma parameter INV "Inverse Gamma/CRT-Geom Gamma out" 0.0 0.0 1.0 1.0
 #pragma parameter monitorgamma "CRTGeom Monitor Gamma" 2.2 0.1 5.0 0.1
 #pragma parameter d "CRTGeom Distance" 1.6 0.1 3.0 0.1
 #pragma parameter CURVATURE "CRTGeom Curvature Toggle" 1.0 0.0 1.0 1.0
