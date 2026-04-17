@@ -13,7 +13,7 @@
 #pragma parameter WARP "Curvature" 0.08 0.0 0.3 0.01
 #pragma parameter BORDER "Border Smooth" 0.02 0.0 0.1 0.005
 #pragma parameter U_CONVERG "Convergence" 0.8 0.0 3.0 0.05
-#pragma parameter SCANLINE "Scanline Brightness" 0.25 0.0 0.5 0.05
+#pragma parameter SCANLINE "Scanline Strength" 0.3 0.0 0.5 0.05
 #pragma parameter MASK "Mask Brightness" 0.35 0.0 0.5 0.05
 #pragma parameter MASK_WID "Mask: CGWG, Slot2, Slot3" 1.0 1.0 3.0 1.0
 #pragma parameter U_NOISE "Glass Dust/Noise" 0.15 0.0 1.0 0.05
@@ -134,45 +134,40 @@ uniform COMPAT_PRECISION float U_SAT;
 #define u_time float(FrameCount)/60.0
 #define pix 1.0/OutputSize.xy
 
-#if defined GL_ES
-
-mat3 hue = mat3(                
-0.60722     ,0.25198 ,   0.27164,
--0.10833    ,0.98873 ,   0.19229,
--0.02558    ,0.12980 ,   1.10027);
-
-#else
-mat3 hue = mat3(                    
-0.9501  ,   -0.0431 ,   0.0857  ,
-0.0265  ,   0.9278  ,   0.0432  ,
-0.0011  ,   -0.0206 ,   1.3153  );
-
-#endif
+// P22D93
+mat3 P22D93 = mat3(
+     0.920, 0.069, -0.051,
+     0.087, 0.9490, -0.008,
+     0.0132, 0.118,  1.023);
 
 float rand(vec2 co) {
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
-void main()
+vec2 warp(vec2 pos)
 {
-// 0.0 to 1.0 range
-vec2 pos = vTexCoord*scale*(1.0-WARP*0.12) + WARP*vec2(0.06,0.); 
-
 // curve horizontally & vertically
 float cx = pos.x - 0.5; // -0.5 to 0.5
 float cy = pos.y - 0.5; // -0.5 to 0.5
     pos.x = pos.x + (cy * cy * WARP * cx);
     pos.y = pos.y + (cx * cx * WARP*2.0 * cy);
-vec2 cpos = pos;
+    return pos;
+}
 
+void main()
+{
+// 0.0 to 1.0 range
+vec2 pos = vTexCoord*scale*(1.0-WARP*0.12) + WARP*vec2(0.06,0.04); 
+    pos = warp(pos);
+vec2 cpos = pos;
     pos /= scale; 
-float spos = pos.y*TextureSize.y;    
+
+float scan_uv = pos.y*TextureSize.y;    
 
     pos = pos*TextureSize + 0.5;
 vec2 i = floor(pos);
 vec2 f = pos - i;        // -0.5 to 0.5
-float s1 = f.y;
-float s2 = 1.0-f.y;
+
     f = f*f*(3.0-2.0*f);
     f.y *= f.y*f.y*f.y;
     pos = (i + f - 0.5)*invdims;
@@ -191,29 +186,24 @@ if (U_CONVERG > 0.01) {
         rgb.b = mix(rgb.b, b_blur.b, 0.5 * U_CONVERG);
     }
 
- // Subtle noise/dust
-if (U_NOISE > 0.001) {
-    float nval = rand(vec2(0.0, pos.y * TextureSize.y + u_time));
-    float dust = smoothstep(0.9 - U_NOISE * 0.2, 1.0, nval) * 0.08 * U_NOISE;
-        rgb += dust;
-    } 
-
-if (NTSC_J == 1.0) {rgb *= hue;}
+if (NTSC_J == 1.0) {rgb *= P22D93; rgb = clamp(rgb, vec3(0.0), vec3(1.0));}
+float l = dot(vec3(0.2),rgb);
 // calc scanlines
-vec3 lumS = SCANLINE*rgb;
-vec3 scan = 0.5-lumS;
-    rgb *= scan*sin((spos+0.5)*TAU)+0.5+lumS;
+vec3 scan_lvl = (vec3(1.0)-rgb*l)*SCANLINE;
+     rgb *= scan_lvl*sin((scan_uv + 0.5)*TAU) + 1.0-scan_lvl;
+////////////////////////
 
 // calc mask
 vec3 lumM = MASK*rgb;
 vec3 mask = 0.5-lumM;
 float slot = MASK_WID > 1.0? floor(maskpos.y): 0.0;
 float mpos = mod(floor(maskpos.x/MASK_WID) + slot ,2.0) ;
-    rgb *= mix(vec3(1.0),0.5+lumM,mpos);
+      rgb *= mix(vec3(1.0),0.5+lumM,mpos);
 
+rgb = sqrt(rgb);
 
-float l = dot(vec3(0.3,0.6,0.1),rgb);
-rgb = mix(vec3(l),rgb, U_SAT);
+float gray = dot(vec3(0.3,0.59,0.11),rgb);
+rgb = mix(vec3(gray),rgb, U_SAT);
  
 // fade screen edges (linear falloff)
 float fade_x = smoothstep(0.0, BORDER, cpos.x) *
@@ -222,7 +212,12 @@ float fade_y = smoothstep(0.0, BORDER*1.5, cpos.y) *
                smoothstep(0.0, BORDER*1.5, 1.0 - cpos.y);
 // combine fades
 float fade = fade_x * fade_y; 
-
-    FragColor.rgb = sqrt(rgb)*fade;
+ // Subtle noise/dust
+if (U_NOISE > 0.001) {
+    float nval = rand(vec2(0.0, pos.y * TextureSize.y + u_time));
+    float dust = smoothstep(0.9 - U_NOISE * 0.2, 1.0, nval) * 0.08 * U_NOISE;
+        rgb += dust;
+    } 
+    FragColor.rgb = rgb*fade;
 }
 #endif
