@@ -51,7 +51,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 uniform COMPAT_PRECISION float m_size;
 
 #else
-#define float m_size 1.0
+#define m_size 1.0
 
 #endif
 
