@@ -13,11 +13,13 @@
 #pragma parameter WARP "Curvature" 0.08 0.0 0.3 0.01
 #pragma parameter BORDER "Border Smooth" 0.02 0.0 0.1 0.005
 #pragma parameter U_CONVERG "Convergence" 0.8 0.0 3.0 0.05
-#pragma parameter SCANLINE "Scanline Strength" 0.3 0.0 0.5 0.05
-#pragma parameter MASK "Mask Brightness" 0.35 0.0 0.5 0.05
+#pragma parameter SCANLINE "Scanline Strength" 0.6 0.0 1.0 0.05
+#pragma parameter scan_beam "Scanline Beam Width" 3.0 1.0 4.0 0.1
+#pragma parameter MASK "Mask Brightness" 0.25 0.0 0.5 0.05
 #pragma parameter MASK_WID "Mask: CGWG, Slot2, Slot3" 1.0 1.0 3.0 1.0
 #pragma parameter U_NOISE "Glass Dust/Noise" 0.15 0.0 1.0 0.05
-#pragma parameter U_SAT "Saturation" 1.0 0.0 2.0 0.05
+#pragma parameter COL_GAIN "Color Gain (Brightness)" 1.4 1.0 2.0 0.05
+#pragma parameter U_SAT "Saturation Boost" 1.3 1.0 2.0 0.05
 #pragma parameter NTSC_J "NTSC-J colors" 1.0 0.0 1.0 1.0
 
 #if defined(VERTEX)
@@ -116,6 +118,8 @@ uniform COMPAT_PRECISION float U_NOISE;
 uniform COMPAT_PRECISION float U_CONVERG;
 uniform COMPAT_PRECISION float NTSC_J;
 uniform COMPAT_PRECISION float U_SAT;
+uniform COMPAT_PRECISION float COL_GAIN;
+uniform COMPAT_PRECISION float scan_beam;
 #else
 #define WARP 0.12
 #define SCANLINE  0.25
@@ -126,6 +130,8 @@ uniform COMPAT_PRECISION float U_SAT;
 #define U_CONVERG  0.3
 #define NTSC_J  1.0
 #define U_SAT  1.0
+#define COL_GAIN 1.2
+#define scan_beam 2.5
 #endif
 
 #define GAMMAIN(color) color*color 
@@ -185,13 +191,21 @@ if (U_CONVERG > 0.01) {
         rgb.g = mix(rgb.g, g_blur.g, 0.5 * U_CONVERG);
         rgb.b = mix(rgb.b, b_blur.b, 0.5 * U_CONVERG);
     }
+float luma = dot(vec3(0.3,0.59,0.11),rgb);
+
+// Boost Gain and Saturation before mask/scanline losses
+    rgb *= COL_GAIN;
+    rgb = mix(vec3(luma * COL_GAIN), rgb, U_SAT);
+
 
 if (NTSC_J == 1.0) {rgb *= P22D93; rgb = clamp(rgb, vec3(0.0), vec3(1.0));}
-float l = dot(vec3(0.2),rgb);
-// calc scanlines
-vec3 scan_lvl = (vec3(1.0)-rgb*l)*SCANLINE;
-     rgb *= scan_lvl*sin((scan_uv + 0.5)*TAU) + 1.0-scan_lvl;
-////////////////////////
+
+// 5. Dynamic Scanlines
+float scan = 0.5 + 0.5 * sin(scan_uv * TAU);
+float dynamic_beam = mix(scan_beam * 0.25, scan_beam, luma*0.5);
+    scan = pow(scan, dynamic_beam);
+float dynamic_str = SCANLINE * (1.0 - pow(luma*0.5, 1.25-luma*0.75));
+    rgb *= (1.0 - (scan * dynamic_str));
 
 // calc mask
 vec3 lumM = MASK*rgb;
@@ -202,9 +216,6 @@ float mpos = mod(floor(maskpos.x/MASK_WID) + slot ,2.0) ;
 
 rgb = sqrt(rgb);
 
-float gray = dot(vec3(0.3,0.59,0.11),rgb);
-rgb = mix(vec3(gray),rgb, U_SAT);
- 
 // fade screen edges (linear falloff)
 float fade_x = smoothstep(0.0, BORDER, cpos.x) *
                smoothstep(0.0, BORDER, 1.0 - cpos.x);
