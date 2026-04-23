@@ -20,10 +20,10 @@
 #pragma parameter slotwidth "Slot Mask Width" 2.0 1.0 6.0 0.5
 #pragma parameter double_slot "Slot Mask Height: 2x1 or 4x1" 1.0 1.0 2.0 1.0
 #pragma parameter slotms "Slot Mask Size" 1.0 1.0 2.0 1.0
-#pragma parameter GAMMA_IN "Gamma In" 2.5 0.0 4.0 0.1
-#pragma parameter GAMMA_OUT "Gamma Out" 2.2 0.0 4.0 0.1
-#pragma parameter glow "Glow Strength" 0.05 0.0 0.5 0.01
-#pragma parameter Size "Glow Size" 1.0 0.1 4.0 0.05
+#pragma parameter GAMMA_IN "Gamma In" 2.4 0.0 4.0 0.05
+#pragma parameter GAMMA_OUT "Gamma Out" 2.25 0.0 4.0 0.05
+#pragma parameter glow "Glow Strength" 0.15 0.0 0.5 0.01
+#pragma parameter Size "Glow Size" 1.5 0.1 4.0 0.05
 #pragma parameter sat "Saturation" 1.1 0.0 2.0 0.05
 #pragma parameter contrast "Contrast, 1.0:Off" 1.0 0.00 2.00 0.05
 #pragma parameter nois "Noise" 0.0 0.0 32.0 1.0
@@ -57,6 +57,7 @@ COMPAT_ATTRIBUTE vec4 VertexCoord;
 COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec2 TEX0;
+COMPAT_VARYING vec2 scale;
 
 vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
@@ -70,6 +71,7 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy * 1.0001;
+    scale = TextureSize/InputSize;
 }
 
 #elif defined(FRAGMENT)
@@ -102,6 +104,7 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec2 TEX0;
+COMPAT_VARYING vec2 scale;
 
 // compatibility #defines
 #define Source Texture
@@ -374,7 +377,7 @@ mat4 contrastMatrix( float contrast )
 
 mat3 vign( float l )
 {
-    vec2 vpos = vTexCoord * (TextureSize.xy / InputSize.xy);
+    vec2 vpos = vTexCoord * scale;
     vpos *= 1.0 - vpos.xy;
     float vig = vpos.x * vpos.y * vstr;
     vig = min(pow(vig, vpower), 1.0); 
@@ -400,44 +403,35 @@ vec3 saturation (vec3 textureColor)
     return res;
 }
 
-vec3 glow0 (vec2 texcoord,vec3 col)
+vec3 glow0 (vec2 texcoord)
 
 {
    vec3 sum = vec3(0.0);
-    float blurSize = Size/1024.0;
+   float sumw = 0.0;
+   vec2 dx = vec2(SourceSize.z*Size, 0.0);
+   vec2 dy = vec2(0.0,SourceSize.w*Size);
 
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - 2.0*blurSize, texcoord.y)).rgb * 0.1;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - blurSize,     texcoord.y)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x,                texcoord.y)).rgb * 0.16;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + blurSize,     texcoord.y)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + 2.0*blurSize, texcoord.y)).rgb * 0.1;
+   for (float x=-1.0; x<=2.0; x=x+1.0 )
+    {
+      for (float y=-1.0; y<=2.0; y=y+1.0 )
+      {
+      float wx = 0.0;
+      float wy = 0.0;
+      if (abs(x)==1.0) wx=0.15;
+      if (abs(y)==1.0) wy=0.15;
+      
+      if (x==0.0) wx=0.3;
+      if (y==0.0) wy=0.3;
 
-   //sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - 2.0*blurSize, texcoord.y - 2.0*blurSize)) * 0.1;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - 2.0*blurSize, texcoord.y - blurSize)).rgb * 0.1;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - blurSize,     texcoord.y - 2.0*blurSize)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - blurSize,     texcoord.y - blurSize)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + blurSize,     texcoord.y + blurSize)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + blurSize,     texcoord.y + 2.0*blurSize)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + 2.0*blurSize, texcoord.y + blurSize)).rgb * 0.1;
-   
-   //sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + 2.0*blurSize,  texcoord.y + 2.0*blurSize)) * 0.1;
-   //sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - 2.0*blurSize, texcoord.y + 2.0*blurSize)) * 0.1;
-   
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - 2.0*blurSize, texcoord.y + blurSize)).rgb * 0.1;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - blurSize,     texcoord.y + 2.0*blurSize)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x - blurSize,     texcoord.y + blurSize)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + blurSize,     texcoord.y - blurSize)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + blurSize,     texcoord.y - 2.0*blurSize)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + 2.0*blurSize, texcoord.y - blurSize)).rgb * 0.1;
-   
-   //sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x + 2.0*blurSize,  texcoord.y - 2.0*blurSize)) * 0.1;
-
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x,               texcoord.y - 2.0*blurSize)).rgb * 0.1;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x,               texcoord.y - blurSize)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x,               texcoord.y + blurSize)).rgb * 0.13;
-   sum += COMPAT_TEXTURE(iChannel0, vec2(texcoord.x,               texcoord.y + 2.0*blurSize)).rgb * 0.1;
-  
-   return sum*glow; 
+      if (x==2.0) wx=0.05;
+      if (y==2.0) wy=0.05;
+      float w = wx+wy;
+      sum += COMPAT_TEXTURE(Source, texcoord + x*dx +y*dy).rgb*w;
+      sumw += w;
+    }
+    }
+   sum /= sumw;
+   return sum*sum*glow; 
 
 }
 
@@ -481,7 +475,7 @@ const mat3 XYZ_to_D50 = mat3 (
 
 void main()
 {
-	vec2 pos = Warp(TEX0.xy*(TextureSize.xy/InputSize.xy))*(InputSize.xy/TextureSize.xy);
+	vec2 pos = Warp(TEX0.xy*scale)/scale;
     vec2 tex_size = SourceSize.xy;	
     if (inter < 0.5 && InputSize.y >400.0) tex_size*=0.5;
 
@@ -525,7 +519,7 @@ void main()
 
     color=pow(color,vec3(1.0/GAMMA_OUT));
 
-    if (glow !=0.0) color+=glow0(pC4,color);
+    if (glow !=0.0) color+=glow0(pC4);
     if (sat != 1.0) color = saturation(color);
     
     if (corner!=0.0) color*= corner0(pC4);
