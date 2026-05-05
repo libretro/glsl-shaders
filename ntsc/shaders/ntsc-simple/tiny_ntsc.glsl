@@ -22,6 +22,8 @@
 */
 // Parameter lines go here:
 
+#pragma parameter NTSC_SAT "NTSC SATURATION" 1.0 0.0 2.0 0.05
+
 #define PI 3.14159
 
 
@@ -115,9 +117,9 @@ COMPAT_VARYING vec2 ogl2pos;
 
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float WARP;
+uniform COMPAT_PRECISION float NTSC_SAT;
 #else
-#define WARP 0.04
+#define NTSC_SAT 1.25
 #endif
 
 // we tell it to pass chroma "info" every four sample pixels at PI/2.0 (90 degrees)
@@ -190,8 +192,8 @@ for (float x=-12.0; x<12.0; x=x+1.0)
 
     float wc = 0.9+0.1*hamm; 
     // saturation paramater can be injected here
-    final.g += signal*cs*2.0*wc;
-    final.b += signal*sn*2.0*wc;
+    final.g += signal*cs*2.0*wc*NTSC_SAT;
+    final.b += signal*sn*2.0*wc*NTSC_SAT;
     sumI += wc;
     sumQ += wc;
 }
