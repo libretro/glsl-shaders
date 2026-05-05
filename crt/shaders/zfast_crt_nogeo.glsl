@@ -92,7 +92,11 @@ precision highp float;
 #else
 precision mediump float;
 #endif
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+#define COMPAT_PRECISION highp
+#else 
 #define COMPAT_PRECISION mediump
+#endif
 #else
 #define COMPAT_PRECISION
 #endif
