@@ -2,5 +2,4 @@ shaders = "2"
 feedback_pass = "0"
 shader0 = "shaders/crt-consumer/linearize.glsl"
 shader1 = "shaders/crt-geom-mini.glsl"
-filter_linear1 = "true"
 g_in = 2.2

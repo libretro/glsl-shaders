@@ -1,8 +1,8 @@
 #version 110
 
 /*
-   CRT-Geom replica by DariusG 2024.
-   This shader should run well on gpu's with around 60-70 gflops.
+   CRT-Geom replica by DariusG 2024-2026.
+   This shader should run well on gpu's with around 100 gflops.
    
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
@@ -22,15 +22,23 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
    THE SOFTWARE.
 */
-#pragma parameter CURV "CRT-Geom Curvature" 1.0 0.0 1.0 1.0
-#pragma parameter scanlines "CRT-Geom Scanline Weight" 0.3 0.0 0.5 0.05
-#pragma parameter MASK "CRT-Geom Dotmask Strength" 0.15 0.0 0.5 0.05
-#pragma parameter INTERL "CRT-Geom Interlacing Simulation" 1.0 0.0 1.0 1.0
-#pragma parameter lum "CRTGeom Luminance" 0.0 0.0 1.0 0.01
-#pragma parameter SAT "CRT-Geom Saturation" 1.0 0.0 2.0 0.05
 
-#define pi 3.1415926
-#define tau 6.2831852
+#pragma parameter CURVATURE "CRTGeom Curvature Toggle" 1.0 0.0 1.0 1.0
+#pragma parameter curve_amount "CRTGeom Curvature Amount" 0.15 0.0 0.5 0.01
+#pragma parameter cornersize "CRTGeom Corner Size" 0.05 0.005 0.3 0.005
+#pragma parameter DOTMASK "CRTGeom Dot Mask Strength" 0.3 0.0 1.0 0.1
+#pragma parameter scanline_weight "CRTGeom Scanline Weight" 0.3 0.1 0.5 0.05
+#pragma parameter interlace_detect "CRTGeom Interlacing Simulation" 1.0 0.0 1.0 1.0
+
+#ifndef PARAMETER_UNIFORM
+#define CURVATURE 1.0
+#define curve_amount 0.15
+#define cornersize 0.03
+#define DOTMASK 0.3
+#define scanline_weight 0.3
+#define interlace_detect 1.0
+#endif
+
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -50,42 +58,39 @@
 #endif
 
 COMPAT_ATTRIBUTE vec4 VertexCoord;
-COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
-COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING vec2 one;
+COMPAT_VARYING float mod_factor;
+COMPAT_VARYING vec2 ilfac;
+COMPAT_VARYING vec2 ilvec;
 COMPAT_VARYING vec2 scale;
-COMPAT_VARYING float maskpos;
 
-vec4 _oPosition1; 
 uniform mat4 MVPMatrix;
-uniform COMPAT_PRECISION int FrameDirection;
-uniform COMPAT_PRECISION int FrameCount;
-uniform COMPAT_PRECISION vec2 OutputSize;
-uniform COMPAT_PRECISION vec2 TextureSize;
-uniform COMPAT_PRECISION vec2 InputSize;
-
-// compatibility #defines
-#define vTexCoord TEX0.xy
-#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutSize vec4(OutputSize, 1.0 / OutputSize)
+uniform vec2 TextureSize;
+uniform vec2 InputSize;
+uniform vec2 OutputSize;
+uniform int FrameCount;
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float WHATEVER;
-#else
-#define WHATEVER 0.0
+uniform float interlace_detect;
 #endif
 
 void main()
 {
-    gl_Position = MVPMatrix * VertexCoord;
-    TEX0.xy = TexCoord.xy*1.0001;
-    scale = SourceSize.xy/InputSize.xy;
-    maskpos = TEX0.x*OutputSize.x*scale.x*pi;
+    gl_Position = VertexCoord.x * MVPMatrix[0] + VertexCoord.y * MVPMatrix[1] + VertexCoord.z * MVPMatrix[2] + VertexCoord.w * MVPMatrix[3];
+    TEX0.xy = TexCoord.xy * 1.0001;
+
+    // Pre-calculate fixed scale and interlacing offset
+    scale = TextureSize.xy / InputSize.xy;
+    ilfac = vec2(1.0, clamp(floor(InputSize.y / 200.0), 1.0, 2.0));
+    ilvec = vec2(0.0, (ilfac.y * interlace_detect > 1.5) ? mod(float(FrameCount), 2.0) : 0.0);
+    
+    one = ilfac / TextureSize.xy;
+    mod_factor = TexCoord.x * OutputSize.x * scale.x;
 }
 
 #elif defined(FRAGMENT)
-
 #if __VERSION__ >= 130
 #define COMPAT_VARYING in
 #define COMPAT_TEXTURE texture
@@ -107,119 +112,102 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
-uniform COMPAT_PRECISION int FrameDirection;
-uniform COMPAT_PRECISION int FrameCount;
-uniform COMPAT_PRECISION vec2 OutputSize;
-uniform COMPAT_PRECISION vec2 TextureSize;
-uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
-COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 scale;
-COMPAT_VARYING float maskpos;
+uniform vec2 TextureSize;
 
-// compatibility #defines
-#define vTexCoord TEX0.xy
-#define Source Texture
-#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
-#define OutSize vec4(OutputSize, 1.0 / OutputSize)
+COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING vec2 one;
+COMPAT_VARYING float mod_factor;
+COMPAT_VARYING vec2 ilfac;
+COMPAT_VARYING vec2 ilvec;
+COMPAT_VARYING vec2 scale;
 
 #ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float scanlines;
-uniform COMPAT_PRECISION float CURV;
-uniform COMPAT_PRECISION float MASK;
-uniform COMPAT_PRECISION float SAT;
-uniform COMPAT_PRECISION float INTERL;
-uniform COMPAT_PRECISION float lum;
-#else
-#define scanlines 0.5
-#define CURV 1.0
-#define MASK 0.2
-#define SAT 1.0
-#define INTERL 1.0
-#define lum 0.0
+uniform float CURVATURE;
+uniform float curve_amount;
+uniform float cornersize;
+uniform float DOTMASK;
+uniform float scanline_weight;
 #endif
 
-#define timer mod(float(FrameCount),2.0)
+#define TEX2D(c) (COMPAT_TEXTURE(Texture, (c)))
 
-vec2 Warp(vec2 coord)
+// Warp logic for consistency with the new corner trick
+vec2 simple_warp(vec2 pos)
 {
-        vec2 CURVATURE_DISTORTION = vec2(0.12, 0.25);
-        // Barrel distortion shrinks the display area a bit, this will allow us to counteract that.
-        vec2 barrelScale = vec2(0.97,0.945);
-        coord -= vec2(0.5);
-        float rsq = coord.x*coord.x + coord.y*coord.y;
-        coord += coord * (CURVATURE_DISTORTION * rsq);
-        coord *= barrelScale;
-        if (abs(coord.x) >= 0.5 || abs(coord.y) >= 0.5)
-                coord = vec2(-1.0);             // If out of bounds, return an invalid value.
-        else
-        {
-                coord += vec2(0.5);
-        }
-
-        return coord;
+    pos = pos * 2.0 - 1.0;
+    pos *= vec2(1.0 + (pos.y * pos.y) * (curve_amount * 0.2), 
+                1.0 + (pos.x * pos.x) * (curve_amount * 0.3));
+    return pos * 0.5 + 0.5;
 }
 
-#define one 1.384615
-#define two 3.230769
-// precalculated Lanczos weight (approximate)
-#define w0   1.174
-#define w1  -0.095
-#define w2   0.007
+vec4 scanlineWeights(float distance, vec4 color)
+{
 
-#define TEX(p) COMPAT_TEXTURE(Source,p).rgb
+    float wid = 0.3 + 0.1 * dot(color.rgb, vec3(0.3, 0.6, 0.1));
+    float w = distance / wid;
+    return vec4((0.1 + scanline_weight) * exp(-w * w) / wid);
+}
 
 void main()
 {
-vec3 res = vec3(0.0);
-vec2 dx = vec2(SourceSize.z,0.0); //sharpness
-vec2 pos, corn;
-if(CURV == 1.0){
- pos = Warp(vTexCoord*scale);
- corn = min(pos, 1.0-pos);    // This is used to mask the rounded
-     corn.x = 0.0001/corn.x;      // corners later on
-pos /= scale;
-}
-else pos = vTexCoord;
+    // Geometry logic with Corner Trick
+    vec2 vpos = TEX0.xy * scale;
+    vec2 xy = (CURVATURE > 0.5) ? simple_warp(vpos) : vpos;
 
-vec2 xy = pos;
-xy -= dx;
-vec2 near = floor(pos*SourceSize.xy)+0.5;
-vec2 f = pos*SourceSize.xy - near;
+    // --- CORNER TRICK START ---
+    vec2 corn = min(xy, 1.0 - xy); 
+    if (CURVATURE > 0.5) {
+        corn.x = (cornersize * 0.001) / corn.x; // Use reciprocal for hyperbolic curve
+    }
+    // --- CORNER TRICK END ---
 
-xy.y = (near.y + 16.0*f.y*f.y*f.y*f.y*f.y)*SourceSize.w;    
-if (InputSize.y>300.0 && INTERL == 1.0) xy.y += SourceSize.w*timer;
-//  lanczos approximation in 5 taps
-    res += TEX(xy)*w0;
-    res += TEX(xy - one*dx).rgb*w1; 
-    res += TEX(xy + one*dx).rgb*w1;
-    res += TEX(xy + two*dx).rgb*w2;
-    res += TEX(xy - two*dx).rgb*w2;
+    xy /= scale;
 
-    res = clamp(res,vec3(0.0),vec3(1.0));
-
-    float a = dot(vec3(0.25),res);
-    float s = mix(scanlines,scanlines*0.6,a);
-
-    float texsize = 1.0;
-    float fp = 0.5;
-    if (InputSize.y > 300.0) texsize = 0.5;
-
-    if (INTERL == 1.0 && InputSize.y > 300.0) 
-    {
-    fp = timer >0.0 ? 0.5+fp :0.5;
+    // Hard boundary check
+    if (xy.y < 0.0 || xy.y > 1.0 || xy.x < 0.0 || xy.x > 1.0) {
+        FragColor = vec4(0.0);
+        return;
     }
 
-    float mask = MASK*sin(maskpos)+1.0-MASK;
-    res *= mask;
-    res = sqrt(res);
-    float scan = s*sin(((pos.y*SourceSize.y+0.15)*texsize-fp)*tau)+1.0-s+lum;
-    res *= scan;
-    //res *= 1.5;
-    float l = dot(vec3(0.29, 0.6, 0.11), res);
-    res  = mix(vec3(l), res, SAT);
-    
-    if (corn.y <= corn.x && CURV == 1.0 || corn.x < 0.0001 && CURV ==1.0 )res = vec3(0.0);
-    FragColor.rgb = (res);
+    vec2 ratio_scale = (xy * TextureSize - vec2(0.5) + ilvec) / ilfac;
+    vec2 uv_ratio = fract(ratio_scale);
+    xy = (floor(ratio_scale) * ilfac + vec2(0.5) - ilvec) / TextureSize;
+
+    // Catmull Filtering
+    float FF = uv_ratio.x * uv_ratio.x;
+    vec4 lobes = vec4(FF * uv_ratio.x, FF, uv_ratio.x, 1.0);
+    vec4 InvX;
+    InvX.x = dot(vec4(-0.5, 1.0, -0.5, 0.0), lobes);
+    InvX.y = dot(vec4( 1.5,-2.5,  0.0, 1.0), lobes);
+    InvX.z = dot(vec4(-1.5, 2.0,  0.5, 0.0), lobes);
+    InvX.w = dot(vec4( 0.5,-0.5,  0.0, 0.0), lobes);
+
+    vec4 col  = mat4(TEX2D(xy + vec2(-one.x, 0.0)), 
+                     TEX2D(xy), 
+                     TEX2D(xy + vec2(one.x, 0.0)), 
+                     TEX2D(xy + vec2(2.0 * one.x, 0.0))) * InvX;
+                     
+    vec4 col2 = mat4(TEX2D(xy + vec2(-one.x, one.y)), 
+                     TEX2D(xy + vec2(0.0, one.y)), 
+                     TEX2D(xy + one), 
+                     TEX2D(xy + vec2(2.0 * one.x, one.y))) * InvX;
+
+    vec4 weights  = scanlineWeights(uv_ratio.y, col);
+    vec4 weights2 = scanlineWeights(1.0 - uv_ratio.y, col2);
+
+    vec3 res = (col * weights + col2 * weights2).rgb;
+
+
+    vec3 dotMask = mix(vec3(1.0, 1.0 - DOTMASK, 1.0), 
+                       vec3(1.0 - DOTMASK, 1.0, 1.0 - DOTMASK), 
+                       floor(mod(mod_factor, 2.0)));
+    res *= dotMask;
+
+    res = sqrt(clamp(res, 0.0, 1.0));
+    // Apply corner mask (if corn.y is less than the reciprocal x, black out)
+    if (CURVATURE > 0.5 && corn.y <= corn.x || corn.x < 0.00001) res = vec3(0.0);
+
+    FragColor = vec4(res, 1.0);
 }
 #endif
