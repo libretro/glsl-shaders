@@ -1,11 +1,12 @@
 #version 110
 
 /*
-    This program is free software; you can redistribute it and/or modify it
+    This program is free software;
+    you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by the Free
-    Software Foundation; either version 2 of the License, or (at your option)
+    Software Foundation;
+    either version 2 of the License, or (at your option)
     any later version.
-    
 */
 
 #pragma parameter dummy0 "   === GEOMETRY === " 0.0 0.0 0.0 0.0
@@ -16,18 +17,14 @@
 #pragma parameter U_VIGN "Vignette Attenuation" 0.6 0.0 2.0 0.05
 
 #pragma parameter dummy1 "  === SCANLINES/MASK === " 0.0 0.0 0.0 0.0
-#pragma parameter SCANLOW "Scanlines Strength Low" 0.45 0.0 0.5 0.05
-#pragma parameter SCANHIGH "Scanlines Strength High" 0.2 0.0 0.5 0.05
-#pragma parameter U_INTERL "Interlace On/Off" 1.0 0.0 1.0 1.0
-#pragma parameter U_SHIMMER "Shimmering fix" 0.0 0.0 1.0 1.0
-#pragma parameter M_SIZE "Mask Fine/Coarse" 2.0 2.0 3.0 1.0
-#pragma parameter U_MASK "Mask Strength" 0.25 0.0 0.5 0.05
-#pragma parameter U_SLOT "Slot Mask Enable" 1.0 0.0 1.0 1.0
+// --- REPLACED PARAMETERS FROM scanlines_test.glsl ---
+#pragma parameter SCAN_LOW "Scanline Intensity (Dark Scenes)" 0.8 0.0 1.0 0.05
+#pragma parameter SCAN_HIGH "Scanline Intensity (Bright Scenes)" 0.3 0.0 1.0 0.05
+#pragma parameter MASK_LOW "Mask Intensity (Dark Scenes)" 0.5 0.0 1.0 0.05
+#pragma parameter MASK_HIGH "Mask Intensity (Bright Scenes)" 0.2 0.0 1.0 0.05
 
 #pragma parameter dummy2 "  === COLOR CONTROLS === " 0.0 0.0 0.0 0.0
 #pragma parameter U_GLOW "Glow Strength" 0.12 0.0 1.0 0.01
-#pragma parameter BOOSTD "Boost Dark Colors" 2.0 1.0 3.0 0.05
-#pragma parameter BOOSTB "Boost Bright Colors" 1.0 1.0 2.0 0.05
 #pragma parameter U_CRT "CRT Colors" 1.0 0.0 1.0 1.0
 
 #if defined(VERTEX)
@@ -66,14 +63,6 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 
-#ifdef PARAMETER_UNIFORM
-uniform COMPAT_PRECISION float M_SIZE;
-
-#else
-#define M_SIZE 2.0
-
-#endif
-
 void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
@@ -108,7 +97,6 @@ precision mediump float;
 #define COMPAT_PRECISION
 #endif
 
-
 uniform sampler2D Texture;
 uniform sampler2D PassPrev4Texture;
 COMPAT_VARYING vec4 TEX0;
@@ -129,43 +117,37 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float ZOOM_XY;
-uniform COMPAT_PRECISION float U_MASK;
 uniform COMPAT_PRECISION float A_CORNER;
 uniform COMPAT_PRECISION float B_SMOOTH;
-uniform COMPAT_PRECISION float SCANLOW;
-uniform COMPAT_PRECISION float SCANHIGH;
-uniform COMPAT_PRECISION float BOOSTD;
-uniform COMPAT_PRECISION float BOOSTB;
-uniform COMPAT_PRECISION float U_SLOT;
-uniform COMPAT_PRECISION float M_SIZE;
 uniform COMPAT_PRECISION float U_VIGN;
 uniform COMPAT_PRECISION float U_CRT;
 uniform COMPAT_PRECISION float U_GLOW;
 uniform COMPAT_PRECISION float U_CURVE;
-uniform COMPAT_PRECISION float U_INTERL;
-uniform COMPAT_PRECISION float U_SHIMMER;
+// --- INTEGRATED scanlines_test UNIFORMS ---
+uniform COMPAT_PRECISION float SCAN_LOW;
+uniform COMPAT_PRECISION float SCAN_HIGH;
+uniform COMPAT_PRECISION float MASK_LOW;
+uniform COMPAT_PRECISION float MASK_HIGH;
 #else
 #define ZOOM_XY 1.0
-#define U_MASK 0.3
 #define A_CORNER 0.0
 #define B_SMOOTH 100.0
-#define SCANLOW 0.5
-#define SCANHIGH 0.25
-#define BOOSTD 1.45
-#define BOOSTB 1.05
-#define U_SLOT 1.0
-#define M_SIZE 2.0
 #define U_VIGN 0.8
 #define U_CRT 1.0
-#define U_INTERL 1.0
 #define U_GLOW 0.1
 #define U_CURVE 0.1
+// --- INTEGRATED scanlines_test DEFINES ---
+#define SCAN_LOW 0.8
+#define SCAN_HIGH 0.3
+#define MASK_LOW 0.5
+#define MASK_HIGH 0.2
 #endif
 
 #define grayweights vec3(0.3,0.59,0.11)
 #define GAMMAIN(color) color*color 
 #define PI 3.14159265358979323846 
 #define TAU 6.2831852
+#define tau 6.2831852
 
 mat3 crt = mat3(
  1.0,   0.05,  0.0,
@@ -176,102 +158,88 @@ mat3 crt = mat3(
 vec2 c_warp(vec2 uv)
 {
     vec2 p = uv*2.0 - 1.0;
-
     p.x *= aspect;
-
     float r2 = dot(p, p);
     float k = 0.02;
-
     vec2 warped = vec2(p.x*(1.0 + k*r2 + k*0.5*r2*r2),p.y*(1.0 + 2.0*k*r2 + k*r2*r2));
-
     float zoom = 1.0 + k*1.5;
     warped /= vec2(zoom, zoom*1.03);
-
     warped.x /= aspect;
-
     return warped * 0.5 + 0.5;
 } 
 
 vec2 warp(vec2 uv)
 {
     vec2 p = uv * 2.0 - 1.0;
-
     p.x *= aspect;
-
     float r2 = dot(p, p);
     float k = U_CURVE*0.01;
-
     vec2 warped = vec2(p.x*(1.0 + k*r2 + k*0.5*r2*r2),p.y*(1.0 + 2.0*k*r2 + k*r2*r2));
-
     float zoom = 1.0 + k*ZOOM_XY;
     warped /= vec2(zoom, zoom*1.03);
-
     warped.x /= aspect;
-
     return warped * 0.5 + 0.5;
 }
 
 float corner(vec2 coord)
 {
-                coord = min(coord, vec2(1.0)-coord);
-                vec2 cdist = vec2(A_CORNER);
-                coord = (cdist - min(coord, cdist));
-                float dist = sqrt(dot(coord,coord));
-                return clamp((cdist.x-dist)*B_SMOOTH, 0.0, 1.0);
+    coord = min(coord, vec2(1.0)-coord);
+    vec2 cdist = vec2(A_CORNER);
+    coord = (cdist - min(coord, cdist));
+    float dist = sqrt(dot(coord,coord));
+    return clamp((cdist.x-dist)*B_SMOOTH, 0.0, 1.0);
 }  
+
 void main()
 {
-// --- warped UV ---
-vec2 uv = warp(vTexCoord*scale);
-// fixed crt "bezel"
-vec2 corner_uv = c_warp(vTexCoord*scale);
+    // --- warped UV ---
+    vec2 uv = warp(vTexCoord*scale);
+    // fixed crt "bezel"
+    vec2 corner_uv = c_warp(vTexCoord*scale);
     uv /= scale;
-// --- pixel space ---
-vec2 pp = uv * TextureSize;
-if (InputSize.y > 300.0 && U_INTERL==1.0) pp.y += mod(float(FrameCount),2.0);
-vec2 near = floor(pp) + 0.5;
-vec2 f = fract(pp);
-// smoothstep interpolation
+
+    // --- pixel space ---
+    vec2 pp = uv * TextureSize;
+    vec2 near = floor(pp) + 0.5;
+    vec2 f = fract(pp);
+
+    // smoothstep interpolation
     f = f*f*(3.0 - 2.0*f);
-// max sharpness Y    
+    // max sharpness Y    
     f.y = f.y*f.y;
-    f.y = f.y*f.y;
-vec2 pos = (near + f) / TextureSize;
-vec3 res = COMPAT_TEXTURE(PassPrev4Texture, pos).rgb;
-     res += U_GLOW*grayweights*COMPAT_TEXTURE(Source, pos).rgb;
+    f.y = f.y*f.y*f.y*f.y;
 
-// crt like colors    
+    vec2 pos = (near + f) / TextureSize;
+    vec3 res = COMPAT_TEXTURE(PassPrev4Texture, pos).rgb;
+    res += U_GLOW*grayweights*COMPAT_TEXTURE(Source, pos).rgb;
+
+    // crt like colors    
     if (U_CRT == 1.0) res *= crt;
-float l = max(max(res.r, res.g), res.b);
-res *= mix(BOOSTD,BOOSTB,l);
-// FIXED SCANLINES
-float scanpos = pp.y;    
-float f1 = fract(scanpos*(InputSize.y > 300.0? 0.5 : 1.0) - (InputSize.y>300.0? U_INTERL*mod(float(FrameCount),2.0)*1.0:0.5)) - 0.5;
-// vain attempt to fix some scanline shimmering near the screen edges
-float dy = U_SHIMMER==0.0? 0.0 : distance(pos*scale,vec2(0.5));
 
-float beam = mix(SCANLOW, SCANHIGH, l);
+    float l = max(max(res.r, res.g), res.b);
 
-float s1 = beam*sin(f1 * TAU) + 1.0-beam;
-float mask_ef = mix(U_MASK, U_MASK*0.6, l);
-float m1 = mask_ef*sin(maskpos.x*2.0/M_SIZE*PI)+1.0-mask_ef;
-float sl1 = U_SLOT == 1.0 ? 0.5*sin((maskpos.x/M_SIZE + maskpos.y)*PI) : 0.0;
+    // =================================================================
+    // --- IMPLEMENTATION REPLACED WITH scanlines_test.glsl LOGIC ---
+    // =================================================================
+    float infl = mix(SCAN_LOW, SCAN_HIGH, l);
+    float infl2 = mix(MASK_LOW, MASK_HIGH, l);
 
-// anti-alias scanlines anti-shimmer
-    s1 = mix(s1, 1.0, dy);
-    sl1 = mix(sl1, 0.0, dy);
-   
-    res *= m1;
-// will add -0.5 to position 1 and +0.5 to position 2, just like crt-lottes    
-    res += res*sl1;
+    // Draw scanlines and mask aligned with the screen curvature
+    float scan = infl * sin((uv.y * TextureSize.y - 0.25) * tau);
+    float msk = infl2 * sin(maskpos.x * PI);
+    
+    res += res * scan;
+    res += res * msk;
+    // =================================================================
 
-// mild CRT gamma feel
-    res = sqrt(res); res *= s1;
+    // mild CRT gamma feel
+    res = sqrt(res);
 
-// vignette
+    // vignette
     float dist = distance(corner_uv.x, 0.5);
     dist = dot(dist,dist)*U_VIGN;
     res *= mix(0.0, 1.0, 1.0-dist);
+
 #if defined GL_ES
     // hacky clamp fix for GLES
     vec2 bordertest = (pos);
@@ -281,8 +249,9 @@ float sl1 = U_SLOT == 1.0 ? 0.5*sin((maskpos.x/M_SIZE + maskpos.y)*PI) : 0.0;
         res = vec3(0.0);
 #endif
 
-// apply "bezel"       
+    // apply "bezel"       
     if(A_CORNER>0.0) res = res*corner(corner_uv);
+
     FragColor = vec4(res, 1.0);
 }
 #endif
