@@ -20,4 +20,4 @@ scale_type3 = "source"
 
 shader4 = "shaders/crt-consumer/crt-consumer-arcade.glsl"
 filter_linear4 = "true"
-g_in = 2.2
+g_in = 2.0
