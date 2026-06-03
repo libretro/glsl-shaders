@@ -20,6 +20,7 @@
 // --- REPLACED PARAMETERS FROM scanlines_test.glsl ---
 #pragma parameter SCAN_LOW "Scanline Intensity (Dark Scenes)" 0.8 0.0 1.0 0.05
 #pragma parameter SCAN_HIGH "Scanline Intensity (Bright Scenes)" 0.3 0.0 1.0 0.05
+#pragma parameter MSK_SIZE "Mask Fine/Coarse" 1.0 0.6666 1.0 0.3333
 #pragma parameter MASK_LOW "Mask Intensity (Dark Scenes)" 0.5 0.0 1.0 0.05
 #pragma parameter MASK_HIGH "Mask Intensity (Bright Scenes)" 0.2 0.0 1.0 0.05
 
@@ -50,7 +51,6 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 ogl2pos;
 COMPAT_VARYING vec2 invdims;
 COMPAT_VARYING vec2 maskpos;
 COMPAT_VARYING vec2 scale;
@@ -62,6 +62,7 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION float MSK_SIZE;
 
 void main()
 {
@@ -69,8 +70,7 @@ void main()
     TEX0.xy = TexCoord.xy;
     invdims = 1.0/TextureSize;
     scale = TextureSize/InputSize;
-    maskpos = TEX0.xy*scale*OutputSize.xy;
-    ogl2pos = TEX0.xy*TextureSize;    
+    maskpos = TEX0.xy*scale*OutputSize.xy*MSK_SIZE;
     aspect = TextureSize.x / TextureSize.y;
 }
 
@@ -100,7 +100,6 @@ precision mediump float;
 uniform sampler2D Texture;
 uniform sampler2D PassPrev4Texture;
 COMPAT_VARYING vec4 TEX0;
-COMPAT_VARYING vec2 ogl2pos;
 COMPAT_VARYING vec2 invdims;
 COMPAT_VARYING vec2 maskpos;
 COMPAT_VARYING vec2 scale;
@@ -123,7 +122,6 @@ uniform COMPAT_PRECISION float U_VIGN;
 uniform COMPAT_PRECISION float U_CRT;
 uniform COMPAT_PRECISION float U_GLOW;
 uniform COMPAT_PRECISION float U_CURVE;
-// --- INTEGRATED scanlines_test UNIFORMS ---
 uniform COMPAT_PRECISION float SCAN_LOW;
 uniform COMPAT_PRECISION float SCAN_HIGH;
 uniform COMPAT_PRECISION float MASK_LOW;
@@ -136,7 +134,6 @@ uniform COMPAT_PRECISION float MASK_HIGH;
 #define U_CRT 1.0
 #define U_GLOW 0.1
 #define U_CURVE 0.1
-// --- INTEGRATED scanlines_test DEFINES ---
 #define SCAN_LOW 0.8
 #define SCAN_HIGH 0.3
 #define MASK_LOW 0.5
@@ -144,14 +141,13 @@ uniform COMPAT_PRECISION float MASK_HIGH;
 #endif
 
 #define grayweights vec3(0.3,0.59,0.11)
-#define GAMMAIN(color) color*color 
 #define PI 3.14159265358979323846 
 #define tau 6.2831852
 
 mat3 crt = mat3(
- 1.0,   0.05,  0.0,
+ 1.0,   0.03, -0.02,
 -0.05,  1.0, -0.05,
- 0.0,   0.05, 1.0
+ 0.02,   0.06, 1.0
 );
 
 vec2 c_warp(vec2 uv)
@@ -208,7 +204,7 @@ void main()
     f.y = f.y*f.y*f.y;
     f.y = f.y*f.y*f.y;
 
-    vec2 pos = (near + f) / TextureSize;
+    vec2 pos = (near + f)*invdims;
     vec3 res = COMPAT_TEXTURE(PassPrev4Texture, pos).rgb;
     res += U_GLOW*grayweights*COMPAT_TEXTURE(Source, pos).rgb;
 
@@ -221,7 +217,7 @@ void main()
     float infl2 = mix(MASK_LOW, MASK_HIGH, l);
 
     // Draw scanlines aligned with the screen curvature
-    float scan = infl * sin((uv.y * TextureSize.y - 0.25) * tau);
+    float scan = infl * sin((uv.y * TextureSize.y) * tau);
     float msk = infl2 * sin(maskpos.x * PI);
     
     res += res * scan;
