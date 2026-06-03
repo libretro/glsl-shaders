@@ -146,7 +146,6 @@ uniform COMPAT_PRECISION float MASK_HIGH;
 #define grayweights vec3(0.3,0.59,0.11)
 #define GAMMAIN(color) color*color 
 #define PI 3.14159265358979323846 
-#define TAU 6.2831852
 #define tau 6.2831852
 
 mat3 crt = mat3(
@@ -206,8 +205,8 @@ void main()
     // smoothstep interpolation
     f = f*f*(3.0 - 2.0*f);
     // max sharpness Y    
-    f.y = f.y*f.y;
-    f.y = f.y*f.y*f.y*f.y;
+    f.y = f.y*f.y*f.y;
+    f.y = f.y*f.y*f.y;
 
     vec2 pos = (near + f) / TextureSize;
     vec3 res = COMPAT_TEXTURE(PassPrev4Texture, pos).rgb;
@@ -218,13 +217,10 @@ void main()
 
     float l = max(max(res.r, res.g), res.b);
 
-    // =================================================================
-    // --- IMPLEMENTATION REPLACED WITH scanlines_test.glsl LOGIC ---
-    // =================================================================
     float infl = mix(SCAN_LOW, SCAN_HIGH, l);
     float infl2 = mix(MASK_LOW, MASK_HIGH, l);
 
-    // Draw scanlines and mask aligned with the screen curvature
+    // Draw scanlines aligned with the screen curvature
     float scan = infl * sin((uv.y * TextureSize.y - 0.25) * tau);
     float msk = infl2 * sin(maskpos.x * PI);
     
