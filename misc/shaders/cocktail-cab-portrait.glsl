@@ -7,7 +7,7 @@
 #pragma parameter x_loc "Cocktail X Mod" 0.0 -2.0 2.0 0.01
 #pragma parameter y_loc "Cocktail Y Mod" 0.51 -2.0 2.0 0.01
 // important for hw-rendered cores
-#pragma parameter flip_y "Flip Vertical Axis" 0.0 0.0 1.0 1.0
+#pragma parameter flip_y "Flip Vertical Axis" 1.0 1.0 0.0 0.0
  
 #if defined(VERTEX)
  
