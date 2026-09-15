@@ -93,6 +93,7 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION vec2 OrigInputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 
@@ -114,8 +115,13 @@ void main()
     // Reading the texel
     vec3 E = pow(COMPAT_TEXTURE(Source, vTexCoord).xyz, vec3(2.4));
 
-    vec2 fp = fract(vTexCoord*SourceSize.xy);
+    vec2 fp = fract(vTexCoord * SourceSize.xy);
     vec2 ps = InputSize.xy * outsize.zw;
+    if (any(notEqual(InputSize, OrigInputSize)))
+    {
+        fp = fract(vTexCoord * TextureSize.xy / InputSize.xy * OrigInputSize.xy);
+        ps = OrigInputSize.xy * outsize.zw;
+    }
 
     vec2 f = clamp(clamp(fp + 0.5*ps, 0.0, 1.0) - RETRO_PIXEL_SIZE, vec2(0.0), ps)/ps;
 

@@ -70,6 +70,7 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION vec2 OrigInputSize;
 void main()
 {
     vec2 _oTexCoord;
@@ -79,15 +80,28 @@ void main()
     _r0011 = _r0011 + VertexCoord.y*MVPMatrix[1];
     _r0011 = _r0011 + VertexCoord.z*MVPMatrix[2];
     _r0011 = _r0011 + VertexCoord.w*MVPMatrix[3];
-    _x0013 = OutputSize.y/InputSize.y;
-    _TMP2 = floor(_x0013);
-    _TMP7 = OutputSize/(InputSize*_TMP2);
+    if (any(notEqual(InputSize, OrigInputSize)))
+    {
+        _x0013 = OutputSize.y/OrigInputSize.y;
+        _TMP2 = floor(_x0013);
+        _TMP7 = OutputSize/(OrigInputSize*_TMP2);
+        _x0015 = OutputSize.y/OrigInputSize.y;
+        _TMP3 = floor(_x0015);
+        _TMP6._cell_height = float((InputSize.y/(TextureSize.y*OrigInputSize.y)));
+        _TMP6._texel_height = float((_TMP6._cell_height/_TMP3));
+    }
+    else
+    {
+        _x0013 = OutputSize.y/InputSize.y;
+        _TMP2 = floor(_x0013);
+        _TMP7 = OutputSize/(InputSize*_TMP2);
+        _x0015 = OutputSize.y/InputSize.y;
+        _TMP3 = floor(_x0015);
+        _TMP6._cell_height = float((1.00000000E+00/TextureSize.y));
+        _TMP6._texel_height = float((1.00000000E+00/(TextureSize.y*_TMP3)));
+    }
     _oPosition1 = _r0011/vec4(_TMP7.x, _TMP7.y, 1.00000000E+00, 1.00000000E+00);
     _oTexCoord = TexCoord.xy + 5.00000000E-01/OutputSize;
-    _x0015 = OutputSize.y/InputSize.y;
-    _TMP3 = floor(_x0015);
-    _TMP6._cell_height = float((1.00000000E+00/TextureSize.y));
-    _TMP6._texel_height = float((1.00000000E+00/(TextureSize.y*_TMP3)));
     _oLineData1._cell_height = _TMP6._cell_height;
     _oLineData1._texel_height = _TMP6._texel_height;
     gl_Position = _oPosition1;
@@ -187,11 +201,32 @@ uniform sampler2D Prev3Texture;
 uniform sampler2D Prev2Texture;
 uniform sampler2D Prev1Texture;
 uniform sampler2D PrevTexture;
+uniform COMPAT_PRECISION vec2 Prev6InputSize;
+uniform COMPAT_PRECISION vec2 Prev5InputSize;
+uniform COMPAT_PRECISION vec2 Prev4InputSize;
+uniform COMPAT_PRECISION vec2 Prev3InputSize;
+uniform COMPAT_PRECISION vec2 Prev2InputSize;
+uniform COMPAT_PRECISION vec2 Prev1InputSize;
+uniform COMPAT_PRECISION vec2 PrevInputSize;
+uniform COMPAT_PRECISION vec2 Prev6TextureSize;
+uniform COMPAT_PRECISION vec2 Prev5TextureSize;
+uniform COMPAT_PRECISION vec2 Prev4TextureSize;
+uniform COMPAT_PRECISION vec2 Prev3TextureSize;
+uniform COMPAT_PRECISION vec2 Prev2TextureSize;
+uniform COMPAT_PRECISION vec2 Prev1TextureSize;
+uniform COMPAT_PRECISION vec2 PrevTextureSize;
 uniform COMPAT_PRECISION int FrameDirection;
 uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION vec2 OrigInputSize;
+vec2 get_history_coord(vec2 history_input_size, vec2 history_texture_size)
+{
+    if (all(equal(InputSize, OrigInputSize)))
+        return TEX0.xy;
+    return TEX0.xy*TextureSize.xy/InputSize.xy*history_input_size/history_texture_size;
+}
 void main()
 {
     vec3 _input_dummy_rgb;
@@ -200,19 +235,19 @@ void main()
     vec3 _TMP28;
     _TMP0 = COMPAT_TEXTURE(Texture, TEX0.xy);
     _input_dummy_rgb = vec3(float(_TMP0.x), float(_TMP0.y), float(_TMP0.z));
-    _TMP1 = COMPAT_TEXTURE(PrevTexture, TEX0.xy);
+    _TMP1 = COMPAT_TEXTURE(PrevTexture, get_history_coord(PrevInputSize.xy, PrevTextureSize.xy));
     _input_dummy_rgb = vec3(float((vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)) + (_TMP1.xyz - vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)))*3.33000004E-01).x), float((vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)) + (_TMP1.xyz - vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)))*3.33000004E-01).y), float((vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)) + (_TMP1.xyz - vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)))*3.33000004E-01).z));
-    _TMP2 = COMPAT_TEXTURE(Prev1Texture, TEX0.xy);
+    _TMP2 = COMPAT_TEXTURE(Prev1Texture, get_history_coord(Prev1InputSize.xy, Prev1TextureSize.xy));
     _input_dummy_rgb = vec3(float((vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)) + (_TMP2.xyz - vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)))*1.10889003E-01).x), float((vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)) + (_TMP2.xyz - vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)))*1.10889003E-01).y), float((vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)) + (_TMP2.xyz - vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)))*1.10889003E-01).z));
-    _TMP4 = COMPAT_TEXTURE(Prev2Texture, TEX0.xy);
+    _TMP4 = COMPAT_TEXTURE(Prev2Texture, get_history_coord(Prev2InputSize.xy, Prev2TextureSize.xy));
     _input_dummy_rgb = vec3(float((vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)) + (_TMP4.xyz - vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)))*3.69260386E-02).x), float((vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)) + (_TMP4.xyz - vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)))*3.69260386E-02).y), float((vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)) + (_TMP4.xyz - vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)))*3.69260386E-02).z));
-    _TMP6 = COMPAT_TEXTURE(Prev3Texture, TEX0.xy);
+    _TMP6 = COMPAT_TEXTURE(Prev3Texture, get_history_coord(Prev3InputSize.xy, Prev3TextureSize.xy));
     _input_dummy_rgb = vec3(float((vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)) + (_TMP6.xyz - vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)))*1.22963712E-02).x), float((vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)) + (_TMP6.xyz - vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)))*1.22963712E-02).y), float((vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)) + (_TMP6.xyz - vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)))*1.22963712E-02).z));
-    _TMP8 = COMPAT_TEXTURE(Prev4Texture, TEX0.xy);
+    _TMP8 = COMPAT_TEXTURE(Prev4Texture, get_history_coord(Prev4InputSize.xy, Prev4TextureSize.xy));
     _input_dummy_rgb = vec3(float((vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)) + (_TMP8.xyz - vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)))*4.09469148E-03).x), float((vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)) + (_TMP8.xyz - vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)))*4.09469148E-03).y), float((vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)) + (_TMP8.xyz - vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)))*4.09469148E-03).z));
-    _TMP10 = COMPAT_TEXTURE(Prev5Texture, TEX0.xy);
+    _TMP10 = COMPAT_TEXTURE(Prev5Texture, get_history_coord(Prev5InputSize.xy, Prev5TextureSize.xy));
     _input_dummy_rgb = vec3(float((vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)) + (_TMP10.xyz - vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)))*1.36353227E-03).x), float((vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)) + (_TMP10.xyz - vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)))*1.36353227E-03).y), float((vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)) + (_TMP10.xyz - vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)))*1.36353227E-03).z));
-    _TMP12 = COMPAT_TEXTURE(Prev6Texture, TEX0.xy);
+    _TMP12 = COMPAT_TEXTURE(Prev6Texture, get_history_coord(Prev6InputSize.xy, Prev6TextureSize.xy));
     _input_dummy_rgb = vec3(float((vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)) + (_TMP12.xyz - vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)))*4.54056280E-04).x), float((vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)) + (_TMP12.xyz - vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)))*4.54056280E-04).y), float((vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)) + (_TMP12.xyz - vec3(float(_input_dummy_rgb.x), float(_input_dummy_rgb.y), float(_input_dummy_rgb.z)))*4.54056280E-04).z));
     _out_color = vec4(_input_dummy_rgb.x, _input_dummy_rgb.y, _input_dummy_rgb.z, 1.00000000E+00);
     _b0047 = float(TEX1.x);

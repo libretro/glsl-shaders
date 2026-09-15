@@ -68,6 +68,7 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION vec2 OrigInputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 
@@ -106,10 +107,11 @@ float intsmear(float x, float dx)
 
 #define round(x) floor( (x) + 0.5 )
 #define TEX2D(c) pow(COMPAT_TEXTURE(Source, (c)), vec4(gamma))
+#define OriginalTexelSize (InputSize.xy / (TextureSize.xy * OrigInputSize.xy))
 
 void main()
 {
-  vec2 texelSize = 1.0 / TextureSize.xy;
+  vec2 texelSize = OriginalTexelSize;
   vec2 subtexelSize = texelSize / vec2(3.0,1.0);
   vec2 range;
   range = InputSize.xy / (OutputSize.xy * TextureSize.xy);

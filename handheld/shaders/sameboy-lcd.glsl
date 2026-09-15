@@ -98,6 +98,7 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION vec2 OrigInputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 
@@ -120,25 +121,27 @@ uniform COMPAT_PRECISION float SCANLINE_DEPTH;
 
 void main()
 {
-    vec2 pos = fract(vTexCoord * SourceSize.xy);
-    vec2 sub_pos = fract(vTexCoord * SourceSize.xy * 6.0);
+    vec2 original_texel = InputSize.xy / (TextureSize.xy * OrigInputSize.xy);
+    vec2 original_coord = vTexCoord / original_texel;
+    vec2 pos = fract(original_coord);
+    vec2 sub_pos = fract(original_coord * 6.0);
     
     vec4 center = COMPAT_TEXTURE(Source, vTexCoord);
-    vec4 left = COMPAT_TEXTURE(Source, vTexCoord - vec2(1.0 / SourceSize.x, 0.0));
-    vec4 right = COMPAT_TEXTURE(Source, vTexCoord + vec2(1.0 / SourceSize.x, 0.0));
+    vec4 left = COMPAT_TEXTURE(Source, vTexCoord - vec2(original_texel.x, 0.0));
+    vec4 right = COMPAT_TEXTURE(Source, vTexCoord + vec2(original_texel.x, 0.0));
     
     if (pos.y < 1.0 / 6.0) {
-        center = mix(center, COMPAT_TEXTURE(Source, vTexCoord + vec2(0.0, -1.0 / SourceSize.y)), 0.5 - sub_pos.y / 2.0);
-        left =   mix(left,   COMPAT_TEXTURE(Source, vTexCoord + vec2(-1.0 / SourceSize.x, -1.0 / SourceSize.y)), 0.5 - sub_pos.y / 2.0);
-        right =  mix(right,  COMPAT_TEXTURE(Source, vTexCoord + vec2( 1.0 / SourceSize.x, -1.0 / SourceSize.y)), 0.5 - sub_pos.y / 2.0);
+        center = mix(center, COMPAT_TEXTURE(Source, vTexCoord + vec2(0.0, -original_texel.y)), 0.5 - sub_pos.y / 2.0);
+        left =   mix(left,   COMPAT_TEXTURE(Source, vTexCoord + vec2(-original_texel.x, -original_texel.y)), 0.5 - sub_pos.y / 2.0);
+        right =  mix(right,  COMPAT_TEXTURE(Source, vTexCoord + vec2( original_texel.x, -original_texel.y)), 0.5 - sub_pos.y / 2.0);
         center *= sub_pos.y * SCANLINE_DEPTH + (1.0 - SCANLINE_DEPTH);
         left *= sub_pos.y * SCANLINE_DEPTH + (1.0 - SCANLINE_DEPTH);
         right *= sub_pos.y * SCANLINE_DEPTH + (1.0 - SCANLINE_DEPTH);
     }
     else if (pos.y > 5.0 / 6.0) {
-        center = mix(center, COMPAT_TEXTURE(Source, vTexCoord + vec2(0, 1.0 / SourceSize.y)), sub_pos.y / 2.0);
-        left =   mix(left,   COMPAT_TEXTURE(Source, vTexCoord + vec2(-1.0 / SourceSize.x, 1.0 / SourceSize.y)), sub_pos.y / 2.0);
-        right =  mix(right,  COMPAT_TEXTURE(Source, vTexCoord + vec2( 1.0 / SourceSize.x, 1.0 / SourceSize.y)), sub_pos.y / 2.0);
+        center = mix(center, COMPAT_TEXTURE(Source, vTexCoord + vec2(0.0, original_texel.y)), sub_pos.y / 2.0);
+        left =   mix(left,   COMPAT_TEXTURE(Source, vTexCoord + vec2(-original_texel.x, original_texel.y)), sub_pos.y / 2.0);
+        right =  mix(right,  COMPAT_TEXTURE(Source, vTexCoord + vec2( original_texel.x, original_texel.y)), sub_pos.y / 2.0);
         center *= (1.0 - sub_pos.y) * SCANLINE_DEPTH + (1.0 - SCANLINE_DEPTH);
         left *= (1.0 - sub_pos.y) * SCANLINE_DEPTH + (1.0 - SCANLINE_DEPTH);
         right *= (1.0 - sub_pos.y) * SCANLINE_DEPTH + (1.0 - SCANLINE_DEPTH);

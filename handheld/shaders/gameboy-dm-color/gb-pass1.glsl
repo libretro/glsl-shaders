@@ -1,3 +1,5 @@
+#pragma name GameBoyDotMatrixAlphaBlend
+
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       //
 // Gameboy Color Dot Matrix v0.9                                        //
