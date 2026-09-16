@@ -1,6 +1,7 @@
 shaders = 6
 shader0 = shader-files/gb-pass0.glsl
 shader1 = ../shaders/gameboy/shader-files/gb-pass1.glsl
+alias1 = "GameBoyDotMatrixAlphaBlend"
 shader2 = ../shaders/gameboy/shader-files/gb-pass2.glsl
 shader3 = ../shaders/gameboy/shader-files/gb-pass3.glsl
 shader4 = ../shaders/gameboy/shader-files/gb-pass4.glsl

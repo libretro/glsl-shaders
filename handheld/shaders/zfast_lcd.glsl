@@ -116,6 +116,7 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION vec2 OrigInputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 varying COMPAT_PRECISION vec2 invSize;
@@ -136,8 +137,10 @@ uniform COMPAT_PRECISION float GBAGAMMA;
 
 void main()
 {
-	COMPAT_PRECISION vec2 texcoordInPixels = TEX0.xy * TextureSize.xy;
+	COMPAT_PRECISION vec2 texcoordInPixels = TEX0.xy * TextureSize.xy / InputSize.xy * OrigInputSize.xy;
 	COMPAT_PRECISION vec2 centerCoord = floor(texcoordInPixels.xy)+vec2(0.5,0.5);
+	COMPAT_PRECISION vec2 sourceCoordInPixels = TEX0.xy * TextureSize.xy;
+	COMPAT_PRECISION vec2 sourceCenterCoord = floor(sourceCoordInPixels.xy)+vec2(0.5,0.5);
 	COMPAT_PRECISION vec2 distFromCenter = abs(centerCoord - texcoordInPixels);
 
 	COMPAT_PRECISION float Y = max(distFromCenter.x,(distFromCenter.y));
@@ -149,7 +152,7 @@ void main()
 	COMPAT_PRECISION float LineWeight = YY - 2.7*YYY;
 	LineWeight = 1.0 - BORDERMULT*LineWeight;
 
-	COMPAT_PRECISION vec3 colour = COMPAT_TEXTURE(Texture, invSize*centerCoord).rgb*LineWeight;
+	COMPAT_PRECISION vec3 colour = COMPAT_TEXTURE(Texture, invSize*sourceCenterCoord).rgb*LineWeight;
 
 //#if defined(GBAGAMMA)
 //	//colour.rgb = pow(colour.rgb, vec3(1.35));

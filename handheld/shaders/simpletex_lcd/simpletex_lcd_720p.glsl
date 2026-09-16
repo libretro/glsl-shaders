@@ -141,6 +141,7 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION vec2 OrigInputSize;
 uniform sampler2D Texture;
 uniform sampler2D BACKGROUND;
 COMPAT_VARYING COMPAT_PRECISION vec4 TEX0;
@@ -185,11 +186,13 @@ const COMPAT_PRECISION float INV_BG_TEXTURE_SIZE = 1.0 / BG_TEXTURE_SIZE;
 void main()
 {
 	// Get current texture coordinate
-	COMPAT_PRECISION vec2 imgPixelCoord = TEX0.xy * TextureSize.xy;
+	COMPAT_PRECISION vec2 imgPixelCoord = TEX0.xy * TextureSize.xy / InputSize.xy * OrigInputSize.xy;
 	COMPAT_PRECISION vec2 imgCenterCoord = floor(imgPixelCoord.xy) + vec2(0.5, 0.5);
+	COMPAT_PRECISION vec2 sourcePixelCoord = TEX0.xy * TextureSize.xy;
+	COMPAT_PRECISION vec2 sourceCenterCoord = floor(sourcePixelCoord.xy) + vec2(0.5, 0.5);
 	
 	// Get colour of current pixel
-	COMPAT_PRECISION vec3 colour = COMPAT_TEXTURE(Texture, InvTextureSize.xy * imgCenterCoord.xy).rgb;
+	COMPAT_PRECISION vec3 colour = COMPAT_TEXTURE(Texture, InvTextureSize.xy * sourceCenterCoord.xy).rgb;
 	
 	// Darken colours (if required...)
 	colour.rgb = pow(colour.rgb, vec3(1.0 + DARKEN_COLOUR));

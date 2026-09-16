@@ -73,6 +73,7 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION vec2 OrigInputSize;
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float baseline_alpha;
@@ -105,12 +106,13 @@ uniform COMPAT_PRECISION float video_scale;
 
 void main()
 {
-	vec2 scaled_video_out = (InputSize.xy * vec2(video_scale));
+	vec2 scaled_video_out = (OrigInputSize.xy * vec2(video_scale));
+    vec2 original_texel = InputSize.xy / (TextureSize.xy * OrigInputSize.xy);
     // Remaps position to integer scaled output
     gl_Position = MVPMatrix * VertexCoord / vec4( vec2(outsize.xy / scaled_video_out), 1.0, 1.0 );
     TEX0.xy = TexCoord.xy + half_pixel;
-    dot_size = SourceSize.zw;
-    one_texel = 1.0 / (SourceSize.xy * video_scale);
+    dot_size = original_texel;
+    one_texel = original_texel / video_scale;
 }
 
 #elif defined(FRAGMENT)
@@ -144,6 +146,21 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION vec2 OrigInputSize;
+uniform COMPAT_PRECISION vec2 PrevInputSize;
+uniform COMPAT_PRECISION vec2 Prev1InputSize;
+uniform COMPAT_PRECISION vec2 Prev2InputSize;
+uniform COMPAT_PRECISION vec2 Prev3InputSize;
+uniform COMPAT_PRECISION vec2 Prev4InputSize;
+uniform COMPAT_PRECISION vec2 Prev5InputSize;
+uniform COMPAT_PRECISION vec2 Prev6InputSize;
+uniform COMPAT_PRECISION vec2 PrevTextureSize;
+uniform COMPAT_PRECISION vec2 Prev1TextureSize;
+uniform COMPAT_PRECISION vec2 Prev2TextureSize;
+uniform COMPAT_PRECISION vec2 Prev3TextureSize;
+uniform COMPAT_PRECISION vec2 Prev4TextureSize;
+uniform COMPAT_PRECISION vec2 Prev5TextureSize;
+uniform COMPAT_PRECISION vec2 Prev6TextureSize;
 uniform sampler2D Texture;
 uniform sampler2D COLOR_PALETTE;
 uniform sampler2D PrevTexture;
@@ -181,14 +198,16 @@ uniform COMPAT_PRECISION float video_scale;
 
 
 // Frame sampling definitions
+#define active_coord (vTexCoord * TextureSize.xy / InputSize.xy)
+#define history_coord(input_size, texture_size) (all(equal(InputSize, OrigInputSize)) ? vTexCoord : active_coord * input_size / texture_size)
 #define curr_rgb  abs(1.0 - COMPAT_TEXTURE(Source,       vTexCoord).rgb)
-#define prev0_rgb abs(1.0 - COMPAT_TEXTURE(PrevTexture,  vTexCoord).rgb)
-#define prev1_rgb abs(1.0 - COMPAT_TEXTURE(Prev1Texture, vTexCoord).rgb)
-#define prev2_rgb abs(1.0 - COMPAT_TEXTURE(Prev2Texture, vTexCoord).rgb)
-#define prev3_rgb abs(1.0 - COMPAT_TEXTURE(Prev3Texture, vTexCoord).rgb)
-#define prev4_rgb abs(1.0 - COMPAT_TEXTURE(Prev4Texture, vTexCoord).rgb)
-#define prev5_rgb abs(1.0 - COMPAT_TEXTURE(Prev5Texture, vTexCoord).rgb)
-#define prev6_rgb abs(1.0 - COMPAT_TEXTURE(Prev6Texture, vTexCoord).rgb)
+#define prev0_rgb abs(1.0 - COMPAT_TEXTURE(PrevTexture,  history_coord(PrevInputSize.xy, PrevTextureSize.xy)).rgb)
+#define prev1_rgb abs(1.0 - COMPAT_TEXTURE(Prev1Texture, history_coord(Prev1InputSize.xy, Prev1TextureSize.xy)).rgb)
+#define prev2_rgb abs(1.0 - COMPAT_TEXTURE(Prev2Texture, history_coord(Prev2InputSize.xy, Prev2TextureSize.xy)).rgb)
+#define prev3_rgb abs(1.0 - COMPAT_TEXTURE(Prev3Texture, history_coord(Prev3InputSize.xy, Prev3TextureSize.xy)).rgb)
+#define prev4_rgb abs(1.0 - COMPAT_TEXTURE(Prev4Texture, history_coord(Prev4InputSize.xy, Prev4TextureSize.xy)).rgb)
+#define prev5_rgb abs(1.0 - COMPAT_TEXTURE(Prev5Texture, history_coord(Prev5InputSize.xy, Prev5TextureSize.xy)).rgb)
+#define prev6_rgb abs(1.0 - COMPAT_TEXTURE(Prev6Texture, history_coord(Prev6InputSize.xy, Prev6TextureSize.xy)).rgb)
 
 void main()
 {

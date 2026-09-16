@@ -100,7 +100,7 @@ vec3 _TMP27;
 COMPAT_VARYING vec4 TEX0;
  
 uniform sampler2D Texture;
-uniform sampler2D Pass1Texture;
+uniform sampler2D PassPrev2Texture;
 uniform COMPAT_PRECISION int FrameDirection;
 uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
@@ -115,7 +115,7 @@ void main()
     vec3 _TMP12;
     _TMP0 = COMPAT_TEXTURE(Texture, TEX0.xy);
     _lcd_color = vec4(float(_TMP0.x), float(_TMP0.y), float(_TMP0.z), float(_TMP0.w));
-    _TMP1 = COMPAT_TEXTURE(Pass1Texture, TEX0.xy);
+    _TMP1 = COMPAT_TEXTURE(PassPrev2Texture, TEX0.xy);
     _input_dummy_color = vec4(float(_TMP1.x), float(_TMP1.y), float(_TMP1.z), float(_TMP1.w));
     _TMP2 = COMPAT_TEXTURE(BACKGROUND, TEX0.xy);
     _bg_color = vec4(float(_TMP2.x), float(_TMP2.y), float(_TMP2.z), float(_TMP2.w));

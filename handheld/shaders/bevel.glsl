@@ -96,6 +96,7 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION vec2 OrigInputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 
@@ -134,7 +135,9 @@ vec3 bevel(vec2 pos, vec3 color)
 
 void main()
 {
-    vec2 position = fract(vTexCoord*SourceSize.xy);
+    vec2 position = fract(vTexCoord * SourceSize.xy);
+    if (any(notEqual(InputSize, OrigInputSize)))
+        position = fract(vTexCoord * TextureSize.xy / InputSize.xy * OrigInputSize.xy);
 
     vec3 color = GAMMA_IN(COMPAT_TEXTURE(Source, vTexCoord).rgb);
 

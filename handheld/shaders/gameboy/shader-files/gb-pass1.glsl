@@ -1,3 +1,5 @@
+#pragma name GameBoyDotMatrixAlphaBlend
+
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       //
 // Gameboy Classic Shader v0.2.2                                         //

@@ -133,10 +133,12 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION vec2 GameBoyDotMatrixAlphaBlendTextureSize;
+uniform COMPAT_PRECISION vec2 GameBoyDotMatrixAlphaBlendInputSize;
 uniform sampler2D Texture;
 uniform sampler2D BACKGROUND;
 uniform sampler2D COLOR_PALETTE;
-uniform sampler2D Pass2Texture;
+uniform sampler2D GameBoyDotMatrixAlphaBlendTexture;
 COMPAT_VARYING vec4 TEX0;
 COMPAT_VARYING vec2 texel;
 
@@ -186,12 +188,12 @@ uniform COMPAT_PRECISION float screen_offset_y;
 
 void main()
 {
-//    vec2 tex = floor(outsize.xy * vTexCoord);
-//    tex = (tex + 0.5) * outsize.zw;
-    vec2 tex = vTexCoord.xy;
+    vec2 active_coord = vTexCoord * TextureSize.xy / InputSize.xy;
+    vec2 tex = floor(GameBoyDotMatrixAlphaBlendInputSize * active_coord);
+    tex = (tex + 0.5) / GameBoyDotMatrixAlphaBlendTextureSize;
     
     // Sample all the relevant textures
-    vec4 foreground = COMPAT_TEXTURE(Pass2Texture, tex - screen_offset);
+    vec4 foreground = COMPAT_TEXTURE(GameBoyDotMatrixAlphaBlendTexture, tex - screen_offset);
     vec4 background = COMPAT_TEXTURE(BACKGROUND, vTexCoord);
     vec4 shadows    = COMPAT_TEXTURE(Source, vTexCoord - (shadow_offset + screen_offset));
     vec4 background_color = bg_color;

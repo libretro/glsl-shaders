@@ -156,7 +156,7 @@ COMPAT_VARYING vec4 TEX3;
 COMPAT_VARYING vec4 TEX4;
  
 uniform sampler2D Texture;
-uniform sampler2D Pass1Texture;
+uniform sampler2D PassPrev3Texture;
 uniform COMPAT_PRECISION int FrameDirection;
 uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
@@ -188,10 +188,10 @@ void main()
     _TMP5 = COMPAT_TEXTURE(Texture, _c0035);
     _adjacent_texel_20019 = vec4(float(_TMP5.x), float(_TMP5.y), float(_TMP5.z), float(_TMP5.w));
     _c0037 = vec2(float(_TMP20.x), float(_TMP20.y));
-    _TMP6 = COMPAT_TEXTURE(Pass1Texture, _c0037);
+    _TMP6 = COMPAT_TEXTURE(PassPrev3Texture, _c0037);
     _adjacent_texel_30019 = vec4(float(_TMP6.x), float(_TMP6.y), float(_TMP6.z), float(_TMP6.w));
     _c0039 = vec2(float(_TMP26.x), float(_TMP26.y));
-    _TMP7 = COMPAT_TEXTURE(Pass1Texture, _c0039);
+    _TMP7 = COMPAT_TEXTURE(PassPrev3Texture, _c0039);
     _adjacent_texel_40019 = vec4(float(_TMP7.x), float(_TMP7.y), float(_TMP7.z), float(_TMP7.w));
     _LCD_color0019 = ((_out_color.xyz - _adjacent_texel_10019.xyz) + (_out_color.xyz - _adjacent_texel_20019.xyz))*2.00195312E-01;
     _original_color0019 = ((_out_color.xyz - _adjacent_texel_30019.xyz) + (_out_color.xyz - _adjacent_texel_40019.xyz))*2.00195312E-01;

@@ -84,6 +84,7 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION vec2 OrigInputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 
@@ -129,7 +130,8 @@ uniform COMPAT_PRECISION float BGR;
 #define BGR 0
 #endif
 
-#define fetch_offset(coord, offset) (pow(vec3(gain) * texelFetchOffset(Source, (coord), 0, (offset)).rgb + vec3(blacklevel), vec3(gamma)) + vec3(ambient))
+#define OriginalTexelSize (InputSize.xy / (TextureSize.xy * OrigInputSize.xy))
+#define fetch_offset(coord, offset) (pow(vec3(gain) * COMPAT_TEXTURE(Source, (vec2((coord) + (offset)) + 0.5) * OriginalTexelSize).rgb + vec3(blacklevel), vec3(gamma)) + vec3(ambient))
 
 // integral of (1 - x^2 - x^4 + x^6)^2
 float coeffs_x[7] = float[](1.0, -2.0/3.0, -1.0/5.0, 4.0/7.0, -1.0/9.0, -2.0/11.0, 1.0/13.0);
@@ -157,7 +159,7 @@ float intsmear(float x, float dx, float d, float coeffs[7])
 
 void main()
 {
-    vec2 texelSize = SourceSize.zw;
+    vec2 texelSize = OriginalTexelSize;
     /* float2 range = IN.video_size / (IN.output_size * IN.texture_size); */
     vec2 range = InputSize.xy / (OutputSize.xy * TextureSize.xy);//outsize.zw;
 

@@ -79,6 +79,7 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION vec2 OrigInputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 
@@ -92,6 +93,7 @@ COMPAT_VARYING vec4 TEX0;
 void main()
 {
 	vec4 color = COMPAT_TEXTURE(Source, vTexCoord);
+	vec2 original_coord = vTexCoord * TextureSize.xy / InputSize.xy * OrigInputSize.xy;
 	vec3 arrayX[4];
 	arrayX[0] = vec3(1.0, 0.2, 0.2);
 	arrayX[1] = vec3(0.2, 1.0, 0.2);
@@ -104,7 +106,7 @@ void main()
 	arrayY[3] = vec3(0.8, 0.8, 0.8);
 	color.rgb = pow(color.rgb * vec3(0.8, 0.8, 0.8), vec3(1.8, 1.8, 1.8)) + vec3(0.16, 0.16, 0.16);
 
-	int colorX = int(mod(vTexCoord.s * SourceSize.x * 4.0, 4.0));
+	int colorX = int(mod(original_coord.x * 4.0, 4.0));
 	if (colorX == 0) {
 		color.rgb *= arrayX[0];
 	} else if (colorX == 1) {
@@ -115,7 +117,7 @@ void main()
 		color.rgb *= arrayX[3];
 	}
 
-	int colorY = int(mod(vTexCoord.t * SourceSize.y * 4.0, 4.0));
+	int colorY = int(mod(original_coord.y * 4.0, 4.0));
 	if (colorY == 0) {
 		color.rgb *= arrayY[0];
 	} else if (colorY == 1) {

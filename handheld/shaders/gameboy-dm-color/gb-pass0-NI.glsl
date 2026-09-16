@@ -60,6 +60,7 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION vec2 OrigInputSize;
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float baseline_alpha;
@@ -85,8 +86,8 @@ uniform COMPAT_PRECISION float console_border_enable;
 void main()
 {
     // Ensure proper scale calculation
-    float scale_x = max(outsize.x / InputSize.x, 1.0);
-    float scale_y = max(outsize.y / InputSize.y, 1.0);
+    float scale_x = max(outsize.x / OrigInputSize.x, 1.0);
+    float scale_y = max(outsize.y / OrigInputSize.y, 1.0);
     float video_scale_factor = max(scale_x, scale_y);
 
     // Override video scale factor if border is enabled
@@ -95,7 +96,8 @@ void main()
     }
 
     // Compute the final output scaling
-    vec2 scaled_video_out = InputSize.xy * vec2(video_scale_factor);
+    vec2 scaled_video_out = OrigInputSize.xy * vec2(video_scale_factor);
+    vec2 original_texel = InputSize.xy / (TextureSize.xy * OrigInputSize.xy);
 
     // Assign vertex transformation and attributes
     gl_Position = MVPMatrix * VertexCoord;
@@ -103,8 +105,8 @@ void main()
     TEX0.xy = TexCoord.xy + half_pixel;
 
     // Define texel size based on final scale
-    dot_size = SourceSize.zw;
-    one_texel = 1.0 / (SourceSize.xy * video_scale_factor);
+    dot_size = original_texel;
+    one_texel = original_texel / video_scale_factor;
 }
 
 #elif defined(FRAGMENT)
@@ -139,6 +141,21 @@ uniform COMPAT_PRECISION int FrameCount;
 uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
+uniform COMPAT_PRECISION vec2 OrigInputSize;
+uniform COMPAT_PRECISION vec2 PrevInputSize;
+uniform COMPAT_PRECISION vec2 Prev1InputSize;
+uniform COMPAT_PRECISION vec2 Prev2InputSize;
+uniform COMPAT_PRECISION vec2 Prev3InputSize;
+uniform COMPAT_PRECISION vec2 Prev4InputSize;
+uniform COMPAT_PRECISION vec2 Prev5InputSize;
+uniform COMPAT_PRECISION vec2 Prev6InputSize;
+uniform COMPAT_PRECISION vec2 PrevTextureSize;
+uniform COMPAT_PRECISION vec2 Prev1TextureSize;
+uniform COMPAT_PRECISION vec2 Prev2TextureSize;
+uniform COMPAT_PRECISION vec2 Prev3TextureSize;
+uniform COMPAT_PRECISION vec2 Prev4TextureSize;
+uniform COMPAT_PRECISION vec2 Prev5TextureSize;
+uniform COMPAT_PRECISION vec2 Prev6TextureSize;
 uniform sampler2D Texture;
 uniform sampler2D COLOR_PALETTE;
 uniform sampler2D PrevTexture;
@@ -157,6 +174,7 @@ COMPAT_VARYING vec2 one_texel;
 #define vTexCoord TEX0.xy
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
+#define history_coord(input_size, texture_size) (all(equal(InputSize, OrigInputSize)) ? TEX0.xy : active_coord * input_size / texture_size)
 
 #ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float baseline_alpha;
@@ -189,13 +207,14 @@ void main()
     // Apply response time smoothing with a decreasing impact of each previous frame
     float base_factor = pow(response_time, 2.0); // Adjust the exponent for a smoother curve
 
-    input_rgb += (COMPAT_TEXTURE(PrevTexture, TEX0.xy).rgb - input_rgb) * response_time;
-    input_rgb += (COMPAT_TEXTURE(Prev1Texture, TEX0.xy).rgb - input_rgb) * base_factor * 0.5;
-    input_rgb += (COMPAT_TEXTURE(Prev2Texture, TEX0.xy).rgb - input_rgb) * base_factor * 0.25;
-    input_rgb += (COMPAT_TEXTURE(Prev3Texture, TEX0.xy).rgb - input_rgb) * base_factor * 0.125;
-    input_rgb += (COMPAT_TEXTURE(Prev4Texture, TEX0.xy).rgb - input_rgb) * base_factor * 0.0625;
-    input_rgb += (COMPAT_TEXTURE(Prev5Texture, TEX0.xy).rgb - input_rgb) * base_factor * 0.03125;
-    input_rgb += (COMPAT_TEXTURE(Prev6Texture, TEX0.xy).rgb - input_rgb) * base_factor * 0.015625;
+    vec2 active_coord = TEX0.xy * TextureSize.xy / InputSize.xy;
+    input_rgb += (COMPAT_TEXTURE(PrevTexture, history_coord(PrevInputSize.xy, PrevTextureSize.xy)).rgb - input_rgb) * response_time;
+    input_rgb += (COMPAT_TEXTURE(Prev1Texture, history_coord(Prev1InputSize.xy, Prev1TextureSize.xy)).rgb - input_rgb) * base_factor * 0.5;
+    input_rgb += (COMPAT_TEXTURE(Prev2Texture, history_coord(Prev2InputSize.xy, Prev2TextureSize.xy)).rgb - input_rgb) * base_factor * 0.25;
+    input_rgb += (COMPAT_TEXTURE(Prev3Texture, history_coord(Prev3InputSize.xy, Prev3TextureSize.xy)).rgb - input_rgb) * base_factor * 0.125;
+    input_rgb += (COMPAT_TEXTURE(Prev4Texture, history_coord(Prev4InputSize.xy, Prev4TextureSize.xy)).rgb - input_rgb) * base_factor * 0.0625;
+    input_rgb += (COMPAT_TEXTURE(Prev5Texture, history_coord(Prev5InputSize.xy, Prev5TextureSize.xy)).rgb - input_rgb) * base_factor * 0.03125;
+    input_rgb += (COMPAT_TEXTURE(Prev6Texture, history_coord(Prev6InputSize.xy, Prev6TextureSize.xy)).rgb - input_rgb) * base_factor * 0.015625;
 
     // Calculate the alpha based on the weighted input RGB
     float rgb_to_alpha = (input_rgb.r + input_rgb.g + input_rgb.b) / 3.0 + (is_on_dot * baseline_alpha);
