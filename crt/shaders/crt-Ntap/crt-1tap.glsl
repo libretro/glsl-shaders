@@ -32,7 +32,7 @@
 #pragma parameter MAX_THICK "Scanline thickness of bright pixels" 0.95 0.0 1.0 0.05
 #pragma parameter H_SMOOTH "Horizontal smoothing" 0.8 0.0 1.0 0.05
 #pragma parameter V_SMOOTH "Vertical smoothing" 1.0 0.5 4.0 0.05
-#pragma parameter SUBPX_POS "Scanline subpixel position" 0.0 -0.5 0.5 0.01
+#pragma parameter SUBPX_POS "Scanline subpixel position" 0.31 -0.5 0.5 0.01
 #pragma parameter THICK_FALLOFF "Reduction / increase of thinner scanlines" 0.45 0.2 2.0 0.05
 // clang-format on
 
@@ -66,7 +66,7 @@ uniform PREC_HIGH vec2 InputSize;
 #ifdef PARAMETER_UNIFORM
 uniform PREC_MED float SUBPX_POS;
 #else
-#define SUBPX_POS 0.0
+#define SUBPX_POS 0.31
 #endif
 
 void main() {
