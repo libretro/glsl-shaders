@@ -112,7 +112,7 @@ vec3 rgb2yiq(vec3 col)
 // end ntsc-rgbyuv
 
 // begin ntsc-decode-filter-3phase
-#ifdef GL_ES
+#if defined(GL_ES) && __VERSION__ < 300
 float luma_filter1 = -0.000174844;
 float luma_filter2 = -0.000205844;
 float luma_filter3 = -0.000149453;
@@ -260,7 +260,7 @@ void main()
 	float one_x = 1.0 / SourceSize.x;
 	vec3 signal = vec3(0.0);
 
-#ifdef GL_ES
+#if defined(GL_ES) && __VERSION__ < 300
 	float offset;
 	vec3 sums;
 
