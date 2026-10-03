@@ -1,4 +1,8 @@
 #version 130
+#ifdef GL_ES
+precision highp float;
+precision highp int;
+#endif
 
 /////////////////////////////////  MIT LICENSE  ////////////////////////////////
 

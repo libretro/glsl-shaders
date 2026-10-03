@@ -1,4 +1,8 @@
 #version 130
+#ifdef GL_ES
+precision highp float;
+precision highp int;
+#endif
 
 #define INTEGRATED_GRAPHICS_COMPATIBILITY_MODE
 #define PHOSPHOR_BLOOM_FAKE
@@ -557,9 +561,9 @@ static const float mask_shadow_avg_color = 41.0/255.0;
     //  TileableLinearShadowMaskEDP*.png
 
 #ifdef PHOSPHOR_MASK_GRILLE14
-    static const float mask_grille_avg_color = mask_grille14_avg_color;
+    #define mask_grille_avg_color float(mask_grille14_avg_color)
 #else
-    static const float mask_grille_avg_color = mask_grille15_avg_color;
+    #define mask_grille_avg_color float(mask_grille15_avg_color)
 #endif
 
 
@@ -619,10 +623,9 @@ static const float mask_shadow_avg_color = 41.0/255.0;
     #endif
     //  Mode 2 (4x4 Gaussian resize) won't work, and mode 1 (3x3 blur) is
     //  inferior in most cases, so replace 2.0 with 0.0:
-    static const float bloom_approx_filter =
-        bloom_approx_filter_static > 1.5 ? 0.0 : bloom_approx_filter_static;
+    #define bloom_approx_filter float(bloom_approx_filter_static > 1.5 ? 0.0 : bloom_approx_filter_static)
 #else
-    static const float bloom_approx_filter = bloom_approx_filter_static;
+    #define bloom_approx_filter float(bloom_approx_filter_static)
 #endif
 
 //  Disable slow runtime paths if static parameters are used.  Most of these
@@ -737,12 +740,12 @@ static const float mask_shadow_avg_color = 41.0/255.0;
     #ifdef ANISOTROPIC_RESAMPLING_COMPAT_TEX2DLOD
         //  TODO: Take advantage of this!
         #define PHOSPHOR_MASK_RESIZE_MIPMAPPED_LUT
-        static const float2 mask_resize_src_lut_size = mask_texture_large_size;
+        #define mask_resize_src_lut_size float2(mask_texture_large_size)
     #else
-        static const float2 mask_resize_src_lut_size = mask_texture_small_size;
+        #define mask_resize_src_lut_size float2(mask_texture_small_size)
     #endif
 #else
-    static const float2 mask_resize_src_lut_size = mask_texture_small_size;
+    #define mask_resize_src_lut_size float2(mask_texture_small_size)
 #endif
 
 
@@ -784,27 +787,25 @@ static const float mask_shadow_avg_color = 41.0/255.0;
 #endif
 //  Anisotropic filtering adds about 0.5 to the pixel border:
 #ifndef ANISOTROPIC_TILING_COMPAT_TEX2DLOD_FAMILY
-    static const float max_aniso_pixel_border = max_aa_base_pixel_border + 0.5;
+    #define max_aniso_pixel_border float(max_aa_base_pixel_border + 0.5)
 #else
-    static const float max_aniso_pixel_border = max_aa_base_pixel_border;
+    #define max_aniso_pixel_border float(max_aa_base_pixel_border)
 #endif
 //  Fixing discontinuities adds 1.0 more to the pixel border:
 #ifdef ANISOTROPIC_TILING_COMPAT_FIX_DISCONTINUITIES
-    static const float max_tiled_pixel_border = max_aniso_pixel_border + 1.0;
+    #define max_tiled_pixel_border float(max_aniso_pixel_border + 1.0)
 #else
-    static const float max_tiled_pixel_border = max_aniso_pixel_border;
+    #define max_tiled_pixel_border float(max_aniso_pixel_border)
 #endif
 //  Convert the pixel border to an integer texel border.  Assume same-pass
 //  curvature about triples the texel frequency:
 #ifdef GEOMETRY_EARLY
-    static const float max_mask_texel_border =
-        ceil(max_tiled_pixel_border * 3.0);
+    #define max_mask_texel_border float(ceil(max_tiled_pixel_border * 3.0))
 #else
-    static const float max_mask_texel_border = ceil(max_tiled_pixel_border);
+    #define max_mask_texel_border float(ceil(max_tiled_pixel_border))
 #endif
 //  Convert the texel border to a tile border using worst-case assumptions:
-static const float max_mask_tile_border = max_mask_texel_border/
-    (mask_min_allowed_triad_size * mask_triads_per_tile);
+#define max_mask_tile_border float(max_mask_texel_border/ (mask_min_allowed_triad_size * mask_triads_per_tile))
 
 //  Finally, set the number of resized tiles to render to MASK_RESIZE, and set
 //  the starting texel (inside borders) for sampling it.
@@ -828,10 +829,8 @@ static const float max_mask_tile_border = max_mask_texel_border/
 //  mask_resize_viewport_scale.  This limits the maximum final triad size.
 //  Estimate the minimum number of triads we can split the screen into in each
 //  dimension (we'll be as correct as mask_resize_viewport_scale is):
-static const float mask_resize_num_triads =
-    mask_resize_num_tiles * mask_triads_per_tile;
-static const float2 min_allowed_viewport_triads =
-    float2(mask_resize_num_triads) / mask_resize_viewport_scale;
+#define mask_resize_num_triads float(mask_resize_num_tiles * mask_triads_per_tile)
+#define min_allowed_viewport_triads float2(float2(mask_resize_num_triads) / mask_resize_viewport_scale)
 
 
 ////////////////////////  COMMON MATHEMATICAL CONSTANTS  ///////////////////////
@@ -1330,7 +1329,7 @@ inline float get_mask_sample_mode()
 #endif
 
 //  Users might want to know if bilinear filtering will be gamma-correct:
-static const bool gamma_aware_bilinear = !linearize_input;
+#define gamma_aware_bilinear bool(!linearize_input)
 
 
 //////////////////////  COLOR ENCODING/DECODING FUNCTIONS  /////////////////////
@@ -1471,10 +1470,10 @@ inline float4 tex2D_linearize(const sampler2D tex, float3 tex_coords)
 {   return decode_input(COMPAT_TEXTURE(tex, tex_coords.xy));   }
 
 inline float4 tex2D_linearize(const sampler2D tex, float2 tex_coords, int texel_off)
-{   return decode_input(textureLod(tex, tex_coords, texel_off));    }
+{   return decode_input(textureLod(tex, tex_coords, float(texel_off)));    }
 
 inline float4 tex2D_linearize(const sampler2D tex, float3 tex_coords, int texel_off)
-{   return decode_input(textureLod(tex, tex_coords.xy, texel_off));    }
+{   return decode_input(textureLod(tex, tex_coords.xy, float(texel_off)));    }
 
 //inline float4 tex2D_linearize(const sampler2D tex, const float2 tex_coords, const float2 dx, const float2 dy)
 //{   return decode_input(COMPAT_TEXTURE(tex, tex_coords, dx, dy));   }
@@ -1507,7 +1506,7 @@ inline float4 tex2Dlod_linearize(const sampler2D tex, float4 tex_coords)
 {   return decode_input(textureLod(tex, tex_coords.xy, 0.0));    }
 
 inline float4 tex2Dlod_linearize(const sampler2D tex, float4 tex_coords, int texel_off)
-{   return decode_input(textureLod(tex, tex_coords.xy, texel_off));     }
+{   return decode_input(textureLod(tex, tex_coords.xy, float(texel_off)));     }
 /*
 //  tex2Dproj:
 inline float4 tex2Dproj_linearize(const sampler2D tex, const float3 tex_coords)
@@ -1625,7 +1624,7 @@ inline float4 tex2Dlod_linearize_gamma(const sampler2D tex, float4 tex_coords, f
 {   return decode_gamma_input(textureLod(tex, tex_coords.xy, 0.0), gamma);    }
 
 inline float4 tex2Dlod_linearize_gamma(const sampler2D tex, float4 tex_coords, int texel_off, float3 gamma)
-{   return decode_gamma_input(textureLod(tex, tex_coords.xy, texel_off), gamma);     }
+{   return decode_gamma_input(textureLod(tex, tex_coords.xy, float(texel_off)), gamma);     }
 
 
 #endif  //  GAMMA_MANAGEMENT_H
@@ -2780,7 +2779,7 @@ uniform COMPAT_PRECISION vec2 PassPrev2InputSize;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
-COMPAT_PRECISION float bloom_approx_scale_x = OutputSize.x / TextureSize.y;
+#define bloom_approx_scale_x (OutputSize.x / TextureSize.y)
 const COMPAT_PRECISION float max_viewport_size_x = 1080.0*1024.0*(4.0/3.0);
 
 void main()
@@ -2877,7 +2876,7 @@ COMPAT_VARYING vec2 tex_uv_to_pixel_scale;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
-COMPAT_PRECISION float bloom_approx_scale_x = OutputSize.x / TextureSize.y;
+#define bloom_approx_scale_x (OutputSize.x / TextureSize.y)
 const COMPAT_PRECISION float max_viewport_size_x = 1080.0*1024.0*(4.0/3.0);
 
 //////////////////////////////  FRAGMENT INCLUDES  //////////////////////////////
