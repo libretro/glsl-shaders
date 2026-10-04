@@ -1828,7 +1828,7 @@ void main()
     //  and the number of tiles that will fit in the FBO.
     const float2 output_tiles_this_pass = output_size / mask_resize_tile_size;
     const float2 output_video_uv = tex_uv * texture_size / video_size;
-    const float2 tile_uv_wrap = output_video_uv * output_tiles_this_pass;
+    tile_uv_wrap = output_video_uv * output_tiles_this_pass;
 
     //  Get the texel size of an input tile and related values:
     const float2 input_tile_size = float2(min(
