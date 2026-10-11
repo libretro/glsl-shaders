@@ -1,5 +1,5 @@
 /*
-  PT SkyWalker541  v2.0.0
+  PT SkyWalker541  v2.0.1
   by SkyWalker541  |  RetroArch GLSL
 
   Pixel transparency shader inspired by mattakins' pixel transparency work.
@@ -90,6 +90,17 @@
             * Guarded smoothstep() against a zero Black Level Threshold
               (undefined behaviour when both edges are equal).
             * Fallback #define defaults now match the #pragma defaults.
+
+  v2.0.1 - fixes only; no parameter names, ranges or defaults changed, so
+            presets saved with 2.0.0 keep working.
+            * The Shadow direction menu label was 74 characters. RetroArch
+              rejects a #pragma parameter label longer than 63 characters,
+              and on builds that enforce this the shader's parameters did not
+              appear at all. The label is now
+              "Shadow direction (0=Down-R, 1=Down-L, 2=Up-R, 3=Up-L)".
+            * Fragment precision statement now comes before the FragColor
+              output (required by GLSL ES 3.00 / GLES3 contexts, where an
+              output without a precision qualifier fails to compile).
 */
 
 
@@ -128,7 +139,7 @@
 // Drop Shadow
 #pragma parameter PT_DROP_SHADOW_OPACITY "== Drop shadow opacity == (0=Off)" 0.30 0.0 1.0 0.01
 #pragma parameter PT_SHADOW_DISTANCE "     > Shadow distance" 1.0 -10.0 10.0 0.5
-#pragma parameter PT_SHADOW_DIRECTION "     > Shadow direction (0=Down Right, 1=Down Left, 2=Up Right, 3=Up Left)" 0.0 0.0 3.0 1.0
+#pragma parameter PT_SHADOW_DIRECTION "     > Shadow direction (0=Down-R, 1=Down-L, 2=Up-R, 3=Up-L)" 0.0 0.0 3.0 1.0
 
 // Bezel Shadow
 #pragma parameter PT_BEZEL_EDGE_SHADOW "== Bezel edge shadow == (0=Off)" 0.40 0.0 1.0 0.01
@@ -176,16 +187,6 @@ void main()
 // -- FRAGMENT SHADER ----------------------------------------------------------
 #elif defined(FRAGMENT)
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING  in
-#define COMPAT_TEXTURE  texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING  varying
-#define FragColor       gl_FragColor
-#define COMPAT_TEXTURE  texture2D
-#endif
-
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
@@ -195,6 +196,16 @@ precision mediump float;
 #define COMPAT_PRECISION mediump
 #else
 #define COMPAT_PRECISION
+#endif
+
+#if __VERSION__ >= 130
+#define COMPAT_VARYING  in
+#define COMPAT_TEXTURE  texture
+out COMPAT_PRECISION vec4 FragColor;
+#else
+#define COMPAT_VARYING  varying
+#define FragColor       gl_FragColor
+#define COMPAT_TEXTURE  texture2D
 #endif
 
 uniform COMPAT_PRECISION vec2 TextureSize;
