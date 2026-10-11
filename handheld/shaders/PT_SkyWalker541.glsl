@@ -1,5 +1,5 @@
 /*
-  PT SkyWalker541  v2.0.1
+  PT SkyWalker541  v2.1.0
   by SkyWalker541  |  RetroArch GLSL
 
   Pixel transparency shader inspired by mattakins' pixel transparency work.
@@ -101,6 +101,33 @@
             * Fragment precision statement now comes before the FragColor
               output (required by GLSL ES 3.00 / GLES3 contexts, where an
               output without a precision qualifier fails to compile).
+
+  v2.1.0 - new optional feature: Glare and sheen. It is OFF by default, so
+            output is identical to 2.0.1 until the user turns it on, and
+            settings saved with 2.0.x keep working (no parameter was renamed,
+            removed or changed).
+            * New menu group "== Glare and sheen ==" (11 parameters), placed
+              under Backing color because it only changes the backing material:
+              the transparent areas, and the gaps when Gap color = Backing.
+            * Glare: a soft white hotspot around a light point.
+            * Sheen: a faint rainbow tint in bands around the light point, like
+              the colored sheen of an LCD's polarizer film in sunlight.
+            * Light home (left to right, top to bottom) sets where the light
+              sits. With Light drift speed above 0 it wanders slowly around
+              that point with the frame counter; at 0 it stays at home. It is
+              worked out in the vertex shader (new varying shimmerLight).
+            * Sheen hue turn shifts the rainbow colors. Sheen ripple (and its
+              size) makes the bands uneven, like uneven film.
+            * Per-pixel cost with the feature On: about 50 scalar ops, one
+              square root and two reciprocals, plus about 25 more only while
+              Sheen ripple is above 0. No texture reads, no noise function and
+              no trig in the pixel shader. With the master switch Off the cost
+              is one branch on a uniform. Not measured on a device.
+            * The feature is a matter of taste: adjust it to your liking, or
+              leave it Off.
+            * Original code written for this shader; no code from other
+              shaders. No tilt sensor input.
+            * Adds one varying (4 in total) and 11 parameters (31 in total).
 */
 
 
@@ -123,6 +150,20 @@
 // Background
 #pragma parameter PT_BACKING_COLOR "== Backing color == (0=Off, 1=Pocket, 2=Grey, 3=White)" 1.0 0.0 3.0 1.0
 #pragma parameter PT_BACKING_COLOR_STRENGTH "     > Backing color strength" 2.0 0.0 2.0 0.05
+
+// Glare and sheen (works on the backing material)
+#pragma parameter PT_GLARE_AND_SHEEN "== Glare and sheen == (0=Off, 1=On)" 0.0 0.0 1.0 1.0
+#pragma parameter PT_GLARE_STRENGTH "     > Glare strength" 0.15 0.0 1.0 0.01
+#pragma parameter PT_GLARE_SPREAD "     > Glare spread" 0.35 0.05 1.0 0.01
+#pragma parameter PT_SHEEN_STRENGTH "     > Sheen strength" 0.12 0.0 0.5 0.01
+#pragma parameter PT_SHEEN_BAND_DENSITY "     > Sheen band density" 2.0 0.5 6.0 0.1
+#pragma parameter PT_SHEEN_HUE_TURN "     > Sheen hue turn (1.0 = one full color cycle)" 0.0 0.0 1.0 0.02
+#pragma parameter PT_SHEEN_RIPPLE "     > Sheen ripple (0=smooth bands)" 0.0 0.0 1.0 0.05
+#pragma parameter PT_SHEEN_RIPPLE_SIZE "     > Sheen ripple size" 0.6 0.1 3.0 0.05
+#pragma parameter PT_LIGHT_HOME_X "     > Light home, left to right (0.5=middle)" 0.5 -0.5 1.5 0.01
+#pragma parameter PT_LIGHT_HOME_Y "     > Light home, top to bottom (0.5=middle)" 0.45 -0.5 1.5 0.01
+#pragma parameter PT_LIGHT_DRIFT_SPEED "     > Light drift speed (0=stay at home)" 0.5 0.0 4.0 0.05
+
 // Color Filter
 #pragma parameter PT_DARKEN_PICTURE "== Darken picture == (0=Off)" 0.0 0.0 100.0 1.0
 
@@ -159,8 +200,10 @@
 
 #ifdef GL_ES
 #define COMPAT_PRECISION mediump
+#define COMPAT_HIGHP     highp
 #else
 #define COMPAT_PRECISION
+#define COMPAT_HIGHP
 #endif
 
 COMPAT_ATTRIBUTE vec4 VertexCoord;
@@ -168,6 +211,9 @@ COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING   vec2 TEX0;
 COMPAT_VARYING   vec2 texel;
 COMPAT_VARYING   vec2 orig_coord;
+// Light point for Glare and sheen: xy = position in the picture (0..1),
+// z = phase used to slide the sheen bands.
+COMPAT_VARYING   vec3 shimmerLight;
 
 uniform mat4 MVPMatrix;
 uniform COMPAT_PRECISION vec2 OutputSize;
@@ -175,6 +221,23 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform COMPAT_PRECISION vec2 OrigTextureSize;
 uniform COMPAT_PRECISION vec2 OrigInputSize;
+uniform COMPAT_HIGHP int FrameCount;
+
+// Parameters the vertex stage needs. Declared with the same precision as the
+// fragment stage, because a uniform shared by both stages must match.
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float PT_GLARE_AND_SHEEN;
+uniform COMPAT_PRECISION float PT_LIGHT_DRIFT_SPEED;
+uniform COMPAT_PRECISION float PT_LIGHT_HOME_X;
+uniform COMPAT_PRECISION float PT_LIGHT_HOME_Y;
+uniform COMPAT_PRECISION float PT_SHEEN_HUE_TURN;
+#else
+#define PT_GLARE_AND_SHEEN    0.0
+#define PT_LIGHT_DRIFT_SPEED  0.5
+#define PT_LIGHT_HOME_X       0.5
+#define PT_LIGHT_HOME_Y       0.45
+#define PT_SHEEN_HUE_TURN     0.0
+#endif
 
 void main()
 {
@@ -182,6 +245,19 @@ void main()
     TEX0        = TexCoord.xy;
     texel       = 1.0 / TextureSize;
     orig_coord  = TEX0.xy * (TextureSize / InputSize) * (OrigInputSize / OrigTextureSize);
+
+    // The light sits at its "home" position. With Light drift speed above 0
+    // it wanders slowly around that home (and a little past the screen
+    // edges); at 0 it stays exactly at home. The sheen's color phase also
+    // starts from Sheen hue turn. All of this is worked out once per vertex,
+    // so it costs nothing per pixel.
+    shimmerLight = vec3(PT_LIGHT_HOME_X, PT_LIGHT_HOME_Y, PT_SHEEN_HUE_TURN);
+    if (PT_GLARE_AND_SHEEN > 0.5 && PT_LIGHT_DRIFT_SPEED > 0.001) {
+        float t = float(FrameCount) * PT_LIGHT_DRIFT_SPEED * 0.01;
+        shimmerLight += vec3(0.6 * sin(t - 0.34),
+                             0.4 * sin(t * 0.73 - 0.52),
+                             t * 0.15);
+    }
 }
 
 // -- FRAGMENT SHADER ----------------------------------------------------------
@@ -218,6 +294,7 @@ uniform sampler2D OrigTexture;
 COMPAT_VARYING vec2 TEX0;
 COMPAT_VARYING vec2 texel;
 COMPAT_VARYING vec2 orig_coord;
+COMPAT_VARYING vec3 shimmerLight;
 
 // -- PARAMETER UNIFORMS / FALLBACKS -------------------------------------------
 #ifdef PARAMETER_UNIFORM
@@ -228,6 +305,13 @@ uniform COMPAT_PRECISION float PT_TRANSPARENCY_AMOUNT;
 uniform COMPAT_PRECISION float PT_MINIMUM_WHITE_TRANSPARENCY;
 uniform COMPAT_PRECISION float PT_BACKING_COLOR;
 uniform COMPAT_PRECISION float PT_BACKING_COLOR_STRENGTH;
+uniform COMPAT_PRECISION float PT_GLARE_AND_SHEEN;
+uniform COMPAT_PRECISION float PT_GLARE_STRENGTH;
+uniform COMPAT_PRECISION float PT_GLARE_SPREAD;
+uniform COMPAT_PRECISION float PT_SHEEN_STRENGTH;
+uniform COMPAT_PRECISION float PT_SHEEN_BAND_DENSITY;
+uniform COMPAT_PRECISION float PT_SHEEN_RIPPLE;
+uniform COMPAT_PRECISION float PT_SHEEN_RIPPLE_SIZE;
 uniform COMPAT_PRECISION float PT_DARKEN_PICTURE;
 uniform COMPAT_PRECISION float PT_PIXEL_EFFECT;
 uniform COMPAT_PRECISION float PT_GAP_COLOR;
@@ -250,6 +334,13 @@ uniform COMPAT_PRECISION float PT_BEZEL_EDGE_SHADOW;
 #define PT_MINIMUM_WHITE_TRANSPARENCY    0.20
 #define PT_BACKING_COLOR                 1.0
 #define PT_BACKING_COLOR_STRENGTH        2.0
+#define PT_GLARE_AND_SHEEN               0.0
+#define PT_GLARE_STRENGTH                0.15
+#define PT_GLARE_SPREAD                  0.35
+#define PT_SHEEN_STRENGTH                0.12
+#define PT_SHEEN_BAND_DENSITY            2.0
+#define PT_SHEEN_RIPPLE                  0.0
+#define PT_SHEEN_RIPPLE_SIZE             0.6
 #define PT_DARKEN_PICTURE                0.0
 #define PT_PIXEL_EFFECT                  1.0
 #define PT_GAP_COLOR                     0.0
@@ -419,9 +510,59 @@ vec3 applyBezelShadow(vec3 color, vec2 coord)
     return color * mix(1.0 - PT_BEZEL_EDGE_SHADOW, 1.0, shadow);
 }
 
+// -- GLARE AND SHEEN ----------------------------------------------------------
+// Applied to the backing material only. Two cheap effects around one light
+// point (shimmerLight, worked out in the vertex shader):
+//   Sheen - a faint rainbow tint in bands around the light, built from three
+//           phase-shifted triangle waves (no cos, no noise function). The tint
+//           has zero average, so it shifts the color without changing how
+//           bright the backing is.
+//   Glare - a soft white hotspot, a smooth bump 1 / (1 + q^2) that is wide and
+//           flat in the middle and falls off quickly at the edge.
+
+vec3 applyGlareAndSheen(vec3 bg, vec2 coord)
+{
+    // Position inside the picture (0..1), and its offset from the light point.
+    // x is stretched by the picture's aspect ratio so the hotspot stays round.
+    vec2  g  = coord * (TextureSize / InputSize);
+    vec2  d  = (g - shimmerLight.xy) * vec2(InputSize.x / InputSize.y, 1.0);
+    float d2 = dot(d, d);
+
+    if (PT_SHEEN_STRENGTH > 0.001) {
+        float ph = sqrt(d2) * PT_SHEEN_BAND_DENSITY + shimmerLight.z;
+        if (PT_SHEEN_RIPPLE > 0.001) {
+            // Uneven bands: three smoothed triangle waves running at
+            // unrelated angles and spacings are added up and used to push
+            // the band phase around, so the stripes look like uneven film
+            // instead of a regular pattern. No noise function, no trig.
+            float f = 3.0 / PT_SHEEN_RIPPLE_SIZE;
+            vec2  u = g * f;
+            vec3  t3 = abs(fract(vec3(u.x * 1.00 + u.y * 0.37,
+                                      u.y * 1.13 - u.x * 0.61 + 0.31,
+                                      u.x * 0.43 - u.y * 1.71 + 0.72)) * 2.0 - 1.0);
+            t3 = t3 * t3 * (3.0 - 2.0 * t3);
+            ph += (t3.x + t3.y + t3.z - 1.5) * PT_SHEEN_RIPPLE * 0.45;
+        }
+        vec3 h = fract(ph + vec3(0.0, 0.3333, 0.6667));
+        vec3 w = abs(h * 2.0 - 1.0);
+        vec3 r = w * w * (3.0 - 2.0 * w);
+        r  = r - vec3(dot(r, vec3(0.3333)));
+        bg = bg + r * PT_SHEEN_STRENGTH;
+    }
+
+    if (PT_GLARE_STRENGTH > 0.001) {
+        float q     = d2 / (PT_GLARE_SPREAD * PT_GLARE_SPREAD);
+        float glare = PT_GLARE_STRENGTH / (1.0 + q * q);
+        bg = mix(bg, vec3(1.0), min(glare, 0.85));
+    }
+
+    return clamp(bg, 0.0, 1.0);
+}
+
 // -- BACKING MATERIAL ---------------------------------------------------------
 // The color of the screen's backing at this pixel: procedural grain, a drop
-// shadow cast by dark neighbouring pixels, then the backing color tint.
+// shadow cast by dark neighbouring pixels, the backing color tint, and the
+// optional glare and sheen.
 // It shows through transparent pixels and, when Gap color is Backing, it also
 // fills the gaps of the pixel effects.
 
@@ -455,6 +596,11 @@ vec3 computeBacking(float threshold)
         else                             tint = vec3(1.0,   1.0,   1.0  );
         vec3 tinted = clamp(tint + (bg * 2.0 - vec3(1.0)), 0.0, 1.0);
         bg = mix(bg, tinted, PT_BACKING_COLOR_STRENGTH);
+    }
+
+    // Glare and sheen - last, on top of the tinted backing.
+    if (PT_GLARE_AND_SHEEN > 0.5) {
+        bg = applyGlareAndSheen(bg, TEX0.xy);
     }
 
     return bg;
