@@ -104,9 +104,9 @@ COMPAT_VARYING vec4 TEX0;
 
 void main()
 {
-   vec3 outColor = COMPAT_TEXTURE(Source, vTexCoord);
+   vec3 outColor = COMPAT_TEXTURE(Source, vTexCoord).rgb;
     /* TODO/FIXME - hacky clamp fix */
-    vec2 bordertest = gl_FragCoord.xy;
+    vec2 bordertest = vTexCoord * TextureSize / InputSize;
     if ( bordertest.x > 0.0001 && bordertest.x < 0.9999 && bordertest.y > 0.0001 && bordertest.y < 0.9999)
         outColor.rgb = outColor.rgb;
     else
