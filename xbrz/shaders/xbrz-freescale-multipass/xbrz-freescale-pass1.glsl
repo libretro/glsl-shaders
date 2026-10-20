@@ -41,6 +41,9 @@
 // * do so, delete this exception statement from your version.                *
 // ****************************************************************************
 
+#pragma parameter XBRZ_MINC "xBRZ: minimum contrast to round a corner (x/255, 0 = off)" 0.0 0.0 80.0 2.0
+#pragma parameter XBRZ_MINC_RAMP "xBRZ: minimum contrast soft transition (0 = hard cut)" 0.0 0.0 64.0 2.0
+
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -115,6 +118,7 @@ uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 uniform sampler2D PassPrev2Texture;
 uniform COMPAT_PRECISION vec2 PassPrev2TextureSize;
+uniform COMPAT_PRECISION vec2 PassPrev2InputSize;
 COMPAT_VARYING vec4 TEX0;
 
 // compatibility #defines
@@ -124,6 +128,14 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 #define OriginalSize vec4(PassPrev2TextureSize, 1.0 / PassPrev2TextureSize)
+
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float XBRZ_MINC;
+uniform COMPAT_PRECISION float XBRZ_MINC_RAMP;
+#else
+#define XBRZ_MINC 0.0
+#define XBRZ_MINC_RAMP 0.0
+#endif
 
 #define BLEND_NONE 0.
 #define BLEND_NORMAL 1.
@@ -151,6 +163,21 @@ bool IsPixEqual(const vec3 pixA, const vec3 pixB)
   return (DistYCbCr(pixA, pixB) < EQUAL_COLOR_TOLERANCE);
 }
 
+// Minimum contrast: how much of the corner cut a blend keeps, from the contrast between
+// the pixel and the blend colour (0 = none, 1 = all). With XBRZ_MINC = 0 every cut is kept.
+float mincKeep(float d)
+{
+  if (XBRZ_MINC_RAMP < 0.5) return d * 255.0 >= XBRZ_MINC ? 1.0 : 0.0;
+  return clamp((d * 255.0 - (XBRZ_MINC - 0.5 * XBRZ_MINC_RAMP)) / XBRZ_MINC_RAMP, 0.0, 1.0);
+}
+
+// moves the blend line towards the pixel corner cp, so that only the fraction k of the cut remains
+vec2 shrinkOrigin(vec2 origin, vec2 direction, vec2 cp, float k)
+{
+  vec2 n = normalize(vec2(-direction.y, direction.x));
+  return origin + n * ((1.0 - k) * dot(cp - origin, n));
+}
+
 float get_left_ratio(vec2 center, vec2 origin, vec2 direction, vec2 scale)
 {
   vec2 P0 = center - origin;
@@ -176,7 +203,8 @@ void main()
   //                      D|E|F
   //                      -|H|-
 
-  vec2 scale = OutputSize.xy * OriginalSize.zw;
+  // output pixels per input pixel; the texture can be larger than the image, so use the image size
+  vec2 scale = OutputSize.xy / PassPrev2InputSize.xy;
   vec2 pos = fract(vTexCoord * OriginalSize.xy) - vec2(0.5, 0.5);
   vec2 coord = vTexCoord - pos * OriginalSize.zw;
 
@@ -198,10 +226,12 @@ void main()
 
   vec3 res = E;
 
+  // The corners are applied in the order of the reference xBRZ (z, y, x, w), and blend colour
+  // ties go to the same neighbour as there ("dist(E,F) <= dist(E,H) ? F : H").
+
   // Pixel Tap Mapping: -|-|-
   //                    -|E|F
   //                    -|H|-
-
   if(blendResult.z > BLEND_NONE)
   {
     vec2 origin = vec2(0.0, 1.0 / sqrt(2.0));
@@ -213,32 +243,16 @@ void main()
       direction.y -= haveSteepLine.z;
     }
 
-    vec3 blendPix = mix(H,F, step(DistYCbCr(E, F), DistYCbCr(E, H)));
-    res = mix(res, blendPix, get_left_ratio(pos, origin, direction, scale));
-  }
-
-  // Pixel Tap Mapping: -|-|-
-  //                    D|E|-
-  //                    -|H|-
-  if(blendResult.w > BLEND_NONE)
-  {
-    vec2 origin = vec2(-1.0 / sqrt(2.0), 0.0);
-    vec2 direction = vec2(1.0, 1.0);
-    if(doLineBlend.w > 0.0)
-    {
-      origin = haveShallowLine.w > 0.0? vec2(-0.25, 0.0) : vec2(-0.5, 0.0);
-      direction.y += haveShallowLine.w;
-      direction.x += haveSteepLine.w;
-    }
-
-    vec3 blendPix = mix(H,D, step(DistYCbCr(E, D), DistYCbCr(E, H)));
-    res = mix(res, blendPix, get_left_ratio(pos, origin, direction, scale));
+    vec3 blendPix = (DistYCbCr(E, F) <= DistYCbCr(E, H)) ? F : H;
+    float keep = mincKeep(DistYCbCr(E, blendPix));
+    if (keep > 0.0)
+      res = mix(res, blendPix, get_left_ratio(pos, shrinkOrigin(origin, direction, vec2(0.5, 0.5), keep), direction, scale));
   }
 
   // Pixel Tap Mapping: -|B|-
   //                    -|E|F
   //                    -|-|-
-   if(blendResult.y > BLEND_NONE)
+  if(blendResult.y > BLEND_NONE)
   {
     vec2 origin = vec2(1.0 / sqrt(2.0), 0.0);
     vec2 direction = vec2(-1.0, -1.0);
@@ -250,8 +264,10 @@ void main()
       direction.x -= haveSteepLine.y;
     }
 
-    vec3 blendPix = mix(F,B, step(DistYCbCr(E, B), DistYCbCr(E, F)));
-    res = mix(res, blendPix, get_left_ratio(pos, origin, direction, scale));
+    vec3 blendPix = (DistYCbCr(E, B) <= DistYCbCr(E, F)) ? B : F;
+    float keep = mincKeep(DistYCbCr(E, blendPix));
+    if (keep > 0.0)
+      res = mix(res, blendPix, get_left_ratio(pos, shrinkOrigin(origin, direction, vec2(0.5, -0.5), keep), direction, scale));
   }
 
   // Pixel Tap Mapping: -|B|-
@@ -268,8 +284,30 @@ void main()
       direction.y += haveSteepLine.x;
     }
 
-    vec3 blendPix = mix(D,B, step(DistYCbCr(E, B), DistYCbCr(E, D)));
-    res = mix(res, blendPix, get_left_ratio(pos, origin, direction, scale));
+    vec3 blendPix = (DistYCbCr(E, D) <= DistYCbCr(E, B)) ? D : B;
+    float keep = mincKeep(DistYCbCr(E, blendPix));
+    if (keep > 0.0)
+      res = mix(res, blendPix, get_left_ratio(pos, shrinkOrigin(origin, direction, vec2(-0.5, -0.5), keep), direction, scale));
+  }
+
+  // Pixel Tap Mapping: -|-|-
+  //                    D|E|-
+  //                    -|H|-
+  if(blendResult.w > BLEND_NONE)
+  {
+    vec2 origin = vec2(-1.0 / sqrt(2.0), 0.0);
+    vec2 direction = vec2(1.0, 1.0);
+    if(doLineBlend.w > 0.0)
+    {
+      origin = haveShallowLine.w > 0.0? vec2(-0.25, 0.0) : vec2(-0.5, 0.0);
+      direction.y += haveShallowLine.w;
+      direction.x += haveSteepLine.w;
+    }
+
+    vec3 blendPix = (DistYCbCr(E, H) <= DistYCbCr(E, D)) ? H : D;
+    float keep = mincKeep(DistYCbCr(E, blendPix));
+    if (keep > 0.0)
+      res = mix(res, blendPix, get_left_ratio(pos, shrinkOrigin(origin, direction, vec2(-0.5, 0.5), keep), direction, scale));
   }
 
   FragColor = vec4(res, 1.0);
