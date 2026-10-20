@@ -41,6 +41,9 @@
 // * do so, delete this exception statement from your version.                *
 // ****************************************************************************
 
+#pragma parameter XBRZ_TOL "xBRZ: equal color tolerance (x/255)" 30.0 1.0 80.0 1.0
+#pragma parameter XBRZ_STEEP "xBRZ: steep/shallow line threshold" 2.2 1.0 6.0 0.1
+
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -123,12 +126,20 @@ COMPAT_VARYING vec4 TEX0;
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define OutSize vec4(OutputSize, 1.0 / OutputSize)
 
+#ifdef PARAMETER_UNIFORM
+uniform COMPAT_PRECISION float XBRZ_TOL;
+uniform COMPAT_PRECISION float XBRZ_STEEP;
+#else
+#define XBRZ_TOL 30.0
+#define XBRZ_STEEP 2.2
+#endif
+
 #define BLEND_NONE 0
 #define BLEND_NORMAL 1
 #define BLEND_DOMINANT 2
 #define LUMINANCE_WEIGHT 1.0
-#define EQUAL_COLOR_TOLERANCE 30.0/255.0
-#define STEEP_DIRECTION_THRESHOLD 2.2
+#define EQUAL_COLOR_TOLERANCE (XBRZ_TOL / 255.0)
+#define STEEP_DIRECTION_THRESHOLD XBRZ_STEEP
 #define DOMINANT_DIRECTION_THRESHOLD 3.6
 
 float DistYCbCr(vec3 pixA, vec3 pixB)
