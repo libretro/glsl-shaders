@@ -41,8 +41,8 @@
 // * do so, delete this exception statement from your version.                *
 // ****************************************************************************
 
-#pragma parameter XBRZ_TOL "xBRZ: equal color tolerance (x/255)" 30.0 1.0 80.0 1.0
-#pragma parameter XBRZ_STEEP "xBRZ: steep/shallow line threshold" 2.2 1.0 6.0 0.1
+#pragma parameter XBRZ_TOL "xBRZ: equal color tolerance (x/255)" 15.0 1.0 80.0 1.0
+#pragma parameter XBRZ_STEEP "xBRZ: steep/shallow line threshold" 3.0 1.0 6.0 0.1
 
 #if defined(VERTEX)
 
@@ -130,8 +130,8 @@ COMPAT_VARYING vec4 TEX0;
 uniform COMPAT_PRECISION float XBRZ_TOL;
 uniform COMPAT_PRECISION float XBRZ_STEEP;
 #else
-#define XBRZ_TOL 30.0
-#define XBRZ_STEEP 2.2
+#define XBRZ_TOL 15.0
+#define XBRZ_STEEP 3.0
 #endif
 
 #define BLEND_NONE 0

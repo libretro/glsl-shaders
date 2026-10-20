@@ -10,7 +10,5 @@ filter_linear1 = false
 scale_type1 = viewport
 scale1 = 1.0
 
-parameters = "XBRZ_TOL;XBRZ_STEEP;XBRZ_MINC"
-XBRZ_TOL = "15.000000"
-XBRZ_STEEP = "3.000000"
+parameters = "XBRZ_MINC"
 XBRZ_MINC = "16.000000"
