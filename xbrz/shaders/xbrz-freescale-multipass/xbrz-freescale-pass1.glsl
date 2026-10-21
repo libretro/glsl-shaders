@@ -1,8 +1,13 @@
 // xBRZ freescale, multipass: xBRZ at any scale factor, in two passes.
 //
-// XBRZ_MINC leaves a corner square when its two colors differ by less than this (x/255, YCbCr
-// distance), so soft shading and textures keep their pixels. 0 (default) is plain xBRZ; the
-// xbrz-crisp preset uses 16.
+// Two optional rules, both off by default (plain xBRZ); the xbrz-crisp preset turns them on:
+// - XBRZ_MINC (crisp: 16) leaves a corner square when its two colors differ by less than this
+//   (x/255, YCbCr distance), so soft shading and textures keep their pixels.
+// - XBRZ_DIAG (crisp: 100) leaves a corner square when the two colors its cut would join differ
+//   by more than this, so a junction of three colors is not pulled into a fake diagonal (an idea
+//   from torcado's cleanEdge, MIT license). Antialiasing ramps use 92, shallow and steep lines are
+//   never blocked, a blocked corner is still cut when a neighbour on the same diagonal is cut,
+//   and where 1-pixel stripes end flush (gauges, health bars) the end corners stay square.
 //
 // The first pass makes every blend decision once per input pixel (blend type, line type, blend
 // color and the minimum contrast), so the second pass, which runs once per output pixel, only
@@ -152,6 +157,25 @@ void main()
   //               w|z|
   vec4 blendResult = mod(info, 4.0);
 
+  // a corner flagged by the first pass (+128, XBRZ_DIAG) is still cut when the same corner of a
+  // neighbour along the cut is cut and not flagged, so diagonal lines are drawn to the end
+  if (max(max(info.x, info.y), max(info.z, info.w)) >= 128.0)
+  {
+    vec4 blocked = floor(info / 128.0);
+    info = mod(info, 128.0);
+    blendResult = mod(info, 4.0);
+    vec4 nA = floor(INFO(coord + vec2( 1.0,-1.0) * ORIG_SIZE.zw) * 255.0 + 0.5);
+    vec4 nB = floor(INFO(coord + vec2(-1.0, 1.0) * ORIG_SIZE.zw) * 255.0 + 0.5);
+    vec4 nC = floor(INFO(coord + vec2( 1.0, 1.0) * ORIG_SIZE.zw) * 255.0 + 0.5);
+    vec4 nD = floor(INFO(coord + vec2(-1.0,-1.0) * ORIG_SIZE.zw) * 255.0 + 0.5);
+    vec4 aA = vec4(greaterThan(mod(nA, 4.0), vec4(0.0))) * vec4(lessThan(nA, vec4(128.0)));
+    vec4 aB = vec4(greaterThan(mod(nB, 4.0), vec4(0.0))) * vec4(lessThan(nB, vec4(128.0)));
+    vec4 aC = vec4(greaterThan(mod(nC, 4.0), vec4(0.0))) * vec4(lessThan(nC, vec4(128.0)));
+    vec4 aD = vec4(greaterThan(mod(nD, 4.0), vec4(0.0))) * vec4(lessThan(nD, vec4(128.0)));
+    // top-left and bottom-right are cut along "/", top-right and bottom-left along "\"
+    vec4 chain = vec4(max(aA.x, aB.x), max(aC.y, aD.y), max(aA.z, aB.z), max(aC.w, aD.w));
+    blendResult *= max(1.0 - blocked, chain);
+  }
 
   // most output pixels have no corner to blend, and only need these two reads
   if (blendResult.x + blendResult.y + blendResult.z + blendResult.w <= 0.0)
