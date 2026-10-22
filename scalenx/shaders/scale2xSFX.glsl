@@ -149,14 +149,14 @@ uniform COMPAT_PRECISION float VTR;
 #endif
 
 mat3 YUV  = mat3(0.299, -0.168736, 0.5, 0.587, -0.331264, -0.418688, 0.114, 0.5, -0.081312);	// transponed
-float3 thresh = float3(0.188235294, 0.02745098, 0.023529412);
-
-bool eq(float3 A, float3 B){
-	return (A==B);
+bool eq(float3 A, float3 B)
+{
+    return all(lessThanEqual(abs(A-B), float3(YTR, UTR, VTR)/255.0));
 }
 
-bool neq(float3 A, float3 B){
-	return (A!=B);
+bool neq(float3 A, float3 B)
+{
+    return any(greaterThan(abs(A-B), float3(YTR, UTR, VTR)/255.0));
 }
 
 void main()
