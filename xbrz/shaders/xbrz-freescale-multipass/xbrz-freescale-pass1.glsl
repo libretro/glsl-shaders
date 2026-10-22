@@ -124,7 +124,10 @@ uniform COMPAT_PRECISION vec2 PassPrev2InputSize;
 #define OUT_SIZE OutputSize
 #define ORIG_SIZE vec4(PassPrev2TextureSize, 1.0 / PassPrev2TextureSize)
 #define ORIG_INPUT_SIZE PassPrev2InputSize
-#define P(x,y) COMPAT_TEXTURE(PassPrev2Texture, coord + ORIG_SIZE.zw * vec2(x, y)).rgb
+// the first pass's texture and the original's can have different sizes (RetroArch rounds each one
+// up to a power of two on its own, e.g. 256 and 512 with snes9x), so each one is read with its own
+#define SRC_SIZE vec4(TextureSize, 1.0 / TextureSize)
+#define P(x,y) COMPAT_TEXTURE(PassPrev2Texture, ocoord + ORIG_SIZE.zw * vec2(x, y)).rgb
 #define INFO(uv) COMPAT_TEXTURE(Texture, uv)
 
 float get_left_ratio(vec2 center, vec2 origin, vec2 direction, vec2 scale)
@@ -146,8 +149,9 @@ void main()
   //                      -|H|-
 
   vec2 scale = OUT_SIZE.xy / ORIG_INPUT_SIZE.xy;
-  vec2 pos = fract(vTexCoord * ORIG_SIZE.xy) - vec2(0.5, 0.5);
-  vec2 coord = vTexCoord - pos * ORIG_SIZE.zw;
+  vec2 pos = fract(vTexCoord * SRC_SIZE.xy) - vec2(0.5, 0.5);
+  vec2 coord = vTexCoord - pos * SRC_SIZE.zw;
+  vec2 ocoord = coord * SRC_SIZE.xy * ORIG_SIZE.zw;
 
   vec4 info = floor(INFO(coord) * 255.0 + 0.5);
   vec3 E = P( 0., 0.);
@@ -164,10 +168,10 @@ void main()
     vec4 blocked = floor(info / 128.0);
     info = mod(info, 128.0);
     blendResult = mod(info, 4.0);
-    vec4 nA = floor(INFO(coord + vec2( 1.0,-1.0) * ORIG_SIZE.zw) * 255.0 + 0.5);
-    vec4 nB = floor(INFO(coord + vec2(-1.0, 1.0) * ORIG_SIZE.zw) * 255.0 + 0.5);
-    vec4 nC = floor(INFO(coord + vec2( 1.0, 1.0) * ORIG_SIZE.zw) * 255.0 + 0.5);
-    vec4 nD = floor(INFO(coord + vec2(-1.0,-1.0) * ORIG_SIZE.zw) * 255.0 + 0.5);
+    vec4 nA = floor(INFO(coord + vec2( 1.0,-1.0) * SRC_SIZE.zw) * 255.0 + 0.5);
+    vec4 nB = floor(INFO(coord + vec2(-1.0, 1.0) * SRC_SIZE.zw) * 255.0 + 0.5);
+    vec4 nC = floor(INFO(coord + vec2( 1.0, 1.0) * SRC_SIZE.zw) * 255.0 + 0.5);
+    vec4 nD = floor(INFO(coord + vec2(-1.0,-1.0) * SRC_SIZE.zw) * 255.0 + 0.5);
     vec4 aA = vec4(greaterThan(mod(nA, 4.0), vec4(0.0))) * vec4(lessThan(nA, vec4(128.0)));
     vec4 aB = vec4(greaterThan(mod(nB, 4.0), vec4(0.0))) * vec4(lessThan(nB, vec4(128.0)));
     vec4 aC = vec4(greaterThan(mod(nC, 4.0), vec4(0.0))) * vec4(lessThan(nC, vec4(128.0)));
