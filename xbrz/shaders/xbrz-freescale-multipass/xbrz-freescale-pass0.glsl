@@ -1,7 +1,7 @@
 // xBRZ freescale, multipass: xBRZ at any scale factor, in two passes.
 //
 // Two optional rules, both off by default (plain xBRZ); the xbrz-crisp preset turns them on:
-// - XBRZ_MINC (crisp: 16) leaves a corner square when its two colors differ by less than this
+// - XBRZ_MINC (crisp: 24) leaves a corner square when its two colors differ by less than this
 //   (x/255, YCbCr distance), so soft shading and textures keep their pixels.
 // - XBRZ_DIAG (crisp: 100) leaves a corner square when the two colors its cut would join differ
 //   by more than this, so a junction of three colors is not pulled into a fake diagonal (an idea
