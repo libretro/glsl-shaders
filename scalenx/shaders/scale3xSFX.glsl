@@ -10,9 +10,9 @@ Scale3SFX improves upon the original Scale3x by avoiding the occurence of artifa
 */
 
 // Parameter lines go here:
-#pragma parameter YTR "SCALE2xSFX Y Threshold" 48.0 0.0 255.0 1.0
-#pragma parameter UTR "SCALE2xSFX U Threshold"  7.0 0.0 255.0 1.0
-#pragma parameter VTR "SCALE2xSFX V Threshold"  6.0 0.0 255.0 1.0
+#pragma parameter YTR "SCALE3xSFX Y Threshold" 48.0 0.0 255.0 1.0
+#pragma parameter UTR "SCALE3xSFX U Threshold"  7.0 0.0 255.0 1.0
+#pragma parameter VTR "SCALE3xSFX V Threshold"  6.0 0.0 255.0 1.0
 
 #define saturate(c) clamp(c, 0.0, 1.0)
 #define lerp(a,b,c) mix(a,b,c)
@@ -148,30 +148,30 @@ uniform COMPAT_PRECISION float VTR;
 #endif
 
 const float3x3 YUV  = float3x3(0.299, -0.168736, 0.5, 0.587, -0.331264, -0.418688, 0.114, 0.5, -0.081312);	// transponed
-float3 thresh = float3(YTR, UTR, VTR)/255.0;
-
-bool3 eq(float3 A, float3 B){
-	return lessThanEqual(abs(A-B) , thresh);
+bool eq(float3 A, float3 B)
+{
+    return all(lessThanEqual(abs(A-B), float3(YTR, UTR, VTR)/255.0));
 }
 
-bool3 neq(float3 A, float3 B){
-	return greaterThan(abs(A-B) , thresh);
+bool neq(float3 A, float3 B)
+{
+    return any(greaterThan(abs(A-B), float3(YTR, UTR, VTR)/255.0));
 }
 
 void main()
 {
 	// subpixel determination
-	float2 fp = floor(2.0 * frac(vTexCoord*SourceSize.xy));
+	float2 fp = floor(3.0 * frac(vTexCoord*SourceSize.xy));
 
 	/*
 		    J
-		  A B C		E0 E1
-		K D E F L	E2 E3
-		  G H I
+		  A B C		E0 E1 E2
+		K D E F L	E3 E4 E5
+		  G H I		E6 E7 E8
 		    M
 	*/
 
-	// reading the texels & colorspace conversion
+	// reading the texels & color space conversion
 	float3 b = tex2D(decal, t1.yw).xyz;
 	float3 d = tex2D(decal, t2.xw).xyz;
 	float3 e = tex2D(decal, t2.yw).xyz;
@@ -197,27 +197,40 @@ void main()
 	tmp = mul(float4x3(J,K,L,M), YUV);
 	J = tmp[0], K = tmp[1], L = tmp[2], M = tmp[3];
 
-	// parent condition
-	bool par0 = neq(B,F) == bool3(true) && neq(D,H) == bool3(true);
-	bool par1 = neq(B,D) == bool3(true) && neq(F,H) == bool3(true);
+
 
 	// equality checks
-	bool AE = eq(A,E) == bool3(true);
-	bool CE = eq(C,E) == bool3(true);
-	bool EG = eq(E,G) == bool3(true);
-	bool EI = eq(E,I) == bool3(true);
+	bool AE = eq(A,E), AJ = eq(A,J), AK = eq(A,K), BD = eq(B,D), BF = eq(B,F), CE = eq(C,E), CJ = eq(C,J), CL = eq(C,L), DH = eq(D,H), EG = eq(E,G), EI = eq(E,I), FH = eq(F,H), GK = eq(G,K), GM = eq(G,M), IL = eq(I,L), IM = eq(I,M);
+
+	// parent condition
+	bool par0 = !(BF || DH);
+	bool par1 = !(BD || FH);
+
+	// diagonal condition
+	bool dia0 = AE || EI;
+	bool dia1 = CE || EG;
 
 	// artifact prevention
-	bool art0 = CE || EG;
-	bool art1 = AE || EI;
+	bool art0 = BD && par0 && (!AE || dia1 || AJ || AK);
+	bool art2 = BF && par1 && (!CE || dia0 || CJ || CL);
+	bool art6 = DH && par1 && (!EG || dia0 || GK || GM);
+	bool art8 = FH && par0 && (!EI || dia1 || IL || IM);
+
+
 
 	// rules
-	float3 E0 = eq(B,D) == bool3(true) && par0 == true && (AE == false || art0 == true || eq(A,J) == bool3(true) || eq(A,K) == bool3(true)) ? 0.5*(b+d) : e;
-	float3 E1 = eq(B,F) == bool3(true) && par1 == true && (CE == false || art1 == true || eq(C,J) == bool3(true) || eq(C,L) == bool3(true)) ? 0.5*(b+f) : e;
-	float3 E2 = eq(D,H) == bool3(true) && par1 == true && (EG == false || art1 == true || eq(G,K) == bool3(true) || eq(G,M) == bool3(true)) ? 0.5*(h+d) : e;
-	float3 E3 = eq(F,H) == bool3(true) && par0 == true && (EI == false || art0 == true || eq(I,L) == bool3(true) || eq(I,M) == bool3(true)) ? 0.5*(h+f) : e;
+	float3 E0 = art0 || BD && (CE && !CJ && !AE || EG && !AE && !GK) ? 0.5*(b+d) : e;
+	float3 E2 = art2 || BF && (AE && !AJ && !CE || EI && !CE && !IL) ? 0.5*(b+f) : e;
+	float3 E6 = art6 || DH && (AE && !AK && !EG || EI && !EG && !IM) ? 0.5*(h+d) : e;
+	float3 E8 = art8 || FH && (CE && !CL && !EI || EG && !EI && !GM) ? 0.5*(h+f) : e;
+
+	float3 E1 = art0 && !CE || art2 && !AE ? b : e;
+	float3 E3 = art0 && !EG || art6 && !AE ? d : e;
+	float3 E5 = art8 && !CE || art2 && !EI ? f : e;
+	float3 E7 = art8 && !EG || art6 && !EI ? h : e;
+
 
 	// subpixel output
-	FragColor = vec4(fp.y == 0. ? (fp.x == 0. ? E0 : E1) : (fp.x == 0. ? E2 : E3), 1.0);
+	FragColor = vec4(fp.y == 0 ? (fp.x == 0 ? E0 : fp.x == 1 ? E1 : E2) : (fp.y == 1 ? (fp.x == 0 ? E3 : fp.x == 1 ? e : E5) : (fp.x == 0 ? E6 : fp.x == 1 ? E7 : E8)), 1.0);
 } 
 #endif
