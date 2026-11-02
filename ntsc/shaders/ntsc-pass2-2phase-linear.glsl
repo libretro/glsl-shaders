@@ -28,6 +28,7 @@ COMPAT_ATTRIBUTE vec4 COLOR;
 COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING float one_x;
 
 uniform mat4 MVPMatrix;
 uniform COMPAT_PRECISION int FrameDirection;
@@ -46,6 +47,7 @@ void main()
     gl_Position = MVPMatrix * VertexCoord;
     COL0 = COLOR;
     TEX0.xy = TexCoord.xy - vec2(0.5 / SourceSize.x, 0.0); // Compensate for decimate-by-2.
+    one_x = SourceSize.z;
 }
 
 #elif defined(FRAGMENT)
@@ -78,6 +80,7 @@ uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
+COMPAT_VARYING float one_x;
 
 // fragment compatibility #defines
 #define Source Texture
@@ -255,7 +258,6 @@ const float chroma_filter[TAPS + 1] = float[TAPS + 1](
 void main()
 {
 // begin ntsc-pass2-decode
-	float one_x = 1.0 / SourceSize.x;
 	vec3 signal = vec3(0.0);
 #if defined(GL_ES) && __VERSION__ < 300
 	float offset;
