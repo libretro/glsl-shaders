@@ -6,8 +6,9 @@
 // - XBRZ_DIAG (crisp: 100) leaves a corner square when the two colors its cut would join differ
 //   by more than this, so a junction of three colors is not pulled into a fake diagonal (an idea
 //   from torcado's cleanEdge, MIT license). Antialiasing ramps use 92, shallow and steep lines are
-//   never blocked, a blocked corner is still cut when a neighbour on the same diagonal is cut,
-//   and where 1-pixel stripes end flush (gauges, health bars) the end corners stay square.
+//   only blocked when they would cut a pixel with a lighter color, a blocked corner is still cut
+//   when a neighbour on the same diagonal is cut or at the tip of a 1-pixel diagonal stripe, and
+//   where 1-pixel stripes end flush (gauges, health bars) the end corners stay square.
 //   The shallow and steep line tests also weigh hue a little more than lightness (1.2x).
 //
 // The first pass makes every blend decision once per input pixel (blend type, line type, blend
@@ -192,6 +193,7 @@ float DistShape(vec3 pixA, vec3 pixB)
 // ---- diagonal rules (XBRZ_DIAG) ----
 #define XBRZ_DIAG_AA 92.0   // diagonal limit for antialiasing ramps
 #define XBRZ_TIP 64.0       // stripe ends stay square above this diagonal distance
+#define XBRZ_STRIPE 64.0    // a diagonal stripe keeps a close color (within this) along its length
 #define alike(a,b) (DistYCbCr(a, b) * 255.0 <= 20.0)
 
 // res holds the xBRZ decisions of the four corners (blend type +4 line +8 second color +16 shallow +64 steep)
@@ -212,8 +214,26 @@ vec4 diagonalRules(vec4 res, vec2 coord, vec3 A, vec3 B, vec3 C, vec3 D, vec3 E,
   // a ramp: one diagonal color lies (almost) on the way from E to the other one
   vec4 ramp = min((dEP + pair) / max(dEQ, vec4(1e-5)), (dEQ + pair) / max(dEP, vec4(1e-5)));
   vec4 limit = mix(vec4(XBRZ_DIAG), vec4(XBRZ_DIAG_AA), vec4(lessThanEqual(ramp, vec4(1.15))));
-  // shallow and steep lines (+16, +64) are never blocked
-  vec4 keep = max(vec4(lessThanEqual(pair * 255.0, limit)), vec4(greaterThanEqual(res, vec4(16.0))));
+  // the blend color P of each corner (+8: the second of its two candidates)
+  vec4 sec = vec4(greaterThan(mod(floor(res / 8.0), 2.0), vec4(0.5)));
+  // shallow and steep lines (+16, +64) are not blocked, unless P is lighter than E: a darker pixel
+  // stays whole up to its edge
+  const vec3 lw = vec3(0.2627, 0.6780, 0.0593);
+  vec4 lP = vec4(dot(sec.x > 0.5 ? B : D, lw), dot(sec.y > 0.5 ? F : B, lw), dot(sec.z > 0.5 ? H : F, lw), dot(sec.w > 0.5 ? D : H, lw));
+  vec4 line = vec4(greaterThanEqual(res, vec4(16.0))) * vec4(lessThanEqual(lP, vec4(dot(E, lw) + 4.0 / 255.0)));
+  vec4 keep = max(vec4(lessThanEqual(pair * 255.0, limit)), line);
+  // diagonal stripe tips: P is a 1-pixel stripe that runs on along the cut (a close color two pixels
+  // away from E) and E's color runs on along its other side, so the tip is drawn to the edge
+  vec4 tipLine;
+  tipLine.x = sec.x > 0.5 ? float(alike(E, C) && min(DistYCbCr(B, P(0.,-2.)), DistYCbCr(B, P(1.,-2.))) * 255.0 <= XBRZ_STRIPE)
+                          : float(alike(E, G) && min(DistYCbCr(D, P(-2.,0.)), DistYCbCr(D, P(-2.,1.))) * 255.0 <= XBRZ_STRIPE);
+  tipLine.y = sec.y > 0.5 ? float(alike(E, I) && min(DistYCbCr(F, P(2.,0.)), DistYCbCr(F, P(2.,1.))) * 255.0 <= XBRZ_STRIPE)
+                          : float(alike(E, A) && min(DistYCbCr(B, P(0.,-2.)), DistYCbCr(B, P(-1.,-2.))) * 255.0 <= XBRZ_STRIPE);
+  tipLine.z = sec.z > 0.5 ? float(alike(E, G) && min(DistYCbCr(H, P(0.,2.)), DistYCbCr(H, P(-1.,2.))) * 255.0 <= XBRZ_STRIPE)
+                          : float(alike(E, C) && min(DistYCbCr(F, P(2.,0.)), DistYCbCr(F, P(2.,-1.))) * 255.0 <= XBRZ_STRIPE);
+  tipLine.w = sec.w > 0.5 ? float(alike(E, A) && min(DistYCbCr(D, P(-2.,0.)), DistYCbCr(D, P(-2.,-1.))) * 255.0 <= XBRZ_STRIPE)
+                          : float(alike(E, I) && min(DistYCbCr(H, P(0.,2.)), DistYCbCr(H, P(1.,2.))) * 255.0 <= XBRZ_STRIPE);
+  keep = max(keep, tipLine);
   // a blocked corner is flagged (+128); the output pass keeps it only when it continues a cut line
   res += 128.0 * (1.0 - keep) * cut;
 
