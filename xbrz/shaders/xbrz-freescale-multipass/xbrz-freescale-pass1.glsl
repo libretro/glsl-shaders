@@ -210,20 +210,25 @@ void main()
     // meeting lines: a blocked line corner is also cut where its blend color's pixel has a line at the
     // other end of their shared edge that blends E's color: the two cuts are one diagonal running into
     // a straight edge, like the end of a lock of hair
-    vec4 oL = INFO_AT(-1.0, 0.0);
-    vec4 oR = INFO_AT( 1.0, 0.0);
-    vec4 oU = INFO_AT( 0.0,-1.0);
-    vec4 oD = INFO_AT( 0.0, 1.0);
-    vec4 sec = FLAG(info, 8.0);
-    vec4 nO = vec4(mix(oL.z, oU.z, sec.x), mix(oU.w, oR.w, sec.y), mix(oR.x, oD.x, sec.z), mix(oD.y, oL.y, sec.w));
-    // the neighbour may also blend the pixel diagonal to E on the far side when it has E's color (a thin arm)
-    vec3 dX = sec.x > 0.5 ? P( 1.,-1.) : P(-1., 1.), dY = sec.y > 0.5 ? P( 1., 1.) : P(-1.,-1.);
-    vec3 dZ = sec.z > 0.5 ? P(-1., 1.) : P( 1.,-1.), dW = sec.w > 0.5 ? P(-1.,-1.) : P( 1., 1.);
-    vec4 sameE = vec4(float(distYCbCr(E, dX) * 255.0 <= 20.0), float(distYCbCr(E, dY) * 255.0 <= 20.0),
-                      float(distYCbCr(E, dZ) * 255.0 <= 20.0), float(distYCbCr(E, dW) * 255.0 <= 20.0));
-    vec4 meet = vec4(greaterThan(BLEND(nO), vec4(0.0))) * vec4(lessThan(nO, vec4(128.0))) * FLAG(nO, 4.0)
-              * max(1.0 - abs(FLAG(nO, 8.0) - sec), abs(FLAG(nO, 8.0) - sec) * sameE)
-              * FLAG(info, 4.0);
+    vec4 lineB = blocked * FLAG(info, 4.0) * vec4(greaterThan(blendResult, vec4(0.0))) * (1.0 - chain);
+    vec4 meet = vec4(0.0);
+    if (dot(lineB, vec4(1.0)) > 0.0)
+    {
+      vec4 oL = INFO_AT(-1.0, 0.0);
+      vec4 oR = INFO_AT( 1.0, 0.0);
+      vec4 oU = INFO_AT( 0.0,-1.0);
+      vec4 oD = INFO_AT( 0.0, 1.0);
+      vec4 sec = FLAG(info, 8.0);
+      vec4 nO = vec4(mix(oL.z, oU.z, sec.x), mix(oU.w, oR.w, sec.y), mix(oR.x, oD.x, sec.z), mix(oD.y, oL.y, sec.w));
+      // the neighbour may also blend the pixel diagonal to E on the far side when it has E's color (a thin arm)
+      vec3 dX = sec.x > 0.5 ? P( 1.,-1.) : P(-1., 1.), dY = sec.y > 0.5 ? P( 1., 1.) : P(-1.,-1.);
+      vec3 dZ = sec.z > 0.5 ? P(-1., 1.) : P( 1.,-1.), dW = sec.w > 0.5 ? P(-1.,-1.) : P( 1., 1.);
+      vec4 sameE = vec4(float(distYCbCr(E, dX) * 255.0 <= 20.0), float(distYCbCr(E, dY) * 255.0 <= 20.0),
+                        float(distYCbCr(E, dZ) * 255.0 <= 20.0), float(distYCbCr(E, dW) * 255.0 <= 20.0));
+      meet = vec4(greaterThan(BLEND(nO), vec4(0.0))) * vec4(lessThan(nO, vec4(128.0))) * FLAG(nO, 4.0)
+           * max(1.0 - abs(FLAG(nO, 8.0) - sec), abs(FLAG(nO, 8.0) - sec) * sameE)
+           * FLAG(info, 4.0);
+    }
     blendResult *= max(1.0 - blocked, max(chain, meet));
 
     // ---- 1. Minimum contrast: a weak corner is cut only inside a cut diagonal ----
