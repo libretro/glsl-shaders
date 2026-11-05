@@ -7,8 +7,11 @@
 //   by more than this, so a junction of three colors is not pulled into a fake diagonal (an idea
 //   from torcado's cleanEdge, MIT license). Antialiasing ramps use 92, shallow and steep lines are
 //   only blocked when they would cut a pixel with a lighter color, a blocked corner is still cut
-//   when a neighbour on the same diagonal is cut or at the tip of a 1-pixel diagonal stripe, and
-//   where 1-pixel stripes end flush (gauges, health bars) the end corners stay square.
+//   when a neighbour on the same diagonal is cut or at the tip of a 1-pixel diagonal stripe, a cut
+//   between two close inner tones runs up to a darker outline, a corner whose blend color runs
+//   straight on stays square, two dark strokes meeting in an L around a light gap (an eye) are
+//   not joined, and where 1-pixel stripes end flush (gauges, health bars) the end corners stay
+//   square.
 //   The shallow and steep line tests also weigh hue a little more than lightness (1.2x).
 //
 // The first pass makes every blend decision once per input pixel (blend type, line type, blend
