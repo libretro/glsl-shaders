@@ -206,6 +206,24 @@ float strokeEnds(vec3 p, vec2 coord, vec2 o, vec2 side)
   return float(!alike(p, P(o.x, o.y)) && !alike(p, P(o.x + side.x, o.y + side.y)) && !alike(p, P(o.x - side.x, o.y - side.y)));
 }
 
+// the pixel at t is part of a straight horizontal or vertical line of its color, 3 pixels or more (a wall)
+float wallAt(vec2 coord, vec2 t)
+{
+  vec3 T = P(t.x, t.y);
+  bool l = alike(T, P(t.x - 1., t.y)), r = alike(T, P(t.x + 1., t.y)), u = alike(T, P(t.x, t.y - 1.)), d = alike(T, P(t.x, t.y + 1.));
+  return float((l && (r || alike(T, P(t.x - 2., t.y)))) || (r && alike(T, P(t.x + 2., t.y))) ||
+               (u && (d || alike(T, P(t.x, t.y - 2.)))) || (d && alike(T, P(t.x, t.y + 2.))));
+}
+
+// E's color runs on along the diagonal d and the first pixel past the run (up to 3 pixels) is a wall
+float runWall(vec3 E, vec2 coord, vec2 d)
+{
+  if (!alike(E, P(d.x, d.y))) return wallAt(coord, d);
+  if (!alike(E, P(2. * d.x, 2. * d.y))) return wallAt(coord, 2. * d);
+  if (!alike(E, P(3. * d.x, 3. * d.y))) return wallAt(coord, 3. * d);
+  return 1.0;
+}
+
 // res holds the xBRZ decisions of the four corners (blend type +4 line +8 second color +16 shallow +64 steep)
 vec4 diagonalRules(vec4 res, vec2 coord, vec3 A, vec3 B, vec3 C, vec3 D, vec3 E, vec3 F, vec3 G, vec3 H, vec3 I,
                    float dEB, float dED, float dEF, float dEH)
@@ -214,6 +232,8 @@ vec4 diagonalRules(vec4 res, vec2 coord, vec3 A, vec3 B, vec3 C, vec3 D, vec3 E,
   vec4 cut = vec4(greaterThan(mod(res, 4.0), vec4(0.0)));
   if (XBRZ_DIAG <= 0.0 || dot(cut, vec4(1.0)) <= 0.0)
     return res;
+  // the xBRZ decisions, before the rules below
+  vec4 res0 = res;
 
   // the two colors on each corner's diagonal: top-left D-B, top-right B-F, bottom-right F-H, bottom-left H-D
   vec4 pair = vec4(DistYCbCr(D, B), DistYCbCr(B, F), DistYCbCr(F, H), DistYCbCr(H, D));
@@ -305,6 +325,128 @@ vec4 diagonalRules(vec4 res, vec2 coord, vec3 A, vec3 B, vec3 C, vec3 D, vec3 E,
     res *= 1.0 - eye;
   }
 
+  // diagonal up to the wall: a corner changed by the rules above goes back to the xBRZ decision when
+  // E's color runs on as a 45-degree diagonal parallel to the cut (C or G for the / corners, A or I for
+  // the \ ones) up to a wall at one end, and the neighbour on that diagonal sits on the same 45-degree
+  // step (or E's color runs 3 pixels along it), like hair or the corner of a fence post
+  vec4 kept = vec4(0.0);
+  if (any(notEqual(res, res0)))
+  {
+    float dCG = float(alike(E, C) || alike(E, G)), dAI = float(alike(E, A) || alike(E, I));
+    float wCG = dCG > 0.5 ? max(runWall(E, coord, vec2(1., -1.)), runWall(E, coord, vec2(-1., 1.))) : 0.0;
+    float wAI = dAI > 0.5 ? max(runWall(E, coord, vec2(1., 1.)), runWall(E, coord, vec2(-1., -1.))) : 0.0;
+    // the neighbour of E's color on the diagonal differs from both pixels beside its own corner
+    vec4 partner = vec4(
+      float((alike(E, C) && !alike(C, B) && !alike(C, P(1., -2.))) || (alike(E, G) && !alike(G, P(-2., 1.)) && !alike(G, D))),
+      float((alike(E, A) && !alike(A, P(-1., -2.)) && !alike(A, B)) || (alike(E, I) && !alike(I, F) && !alike(I, P(2., 1.)))),
+      float((alike(E, C) && !alike(C, P(2., -1.)) && !alike(C, F)) || (alike(E, G) && !alike(G, H) && !alike(G, P(-1., 2.)))),
+      float((alike(E, A) && !alike(A, D) && !alike(A, P(-2., -1.))) || (alike(E, I) && !alike(I, P(1., 2.)) && !alike(I, H))));
+    float l3CG = float((alike(E, C) && alike(E, P(2., -2.))) || (alike(E, G) && alike(E, P(-2., 2.))));
+    float l3AI = float((alike(E, A) && alike(E, P(-2., -2.))) || (alike(E, I) && alike(E, P(2., 2.))));
+    partner = max(partner, vec4(l3CG, l3AI, l3CG, l3AI));
+    // E ends a straight line of its color, 3 pixels or more, that runs away from the corner
+    float lineR = float(alike(E, F) && alike(E, P(2., 0.))), lineL = float(alike(E, D) && alike(E, P(-2., 0.)));
+    float lineD = float(alike(E, H) && alike(E, P(0., 2.))), lineU = float(alike(E, B) && alike(E, P(0., -2.)));
+    vec4 endLine = vec4(max(lineR, lineD), max(lineL, lineD), max(lineL, lineU), max(lineR, lineU));
+    // Q runs straight on away from the corner, or passes through it for 2 pixels (straightQ0) or 3 (straightQ)
+    vec4 straightQ = vec4(float(sec.x > 0.5 ? alike(D, G) : alike(B, C)), float(sec.y > 0.5 ? alike(B, A) : alike(F, I)),
+                          float(sec.z > 0.5 ? alike(F, C) : alike(H, G)), float(sec.w > 0.5 ? alike(H, I) : alike(D, A)));
+    vec4 straightQ0 = max(straightQ, vec4(float(alike(Qx, A)), float(alike(Qy, C)), float(alike(Qz, I)), float(alike(Qw, G))));
+    straightQ = max(straightQ, vec4(float(alike(Qx, A) && alike(Qx, sec.x > 0.5 ? P(-1., -2.) : P(-2., -1.))),
+                                    float(alike(Qy, C) && alike(Qy, sec.y > 0.5 ? P(2., -1.) : P(1., -2.))),
+                                    float(alike(Qz, I) && alike(Qz, sec.z > 0.5 ? P(1., 2.) : P(2., 1.))),
+                                    float(alike(Qw, G) && alike(Qw, sec.w > 0.5 ? P(-2., 1.) : P(-1., 2.)))));
+    // E is a 1-pixel stripe along P; there Q bends when it passes the corner for only 2 pixels
+    float sH = float(!alike(E, B) && !alike(E, H) && !alike(B, H)), sV = float(!alike(E, D) && !alike(E, F) && !alike(D, F));
+    vec4 stripeE = vec4(sec.x > 0.5 ? sH : sV, sec.y > 0.5 ? sV : sH, sec.z > 0.5 ? sH : sV, sec.w > 0.5 ? sV : sH);
+    vec4 bendQ = straightQ0 * (1.0 - straightQ) * stripeE;
+    vec4 sQ = mix(straightQ0, straightQ, stripeE);
+    // Q runs on along the cut: the pixel after Q in the cut's direction has Q's color
+    vec3 Qnx = sec.x > 0.5 ? P(-2., 1.) : P(1., -2.), Qny = sec.y > 0.5 ? P(-1., -2.) : P(2., 1.);
+    vec3 Qnz = sec.z > 0.5 ? P(2., -1.) : P(-1., 2.), Qnw = sec.w > 0.5 ? P(1., 2.) : P(-2., -1.);
+    vec4 qRun = vec4(float(alike(Qx, Qnx)), float(alike(Qy, Qny)), float(alike(Qz, Qnz)), float(alike(Qw, Qnw)));
+    // not where P and Q both run straight (a right-angle junction), where a straight P is a darker line
+    // or E ends a straight line beside it (unless Q bends), or where a straight P meets a Q that neither
+    // runs straight nor along the cut
+    vec4 run = vec4(wCG, wAI, wCG, wAI) * partner * (1.0 - straight * sQ) * (1.0 - straight * vec4(lessThan(lP, vec4(lE))) * (1.0 - bendQ))
+             * (1.0 - endLine * straight * (1.0 - bendQ)) * (1.0 - straight * (1.0 - straightQ0) * (1.0 - qRun)) * cut;
+    // not where P and Q are both lone pixels (no neighbour of their own color in a cross), like an eye
+    vec3 Pc[4]; Pc[0] = Px; Pc[1] = Py; Pc[2] = Pz; Pc[3] = Pw;
+    vec3 Qc[4]; Qc[0] = Qx; Qc[1] = Qy; Qc[2] = Qz; Qc[3] = Qw;
+    vec2 Po[4]; Po[0] = sec.x > 0.5 ? vec2(0., -1.) : vec2(-1., 0.); Po[1] = sec.y > 0.5 ? vec2(1., 0.) : vec2(0., -1.);
+    Po[2] = sec.z > 0.5 ? vec2(0., 1.) : vec2(1., 0.); Po[3] = sec.w > 0.5 ? vec2(-1., 0.) : vec2(0., 1.);
+    vec2 Qo[4]; Qo[0] = sec.x > 0.5 ? vec2(-1., 0.) : vec2(0., -1.); Qo[1] = sec.y > 0.5 ? vec2(0., -1.) : vec2(1., 0.);
+    Qo[2] = sec.z > 0.5 ? vec2(1., 0.) : vec2(0., 1.); Qo[3] = sec.w > 0.5 ? vec2(0., 1.) : vec2(-1., 0.);
+    vec2 n4[4]; n4[0] = vec2(1., 0.); n4[1] = vec2(-1., 0.); n4[2] = vec2(0., 1.); n4[3] = vec2(0., -1.);
+    for (int k = 0; k < 4; k++)
+    {
+      if (run[k] <= 0.0) continue;
+      float np = 0.0, nq = 0.0;
+      for (int j = 0; j < 4; j++)
+      {
+        vec2 u = Po[k] + n4[j], v = Qo[k] + n4[j];
+        if (u != vec2(0.0)) np += float(alike(Pc[k], P(u.x, u.y)));
+        if (v != vec2(0.0)) nq += float(alike(Qc[k], P(v.x, v.y)));
+      }
+      if (np < 0.5 && nq < 0.5) run[k] = 0.0;
+    }
+    res = mix(res, res0, run);
+    kept = run;
+    // a restored corner whose P runs straight while Q does not, and Q runs on along the cut, blends Q
+    vec4 swap = run * straight * (1.0 - straightQ0) * qRun;
+    res += 8.0 * (1.0 - 2.0 * sec) * swap;
+  }
+
+  // thin light stroke: a blocked corner comes back as in xBRZ where E is a 1-pixel stroke lighter than both diagonal
+  // colors that runs on along the diagonal of the cut (E's color in C or G for the / corners, A or I for the \ ones,
+  // not on E's far side), like the white strokes of letters or a ring with gray antialiasing
+  {
+    // E's color, or a tone closer to E than the corner's two colors (an antialiasing step), goes on along the diagonal
+    vec4 dPQmin = min(mix(dEP, dEQ, sec), mix(dEQ, dEP, sec));
+    float eC = DistYCbCr(E, C), eG = DistYCbCr(E, G), eA = DistYCbCr(E, A), eI = DistYCbCr(E, I);
+    // a diagonal neighbour counts only when the stroke really bends there: the cross neighbour beside it on E's far side
+    // is not E's tone too (a peak on top of a straight line is not a diagonal stroke)
+    vec4 tE = 0.6 * dPQmin;
+    bvec4 aD = bvec4(alike(E, C), alike(E, G), alike(E, A), alike(E, I));
+    bvec4 nD = bvec4(aD.x || eC < tE.x, aD.y || eG < tE.x, aD.z || eA < tE.y, aD.w || eI < tE.y);
+    bvec4 nD2 = bvec4(aD.x || eC < tE.z, aD.y || eG < tE.z, aD.z || eA < tE.w, aD.w || eI < tE.w);
+    float fB = DistYCbCr(E, B), fD = DistYCbCr(E, D), fF = DistYCbCr(E, F), fH = DistYCbCr(E, H);
+    // x: C beside F, G beside H; y: A beside D, I beside H; z: C beside B, G beside D; w: A beside B, I beside F
+    vec4 sideA = vec4(float(aD.x && !(fF < tE.x)) + float(aD.y && !(fH < tE.x)), float(aD.z && !(fD < tE.y)) + float(aD.w && !(fH < tE.y)),
+                      float(aD.x && !(fB < tE.z)) + float(aD.y && !(fD < tE.z)), float(aD.z && !(fB < tE.w)) + float(aD.w && !(fF < tE.w)));
+    vec4 sideN = vec4(float(nD.x && !(fF < tE.x)) + float(nD.y && !(fH < tE.x)), float(nD.z && !(fD < tE.y)) + float(nD.w && !(fH < tE.y)),
+                      float(nD2.x && !(fB < tE.z)) + float(nD2.y && !(fD < tE.z)), float(nD2.z && !(fB < tE.w)) + float(nD2.w && !(fF < tE.w)));
+    sideA = min(sideA, vec4(1.0)); sideN = min(sideN, vec4(1.0));
+    vec4 farOff = vec4(float(!alike(E, I)), float(!alike(E, G)), float(!alike(E, A)), float(!alike(E, C)));
+    vec4 along = sideA * farOff;
+    along = max(along, sideA * vec4(lessThan(max(lP, lQ), vec4(0.45))));
+    along = max(along, sideN * farOff);
+    vec4 light = vec4(greaterThan(vec4(lE) - max(lP, lQ), vec4(0.15)));
+    vec4 back = along * light * cut * vec4(notEqual(res, res0));
+    // not where P and Q are lone pixels (no neighbour of their own color in a cross), like an eye
+    vec3 Pc[4]; Pc[0] = Px; Pc[1] = Py; Pc[2] = Pz; Pc[3] = Pw;
+    vec3 Qc[4]; Qc[0] = Qx; Qc[1] = Qy; Qc[2] = Qz; Qc[3] = Qw;
+    vec2 Po[4]; Po[0] = sec.x > 0.5 ? vec2(0., -1.) : vec2(-1., 0.); Po[1] = sec.y > 0.5 ? vec2(1., 0.) : vec2(0., -1.);
+    Po[2] = sec.z > 0.5 ? vec2(0., 1.) : vec2(1., 0.); Po[3] = sec.w > 0.5 ? vec2(-1., 0.) : vec2(0., 1.);
+    vec2 Qo[4]; Qo[0] = sec.x > 0.5 ? vec2(-1., 0.) : vec2(0., -1.); Qo[1] = sec.y > 0.5 ? vec2(0., -1.) : vec2(1., 0.);
+    Qo[2] = sec.z > 0.5 ? vec2(1., 0.) : vec2(0., 1.); Qo[3] = sec.w > 0.5 ? vec2(0., 1.) : vec2(-1., 0.);
+    vec2 n4[4]; n4[0] = vec2(1., 0.); n4[1] = vec2(-1., 0.); n4[2] = vec2(0., 1.); n4[3] = vec2(0., -1.);
+    for (int k = 0; k < 4; k++)
+    {
+      if (back[k] <= 0.0) continue;
+      float np = 0.0, nq = 0.0;
+      for (int j = 0; j < 4; j++)
+      {
+        vec2 u = Po[k] + n4[j], v = Qo[k] + n4[j];
+        if (u != vec2(0.0)) np += float(alike(Pc[k], P(u.x, u.y)));
+        if (v != vec2(0.0)) nq += float(alike(Qc[k], P(v.x, v.y)));
+      }
+      if (np < 0.5 && nq < 0.5) back[k] = 0.0;
+    }
+    res = mix(res, res0, back);
+    kept = max(kept, back);
+  }
+
   // stripe ends: E ends a 1-pixel horizontal line (left or right end) or vertical line (top or bottom end)
   bool eB = eq(E, B), eD = eq(E, D), eF = eq(E, F), eH = eq(E, H);
   // the stripes on both sides differ from each other too, so outlines (same color on both sides) are left alone
@@ -323,7 +465,7 @@ vec4 diagonalRules(vec4 res, vec2 coord, vec3 A, vec3 B, vec3 C, vec3 D, vec3 E,
     float endB = (thinV && nB && !eH && alike(D, A) && alike(F, C) && !eq(D, G) && !eq(F, I) && alike(E, P(0., -2.)) && alike(A, P(-1., -2.)) && alike(C, P(1., -2.))) ? 1.0 : 0.0;
     vec4 tip = vec4(max(endL, endT), max(endR, endT), max(endR, endB), max(endL, endB));
     tip *= vec4(greaterThan(pair * 255.0, vec4(XBRZ_TIP)));
-    res *= 1.0 - tip;
+    res *= 1.0 - tip * (1.0 - kept);
   }
   return res;
 }
