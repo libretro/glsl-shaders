@@ -134,6 +134,7 @@ uniform COMPAT_PRECISION vec2 PassPrev2InputSize;
 #define SRC_SIZE vec4(TextureSize, 1.0 / TextureSize)
 #define P(x,y) COMPAT_TEXTURE(PassPrev2Texture, ocoord + ORIG_SIZE.zw * vec2(x, y)).rgb
 #define INFO(uv) COMPAT_TEXTURE(Texture, uv)
+#define INFO_STEP SRC_SIZE.zw
 
 float distYCbCr(vec3 pixA, vec3 pixB)
 {
@@ -156,6 +157,12 @@ float get_left_ratio(vec2 center, vec2 origin, vec2 direction, vec2 scale)
   return smoothstep(-sqrt(2.0)/2.0, sqrt(2.0)/2.0, v);
 }
 
+// the first pass's decisions for the four corners of the pixel at (x, y) from E; see the decision
+// word in pass 0 (BLEND is the blend type, FLAG(r, f) one of its flags)
+#define INFO_AT(x, y) floor(INFO(coord + vec2(x, y) * INFO_STEP) * 255.0 + 0.5)
+#define BLEND(r) mod(r, 4.0)
+#define FLAG(r, f) mod(floor((r) / (f)), 2.0)
+
 void main()
 {
   //---------------------------------------
@@ -168,52 +175,59 @@ void main()
   vec2 coord = vTexCoord - pos * SRC_SIZE.zw;
   vec2 ocoord = coord * SRC_SIZE.xy * ORIG_SIZE.zw;
 
-  vec4 info = floor(INFO(coord) * 255.0 + 0.5);
+  vec4 info = INFO_AT(0.0, 0.0);
   vec3 E = P( 0., 0.);
   vec3 res = E;
 
   // info Mapping: x|y|
   //               w|z|
-  vec4 blendResult = mod(info, 4.0);
+  vec4 blendResult = BLEND(info);
 
-  // a corner flagged by the first pass (+128, XBRZ_DIAG) is still cut when the same corner of a
-  // neighbour along the cut is cut and not flagged, so diagonal lines are drawn to the end
-  // a weak corner (blend type 3, just below XBRZ_MINC) is only cut inside a cut diagonal
-  vec4 weak = vec4(equal(mod(info, 4.0), vec4(3.0)));
+  // ============================================================================================
+  // the second part of rules 1 and 2, which needs the neighbours' decisions
+  // ============================================================================================
+  vec4 weak = vec4(equal(BLEND(info), vec4(3.0)));
   if (max(max(info.x, info.y), max(info.z, info.w)) >= 128.0 || dot(weak, vec4(1.0)) > 0.0)
   {
     vec4 blocked = floor(info / 128.0);
     info = mod(info, 128.0);
-    blendResult = mod(info, 4.0);
-    vec4 nA = floor(INFO(coord + vec2( 1.0,-1.0) * SRC_SIZE.zw) * 255.0 + 0.5);
-    vec4 nB = floor(INFO(coord + vec2(-1.0, 1.0) * SRC_SIZE.zw) * 255.0 + 0.5);
-    vec4 nC = floor(INFO(coord + vec2( 1.0, 1.0) * SRC_SIZE.zw) * 255.0 + 0.5);
-    vec4 nD = floor(INFO(coord + vec2(-1.0,-1.0) * SRC_SIZE.zw) * 255.0 + 0.5);
-    vec4 aA = vec4(greaterThan(mod(nA, 4.0), vec4(0.0))) * vec4(lessThan(mod(nA, 4.0), vec4(3.0))) * vec4(lessThan(nA, vec4(128.0)));
-    vec4 aB = vec4(greaterThan(mod(nB, 4.0), vec4(0.0))) * vec4(lessThan(mod(nB, 4.0), vec4(3.0))) * vec4(lessThan(nB, vec4(128.0)));
-    vec4 aC = vec4(greaterThan(mod(nC, 4.0), vec4(0.0))) * vec4(lessThan(mod(nC, 4.0), vec4(3.0))) * vec4(lessThan(nC, vec4(128.0)));
-    vec4 aD = vec4(greaterThan(mod(nD, 4.0), vec4(0.0))) * vec4(lessThan(mod(nD, 4.0), vec4(3.0))) * vec4(lessThan(nD, vec4(128.0)));
-    // top-left and bottom-right are cut along "/", top-right and bottom-left along "\"
+    blendResult = BLEND(info);
+    // the same corner of the neighbours along the cut: top-left and bottom-right are cut along "/"
+    // (neighbours up-right and down-left), top-right and bottom-left along "\" (down-right, up-left).
+    // A corner counts as cut when it blends (type 1 or 2) and is not blocked
+    vec4 nA = INFO_AT( 1.0,-1.0);
+    vec4 nB = INFO_AT(-1.0, 1.0);
+    vec4 nC = INFO_AT( 1.0, 1.0);
+    vec4 nD = INFO_AT(-1.0,-1.0);
+    vec4 aA = vec4(greaterThan(BLEND(nA), vec4(0.0))) * vec4(lessThan(BLEND(nA), vec4(3.0))) * vec4(lessThan(nA, vec4(128.0)));
+    vec4 aB = vec4(greaterThan(BLEND(nB), vec4(0.0))) * vec4(lessThan(BLEND(nB), vec4(3.0))) * vec4(lessThan(nB, vec4(128.0)));
+    vec4 aC = vec4(greaterThan(BLEND(nC), vec4(0.0))) * vec4(lessThan(BLEND(nC), vec4(3.0))) * vec4(lessThan(nC, vec4(128.0)));
+    vec4 aD = vec4(greaterThan(BLEND(nD), vec4(0.0))) * vec4(lessThan(BLEND(nD), vec4(3.0))) * vec4(lessThan(nD, vec4(128.0)));
+
+    // ---- 2. Diagonal limit: a blocked corner is cut only where it continues a cut ----
+    // a chain: the same corner of a neighbour along the cut is cut, so diagonal lines are drawn to the end
     vec4 chain = vec4(max(aA.x, aB.x), max(aC.y, aD.y), max(aA.z, aB.z), max(aC.w, aD.w));
-    // a flagged line corner is also cut where its blend color's pixel has a line at the other end
-    // of their shared edge that blends E's color: the two cuts are one diagonal
-    // running into a straight edge, like the end of a lock of hair
-    vec4 oL = floor(INFO(coord + vec2(-1.0, 0.0) * SRC_SIZE.zw) * 255.0 + 0.5);
-    vec4 oR = floor(INFO(coord + vec2( 1.0, 0.0) * SRC_SIZE.zw) * 255.0 + 0.5);
-    vec4 oU = floor(INFO(coord + vec2( 0.0,-1.0) * SRC_SIZE.zw) * 255.0 + 0.5);
-    vec4 oD = floor(INFO(coord + vec2( 0.0, 1.0) * SRC_SIZE.zw) * 255.0 + 0.5);
-    vec4 sec = mod(floor(info / 8.0), 2.0);
+    // meeting lines: a blocked line corner is also cut where its blend color's pixel has a line at the
+    // other end of their shared edge that blends E's color: the two cuts are one diagonal running into
+    // a straight edge, like the end of a lock of hair
+    vec4 oL = INFO_AT(-1.0, 0.0);
+    vec4 oR = INFO_AT( 1.0, 0.0);
+    vec4 oU = INFO_AT( 0.0,-1.0);
+    vec4 oD = INFO_AT( 0.0, 1.0);
+    vec4 sec = FLAG(info, 8.0);
     vec4 nO = vec4(mix(oL.z, oU.z, sec.x), mix(oU.w, oR.w, sec.y), mix(oR.x, oD.x, sec.z), mix(oD.y, oL.y, sec.w));
-    // the neighbour may also blend the pixel diagonal to E on the far side when it has E's color
+    // the neighbour may also blend the pixel diagonal to E on the far side when it has E's color (a thin arm)
     vec3 dX = sec.x > 0.5 ? P( 1.,-1.) : P(-1., 1.), dY = sec.y > 0.5 ? P( 1., 1.) : P(-1.,-1.);
     vec3 dZ = sec.z > 0.5 ? P(-1., 1.) : P( 1.,-1.), dW = sec.w > 0.5 ? P(-1.,-1.) : P( 1., 1.);
     vec4 sameE = vec4(float(distYCbCr(E, dX) * 255.0 <= 20.0), float(distYCbCr(E, dY) * 255.0 <= 20.0),
                       float(distYCbCr(E, dZ) * 255.0 <= 20.0), float(distYCbCr(E, dW) * 255.0 <= 20.0));
-    vec4 meet = vec4(greaterThan(mod(nO, 4.0), vec4(0.0))) * vec4(lessThan(nO, vec4(128.0))) * mod(floor(nO / 4.0), 2.0)
-              * max(1.0 - abs(mod(floor(nO / 8.0), 2.0) - sec), abs(mod(floor(nO / 8.0), 2.0) - sec) * sameE)
-              * mod(floor(info / 4.0), 2.0);
+    vec4 meet = vec4(greaterThan(BLEND(nO), vec4(0.0))) * vec4(lessThan(nO, vec4(128.0))) * FLAG(nO, 4.0)
+              * max(1.0 - abs(FLAG(nO, 8.0) - sec), abs(FLAG(nO, 8.0) - sec) * sameE)
+              * FLAG(info, 4.0);
     blendResult *= max(1.0 - blocked, max(chain, meet));
-    // a weak corner needs the same corner of both neighbours along the cut to be cut
+
+    // ---- 1. Minimum contrast: a weak corner is cut only inside a cut diagonal ----
+    // the same corner of both neighbours along the cut must be cut
     blendResult *= mix(vec4(1.0), vec4(min(aA.x, aB.x), min(aC.y, aD.y), min(aA.z, aB.z), min(aC.w, aD.w)), weak);
   }
 
@@ -224,33 +238,39 @@ void main()
     return;
   }
 
-  vec4 doLineBlend = mod(floor(info / 4.0), 2.0);
-  vec4 secondPix = mod(floor(info / 8.0), 2.0);
-  vec4 haveShallowLine = mod(floor(info / 16.0), 2.0);
-  vec4 haveSteepLine = mod(floor(info / 64.0), 2.0);
+  vec4 doLineBlend = FLAG(info, 4.0);
+  vec4 secondPix = FLAG(info, 8.0);
+  vec4 haveShallowLine = FLAG(info, 16.0);
+  vec4 haveSteepLine = FLAG(info, 64.0);
 
+  // ============================================================================================
+  // 9. Line shapes, second part
+  // ============================================================================================
   // a line flagged +32 by the first pass (found only by hue, between two different colors) is drawn
   // as a plain line where the neighbour across its edge draws a line the same way: the two lines
   // would run into each other, one bending around the other's end
-  vec4 tone = mod(floor(info / 32.0), 2.0);
+  vec4 tone = FLAG(info, 32.0);
   if (tone.x + tone.y + tone.z + tone.w > 0.0)
   {
-    vec4 nL = floor(INFO(coord + vec2(-1.0, 0.0) * SRC_SIZE.zw) * 255.0 + 0.5);
-    vec4 nR = floor(INFO(coord + vec2( 1.0, 0.0) * SRC_SIZE.zw) * 255.0 + 0.5);
-    vec4 nU = floor(INFO(coord + vec2( 0.0,-1.0) * SRC_SIZE.zw) * 255.0 + 0.5);
-    vec4 nD = floor(INFO(coord + vec2( 0.0, 1.0) * SRC_SIZE.zw) * 255.0 + 0.5);
+    vec4 nL = INFO_AT(-1.0, 0.0);
+    vec4 nR = INFO_AT( 1.0, 0.0);
+    vec4 nU = INFO_AT( 0.0,-1.0);
+    vec4 nD = INFO_AT( 0.0, 1.0);
     // a neighbour corner draws a line when it blends, is not flagged (+128) and has the line bit (+4)
-    vec4 drawL = vec4(lessThan(nL, vec4(128.0))) * mod(floor(nL / 4.0), 2.0), drawR = vec4(lessThan(nR, vec4(128.0))) * mod(floor(nR / 4.0), 2.0);
-    vec4 drawU = vec4(lessThan(nU, vec4(128.0))) * mod(floor(nU / 4.0), 2.0), drawD = vec4(lessThan(nD, vec4(128.0))) * mod(floor(nD / 4.0), 2.0);
+    vec4 drawL = vec4(lessThan(nL, vec4(128.0))) * FLAG(nL, 4.0), drawR = vec4(lessThan(nR, vec4(128.0))) * FLAG(nR, 4.0);
+    vec4 drawU = vec4(lessThan(nU, vec4(128.0))) * FLAG(nU, 4.0), drawD = vec4(lessThan(nD, vec4(128.0))) * FLAG(nD, 4.0);
     // steep lines meet the left/right neighbour, shallow ones the upper/lower one
-    vec4 steepN = vec4(drawL.z * mod(floor(nL.z / 64.0), 2.0), drawR.w * mod(floor(nR.w / 64.0), 2.0),
-                       drawR.x * mod(floor(nR.x / 64.0), 2.0), drawL.y * mod(floor(nL.y / 64.0), 2.0));
-    vec4 shallowN = vec4(drawU.z * mod(floor(nU.z / 16.0), 2.0), drawU.w * mod(floor(nU.w / 16.0), 2.0),
-                         drawD.x * mod(floor(nD.x / 16.0), 2.0), drawD.y * mod(floor(nD.y / 16.0), 2.0));
+    vec4 steepN = vec4(drawL.z * FLAG(nL.z, 64.0), drawR.w * FLAG(nR.w, 64.0),
+                       drawR.x * FLAG(nR.x, 64.0), drawL.y * FLAG(nL.y, 64.0));
+    vec4 shallowN = vec4(drawU.z * FLAG(nU.z, 16.0), drawU.w * FLAG(nU.w, 16.0),
+                         drawD.x * FLAG(nD.x, 16.0), drawD.y * FLAG(nD.y, 16.0));
     haveSteepLine *= 1.0 - tone * steepN;
     haveShallowLine *= 1.0 - tone * shallowN;
   }
 
+  // ============================================================================================
+  // xBRZ: drawing the corners
+  // ============================================================================================
   // Corners are applied in the same order as the original xBRZ (0, 90, 180, 270 degrees). The first
   // pass picked each blend colour ("dist(e,f) <= dist(e,h) ? f : h").
 
