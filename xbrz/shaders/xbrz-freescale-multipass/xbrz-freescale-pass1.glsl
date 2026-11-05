@@ -13,6 +13,10 @@
 //   not joined, and where 1-pixel stripes end flush (gauges, health bars) the end corners stay
 //   square.
 //   The shallow and steep line tests also weigh hue a little more than lightness (1.2x).
+//   A pixel closed in a row between two near-black outline pixels is not pulled out of it.
+//   A corner left square by XBRZ_MINC on a long straight line between two stripes is still cut,
+//   the notch where a near-black shadow runs under an object is closed, and a blocked corner
+//   between 1-pixel tiles in a row between two walls stays square.
 //
 // The first pass makes every blend decision once per input pixel (blend type, line type, blend
 // color and the minimum contrast) and the resolve pass, also once per input pixel, settles the

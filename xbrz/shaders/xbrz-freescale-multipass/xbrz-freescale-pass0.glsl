@@ -14,6 +14,9 @@
 //   square.
 //   The shallow and steep line tests also weigh hue a little more than lightness (1.2x).
 //   A pixel closed in a row between two near-black outline pixels is not pulled out of it.
+//   A corner left square by XBRZ_MINC on a long straight line between two stripes is still cut,
+//   the notch where a near-black shadow runs under an object is closed, and a blocked corner
+//   between 1-pixel tiles in a row between two walls stays square.
 //
 // The first pass makes every blend decision once per input pixel (blend type, line type, blend
 // color and the minimum contrast) and the resolve pass, also once per input pixel, settles the
@@ -182,6 +185,8 @@ uniform COMPAT_PRECISION float XBRZ_DIAG;
 #define XBRZ_TIP 36.0       // 7. stripe ends stay square above this diagonal distance
 #define XBRZ_AA_LINE 1.01   // 8. E lies between the colors: d(P1,E) + d(E,P2) up to this times d(P1,P2)
 #define XBRZ_AA_EDGE 40.0   // 8. the two colors differ by at least this
+#define XBRZ_STRONG 40.0    // 11. the contour past a 1-pixel stripe differs from it by at least this
+#define XBRZ_SHADOW 0.10    // 12. a shadow is darker than this (luma)
 #define alike(a,b) (DistYCbCr(a, b) * 255.0 <= 20.0)
 #define eq(a,b)  (a == b)
 #define neq(a,b) (a != b)
@@ -653,6 +658,167 @@ vec4 closedPixel(vec4 res, vec3 A, vec3 B, vec3 C, vec3 D, vec3 E, vec3 F, vec3 
   return res * (1.0 - closed);
 }
 
+// ============================================================================================
+// 11. Lines in a larger window
+// ============================================================================================
+// a corner that rule 1 squared is cut as in xBRZ where it lies on a straight boundary between two
+// stripes, along the slope xBRZ found for it (45 degrees, or a 2:1 shallow or steep line), read in a
+// 7x7 window: E's tone runs on along the boundary on E's side and the corner's two colors run on along
+// it on the other side, with every step of a 2:1 line exactly 2 pixels long; E's far side does not
+// have the other tone (not a checkerboard); and one of the two stripes is 1 pixel wide with a strong
+// contour past it (at least XBRZ_STRONG), so it is a line or the antialiasing band of one, not a band
+// of shading or a texture
+// X has a's tone against b: closer to a than to b, and alike a
+float onTone(vec3 X, vec3 a, vec3 b)
+{
+  float da = DistYCbCr(X, a);
+  return float(da < DistYCbCr(X, b) && da * 255.0 <= 20.0);
+}
+// X is past a stripe of tone a (next to tone b) on a strong contour: neither tone, and XBRZ_STRONG from a
+float strongPx(vec3 X, vec3 a, vec3 b)
+{
+  return (1.0 - onTone(X, a, b)) * (1.0 - onTone(X, b, a)) * float(DistYCbCr(X, a) * 255.0 >= XBRZ_STRONG);
+}
+// the pixel at offset o in the corner's own frame (canonical corner: bottom-right, colors F and H)
+#define RP(o) P((rot * (o)).x, (rot * (o)).y)
+
+// one corner, in its own frame: shape 0 is a 45-degree boundary, 1 shallow (2:1), 2 steep (1:2)
+float stripeLine(vec2 coord, mat2 rot, vec3 E, vec3 Pc, float shape)
+{
+  // offsets: e1..e4 run on E's side, p1..p5 on the other side (with F and H; p4 and p5 close the steps at
+  // both ends, so each step of a 2:1 line is exactly 2 pixels long), f1 f2 are E's far side,
+  // o1 o2 o3 the pixels past the other stripe
+  vec2 e1, e2, e3, e4, p1, p2, p3, p4, p5, f1, f2, o1, o2, o3;
+  if (shape < 0.5)
+  {
+    e1 = vec2(1., -1.); e2 = vec2(-1., 1.); e3 = vec2(2., -2.); e4 = vec2(-2., 2.);
+    p1 = vec2(2., -1.); p2 = vec2(-1., 2.); p3 = p1; p4 = vec2(3., -2.); p5 = vec2(-2., 3.);
+    f1 = vec2(0., -1.); f2 = vec2(-1., 0.);
+    o1 = vec2(1., 1.); o2 = vec2(2., 0.); o3 = vec2(0., 2.);
+  }
+  else if (shape < 1.5)
+  {
+    // E's run is the 2-pixel step D E, then C and the pixel right of it, and the one below-left of D
+    e1 = vec2(-1., 0.); e2 = vec2(1., -1.); e3 = vec2(2., -1.); e4 = vec2(-2., 1.);
+    p1 = vec2(-1., 1.); p2 = vec2(2., 0.); p3 = vec2(-2., 2.); p4 = vec2(3., -1.); p5 = vec2(-3., 2.);
+    f1 = vec2(0., -1.); f2 = vec2(-1., -1.);
+    o1 = vec2(1., 1.); o2 = vec2(0., 2.); o3 = vec2(2., 1.);
+  }
+  else
+  {
+    e1 = vec2(0., -1.); e2 = vec2(-1., 1.); e3 = vec2(-1., 2.); e4 = vec2(1., -2.);
+    p1 = vec2(1., -1.); p2 = vec2(0., 2.); p3 = vec2(2., -2.); p4 = vec2(-1., 3.); p5 = vec2(2., -3.);
+    f1 = vec2(-1., 0.); f2 = vec2(-1., -1.);
+    o1 = vec2(1., 1.); o2 = vec2(2., 0.); o3 = vec2(1., 2.);
+  }
+  // a strong contour on one side first (cheap: three reads), since textures seldom have one
+  vec3 Fa = RP(f1), Fb = RP(f2), O1 = RP(o1);
+  float eStrong = float(min(DistYCbCr(Fa, E), DistYCbCr(Fb, E)) * 255.0 >= XBRZ_STRONG);
+  float pStrong = float(DistYCbCr(O1, Pc) * 255.0 >= XBRZ_STRONG);
+  if (eStrong + pStrong <= 0.0)
+    return 0.0;
+  // then the two runs, nearest pixels first
+  if (onTone(RP(e1), E, Pc) * onTone(RP(e2), E, Pc) <= 0.0)
+    return 0.0;
+  float runs = onTone(RP(e3), E, Pc) * onTone(RP(e4), E, Pc)
+             * onTone(RP(p1), Pc, E) * onTone(RP(p2), Pc, E) * onTone(RP(p3), Pc, E)
+             * onTone(RP(p4), Pc, E) * onTone(RP(p5), Pc, E)
+             * (1.0 - onTone(Fa, Pc, E)) * (1.0 - onTone(Fb, Pc, E));
+  if (runs <= 0.0)
+    return 0.0;
+  float eNarrow = eStrong * strongPx(Fa, E, Pc) * strongPx(Fb, E, Pc);
+  float pNarrow = pStrong * strongPx(O1, Pc, E) * (1.0 - onTone(RP(o2), Pc, E)) * (1.0 - onTone(RP(o3), Pc, E));
+  return max(eNarrow, pNarrow);
+}
+
+vec4 diagonalStripes(vec2 coord, vec3 B, vec3 D, vec3 E, vec3 F, vec3 H, float dEB, float dED, float dEF, float dEH, vec4 xb, vec4 sq)
+{
+  // the slope xBRZ found for each corner (+16 shallow, +64 steep, in the corner's own frame)
+  vec4 shape = FLAG(xb, 4.0) * (FLAG(xb, 16.0) + 2.0 * FLAG(xb, 64.0));
+  // P the closer candidate of each corner, Q the other one; Q must have P's tone (one stripe)
+  vec3 Px = dED <= dEB ? D : B, Qx = dED <= dEB ? B : D;
+  vec3 Py = dEB <= dEF ? B : F, Qy = dEB <= dEF ? F : B;
+  vec3 Pz = dEF <= dEH ? F : H, Qz = dEF <= dEH ? H : F;
+  vec3 Pw = dEH <= dED ? H : D, Qw = dEH <= dED ? D : H;
+  sq *= vec4(lessThan(shape, vec4(2.5))) * vec4(onTone(Qx, Px, E), onTone(Qy, Py, E), onTone(Qz, Pz, E), onTone(Qw, Pw, E));
+  // one corner at a time, so the test is compiled once (corner z is the canonical frame, the others turned)
+  vec4 r = vec4(0.0);
+  for (int k = 0; k < 4; k++)
+  {
+    vec4 m = vec4(equal(vec4(float(k)), vec4(0., 1., 2., 3.)));
+    if (dot(sq, m) > 0.0)
+    {
+      mat2 rot = k == 0 ? mat2(-1., 0., 0., -1.) : (k == 1 ? mat2(0., -1., 1., 0.) : (k == 2 ? mat2(1., 0., 0., 1.) : mat2(0., 1., -1., 0.)));
+      vec3 Pc = k == 0 ? Px : (k == 1 ? Py : (k == 2 ? Pz : Pw));
+      r += m * stripeLine(coord, rot, E, Pc, dot(shape, m));
+    }
+  }
+  return r;
+}
+
+
+// ============================================================================================
+// 12. Closed shadow
+// ============================================================================================
+// E (background) sits in the notch where a near-black shadow blob runs under another object O (like
+// feet over a round shadow): S = P(s) is the shadow's arm beside E, O = P(o) the object, K = P(o - s)
+// the shadow on O's other side. The shape is read from a bigger window: the arm runs straight 3
+// pixels with background outside it and the object over it, and beyond K the shadow is a solid 2x2
+// lobe (a blob, not a 1-pixel stroke like a serif)
+bool floorPx(vec3 X, vec3 S, vec3 O, float lS)
+{
+  return dot(X, lumaW) > lS + 0.15 && !alike(X, S) && !alike(X, O);
+}
+
+float shadowClose(vec2 coord, vec3 E, vec2 s, vec2 o)
+{
+  vec3 S = P(s.x, s.y);
+  vec3 O = P(o.x, o.y);
+  vec2 k = o - s;
+  vec3 K = P(k.x, k.y);
+  float lS = dot(S, lumaW);
+  if (!(lS < XBRZ_SHADOW && dot(K, lumaW) < XBRZ_SHADOW && dot(E, lumaW) > XBRZ_SHADOW + 0.15 && alike(S, K) && !alike(O, S) && !alike(O, E) && !alike(E, S)
+        && lS + 0.15 < dot(E, lumaW) && lS + 0.15 < dot(O, lumaW)))
+    return 0.0;
+  // the floor around the notch is any pixel lighter than the shadow that is neither the shadow nor the
+  // object, so a textured floor (grass, tiles) counts the same as a flat one
+  bool bg = floorPx(P(-s.x, -s.y), S, O, lS) && floorPx(P(-o.x, -o.y), S, O, lS);
+  bool arm = alike(S, P(2. * s.x, 2. * s.y)) && alike(S, P(3. * s.x, 3. * s.y))
+          && floorPx(P(s.x - o.x, s.y - o.y), S, O, lS) && floorPx(P(2. * s.x - o.x, 2. * s.y - o.y), S, O, lS)
+          && !alike(S, P(s.x + o.x, s.y + o.y));
+  bool lobe = alike(S, P(k.x + o.x, k.y + o.y)) && alike(S, P(k.x + o.x - s.x, k.y + o.y - s.y))
+           && alike(S, P(k.x + 2. * o.x, k.y + 2. * o.y)) && alike(S, P(k.x + 2. * o.x - s.x, k.y + 2. * o.y - s.y));
+  vec3 O2 = P(2. * o.x, 2. * o.y);
+  bool obj = !alike(E, O2) && !alike(S, O2);
+  return float(bg && arm && lobe && obj);
+}
+
+
+// ============================================================================================
+// 13. Tiles between walls
+// ============================================================================================
+// E and its neighbour P = E + a are two square tiles of a row of tiles 1 pixel wide (4 tiles or more,
+// in a repeating pattern, all lighter or all darker than the walls) that runs between two straight
+// walls (Q's side w and the opposite side, 3 pixels or more each): a blocked corner between two tiles
+// stays square, so the second pass does not chain a diagonal through the row (Castlevania's gauge)
+float tileStripe(vec2 coord, vec3 E, vec2 a, vec2 w)
+{
+  vec3 P1 = P(a.x, a.y), Q = P(w.x, w.y), Q2 = P(w.x + a.x, w.y + a.y), O = P(-w.x, -w.y), O2 = P(a.x - w.x, a.y - w.y);
+  vec3 T0 = P(-a.x, -a.y);
+  // first what the 3x3 shows: both walls along E and P, E and P tiles, the pixel before E another tile
+  float lE = dot(E, lumaW), lP = dot(P1, lumaW), lQ = dot(Q, lumaW), lO = dot(O, lumaW);
+  bool light = min(lE, lP) > max(lQ, lO) + XBRZ_OUTLINE, dark = max(lE, lP) + XBRZ_OUTLINE < min(lQ, lO);
+  if (!((light || dark) && alike(Q, Q2) && alike(O, O2) && !alike(E, T0) && !alike(T0, Q) && !alike(T0, O)))
+    return 0.0;
+  // then the row past P: the walls run on (3 pixels) and the next tile follows the pattern
+  vec3 T3 = P(2. * a.x, 2. * a.y);
+  bool wallQ = alike(Q, P(w.x - a.x, w.y - a.y)) || alike(Q, P(w.x + 2. * a.x, w.y + 2. * a.y));
+  bool wallO = alike(O, P(-w.x - a.x, -w.y - a.y)) || alike(O, P(2. * a.x - w.x, 2. * a.y - w.y));
+  bool tiles = !alike(P1, T3) && !alike(T3, Q) && !alike(T3, O) && (alike(T0, P1) || alike(E, T3));
+  return float(wallQ && wallO && tiles);
+}
+
+
 void main()
 {
   //---------------------------------------
@@ -877,11 +1043,119 @@ void main()
   vec4 xbrz = res;
   vec4 contrast, weak;
   res = minimumContrast(res, dEB, dED, dEF, dEH, contrast, weak);              // 1
+  // 11. Lines in a larger window: corners squared by rule 1 on a straight line come back
+  vec4 sq = vec4(lessThan(contrast, vec4(XBRZ_MINC))) * vec4(greaterThan(BLEND(xbrz), vec4(0.0)));
+  if (XBRZ_MINC > 0.0 && dot(sq, vec4(1.0)) > 0.0)
+  {
+    sq *= diagonalStripes(coord, B, D, E, F, H, dEB, dED, dEF, dEH, xbrz, sq);
+    res = mix(res, xbrz, sq);
+    weak *= 1.0 - sq;
+  }
   res = diagonalRules(res, coord, A, B, C, D, E, F, G, H, I, dEB, dED, dEF, dEH);  // 2 to 7
   res = weakCorners(res, weak);                                                 // 1, weak corners
   res = lineThroughAA(res, xbrz, contrast, B, D, E, F, H);                      // 8
   res = closedPixel(res, A, B, C, D, E, F, G, H, I);                            // 10
 
+  // 12. closed shadow (the notch's corner and, on the shadow's side, the corners next to the notch)
+  if (XBRZ_DIAG > 0.0)
+  {
+    float lE = dot(E, lumaW);
+    // cheap gates on the 3x3 before the 7x7 tests (cross order B D F H, diagonal order A C G I):
+    // dS shadow, dA close to a shadow color, nd not a shadow, bg close to a background lighter than the shadow
+    vec4 lX = vec4(dot(B, lumaW), dot(D, lumaW), dot(F, lumaW), dot(H, lumaW));
+    vec4 lY = vec4(dot(A, lumaW), dot(C, lumaW), dot(G, lumaW), dot(I, lumaW));
+    bvec4 dS = lessThan(lX, vec4(XBRZ_SHADOW)), dSd = lessThan(lY, vec4(XBRZ_SHADOW));
+    bvec4 dA = lessThan(lX, vec4(XBRZ_SHADOW + 0.08)), dAd = lessThan(lY, vec4(XBRZ_SHADOW + 0.08));
+    bvec4 nd = not(dS), ndd = not(dSd);
+    bvec4 bg = greaterThan(lX, vec4(XBRZ_SHADOW + 0.07)), bgd = greaterThan(lY, vec4(XBRZ_SHADOW + 0.07));
+    bvec4 lt = greaterThan(lX, vec4(XBRZ_SHADOW + 0.15)), ltd = greaterThan(lY, vec4(XBRZ_SHADOW + 0.15));
+    // corner k (x, y, z, w) lies between the directions d = L, U, R, Dn and n = d turned 90 degrees (U, R, Dn, L);
+    // the loops run one 7x7 test at a time, so the test is compiled once
+    if (lE > XBRZ_SHADOW + 0.15 && any(dS))
+    {
+      // E is the notch: S = P(s) and K = P(o - s) shadow, O = P(o) not, background at -s, -o and s - o;
+      // first candidate (s, o) = (d, n), second (n, d)
+      vec4 g1 = vec4(dS.y && dSd.y && nd.x && bg.z && bg.w && bgd.z, dS.x && dSd.w && nd.z && bg.w && bg.y && bgd.x,
+                     dS.z && dSd.z && nd.w && bg.y && bg.x && bgd.y, dS.w && dSd.x && nd.y && bg.x && bg.z && bgd.w);
+      vec4 g2 = vec4(dS.x && dSd.z && nd.y && bg.w && bg.z && bgd.y, dS.z && dSd.x && nd.x && bg.y && bg.w && bgd.w,
+                     dS.w && dSd.y && nd.z && bg.x && bg.y && bgd.z, dS.y && dSd.w && nd.w && bg.z && bg.x && bgd.x);
+      vec4 c1 = vec4(0.0), c2 = vec4(0.0);
+      vec2 d = vec2(-1., 0.);
+      for (int i = 0; i < 8; i++)
+      {
+        int k = i / 2;
+        bool second = i - 2 * k == 1;
+        vec2 n = vec2(-d.y, d.x);
+        vec4 m = vec4(equal(vec4(float(k)), vec4(0., 1., 2., 3.)));
+        if (dot(second ? g2 : g1, m) > 0.0)
+        {
+          float r = shadowClose(coord, E, second ? n : d, second ? d : n);
+          if (second) c2 += m * r; else c1 += m * r;
+        }
+        if (second) d = n;
+      }
+      // first candidate as S: x/z with a horizontal arm and y/w with a vertical one take +16; second (+8): +64
+      c2 *= 1.0 - c1;
+      res = mix(res, vec4(1. + 4. + 16.), c1);
+      res = mix(res, vec4(1. + 4. + 8. + 64.), c2);
+    }
+    else if (lE < XBRZ_SHADOW && (any(lt) || any(ltd)))
+    {
+      // E is the shadow next to a notch Y: the arm's tip (Y = E + d, O = Y + o diagonal to E) or the lobe's
+      // corner (Y = E + s - o diagonal to E, O = E + s); E's corner toward the notch stays square.
+      // Candidates for corner k, as (Y, s, o): (d, -d, n), (n, -n, d), (d + n, d, -n), (d + n, n, -d)
+      vec4 gT1 = vec4(lt.y && bg.w && bgd.w && dA.z && ndd.x, lt.x && bg.y && bgd.z && dA.w && ndd.y,
+                      lt.z && bg.x && bgd.x && dA.y && ndd.w, lt.w && bg.z && bgd.y && dA.x && ndd.z);
+      vec4 gT2 = vec4(lt.x && bg.z && bgd.w && dA.w && ndd.x, lt.z && bg.w && bgd.z && dA.y && ndd.y,
+                      lt.w && bg.y && bgd.x && dA.x && ndd.w, lt.y && bg.x && bgd.y && dA.z && ndd.z);
+      vec4 gK1 = vec4(ltd.x && nd.y && bg.x && dA.w && dAd.w, ltd.y && nd.x && bg.z && dA.y && dAd.z,
+                      ltd.w && nd.z && bg.w && dA.x && dAd.x, ltd.z && nd.w && bg.y && dA.z && dAd.y);
+      vec4 gK2 = vec4(ltd.x && nd.x && bg.y && dA.z && dAd.w, ltd.y && nd.z && bg.x && dA.w && dAd.z,
+                      ltd.w && nd.w && bg.z && dA.y && dAd.x, ltd.z && nd.y && bg.w && dA.x && dAd.y);
+      vec4 keepSq = vec4(0.0);
+      vec2 d = vec2(-1., 0.);
+      for (int i = 0; i < 16; i++)
+      {
+        int k = i / 4;
+        int t = i - 4 * k;
+        vec2 n = vec2(-d.y, d.x);
+        vec4 m = vec4(equal(vec4(float(k)), vec4(0., 1., 2., 3.)));
+        vec4 g = t == 0 ? gT1 : (t == 1 ? gT2 : (t == 2 ? gK1 : gK2));
+        if (dot(g, m) > 0.0)
+        {
+          vec2 y = t == 0 ? d : (t == 1 ? n : d + n);
+          vec2 s = t == 0 ? -d : (t == 1 ? -n : (t == 2 ? d : n));
+          vec2 o = t == 0 ? n : (t == 1 ? d : (t == 2 ? -n : -d));
+          keepSq = max(keepSq, m * shadowClose(coord + SRC_SIZE.zw * y, P(y.x, y.y), s, o));
+        }
+        if (t == 3) d = n;
+      }
+      res *= 1.0 - min(keepSq, vec4(1.0));
+    }
+  }
+  // 13. tiles between walls: a blocked corner between two tiles is dropped
+  if (XBRZ_DIAG > 0.0 && max(max(res.x, res.y), max(res.z, res.w)) >= 128.0)
+  {
+    vec4 blk = vec4(greaterThanEqual(res, vec4(128.0))) * vec4(greaterThan(BLEND(res), vec4(0.0)));
+    vec4 sc = FLAG(mod(res, 128.0), 8.0);
+    // corner k (x, y, z, w) lies between the directions d = L, U, R, Dn and n = d turned 90 degrees (U, R, Dn, L):
+    // P = E + a is d's pixel, or n's with the second blend color, and Q's side w is the other one. The loop
+    // runs one test at a time, so the test is compiled once
+    vec4 tile = vec4(0.0);
+    vec2 d = vec2(-1., 0.);
+    for (int k = 0; k < 4; k++)
+    {
+      vec2 n = vec2(-d.y, d.x);
+      vec4 m = vec4(equal(vec4(float(k)), vec4(0., 1., 2., 3.)));
+      if (dot(blk, m) > 0.0)
+      {
+        bool second = dot(sc, m) > 0.5;
+        tile += m * tileStripe(coord, E, second ? n : d, second ? d : n);
+      }
+      d = n;
+    }
+    res *= 1.0 - tile;
+  }
   FRAG_OUT = res / 255.0;
 }
 
