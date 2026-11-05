@@ -36,7 +36,8 @@
 //    of a lock of hair (that line may also run toward the pixel diagonal to E when it has E's color,
 //    so a thin arm closes up to the next color).
 // 3. Eye: where two dark strokes of different colors meet in an L around a 1-pixel light gap, like
-//    a pupil under an eyebrow, the corner stays square.
+//    a pupil under an eyebrow, the corner stays square. Not where one stroke ends in the other's
+//    color, like a shaded outline: that is one outline, cut as in xBRZ.
 // 4. Diagonal up to the wall: a corner changed by rules 2 and 3 comes back as in xBRZ where the
 //    pixel's color runs on as a 45-degree diagonal along the cut up to a straight line, like hair or
 //    a fence post, unless that would bend a straight line or stretch a lone 1-pixel dot.
@@ -375,10 +376,12 @@ vec4 weakCorners(vec4 res, vec4 weak)
 // ============================================================================================
 // helpers for rules 3 and 4
 // ============================================================================================
-// P's stroke ends at its pixel o - side: no pixel of P's color right after it, straight on (o) or diagonally (o +- side)
-float strokeEnds(vec3 p, vec2 coord, vec2 o, vec2 side)
+// P's stroke ends at its pixel o - side: no pixel of P's color right after it, straight on (o) or diagonally (o +- side),
+// and the pixel straight on is not Q's color either (a shaded outline whose tones step from P to Q is one outline)
+float strokeEnds(vec3 p, vec3 q, vec2 coord, vec2 o, vec2 side)
 {
-  return float(!alike(p, P(o.x, o.y)) && !alike(p, P(o.x + side.x, o.y + side.y)) && !alike(p, P(o.x - side.x, o.y - side.y)));
+  vec3 T = P(o.x, o.y);
+  return float(!alike(p, T) && !alike(q, T) && !alike(p, P(o.x + side.x, o.y + side.y)) && !alike(p, P(o.x - side.x, o.y - side.y)));
 }
 
 // the pixel at t is part of a straight horizontal or vertical line of its color, 3 pixels or more (a wall)
@@ -499,10 +502,10 @@ vec4 diagonalRules(vec4 res, vec2 coord, vec3 A, vec3 B, vec3 C, vec3 D, vec3 E,
     eye *= 1.0 - vec4(stripeCG, stripeAI, stripeCG, stripeAI);
     if (dot(eye, vec4(1.0)) > 0.0)
     {
-      eye *= vec4(sec.x > 0.5 ? strokeEnds(Px, coord, vec2(2.,-1.), vec2(0.,1.)) : strokeEnds(Px, coord, vec2(-1.,2.), vec2(1.,0.)),
-                  sec.y > 0.5 ? strokeEnds(Py, coord, vec2(1.,2.), vec2(1.,0.)) : strokeEnds(Py, coord, vec2(-2.,-1.), vec2(0.,1.)),
-                  sec.z > 0.5 ? strokeEnds(Pz, coord, vec2(-2.,1.), vec2(0.,1.)) : strokeEnds(Pz, coord, vec2(1.,-2.), vec2(1.,0.)),
-                  sec.w > 0.5 ? strokeEnds(Pw, coord, vec2(-1.,-2.), vec2(1.,0.)) : strokeEnds(Pw, coord, vec2(2.,1.), vec2(0.,1.)));
+      eye *= vec4(sec.x > 0.5 ? strokeEnds(Px, Qx, coord, vec2(2.,-1.), vec2(0.,1.)) : strokeEnds(Px, Qx, coord, vec2(-1.,2.), vec2(1.,0.)),
+                  sec.y > 0.5 ? strokeEnds(Py, Qy, coord, vec2(1.,2.), vec2(1.,0.)) : strokeEnds(Py, Qy, coord, vec2(-2.,-1.), vec2(0.,1.)),
+                  sec.z > 0.5 ? strokeEnds(Pz, Qz, coord, vec2(-2.,1.), vec2(0.,1.)) : strokeEnds(Pz, Qz, coord, vec2(1.,-2.), vec2(1.,0.)),
+                  sec.w > 0.5 ? strokeEnds(Pw, Qw, coord, vec2(-1.,-2.), vec2(1.,0.)) : strokeEnds(Pw, Qw, coord, vec2(2.,1.), vec2(0.,1.)));
       res *= 1.0 - eye;
     }
   }
