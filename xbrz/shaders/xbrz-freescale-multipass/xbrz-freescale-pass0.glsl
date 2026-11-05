@@ -8,6 +8,7 @@
 //   from torcado's cleanEdge, MIT license). Antialiasing ramps use 92, shallow and steep lines are
 //   never blocked, a blocked corner is still cut when a neighbour on the same diagonal is cut,
 //   and where 1-pixel stripes end flush (gauges, health bars) the end corners stay square.
+//   The shallow and steep line tests also weigh hue a little more than lightness (1.2x).
 //
 // The first pass makes every blend decision once per input pixel (blend type, line type, blend
 // color and the minimum contrast), so the second pass, which runs once per output pixel, only
@@ -169,6 +170,22 @@ bool IsPixEqual(vec3 pixA, vec3 pixB)
   return (DistYCbCr(pixA, pixB) < EQUAL_COLOR_TOLERANCE);
 }
 
+// the distance for the shallow and steep line tests: with the crisp rules on (XBRZ_DIAG > 0) hue
+// weighs 1.2x more than lightness, scaled so that as many neighbour pairs pass the thresholds
+float DistShape(vec3 pixA, vec3 pixB)
+{
+  const vec3 w = vec3(0.2627, 0.6780, 0.0593);
+  const float scaleB = 0.5 / (1.0 - 0.0593);
+  const float scaleR = 0.5 / (1.0 - 0.2627);
+  vec2 k = XBRZ_DIAG > 0.0 ? vec2(0.937, 1.125) : vec2(1.0);
+  vec3 diff = pixA - pixB;
+  float y = dot(diff.rgb, w);
+  float Y = k.x * y;
+  float Cb = k.y * scaleB * (diff.b - y);
+  float Cr = k.y * scaleR * (diff.r - y);
+  return sqrt((Y * Y) + (Cb * Cb) + (Cr * Cr));
+}
+
 #define eq(a,b)  (a == b)
 #define neq(a,b) (a != b)
 
@@ -314,8 +331,8 @@ void main()
      (IsPixEqual(G, H) && IsPixEqual(H, I) && IsPixEqual(I, F) && IsPixEqual(F, C) && !IsPixEqual(E, I)))))
   {
     res.z += 4.0;
-    float dist_F_G = DistYCbCr(F, G);
-    float dist_H_C = DistYCbCr(H, C);
+    float dist_F_G = DistShape(F, G);
+    float dist_H_C = DistShape(H, C);
     if((STEEP_E * dist_F_G <= dist_H_C) && neq(E,G) && neq(D,G))
       res.z += 16.0;
     if((STEEP_E * dist_H_C <= dist_F_G) && neq(E,C) && neq(B,C))
@@ -332,8 +349,8 @@ void main()
      (IsPixEqual(A, D) && IsPixEqual(D, G) && IsPixEqual(G, H) && IsPixEqual(H, I) && !IsPixEqual(E, G)))))
   {
     res.w += 4.0;
-    float dist_H_A = DistYCbCr(H, A);
-    float dist_D_I = DistYCbCr(D, I);
+    float dist_H_A = DistShape(H, A);
+    float dist_D_I = DistShape(D, I);
     if((STEEP_E * dist_H_A <= dist_D_I) && neq(E,A) && neq(B,A))
       res.w += 16.0;
     if((STEEP_E * dist_D_I <= dist_H_A) && neq(E,I) && neq(F,I))
@@ -350,8 +367,8 @@ void main()
      (IsPixEqual(I, F) && IsPixEqual(F, C) && IsPixEqual(C, B) && IsPixEqual(B, A) && !IsPixEqual(E, C)))))
   {
     res.y += 4.0;
-    float dist_B_I = DistYCbCr(B, I);
-    float dist_F_A = DistYCbCr(F, A);
+    float dist_B_I = DistShape(B, I);
+    float dist_F_A = DistShape(F, A);
     if((STEEP_E * dist_B_I <= dist_F_A) && neq(E,I) && neq(H,I))
       res.y += 16.0;
     if((STEEP_E * dist_F_A <= dist_B_I) && neq(E,A) && neq(D,A))
@@ -368,8 +385,8 @@ void main()
      (IsPixEqual(C, B) && IsPixEqual(B, A) && IsPixEqual(A, D) && IsPixEqual(D, G) && !IsPixEqual(E, A)))))
   {
     res.x += 4.0;
-    float dist_D_C = DistYCbCr(D, C);
-    float dist_B_G = DistYCbCr(B, G);
+    float dist_D_C = DistShape(D, C);
+    float dist_B_G = DistShape(B, G);
     if((STEEP_E * dist_D_C <= dist_B_G) && neq(E,C) && neq(F,C))
       res.x += 16.0;
     if((STEEP_E * dist_B_G <= dist_D_C) && neq(E,G) && neq(H,G))

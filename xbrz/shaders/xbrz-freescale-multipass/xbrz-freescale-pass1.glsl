@@ -8,6 +8,7 @@
 //   from torcado's cleanEdge, MIT license). Antialiasing ramps use 92, shallow and steep lines are
 //   never blocked, a blocked corner is still cut when a neighbour on the same diagonal is cut,
 //   and where 1-pixel stripes end flush (gauges, health bars) the end corners stay square.
+//   The shallow and steep line tests also weigh hue a little more than lightness (1.2x).
 //
 // The first pass makes every blend decision once per input pixel (blend type, line type, blend
 // color and the minimum contrast), so the second pass, which runs once per output pixel, only
