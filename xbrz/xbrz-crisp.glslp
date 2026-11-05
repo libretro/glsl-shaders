@@ -1,14 +1,19 @@
-shaders = 2
+shaders = 3
 
 shader0 = shaders/xbrz-freescale-multipass/xbrz-freescale-pass0.glsl
 filter_linear0 = false
 scale_type0 = source
 scale0 = 1.0
 
-shader1 = shaders/xbrz-freescale-multipass/xbrz-freescale-pass1.glsl
+shader1 = shaders/xbrz-freescale-multipass/xbrz-freescale-resolve.glsl
 filter_linear1 = false
-scale_type1 = viewport
+scale_type1 = source
 scale1 = 1.0
+
+shader2 = shaders/xbrz-freescale-multipass/xbrz-freescale-pass1.glsl
+filter_linear2 = false
+scale_type2 = viewport
+scale2 = 1.0
 
 parameters = "XBRZ_MINC;XBRZ_DIAG"
 XBRZ_MINC = "20.000000"

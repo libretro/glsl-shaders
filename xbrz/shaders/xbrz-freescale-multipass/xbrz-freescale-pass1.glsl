@@ -1,4 +1,4 @@
-// xBRZ freescale, multipass: xBRZ at any scale factor, in two passes.
+// xBRZ freescale, multipass: xBRZ at any scale factor, in three passes.
 //
 // Two optional rules, both off by default (plain xBRZ); the xbrz-crisp preset turns them on:
 // - XBRZ_MINC (crisp: 20) leaves a corner square when its two colors differ by less than this
@@ -15,10 +15,11 @@
 //   The shallow and steep line tests also weigh hue a little more than lightness (1.2x).
 //
 // The first pass makes every blend decision once per input pixel (blend type, line type, blend
-// color and the minimum contrast), so the second pass, which runs once per output pixel, only
-// reads two textures where no corner is cut. Blend color ties and the order of the four corners
-// follow the reference C++ xBRZ, and the second pass reads the image from the pass before xBRZ,
-// so it also works after other shaders in a preset.
+// color and the minimum contrast) and the resolve pass, also once per input pixel, settles the
+// ones that depend on the neighbours' decisions, so the output pass, which runs once per output
+// pixel, only reads two textures where no corner is cut. Blend color ties and the order of the
+// four corners follow the reference C++ xBRZ, and the output pass reads the image from the pass
+// before xBRZ, so it also works after other shaders in a preset.
 // Defaults: equal color tolerance 15, dominant direction 3.8, steep/shallow line 3.2
 // (reference xBRZ: 30, 3.6 and 2.2).
 /*
@@ -122,17 +123,17 @@ COMPAT_VARYING vec4 TEX0;
 #define vTexCoord TEX0.xy
 #define FRAG_OUT FragColor
 
-// the input of the first pass, which is the original image unless other shaders run before xBRZ
-uniform sampler2D PassPrev2Texture;
-uniform COMPAT_PRECISION vec2 PassPrev2TextureSize;
-uniform COMPAT_PRECISION vec2 PassPrev2InputSize;
+// the input of the first pass (three passes back), which is the original image unless other shaders run before xBRZ
+uniform sampler2D PassPrev3Texture;
+uniform COMPAT_PRECISION vec2 PassPrev3TextureSize;
+uniform COMPAT_PRECISION vec2 PassPrev3InputSize;
 #define OUT_SIZE OutputSize
-#define ORIG_SIZE vec4(PassPrev2TextureSize, 1.0 / PassPrev2TextureSize)
-#define ORIG_INPUT_SIZE PassPrev2InputSize
+#define ORIG_SIZE vec4(PassPrev3TextureSize, 1.0 / PassPrev3TextureSize)
+#define ORIG_INPUT_SIZE PassPrev3InputSize
 // the first pass's texture and the original's can have different sizes (RetroArch rounds each one
 // up to a power of two on its own, e.g. 256 and 512 with snes9x), so each one is read with its own
 #define SRC_SIZE vec4(TextureSize, 1.0 / TextureSize)
-#define P(x,y) COMPAT_TEXTURE(PassPrev2Texture, ocoord + ORIG_SIZE.zw * vec2(x, y)).rgb
+#define P(x,y) COMPAT_TEXTURE(PassPrev3Texture, ocoord + ORIG_SIZE.zw * vec2(x, y)).rgb
 #define INFO(uv) COMPAT_TEXTURE(Texture, uv)
 #define INFO_STEP SRC_SIZE.zw
 
@@ -183,58 +184,7 @@ void main()
   //               w|z|
   vec4 blendResult = BLEND(info);
 
-  // ============================================================================================
-  // the second part of rules 1 and 2, which needs the neighbours' decisions
-  // ============================================================================================
-  vec4 weak = vec4(equal(BLEND(info), vec4(3.0)));
-  if (max(max(info.x, info.y), max(info.z, info.w)) >= 128.0 || dot(weak, vec4(1.0)) > 0.0)
-  {
-    vec4 blocked = floor(info / 128.0);
-    info = mod(info, 128.0);
-    blendResult = BLEND(info);
-    // the same corner of the neighbours along the cut: top-left and bottom-right are cut along "/"
-    // (neighbours up-right and down-left), top-right and bottom-left along "\" (down-right, up-left).
-    // A corner counts as cut when it blends (type 1 or 2) and is not blocked
-    vec4 nA = INFO_AT( 1.0,-1.0);
-    vec4 nB = INFO_AT(-1.0, 1.0);
-    vec4 nC = INFO_AT( 1.0, 1.0);
-    vec4 nD = INFO_AT(-1.0,-1.0);
-    vec4 aA = vec4(greaterThan(BLEND(nA), vec4(0.0))) * vec4(lessThan(BLEND(nA), vec4(3.0))) * vec4(lessThan(nA, vec4(128.0)));
-    vec4 aB = vec4(greaterThan(BLEND(nB), vec4(0.0))) * vec4(lessThan(BLEND(nB), vec4(3.0))) * vec4(lessThan(nB, vec4(128.0)));
-    vec4 aC = vec4(greaterThan(BLEND(nC), vec4(0.0))) * vec4(lessThan(BLEND(nC), vec4(3.0))) * vec4(lessThan(nC, vec4(128.0)));
-    vec4 aD = vec4(greaterThan(BLEND(nD), vec4(0.0))) * vec4(lessThan(BLEND(nD), vec4(3.0))) * vec4(lessThan(nD, vec4(128.0)));
-
-    // ---- 2. Diagonal limit: a blocked corner is cut only where it continues a cut ----
-    // a chain: the same corner of a neighbour along the cut is cut, so diagonal lines are drawn to the end
-    vec4 chain = vec4(max(aA.x, aB.x), max(aC.y, aD.y), max(aA.z, aB.z), max(aC.w, aD.w));
-    // meeting lines: a blocked line corner is also cut where its blend color's pixel has a line at the
-    // other end of their shared edge that blends E's color: the two cuts are one diagonal running into
-    // a straight edge, like the end of a lock of hair
-    vec4 lineB = blocked * FLAG(info, 4.0) * vec4(greaterThan(blendResult, vec4(0.0))) * (1.0 - chain);
-    vec4 meet = vec4(0.0);
-    if (dot(lineB, vec4(1.0)) > 0.0)
-    {
-      vec4 oL = INFO_AT(-1.0, 0.0);
-      vec4 oR = INFO_AT( 1.0, 0.0);
-      vec4 oU = INFO_AT( 0.0,-1.0);
-      vec4 oD = INFO_AT( 0.0, 1.0);
-      vec4 sec = FLAG(info, 8.0);
-      vec4 nO = vec4(mix(oL.z, oU.z, sec.x), mix(oU.w, oR.w, sec.y), mix(oR.x, oD.x, sec.z), mix(oD.y, oL.y, sec.w));
-      // the neighbour may also blend the pixel diagonal to E on the far side when it has E's color (a thin arm)
-      vec3 dX = sec.x > 0.5 ? P( 1.,-1.) : P(-1., 1.), dY = sec.y > 0.5 ? P( 1., 1.) : P(-1.,-1.);
-      vec3 dZ = sec.z > 0.5 ? P(-1., 1.) : P( 1.,-1.), dW = sec.w > 0.5 ? P(-1.,-1.) : P( 1., 1.);
-      vec4 sameE = vec4(float(distYCbCr(E, dX) * 255.0 <= 20.0), float(distYCbCr(E, dY) * 255.0 <= 20.0),
-                        float(distYCbCr(E, dZ) * 255.0 <= 20.0), float(distYCbCr(E, dW) * 255.0 <= 20.0));
-      meet = vec4(greaterThan(BLEND(nO), vec4(0.0))) * vec4(lessThan(nO, vec4(128.0))) * FLAG(nO, 4.0)
-           * max(1.0 - abs(FLAG(nO, 8.0) - sec), abs(FLAG(nO, 8.0) - sec) * sameE)
-           * FLAG(info, 4.0);
-    }
-    blendResult *= max(1.0 - blocked, max(chain, meet));
-
-    // ---- 1. Minimum contrast: a weak corner is cut only inside a cut diagonal ----
-    // the same corner of both neighbours along the cut must be cut
-    blendResult *= mix(vec4(1.0), vec4(min(aA.x, aB.x), min(aC.y, aD.y), min(aA.z, aB.z), min(aC.w, aD.w)), weak);
-  }
+  // the decisions are final: the resolve pass applied the parts of rules 1, 2 and 9 that need the neighbours
 
   // most output pixels have no corner to blend, and only need these two reads
   if (blendResult.x + blendResult.y + blendResult.z + blendResult.w <= 0.0)
@@ -247,34 +197,6 @@ void main()
   vec4 secondPix = FLAG(info, 8.0);
   vec4 haveShallowLine = FLAG(info, 16.0);
   vec4 haveSteepLine = FLAG(info, 64.0);
-
-  // ============================================================================================
-  // 9. Line shapes, second part
-  // ============================================================================================
-  // a line flagged +32 by the first pass (found only by hue, between two different colors) is drawn
-  // as a plain line where the neighbour across its edge draws a line the same way: the two lines
-  // would run into each other, one bending around the other's end
-  vec4 tone = FLAG(info, 32.0);
-  if (tone.x + tone.y + tone.z + tone.w > 0.0)
-  {
-    vec4 nL = INFO_AT(-1.0, 0.0);
-    vec4 nR = INFO_AT( 1.0, 0.0);
-    vec4 nU = INFO_AT( 0.0,-1.0);
-    vec4 nD = INFO_AT( 0.0, 1.0);
-    // a neighbour corner draws a line when it blends, is not flagged (+128) and has the line bit (+4)
-    vec4 drawL = vec4(lessThan(nL, vec4(128.0))) * FLAG(nL, 4.0), drawR = vec4(lessThan(nR, vec4(128.0))) * FLAG(nR, 4.0);
-    vec4 drawU = vec4(lessThan(nU, vec4(128.0))) * FLAG(nU, 4.0), drawD = vec4(lessThan(nD, vec4(128.0))) * FLAG(nD, 4.0);
-    // the shallow and steep flags are in each corner's own rotated frame: at the top-left and
-    // bottom-right corners a steep line runs up and down and meets the left/right neighbour, at the
-    // top-right and bottom-left corners it runs sideways and meets the upper/lower one (and the
-    // other way round for shallow lines)
-    vec4 steepN = vec4(drawL.z * FLAG(nL.z, 64.0), drawU.w * FLAG(nU.w, 64.0),
-                       drawR.x * FLAG(nR.x, 64.0), drawD.y * FLAG(nD.y, 64.0));
-    vec4 shallowN = vec4(drawU.z * FLAG(nU.z, 16.0), drawR.w * FLAG(nR.w, 16.0),
-                         drawD.x * FLAG(nD.x, 16.0), drawL.y * FLAG(nL.y, 16.0));
-    haveSteepLine *= 1.0 - tone * steepN;
-    haveShallowLine *= 1.0 - tone * shallowN;
-  }
 
   // ============================================================================================
   // xBRZ: drawing the corners
