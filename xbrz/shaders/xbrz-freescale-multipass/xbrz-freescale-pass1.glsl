@@ -259,11 +259,14 @@ void main()
     // a neighbour corner draws a line when it blends, is not flagged (+128) and has the line bit (+4)
     vec4 drawL = vec4(lessThan(nL, vec4(128.0))) * FLAG(nL, 4.0), drawR = vec4(lessThan(nR, vec4(128.0))) * FLAG(nR, 4.0);
     vec4 drawU = vec4(lessThan(nU, vec4(128.0))) * FLAG(nU, 4.0), drawD = vec4(lessThan(nD, vec4(128.0))) * FLAG(nD, 4.0);
-    // steep lines meet the left/right neighbour, shallow ones the upper/lower one
-    vec4 steepN = vec4(drawL.z * FLAG(nL.z, 64.0), drawR.w * FLAG(nR.w, 64.0),
-                       drawR.x * FLAG(nR.x, 64.0), drawL.y * FLAG(nL.y, 64.0));
-    vec4 shallowN = vec4(drawU.z * FLAG(nU.z, 16.0), drawU.w * FLAG(nU.w, 16.0),
-                         drawD.x * FLAG(nD.x, 16.0), drawD.y * FLAG(nD.y, 16.0));
+    // the shallow and steep flags are in each corner's own rotated frame: at the top-left and
+    // bottom-right corners a steep line runs up and down and meets the left/right neighbour, at the
+    // top-right and bottom-left corners it runs sideways and meets the upper/lower one (and the
+    // other way round for shallow lines)
+    vec4 steepN = vec4(drawL.z * FLAG(nL.z, 64.0), drawU.w * FLAG(nU.w, 64.0),
+                       drawR.x * FLAG(nR.x, 64.0), drawD.y * FLAG(nD.y, 64.0));
+    vec4 shallowN = vec4(drawU.z * FLAG(nU.z, 16.0), drawR.w * FLAG(nR.w, 16.0),
+                         drawD.x * FLAG(nD.x, 16.0), drawL.y * FLAG(nL.y, 16.0));
     haveSteepLine *= 1.0 - tone * steepN;
     haveShallowLine *= 1.0 - tone * shallowN;
   }

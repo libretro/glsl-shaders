@@ -13,6 +13,7 @@
 //   not joined, and where 1-pixel stripes end flush (gauges, health bars) the end corners stay
 //   square.
 //   The shallow and steep line tests also weigh hue a little more than lightness (1.2x).
+//   A pixel closed in a row between two near-black outline pixels is not pulled out of it.
 //
 // The first pass makes every blend decision once per input pixel (blend type, line type, blend
 // color and the minimum contrast), so the second pass, which runs once per output pixel, only
@@ -177,7 +178,7 @@ uniform COMPAT_PRECISION float XBRZ_DIAG;
 #define XBRZ_RAMP 1.15      // 2, 6. a ramp: (d(E,P) + d(P,Q)) / d(E,Q) up to this
 #define XBRZ_STRIPE 64.0    // 2, 3. a diagonal stripe keeps a close color (within this) along its length
 #define XBRZ_OUTLINE 0.15   // 2, 3. an outline is darker (in luma) than both inner tones by this much
-#define XBRZ_TIP 64.0       // 7. stripe ends stay square above this diagonal distance
+#define XBRZ_TIP 36.0       // 7. stripe ends stay square above this diagonal distance
 #define XBRZ_AA_LINE 1.01   // 8. E lies between the colors: d(P1,E) + d(E,P2) up to this times d(P1,P2)
 #define XBRZ_AA_EDGE 40.0   // 8. the two colors differ by at least this
 #define alike(a,b) (DistYCbCr(a, b) * 255.0 <= 20.0)
@@ -206,8 +207,9 @@ bool IsPixEqual(vec3 pixA, vec3 pixB)
 // ============================================================================================
 // 9. Line shapes
 // ============================================================================================
-// the distance for the shallow and steep line tests: with the crisp rules on (XBRZ_DIAG > 0) hue
-// weighs 1.2x more than lightness, scaled so that as many neighbour pairs pass the thresholds
+// the extra distance for the shallow and steep line tests (a line passes with it or with xBRZ's):
+// with the crisp rules on (XBRZ_DIAG > 0) hue weighs 1.2x more than lightness, scaled so that as
+// many neighbour pairs pass the thresholds
 float DistShape(vec3 pixA, vec3 pixB)
 {
   const vec3 w = vec3(0.2627, 0.6780, 0.0593);
@@ -220,6 +222,14 @@ float DistShape(vec3 pixA, vec3 pixB)
   float Cb = k.y * scaleB * (diff.b - y);
   float Cr = k.y * scaleR * (diff.r - y);
   return sqrt((Y * Y) + (Cb * Cb) + (Cr * Cr));
+}
+
+// a line xBRZ finds that the hue-weighted test does not is kept too, except where it would bring
+// back a corner blocked by the diagonal limit (rule 2), or where the line's color runs on along a
+// 45-degree diagonal in the same color while the line test pairs it with a different one (alt45)
+bool plainLine(vec3 a, vec3 b, vec3 c, vec3 d, float pairD, bool alt45)
+{
+  return STEEP_E * DistYCbCr(a, b) <= DistYCbCr(c, d) && pairD * 255.0 <= XBRZ_DIAG && !alt45;
 }
 
 // a shallow or steep line found only because hue weighs more (DistShape) between two different
@@ -511,8 +521,11 @@ vec4 diagonalRules(vec4 res, vec2 coord, vec3 A, vec3 B, vec3 C, vec3 D, vec3 E,
   // E ends a 1-pixel horizontal line (left or right end) or vertical line (top or bottom end); a corner
   // brought back by rules 4 to 6 is left as it is
   bool eB = eq(E, B), eD = eq(E, D), eF = eq(E, F), eH = eq(E, H);
-  // the stripes on both sides differ from each other too, so outlines (same color on both sides) are left alone
-  bool thinH = !eB && !eH && !eq(B, H), thinV = !eD && !eF && !eq(D, F);
+  // the stripes on both sides differ from each other too, so outlines (same color on both sides) are left alone;
+  // E's stripe may also be 2 pixels wide (E's color on one side and not 2 pixels away)
+  vec3 fB = eB ? P(0., -2.) : P(0., 2.), fD = eD ? P(-2., 0.) : P(2., 0.);
+  bool thinH = !eq(B, H) && ((!eB && !eH) || (eB != eH && !eq(fB, E)));
+  bool thinV = !eq(D, F) && ((!eD && !eF) || (eD != eF && !eq(fD, E)));
   if (thinH || thinV)
   {
     // the stripes only need to keep a similar color (within 20/255) along their length, so a background
@@ -521,11 +534,12 @@ vec4 diagonalRules(vec4 res, vec2 coord, vec3 A, vec3 B, vec3 C, vec3 D, vec3 E,
     // only inside a stack of parallel stripes: the rows (or columns) on both sides run along the line too
     // and they all end flush at the same column (or row), like the stripes of a gauge
     // all three stripes run at least 3 pixels back from the end, and E's 4 when the color past the
-    // end runs straight on (a line meeting a short stripe, not a gauge)
-    float endL = (thinH && nF && !eD && alike(B, C) && alike(H, I) && !eq(B, A) && !eq(H, G) && alike(E, P(2., 0.)) && (alike(E, P(3., 0.)) || !eq(D, P(-2., 0.))) && alike(C, P(2., -1.)) && alike(I, P(2., 1.))) ? 1.0 : 0.0;
-    float endR = (thinH && nD && !eF && alike(B, A) && alike(H, G) && !eq(B, C) && !eq(H, I) && alike(E, P(-2., 0.)) && (alike(E, P(-3., 0.)) || !eq(F, P(2., 0.))) && alike(A, P(-2., -1.)) && alike(G, P(-2., 1.))) ? 1.0 : 0.0;
-    float endT = (thinV && nH && !eB && alike(D, G) && alike(F, I) && !eq(D, A) && !eq(F, C) && alike(E, P(0., 2.)) && (alike(E, P(0., 3.)) || !eq(B, P(0., -2.))) && alike(G, P(-1., 2.)) && alike(I, P(1., 2.))) ? 1.0 : 0.0;
-    float endB = (thinV && nB && !eH && alike(D, A) && alike(F, C) && !eq(D, G) && !eq(F, I) && alike(E, P(0., -2.)) && (alike(E, P(0., -3.)) || !eq(H, P(0., 2.))) && alike(A, P(-1., -2.)) && alike(C, P(1., -2.))) ? 1.0 : 0.0;
+    // end runs straight on (a line meeting a short stripe, not a gauge); E is not an end when its
+    // color runs on along a diagonal past the end (a line turning diagonal, like the bottom of a 3)
+    float endL = (thinH && nF && !eD && !(alike(E, A) && alike(E, P(-2., -2.)) && !alike(E, D) && !alike(E, B)) && !(alike(E, G) && alike(E, P(-2., 2.)) && !alike(E, D) && !alike(E, H)) && !(alike(E, A) && alike(B, D)) && !(alike(E, G) && alike(H, D)) && alike(B, C) && alike(H, I) && !eq(B, A) && !eq(H, G) && alike(E, P(2., 0.)) && (alike(E, P(3., 0.)) || !eq(D, P(-2., 0.))) && alike(C, P(2., -1.)) && alike(I, P(2., 1.))) ? 1.0 : 0.0;
+    float endR = (thinH && nD && !eF && !(alike(E, C) && alike(E, P(2., -2.)) && !alike(E, F) && !alike(E, B)) && !(alike(E, I) && alike(E, P(2., 2.)) && !alike(E, F) && !alike(E, H)) && !(alike(E, C) && alike(B, F)) && !(alike(E, I) && alike(H, F)) && alike(B, A) && alike(H, G) && !eq(B, C) && !eq(H, I) && alike(E, P(-2., 0.)) && (alike(E, P(-3., 0.)) || !eq(F, P(2., 0.))) && alike(A, P(-2., -1.)) && alike(G, P(-2., 1.))) ? 1.0 : 0.0;
+    float endT = (thinV && nH && !eB && !(alike(E, A) && alike(E, P(-2., -2.)) && !alike(E, B) && !alike(E, D)) && !(alike(E, C) && alike(E, P(2., -2.)) && !alike(E, B) && !alike(E, F)) && !(alike(E, A) && alike(D, B)) && !(alike(E, C) && alike(F, B)) && alike(D, G) && alike(F, I) && !eq(D, A) && !eq(F, C) && alike(E, P(0., 2.)) && (alike(E, P(0., 3.)) || !eq(B, P(0., -2.))) && alike(G, P(-1., 2.)) && alike(I, P(1., 2.))) ? 1.0 : 0.0;
+    float endB = (thinV && nB && !eH && !(alike(E, G) && alike(E, P(-2., 2.)) && !alike(E, H) && !alike(E, D)) && !(alike(E, I) && alike(E, P(2., 2.)) && !alike(E, H) && !alike(E, F)) && !(alike(E, G) && alike(D, H)) && !(alike(E, I) && alike(F, H)) && alike(D, A) && alike(F, C) && !eq(D, G) && !eq(F, I) && alike(E, P(0., -2.)) && (alike(E, P(0., -3.)) || !eq(H, P(0., 2.))) && alike(A, P(-1., -2.)) && alike(C, P(1., -2.))) ? 1.0 : 0.0;
     vec4 tip = vec4(max(endL, endT), max(endR, endT), max(endR, endB), max(endL, endB));
     tip *= vec4(greaterThan(pair * 255.0, vec4(XBRZ_TIP)));
     res *= 1.0 - tip * (1.0 - kept);
@@ -556,6 +570,33 @@ vec4 lineThroughAA(vec4 res, vec4 xbrz, vec4 contrast, vec3 B, vec3 D, vec3 E, v
   float bxz = float(DistYCbCr(Cx, E) + DistYCbCr(E, Cz) <= XBRZ_AA_LINE * dXZ && dXZ * 255.0 >= XBRZ_AA_EDGE);
   float byw = float(DistYCbCr(Cy, E) + DistYCbCr(E, Cw) <= XBRZ_AA_LINE * dYW && dYW * 255.0 >= XBRZ_AA_EDGE);
   return mix(res, xbrz, pair * vec4(bxz, byw, bxz, byw));
+}
+
+// ============================================================================================
+// 10. Pixel closed between outlines
+// ============================================================================================
+// the blend color P is a pixel closed in a straight row (or column) between two pixels of a dark
+// outline color Q, and Q also takes the corner's other neighbour, in an L around P: a line test that
+// reads Q on both sides of P as one line would pull P toward E, so the corner stays square
+vec4 closedPixel(vec4 res, vec3 A, vec3 B, vec3 C, vec3 D, vec3 E, vec3 F, vec3 G, vec3 H, vec3 I)
+{
+  if (XBRZ_DIAG <= 0.0)
+    return res;
+  vec4 sc = FLAG(res, 8.0);
+  // Q is A, C, I, G for the corners x, y, z, w
+  bool sx = sc.x > 0.5 ? (alike(C, A) && alike(D, A) && !alike(B, A) && !alike(E, A)) : (alike(G, A) && alike(B, A) && !alike(D, A) && !alike(E, A));
+  bool sy = sc.y > 0.5 ? (alike(I, C) && alike(B, C) && !alike(F, C) && !alike(E, C)) : (alike(A, C) && alike(F, C) && !alike(B, C) && !alike(E, C));
+  bool sz = sc.z > 0.5 ? (alike(G, I) && alike(F, I) && !alike(H, I) && !alike(E, I)) : (alike(C, I) && alike(H, I) && !alike(F, I) && !alike(E, I));
+  bool sw = sc.w > 0.5 ? (alike(A, G) && alike(H, G) && !alike(D, G) && !alike(E, G)) : (alike(I, G) && alike(D, G) && !alike(H, G) && !alike(E, G));
+  // Q is an outline close to black, darker than both E and P
+  vec3 Px = sc.x > 0.5 ? B : D, Py = sc.y > 0.5 ? F : B, Pz = sc.z > 0.5 ? H : F, Pw = sc.w > 0.5 ? D : H;
+  vec4 lQ = vec4(dot(A, lumaW), dot(C, lumaW), dot(I, lumaW), dot(G, lumaW));
+  vec4 lP = vec4(dot(Px, lumaW), dot(Py, lumaW), dot(Pz, lumaW), dot(Pw, lumaW));
+  vec4 dark = vec4(lessThan(lQ + 0.1, lP)) * vec4(lessThan(lQ + 0.1, vec4(dot(E, lumaW)))) * vec4(lessThan(lQ, vec4(0.15)));
+  // only where xBRZ found a shallow or steep line
+  vec4 line = min(FLAG(res, 16.0) + FLAG(res, 64.0), 1.0);
+  vec4 closed = vec4(sx, sy, sz, sw) * vec4(greaterThan(BLEND(res), vec4(0.0))) * dark * line;
+  return res * (1.0 - closed);
 }
 
 void main()
@@ -655,9 +696,9 @@ void main()
     res.z += 4.0;
     float dist_F_G = DistShape(F, G);
     float dist_H_C = DistShape(H, C);
-    if((STEEP_E * dist_F_G <= dist_H_C) && neq(E,G) && neq(D,G))
+    if((STEEP_E * dist_F_G <= dist_H_C || plainLine(F, G, H, C, DistYCbCr(F, H), eq(P(-1.,2.), H) && !eq(G, H))) && neq(E,G) && neq(D,G))
       res.z += 16.0 + 32.0 * toneLine(F, G, H, C);
-    if((STEEP_E * dist_H_C <= dist_F_G) && neq(E,C) && neq(B,C))
+    if((STEEP_E * dist_H_C <= dist_F_G || plainLine(H, C, F, G, DistYCbCr(F, H), eq(P(2.,-1.), F) && !eq(C, F))) && neq(E,C) && neq(B,C))
       res.z += 64.0 + 32.0 * toneLine(H, C, F, G);
   }
 
@@ -673,9 +714,9 @@ void main()
     res.w += 4.0;
     float dist_H_A = DistShape(H, A);
     float dist_D_I = DistShape(D, I);
-    if((STEEP_E * dist_H_A <= dist_D_I) && neq(E,A) && neq(B,A))
+    if((STEEP_E * dist_H_A <= dist_D_I || plainLine(H, A, D, I, DistYCbCr(H, D), eq(P(-2.,-1.), D) && !eq(A, D))) && neq(E,A) && neq(B,A))
       res.w += 16.0 + 32.0 * toneLine(H, A, D, I);
-    if((STEEP_E * dist_D_I <= dist_H_A) && neq(E,I) && neq(F,I))
+    if((STEEP_E * dist_D_I <= dist_H_A || plainLine(D, I, H, A, DistYCbCr(H, D), eq(P(1.,2.), H) && !eq(I, H))) && neq(E,I) && neq(F,I))
       res.w += 64.0 + 32.0 * toneLine(D, I, H, A);
   }
 
@@ -691,9 +732,9 @@ void main()
     res.y += 4.0;
     float dist_B_I = DistShape(B, I);
     float dist_F_A = DistShape(F, A);
-    if((STEEP_E * dist_B_I <= dist_F_A) && neq(E,I) && neq(H,I))
+    if((STEEP_E * dist_B_I <= dist_F_A || plainLine(B, I, F, A, DistYCbCr(B, F), eq(P(2.,1.), F) && !eq(I, F))) && neq(E,I) && neq(H,I))
       res.y += 16.0 + 32.0 * toneLine(B, I, F, A);
-    if((STEEP_E * dist_F_A <= dist_B_I) && neq(E,A) && neq(D,A))
+    if((STEEP_E * dist_F_A <= dist_B_I || plainLine(F, A, B, I, DistYCbCr(B, F), eq(P(-1.,-2.), B) && !eq(A, B))) && neq(E,A) && neq(D,A))
       res.y += 64.0 + 32.0 * toneLine(F, A, B, I);
   }
 
@@ -709,9 +750,9 @@ void main()
     res.x += 4.0;
     float dist_D_C = DistShape(D, C);
     float dist_B_G = DistShape(B, G);
-    if((STEEP_E * dist_D_C <= dist_B_G) && neq(E,C) && neq(F,C))
+    if((STEEP_E * dist_D_C <= dist_B_G || plainLine(D, C, B, G, DistYCbCr(D, B), eq(P(1.,-2.), B) && !eq(C, B))) && neq(E,C) && neq(F,C))
       res.x += 16.0 + 32.0 * toneLine(D, C, B, G);
-    if((STEEP_E * dist_B_G <= dist_D_C) && neq(E,G) && neq(H,G))
+    if((STEEP_E * dist_B_G <= dist_D_C || plainLine(B, G, D, C, DistYCbCr(D, B), eq(P(-2.,1.), D) && !eq(G, D))) && neq(E,G) && neq(H,G))
       res.x += 64.0 + 32.0 * toneLine(B, G, D, C);
   }
 
@@ -733,6 +774,7 @@ void main()
   res = diagonalRules(res, coord, A, B, C, D, E, F, G, H, I, dEB, dED, dEF, dEH);  // 2 to 7
   res = weakCorners(res, weak);                                                 // 1, weak corners
   res = lineThroughAA(res, xbrz, contrast, B, D, E, F, H);                      // 8
+  res = closedPixel(res, A, B, C, D, E, F, G, H, I);                            // 10
 
   FRAG_OUT = res / 255.0;
 }
