@@ -288,15 +288,15 @@ bool IsPixEqual(vec3 pixA, vec3 pixB)
 // ============================================================================================
 // 9. Line shapes
 // ============================================================================================
-// the extra distance for the shallow and steep line tests (a line passes with it or with xBRZ's):
-// with the crisp rules on (CRISP_RULES) hue weighs 1.2x more than lightness, scaled so that as
-// many neighbour pairs pass the thresholds
+// the extra distance for the shallow and steep line tests with the crisp rules on (a line passes with
+// it or with xBRZ's): hue weighs 1.2x more than lightness, scaled so that as many neighbour pairs pass
+// the thresholds
 float DistShape(vec3 pixA, vec3 pixB)
 {
   const vec3 w = vec3(0.2627, 0.6780, 0.0593);
   const float scaleB = 0.5 / (1.0 - 0.0593);
   const float scaleR = 0.5 / (1.0 - 0.2627);
-  vec2 k = CRISP_RULES ? vec2(0.937, 1.125) : vec2(1.0);
+  const vec2 k = vec2(0.937, 1.125);
   vec3 diff = pixA - pixB;
   float y = dot(diff.rgb, w);
   float Y = k.x * y;
@@ -328,6 +328,22 @@ float toneLine(vec3 a, vec3 b, vec3 c, vec3 d)
 bool farTone(vec3 a, vec3 b, vec3 c, vec3 d, vec3 E, bool alt45)
 {
   return !(toneLine(a, b, c, d) > 0.5 && (DistYCbCr(E, b) < DistYCbCr(a, b) || (alt45 && DistYCbCr(a, b) * 255.0 > 36.0)));
+}
+
+// the shallow (x) and steep (y) line tests of a corner, a line along a-b against one along c-d, as
+// the flags they add (+16 and +64, and +32 for a line found only because hue weighs more): xBRZ's own
+// test (STEEP_E * d(a, b) <= d(c, d)) without the crisp rules, the hue-weighted one with them
+vec2 lineTests(vec3 a, vec3 b, vec3 c, vec3 d, vec3 E, float pairD, bool alt45s, bool alt45t)
+{
+  if (!CRISP_RULES)
+  {
+    float ab = DistYCbCr(a, b), cd = DistYCbCr(c, d);
+    return vec2(STEEP_E * ab <= cd ? 16.0 : 0.0, STEEP_E * cd <= ab ? 64.0 : 0.0);
+  }
+  float sab = DistShape(a, b), scd = DistShape(c, d);
+  float shallow = (((STEEP_E * sab <= scd) && farTone(a, b, c, d, E, alt45s)) || plainLine(a, b, c, d, pairD, alt45s)) ? 16.0 + 32.0 * toneLine(a, b, c, d) : 0.0;
+  float steep = (((STEEP_E * scd <= sab) && farTone(c, d, a, b, E, alt45t)) || plainLine(c, d, a, b, pairD, alt45t)) ? 64.0 + 32.0 * toneLine(c, d, a, b) : 0.0;
+  return vec2(shallow, steep);
 }
 
 // ============================================================================================
@@ -374,13 +390,12 @@ float wallAt(vec2 coord, vec2 t)
                (u && (d || alike(T, P(t.x, t.y - 2.)))) || (d && alike(T, P(t.x, t.y + 2.))));
 }
 
-// E's color runs on along the diagonal d and the first pixel past the run (up to 3 pixels) is a wall
+// E's color runs on along the diagonal d and the first pixel past the run (up to 3 pixels) is a wall;
+// the run's length k is found first, so the wall test is compiled once
 float runWall(vec3 E, vec2 coord, vec2 d)
 {
-  if (!alike(E, P(d.x, d.y))) return wallAt(coord, d);
-  if (!alike(E, P(2. * d.x, 2. * d.y))) return wallAt(coord, 2. * d);
-  if (!alike(E, P(3. * d.x, 3. * d.y))) return wallAt(coord, 3. * d);
-  return 1.0;
+  float k = !alike(E, P(d.x, d.y)) ? 1.0 : !alike(E, P(2. * d.x, 2. * d.y)) ? 2.0 : !alike(E, P(3. * d.x, 3. * d.y)) ? 3.0 : 0.0;
+  return k > 0.0 ? wallAt(coord, k * d) : 1.0;
 }
 
 // ============================================================================================
@@ -471,22 +486,25 @@ vec4 diagonalRules(vec4 res, vec2 coord, vec3 A, vec3 B, vec3 C, vec3 D, vec3 E,
   // two dark strokes of different colors meet in an L around a 1-pixel light gap E, like a pupil under
   // an eyebrow: Q passes the corner, P is a short 1-pixel line that ends against it. The corner is
   // dropped, so the two strokes are not joined into a diagonal
-  vec4 eye = vec4(float(!alike(Px, Qx) && alike(Qx, A) && !alike(Px, A) && !alike(Px, Rx) && !alike(E, sec.x > 0.5 ? H : F)),
-                  float(!alike(Py, Qy) && alike(Qy, C) && !alike(Py, C) && !alike(Py, Ry) && !alike(E, sec.y > 0.5 ? D : H)),
-                  float(!alike(Pz, Qz) && alike(Qz, I) && !alike(Pz, I) && !alike(Pz, Rz) && !alike(E, sec.z > 0.5 ? B : D)),
-                  float(!alike(Pw, Qw) && alike(Qw, G) && !alike(Pw, G) && !alike(Pw, Rw) && !alike(E, sec.w > 0.5 ? F : B)))
-          * straight * cut * vec4(lessThan(max(lP, lQ), vec4(lE - XBRZ_OUTLINE)));
-  // E is not part of a diagonal stripe along the cut
-  float stripeCG = float(min(DistYCbCr(C, E), DistYCbCr(E, G)) * 255.0 <= XBRZ_STRIPE);
-  float stripeAI = float(min(DistYCbCr(A, E), DistYCbCr(E, I)) * 255.0 <= XBRZ_STRIPE);
-  eye *= 1.0 - vec4(stripeCG, stripeAI, stripeCG, stripeAI);
-  if (CRISP_RULES && dot(eye, vec4(1.0)) > 0.0)
+  if (CRISP_RULES)
   {
-    eye *= vec4(sec.x > 0.5 ? strokeEnds(Px, coord, vec2(2.,-1.), vec2(0.,1.)) : strokeEnds(Px, coord, vec2(-1.,2.), vec2(1.,0.)),
-                sec.y > 0.5 ? strokeEnds(Py, coord, vec2(1.,2.), vec2(1.,0.)) : strokeEnds(Py, coord, vec2(-2.,-1.), vec2(0.,1.)),
-                sec.z > 0.5 ? strokeEnds(Pz, coord, vec2(-2.,1.), vec2(0.,1.)) : strokeEnds(Pz, coord, vec2(1.,-2.), vec2(1.,0.)),
-                sec.w > 0.5 ? strokeEnds(Pw, coord, vec2(-1.,-2.), vec2(1.,0.)) : strokeEnds(Pw, coord, vec2(2.,1.), vec2(0.,1.)));
-    res *= 1.0 - eye;
+    vec4 eye = vec4(float(!alike(Px, Qx) && alike(Qx, A) && !alike(Px, A) && !alike(Px, Rx) && !alike(E, sec.x > 0.5 ? H : F)),
+                    float(!alike(Py, Qy) && alike(Qy, C) && !alike(Py, C) && !alike(Py, Ry) && !alike(E, sec.y > 0.5 ? D : H)),
+                    float(!alike(Pz, Qz) && alike(Qz, I) && !alike(Pz, I) && !alike(Pz, Rz) && !alike(E, sec.z > 0.5 ? B : D)),
+                    float(!alike(Pw, Qw) && alike(Qw, G) && !alike(Pw, G) && !alike(Pw, Rw) && !alike(E, sec.w > 0.5 ? F : B)))
+            * straight * cut * vec4(lessThan(max(lP, lQ), vec4(lE - XBRZ_OUTLINE)));
+    // E is not part of a diagonal stripe along the cut
+    float stripeCG = float(min(DistYCbCr(C, E), DistYCbCr(E, G)) * 255.0 <= XBRZ_STRIPE);
+    float stripeAI = float(min(DistYCbCr(A, E), DistYCbCr(E, I)) * 255.0 <= XBRZ_STRIPE);
+    eye *= 1.0 - vec4(stripeCG, stripeAI, stripeCG, stripeAI);
+    if (dot(eye, vec4(1.0)) > 0.0)
+    {
+      eye *= vec4(sec.x > 0.5 ? strokeEnds(Px, coord, vec2(2.,-1.), vec2(0.,1.)) : strokeEnds(Px, coord, vec2(-1.,2.), vec2(1.,0.)),
+                  sec.y > 0.5 ? strokeEnds(Py, coord, vec2(1.,2.), vec2(1.,0.)) : strokeEnds(Py, coord, vec2(-2.,-1.), vec2(0.,1.)),
+                  sec.z > 0.5 ? strokeEnds(Pz, coord, vec2(-2.,1.), vec2(0.,1.)) : strokeEnds(Pz, coord, vec2(1.,-2.), vec2(1.,0.)),
+                  sec.w > 0.5 ? strokeEnds(Pw, coord, vec2(-1.,-2.), vec2(1.,0.)) : strokeEnds(Pw, coord, vec2(2.,1.), vec2(0.,1.)));
+      res *= 1.0 - eye;
+    }
   }
 
   // ---- 4. Diagonal up to the wall ----
@@ -1035,12 +1053,9 @@ void main()
      (IsPixEqual(G, H) && IsPixEqual(H, I) && IsPixEqual(F, I) && IsPixEqual(C, F) && !IsPixEqual(E, I)))))
   {
     res.z += 4.0;
-    float dist_F_G = DistShape(F, G);
-    float dist_H_C = DistShape(H, C);
-    if((((STEEP_E * dist_F_G <= dist_H_C) && farTone(F, G, H, C, E, eq(N_m1_p2, H) && !eq(G, H))) || plainLine(F, G, H, C, DistYCbCr(F, H), eq(N_m1_p2, H) && !eq(G, H))) && neq(E,G) && neq(D,G))
-      res.z += 16.0 + 32.0 * toneLine(F, G, H, C);
-    if((((STEEP_E * dist_H_C <= dist_F_G) && farTone(H, C, F, G, E, eq(N_p2_m1, F) && !eq(C, F))) || plainLine(H, C, F, G, DistYCbCr(F, H), eq(N_p2_m1, F) && !eq(C, F))) && neq(E,C) && neq(B,C))
-      res.z += 64.0 + 32.0 * toneLine(H, C, F, G);
+    vec2 line = lineTests(F, G, H, C, E, DistYCbCr(F, H), eq(N_m1_p2, H) && !eq(G, H), eq(N_p2_m1, F) && !eq(C, F));
+    if (neq(E,G) && neq(D,G)) res.z += line.x;
+    if (neq(E,C) && neq(B,C)) res.z += line.y;
   }
 
   // Pixel Tap Mapping: -|-|-|-|-
@@ -1053,12 +1068,9 @@ void main()
      (IsPixEqual(A, D) && IsPixEqual(D, G) && IsPixEqual(G, H) && IsPixEqual(H, I) && !IsPixEqual(E, G)))))
   {
     res.w += 4.0;
-    float dist_H_A = DistShape(H, A);
-    float dist_D_I = DistShape(D, I);
-    if((((STEEP_E * dist_H_A <= dist_D_I) && farTone(H, A, D, I, E, eq(N_m2_m1, D) && !eq(A, D))) || plainLine(H, A, D, I, DistYCbCr(D, H), eq(N_m2_m1, D) && !eq(A, D))) && neq(E,A) && neq(B,A))
-      res.w += 16.0 + 32.0 * toneLine(H, A, D, I);
-    if((((STEEP_E * dist_D_I <= dist_H_A) && farTone(D, I, H, A, E, eq(N_p1_p2, H) && !eq(I, H))) || plainLine(D, I, H, A, DistYCbCr(D, H), eq(N_p1_p2, H) && !eq(I, H))) && neq(E,I) && neq(F,I))
-      res.w += 64.0 + 32.0 * toneLine(D, I, H, A);
+    vec2 line = lineTests(H, A, D, I, E, DistYCbCr(D, H), eq(N_m2_m1, D) && !eq(A, D), eq(N_p1_p2, H) && !eq(I, H));
+    if (neq(E,A) && neq(B,A)) res.w += line.x;
+    if (neq(E,I) && neq(F,I)) res.w += line.y;
   }
 
   // Pixel Tap Mapping: -|-|x|x|-
@@ -1071,12 +1083,9 @@ void main()
      (IsPixEqual(F, I) && IsPixEqual(C, F) && IsPixEqual(B, C) && IsPixEqual(A, B) && !IsPixEqual(C, E)))))
   {
     res.y += 4.0;
-    float dist_B_I = DistShape(B, I);
-    float dist_F_A = DistShape(F, A);
-    if((((STEEP_E * dist_B_I <= dist_F_A) && farTone(B, I, F, A, E, eq(N_p2_p1, F) && !eq(I, F))) || plainLine(B, I, F, A, DistYCbCr(B, F), eq(N_p2_p1, F) && !eq(I, F))) && neq(E,I) && neq(H,I))
-      res.y += 16.0 + 32.0 * toneLine(B, I, F, A);
-    if((((STEEP_E * dist_F_A <= dist_B_I) && farTone(F, A, B, I, E, eq(N_m1_m2, B) && !eq(A, B))) || plainLine(F, A, B, I, DistYCbCr(B, F), eq(N_m1_m2, B) && !eq(A, B))) && neq(E,A) && neq(D,A))
-      res.y += 64.0 + 32.0 * toneLine(F, A, B, I);
+    vec2 line = lineTests(B, I, F, A, E, DistYCbCr(B, F), eq(N_p2_p1, F) && !eq(I, F), eq(N_m1_m2, B) && !eq(A, B));
+    if (neq(E,I) && neq(H,I)) res.y += line.x;
+    if (neq(E,A) && neq(D,A)) res.y += line.y;
   }
 
   // Pixel Tap Mapping: -|x|x|-|-
@@ -1089,12 +1098,9 @@ void main()
      (IsPixEqual(B, C) && IsPixEqual(A, B) && IsPixEqual(A, D) && IsPixEqual(D, G) && !IsPixEqual(A, E)))))
   {
     res.x += 4.0;
-    float dist_D_C = DistShape(D, C);
-    float dist_B_G = DistShape(B, G);
-    if((((STEEP_E * dist_D_C <= dist_B_G) && farTone(D, C, B, G, E, eq(N_p1_m2, B) && !eq(C, B))) || plainLine(D, C, B, G, DistYCbCr(B, D), eq(N_p1_m2, B) && !eq(C, B))) && neq(E,C) && neq(F,C))
-      res.x += 16.0 + 32.0 * toneLine(D, C, B, G);
-    if((((STEEP_E * dist_B_G <= dist_D_C) && farTone(B, G, D, C, E, eq(N_m2_p1, D) && !eq(G, D))) || plainLine(B, G, D, C, DistYCbCr(B, D), eq(N_m2_p1, D) && !eq(G, D))) && neq(E,G) && neq(H,G))
-      res.x += 64.0 + 32.0 * toneLine(B, G, D, C);
+    vec2 line = lineTests(D, C, B, G, E, DistYCbCr(B, D), eq(N_p1_m2, B) && !eq(C, B), eq(N_m2_p1, D) && !eq(G, D));
+    if (neq(E,C) && neq(F,C)) res.x += line.x;
+    if (neq(E,G) && neq(H,G)) res.x += line.y;
   }
 
   // Decisions for the output pass, made once per input pixel instead of once per output pixel:

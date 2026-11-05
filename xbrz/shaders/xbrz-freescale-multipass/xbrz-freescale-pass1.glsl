@@ -272,7 +272,8 @@ void main()
   // xBRZ: drawing the corners
   // ============================================================================================
   // Corners are applied in the same order as the original xBRZ (0, 90, 180, 270 degrees). The first
-  // pass picked each blend colour ("dist(e,f) <= dist(e,h) ? f : h").
+  // pass picked each blend colour ("dist(e,f) <= dist(e,h) ? f : h"); its offset is chosen first, so
+  // each corner reads one pixel.
 
   // Pixel Tap Mapping: -|-|-
   //                    -|E|F
@@ -287,7 +288,8 @@ void main()
       direction.x += haveShallowLine.z;
       direction.y -= haveSteepLine.z;
     }
-    vec3 blendPix = (secondPix.z > 0.0) ? P( 0., 1.) : P( 1., 0.);
+    vec2 bo = (secondPix.z > 0.0) ? vec2( 0., 1.) : vec2( 1., 0.);
+    vec3 blendPix = P(bo.x, bo.y);
     res = mix(res, blendPix, get_left_ratio(pos, origin, direction, scale));
   }
 
@@ -304,7 +306,8 @@ void main()
       direction.y -= haveShallowLine.y;
       direction.x -= haveSteepLine.y;
     }
-    vec3 blendPix = (secondPix.y > 0.0) ? P( 1., 0.) : P( 0.,-1.);
+    vec2 bo = (secondPix.y > 0.0) ? vec2( 1., 0.) : vec2( 0.,-1.);
+    vec3 blendPix = P(bo.x, bo.y);
     res = mix(res, blendPix, get_left_ratio(pos, origin, direction, scale));
   }
 
@@ -321,7 +324,8 @@ void main()
       direction.x -= haveShallowLine.x;
       direction.y += haveSteepLine.x;
     }
-    vec3 blendPix = (secondPix.x > 0.0) ? P( 0.,-1.) : P(-1., 0.);
+    vec2 bo = (secondPix.x > 0.0) ? vec2( 0.,-1.) : vec2(-1., 0.);
+    vec3 blendPix = P(bo.x, bo.y);
     res = mix(res, blendPix, get_left_ratio(pos, origin, direction, scale));
   }
 
@@ -338,7 +342,8 @@ void main()
       direction.y += haveShallowLine.w;
       direction.x += haveSteepLine.w;
     }
-    vec3 blendPix = (secondPix.w > 0.0) ? P(-1., 0.) : P( 0., 1.);
+    vec2 bo = (secondPix.w > 0.0) ? vec2(-1., 0.) : vec2( 0., 1.);
+    vec3 blendPix = P(bo.x, bo.y);
     res = mix(res, blendPix, get_left_ratio(pos, origin, direction, scale));
   }
 
