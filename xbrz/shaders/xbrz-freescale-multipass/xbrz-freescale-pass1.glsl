@@ -1,19 +1,95 @@
-// xBRZ freescale, multipass: xBRZ at any scale factor, in two passes.
+// xBRZ freescale, multipass: xBRZ at any scale factor, in three passes.
 //
-// Two optional rules, both off by default (plain xBRZ); the xbrz-crisp preset turns them on:
-// - XBRZ_MINC (crisp: 24) leaves a corner square when its two colors differ by less than this
-//   (x/255, YCbCr distance), so soft shading and textures keep their pixels.
-// - XBRZ_DIAG (crisp: 100) leaves a corner square when the two colors its cut would join differ
-//   by more than this, so a junction of three colors is not pulled into a fake diagonal (an idea
-//   from torcado's cleanEdge, MIT license). Antialiasing ramps use 92, shallow and steep lines are
-//   never blocked, a blocked corner is still cut when a neighbour on the same diagonal is cut,
-//   and where 1-pixel stripes end flush (gauges, health bars) the end corners stay square.
+// Rules 2, 4 to 7 and 10 below keep xBRZ from cutting corners into shapes the artist did not
+// draw (fake diagonals at junctions of three colors, bent frames, rounded ends of stripes, a pixel
+// closed between outlines). They are on by default; XBRZ_DIAG = 0 turns them off, for the
+// reference xBRZ shapes. Rules 1, 3, 8, 9 and 11 to 13 are the crisp look and run with XBRZ_MINC
+// above 0; the xbrz-crisp preset sets it to 20, so low-contrast shading and textures keep their pixels.
+//
+// xBRZ decides, for each corner of each pixel, whether to cut it and how (a corner piece, a 45-degree
+// line, or a shallow or steep line). The rules below then change some of those decisions. Each rule
+// has a section of the same number and name in the code. The first pass (pass 0) makes the decisions,
+// the resolve pass, also once per game pixel, finishes rules 1, 2 and 9, which need the neighbours'
+// decisions, and the output pass (pass 1) only draws the corners.
+//
+// 1. Minimum contrast (XBRZ_MINC): a corner whose two colors differ by less than XBRZ_MINC (x/255,
+//    YCbCr distance) is left square, so low-contrast shading, dithering and textures (grass,
+//    foliage, stone) keep their pixel detail, while outlines, text and sprites are smoothed as in
+//    xBRZ. A corner up to 4 below the limit is weak: it is still rounded when the same corner of both
+//    neighbours along its cut is rounded, so a diagonal edge has no tooth where its contrast dips.
+// 2. Diagonal limit (XBRZ_DIAG): a corner is blocked when the two colors on its diagonal (the colors
+//    the cut would join) differ by more than XBRZ_DIAG, so a junction of three different colors is
+//    not pulled into a fake diagonal (an idea from torcado's cleanEdge, MIT license).
+//    Antialiasing ramps, where one of those colors sits between the pixel and the other one, use 92.
+//    A corner is not blocked:
+//    - on a shallow or steep line, unless it would cut a pixel with a lighter color, so dark
+//      outlines, eyes and eyebrows keep their pixels;
+//    - at the tip of a 1-pixel diagonal stripe, so the stripe runs on to the edge;
+//    - between two close inner tones next to an outline darker than both, so the cut runs up to the
+//      outline, which stays whole (not at the corner of a solid block, along a 1-pixel stripe or next
+//      to a corner the artist already rounded with an antialiasing pixel).
+//    A blocked corner whose blend color runs straight on, like a frame or a horizontal line, stays
+//    square, so lines do not bend where they meet. Any other blocked corner is cut by the resolve pass
+//    only where it continues a cut: when a neighbour on the same diagonal is cut, so lines are drawn
+//    to the end, or when the neighbour across its edge cuts the other end of that edge with a line in
+//    the pixel's color, so the two cuts make one diagonal that ends on a straight edge, like the tip
+//    of a lock of hair (that line may also run toward the pixel diagonal to E when it has E's color,
+//    so a thin arm closes up to the next color).
+// 3. Eye: where two dark strokes of different colors meet in an L around a 1-pixel light gap, like
+//    a pupil under an eyebrow, the corner stays square.
+// 4. Diagonal up to the wall: a corner changed by rules 2 and 3 comes back as in xBRZ where the
+//    pixel's color runs on as a 45-degree diagonal along the cut up to a straight line, like hair or
+//    a fence post, unless that would bend a straight line or stretch a lone 1-pixel dot.
+// 5. Thin light stroke: it also comes back where a 1-pixel stroke lighter than both colors runs on
+//    along the cut, like the white strokes of letters.
+// 6. Antialiasing notch: and where a single antialiasing pixel steps along a diagonal edge between
+//    two colors, like the shaded edge of a cape.
+// 7. Stripe ends: where a stack of 1- or 2-pixel stripes of different colors ends flush, like the
+//    bars of a gauge or a striped wall, the end corners stay square when their diagonal colors differ
+//    by more than 36, so every stripe ends the same way. A line that turns diagonal at its end is
+//    not a stripe end. A stripe only 3 pixels long is left alone when the color past its end
+//    runs straight on, like a line meeting it. Nor is a pixel whose side neighbour is a close tone of
+//    it, where the end corner is a line between two outline colors darker than it, like a dark outline
+//    turning diagonal over a forehead.
+// 8. Line through an antialiasing pixel: when a line cuts one corner of a pixel whose color lies
+//    between the line's two colors on a strong edge, and rule 1 left the opposite corner square, that
+//    corner is cut too, as in xBRZ, so the pixel becomes a thin strip of the diagonal instead of a
+//    notch in it.
+// 9. Line shapes: the shallow and steep line tests weigh hue a little more than lightness (1.2x), so
+//    lines in hue-shifted shading follow the artist's pixels. A line xBRZ finds is kept too, unless it
+//    would bring back a corner blocked by rule 2 or the line's color runs on along a 45-degree
+//    diagonal in the same color. Where a line found only by the hue weighting, between two
+//    different colors, would run into the line of the neighbour across the same edge, it is drawn
+//    as in xBRZ. A line found only by the hue weighting is not drawn where the pixel at its far end is
+//    closer to the pixel's own color than to the line's, so a diagonal of that color is not cut short
+//    (Goku's brow in Buu's Fury), nor where its two colors clearly differ and the line's color runs on
+//    along a 45-degree diagonal in the same color (the tip of Goku's nose).
+// 10. Pixel closed between outlines: a pixel closed in a straight row between two pixels of a
+//     near-black outline that also wraps the corner, like the brown brow between the black lines of
+//     Link's eye, is not pulled toward E by a line through the outline; that corner stays square.
+// 11. Lines in a larger window: a corner that rule 1 left square is still cut as in xBRZ where it lies
+//     on a straight line (45 degrees or 2:1, with regular steps) between two stripes that run on for
+//     5 pixels or more, one of them 1 pixel wide against a strong contour, like the inner side of an
+//     outline's antialiasing band or the stripes of a bar, so those lines have no teeth.
+// 12. Closed shadow: where a near-black shadow runs under an object, like the round shadow under a
+//     character's feet, the background pixel in the notch between them gets a wedge of the shadow's
+//     color and the shadow's corners next to the notch stay square, so the shadow's outline closes.
+//     The shape is read in a 7x7 window (an arm 3 pixels long with background outside it, a solid
+//     2x2 lobe, an object bigger than 1 pixel), so serifs, letters and textures are left alone.
+//     The floor around the notch may have any color or texture (grass, tiles): it only has to be
+//     lighter than the shadow and differ from both the shadow and the object.
+// 13. Tiles between walls: in a row of 1-pixel tiles (4 or more, in a repeating pattern) that runs
+//     between two straight walls, like the squares of a gauge, a blocked corner between two tiles
+//     stays square, so no diagonal is chained through the row.
+// XBRZ_DIAG = 0 turns rules 2 to 7, 9, 10, 12 and 13 off, and XBRZ_MINC = 0 turns rules 1, 3, 8, 9 and
+// 11 to 13 off, so with XBRZ_MINC at 0 only rules 2, 4 to 7 and 10 run.
 //
 // The first pass makes every blend decision once per input pixel (blend type, line type, blend
-// color and the minimum contrast), so the second pass, which runs once per output pixel, only
-// reads two textures where no corner is cut. Blend color ties and the order of the four corners
-// follow the reference C++ xBRZ, and the second pass reads the image from the pass before xBRZ,
-// so it also works after other shaders in a preset.
+// color and the minimum contrast) and the resolve pass, also once per input pixel, settles the
+// ones that depend on the neighbours' decisions, so the output pass, which runs once per output
+// pixel, only reads two textures where no corner is cut. Blend color ties and the order of the
+// four corners follow the reference C++ xBRZ, and the output pass reads the image from the pass
+// before xBRZ, so it also works after other shaders in a preset.
 // Defaults: equal color tolerance 15, dominant direction 3.8, steep/shallow line 3.2
 // (reference xBRZ: 30, 3.6 and 2.2).
 /*
@@ -117,18 +193,29 @@ COMPAT_VARYING vec4 TEX0;
 #define vTexCoord TEX0.xy
 #define FRAG_OUT FragColor
 
-// the input of the first pass, which is the original image unless other shaders run before xBRZ
-uniform sampler2D PassPrev2Texture;
-uniform COMPAT_PRECISION vec2 PassPrev2TextureSize;
-uniform COMPAT_PRECISION vec2 PassPrev2InputSize;
+// the input of the first pass (three passes back), which is the original image unless other shaders run before xBRZ
+uniform sampler2D PassPrev3Texture;
+uniform COMPAT_PRECISION vec2 PassPrev3TextureSize;
+uniform COMPAT_PRECISION vec2 PassPrev3InputSize;
 #define OUT_SIZE OutputSize
-#define ORIG_SIZE vec4(PassPrev2TextureSize, 1.0 / PassPrev2TextureSize)
-#define ORIG_INPUT_SIZE PassPrev2InputSize
+#define ORIG_SIZE vec4(PassPrev3TextureSize, 1.0 / PassPrev3TextureSize)
+#define ORIG_INPUT_SIZE PassPrev3InputSize
 // the first pass's texture and the original's can have different sizes (RetroArch rounds each one
 // up to a power of two on its own, e.g. 256 and 512 with snes9x), so each one is read with its own
 #define SRC_SIZE vec4(TextureSize, 1.0 / TextureSize)
-#define P(x,y) COMPAT_TEXTURE(PassPrev2Texture, ocoord + ORIG_SIZE.zw * vec2(x, y)).rgb
+#define P(x,y) COMPAT_TEXTURE(PassPrev3Texture, ocoord + ORIG_SIZE.zw * vec2(x, y)).rgb
 #define INFO(uv) COMPAT_TEXTURE(Texture, uv)
+#define INFO_STEP SRC_SIZE.zw
+
+float distYCbCr(vec3 pixA, vec3 pixB)
+{
+  const vec3 w = vec3(0.2627, 0.6780, 0.0593);
+  vec3 diff = pixA - pixB;
+  float Y = dot(diff, w);
+  float Cb = 0.5 / (1.0 - 0.0593) * (diff.b - Y);
+  float Cr = 0.5 / (1.0 - 0.2627) * (diff.r - Y);
+  return sqrt(Y * Y + Cb * Cb + Cr * Cr);
+}
 
 float get_left_ratio(vec2 center, vec2 origin, vec2 direction, vec2 scale)
 {
@@ -140,6 +227,12 @@ float get_left_ratio(vec2 center, vec2 origin, vec2 direction, vec2 scale)
   float v = side * length(distv * scale);
   return smoothstep(-sqrt(2.0)/2.0, sqrt(2.0)/2.0, v);
 }
+
+// the first pass's decisions for the four corners of the pixel at (x, y) from E; see the decision
+// word in pass 0 (BLEND is the blend type, FLAG(r, f) one of its flags)
+#define INFO_AT(x, y) floor(INFO(coord + vec2(x, y) * INFO_STEP) * 255.0 + 0.5)
+#define BLEND(r) mod(r, 4.0)
+#define FLAG(r, f) mod(floor((r) / (f)), 2.0)
 
 void main()
 {
@@ -153,33 +246,15 @@ void main()
   vec2 coord = vTexCoord - pos * SRC_SIZE.zw;
   vec2 ocoord = coord * SRC_SIZE.xy * ORIG_SIZE.zw;
 
-  vec4 info = floor(INFO(coord) * 255.0 + 0.5);
+  vec4 info = INFO_AT(0.0, 0.0);
   vec3 E = P( 0., 0.);
   vec3 res = E;
 
   // info Mapping: x|y|
   //               w|z|
-  vec4 blendResult = mod(info, 4.0);
+  vec4 blendResult = BLEND(info);
 
-  // a corner flagged by the first pass (+128, XBRZ_DIAG) is still cut when the same corner of a
-  // neighbour along the cut is cut and not flagged, so diagonal lines are drawn to the end
-  if (max(max(info.x, info.y), max(info.z, info.w)) >= 128.0)
-  {
-    vec4 blocked = floor(info / 128.0);
-    info = mod(info, 128.0);
-    blendResult = mod(info, 4.0);
-    vec4 nA = floor(INFO(coord + vec2( 1.0,-1.0) * SRC_SIZE.zw) * 255.0 + 0.5);
-    vec4 nB = floor(INFO(coord + vec2(-1.0, 1.0) * SRC_SIZE.zw) * 255.0 + 0.5);
-    vec4 nC = floor(INFO(coord + vec2( 1.0, 1.0) * SRC_SIZE.zw) * 255.0 + 0.5);
-    vec4 nD = floor(INFO(coord + vec2(-1.0,-1.0) * SRC_SIZE.zw) * 255.0 + 0.5);
-    vec4 aA = vec4(greaterThan(mod(nA, 4.0), vec4(0.0))) * vec4(lessThan(nA, vec4(128.0)));
-    vec4 aB = vec4(greaterThan(mod(nB, 4.0), vec4(0.0))) * vec4(lessThan(nB, vec4(128.0)));
-    vec4 aC = vec4(greaterThan(mod(nC, 4.0), vec4(0.0))) * vec4(lessThan(nC, vec4(128.0)));
-    vec4 aD = vec4(greaterThan(mod(nD, 4.0), vec4(0.0))) * vec4(lessThan(nD, vec4(128.0)));
-    // top-left and bottom-right are cut along "/", top-right and bottom-left along "\"
-    vec4 chain = vec4(max(aA.x, aB.x), max(aC.y, aD.y), max(aA.z, aB.z), max(aC.w, aD.w));
-    blendResult *= max(1.0 - blocked, chain);
-  }
+  // the decisions are final: the resolve pass applied the parts of rules 1, 2 and 9 that need the neighbours
 
   // most output pixels have no corner to blend, and only need these two reads
   if (blendResult.x + blendResult.y + blendResult.z + blendResult.w <= 0.0)
@@ -188,13 +263,17 @@ void main()
     return;
   }
 
-  vec4 doLineBlend = mod(floor(info / 4.0), 2.0);
-  vec4 secondPix = mod(floor(info / 8.0), 2.0);
-  vec4 haveShallowLine = floor(mod(info / 16.0, 4.0));
-  vec4 haveSteepLine = floor(mod(info / 64.0, 4.0));
+  vec4 doLineBlend = FLAG(info, 4.0);
+  vec4 secondPix = FLAG(info, 8.0);
+  vec4 haveShallowLine = FLAG(info, 16.0);
+  vec4 haveSteepLine = FLAG(info, 64.0);
 
+  // ============================================================================================
+  // xBRZ: drawing the corners
+  // ============================================================================================
   // Corners are applied in the same order as the original xBRZ (0, 90, 180, 270 degrees). The first
-  // pass picked each blend colour ("dist(e,f) <= dist(e,h) ? f : h").
+  // pass picked each blend colour ("dist(e,f) <= dist(e,h) ? f : h"); its offset is chosen first, so
+  // each corner reads one pixel.
 
   // Pixel Tap Mapping: -|-|-
   //                    -|E|F
@@ -209,7 +288,8 @@ void main()
       direction.x += haveShallowLine.z;
       direction.y -= haveSteepLine.z;
     }
-    vec3 blendPix = (secondPix.z > 0.0) ? P( 0., 1.) : P( 1., 0.);
+    vec2 bo = (secondPix.z > 0.0) ? vec2( 0., 1.) : vec2( 1., 0.);
+    vec3 blendPix = P(bo.x, bo.y);
     res = mix(res, blendPix, get_left_ratio(pos, origin, direction, scale));
   }
 
@@ -226,7 +306,8 @@ void main()
       direction.y -= haveShallowLine.y;
       direction.x -= haveSteepLine.y;
     }
-    vec3 blendPix = (secondPix.y > 0.0) ? P( 1., 0.) : P( 0.,-1.);
+    vec2 bo = (secondPix.y > 0.0) ? vec2( 1., 0.) : vec2( 0.,-1.);
+    vec3 blendPix = P(bo.x, bo.y);
     res = mix(res, blendPix, get_left_ratio(pos, origin, direction, scale));
   }
 
@@ -243,7 +324,8 @@ void main()
       direction.x -= haveShallowLine.x;
       direction.y += haveSteepLine.x;
     }
-    vec3 blendPix = (secondPix.x > 0.0) ? P( 0.,-1.) : P(-1., 0.);
+    vec2 bo = (secondPix.x > 0.0) ? vec2( 0.,-1.) : vec2(-1., 0.);
+    vec3 blendPix = P(bo.x, bo.y);
     res = mix(res, blendPix, get_left_ratio(pos, origin, direction, scale));
   }
 
@@ -260,7 +342,8 @@ void main()
       direction.y += haveShallowLine.w;
       direction.x += haveSteepLine.w;
     }
-    vec3 blendPix = (secondPix.w > 0.0) ? P(-1., 0.) : P( 0., 1.);
+    vec2 bo = (secondPix.w > 0.0) ? vec2(-1., 0.) : vec2( 0., 1.);
+    vec3 blendPix = P(bo.x, bo.y);
     res = mix(res, blendPix, get_left_ratio(pos, origin, direction, scale));
   }
 
