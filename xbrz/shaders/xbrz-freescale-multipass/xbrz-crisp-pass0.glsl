@@ -1,11 +1,11 @@
 // xBRZ freescale, multipass: xBRZ at any scale factor, in three passes.
 //
-// Rules 2 and 4 to 7 below keep xBRZ from cutting corners into shapes the artist did not draw
-// (fake diagonals at junctions of three colors, bent frames, rounded ends of stripes). They are
-// on by default; XBRZ_DIAG = 0 turns them off, for the reference xBRZ shapes. Rules 1, 3 and 8 to
-// 13 are the crisp look and run with XBRZ_MINC above 0; the xbrz-crisp preset sets it to 20, so
-// low-contrast shading and textures keep their pixels. Plain xBRZ uses
-// xbrz-freescale-pass0, the same pass with XBRZ_MINC fixed at 0, which is lighter.
+// Rules 2, 4 to 7 and 10 below keep xBRZ from cutting corners into shapes the artist did not
+// draw (fake diagonals at junctions of three colors, bent frames, rounded ends of stripes, a pixel
+// closed between outlines). They are on by default; XBRZ_DIAG = 0 turns them off, for the
+// reference xBRZ shapes. Rules 1, 3, 8, 9 and 11 to 13 are the crisp look and run with XBRZ_MINC
+// above 0; the xbrz-crisp preset sets it to 20, so low-contrast shading and textures keep their pixels.
+// Plain xBRZ uses xbrz-freescale-pass0, the same pass with XBRZ_MINC fixed at 0, which is lighter.
 //
 // xBRZ decides, for each corner of each pixel, whether to cut it and how (a corner piece, a 45-degree
 // line, or a shallow or steep line). The rules below then change some of those decisions. Each rule
@@ -83,8 +83,8 @@
 // 13. Tiles between walls: in a row of 1-pixel tiles (4 or more, in a repeating pattern) that runs
 //     between two straight walls, like the squares of a gauge, a blocked corner between two tiles
 //     stays square, so no diagonal is chained through the row.
-// XBRZ_DIAG = 0 turns rules 2 to 7, 9, 10, 12 and 13 off, and XBRZ_MINC = 0 turns rules 1, 3 and 8 to
-// 13 off, so with XBRZ_MINC at 0 only rules 2 and 4 to 7 run.
+// XBRZ_DIAG = 0 turns rules 2 to 7, 9, 10, 12 and 13 off, and XBRZ_MINC = 0 turns rules 1, 3, 8, 9 and
+// 11 to 13 off, so with XBRZ_MINC at 0 only rules 2, 4 to 7 and 10 run.
 //
 // The first pass makes every blend decision once per input pixel (blend type, line type, blend
 // color and the minimum contrast) and the resolve pass, also once per input pixel, settles the
@@ -245,8 +245,8 @@ uniform COMPAT_PRECISION float XBRZ_DIAG;
 #define FLAG(r, f) mod(floor((r) / (f)), 2.0)
 
 // ---- rule tunables (XBRZ_MINC and XBRZ_DIAG are in the menu) ----
-// rules 3, 9, 10, 12 and 13 belong to the crisp look rather than fixing clear xBRZ errors, so they
-// run only when XBRZ_MINC is on too (plain xBRZ, with XBRZ_MINC 0, keeps rules 2 and 4 to 7)
+// rules 3, 9, 12 and 13 belong to the crisp look rather than fixing clear xBRZ errors, so they
+// run only when XBRZ_MINC is on too (plain xBRZ, with XBRZ_MINC 0, keeps rules 2, 4 to 7 and 10)
 #define CRISP_RULES (XBRZ_MINC > 0.0 && XBRZ_DIAG > 0.0)
 #define XBRZ_HYST 4.0       // 1. a corner this close below XBRZ_MINC is weak
 #define XBRZ_DIAG_AA 92.0   // 2. diagonal limit on antialiasing ramps
@@ -729,7 +729,7 @@ vec4 closedPixel(vec4 res, vec3 A, vec3 B, vec3 C, vec3 D, vec3 E, vec3 F, vec3 
 {
   // only where xBRZ found a shallow or steep line
   vec4 line = min(FLAG(res, 16.0) + FLAG(res, 64.0), 1.0) * vec4(greaterThan(BLEND(res), vec4(0.0)));
-  if (!CRISP_RULES || dot(line, vec4(1.0)) <= 0.0)
+  if (XBRZ_DIAG <= 0.0 || dot(line, vec4(1.0)) <= 0.0)
     return res;
   vec4 sc = FLAG(res, 8.0);
   // Q (A, C, I, G for the corners x, y, z, w) is an outline close to black, darker than both E and P

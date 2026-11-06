@@ -1,10 +1,10 @@
 // xBRZ freescale, multipass: xBRZ at any scale factor, in three passes.
 //
-// Rules 2 and 4 to 7 below keep xBRZ from cutting corners into shapes the artist did not draw
-// (fake diagonals at junctions of three colors, bent frames, rounded ends of stripes). They are
-// on by default; XBRZ_DIAG = 0 turns them off, for the reference xBRZ shapes. Rules 1, 3 and 8 to
-// 13 are the crisp look and run with XBRZ_MINC above 0; the xbrz-crisp preset sets it to 20, so
-// low-contrast shading and textures keep their pixels.
+// Rules 2, 4 to 7 and 10 below keep xBRZ from cutting corners into shapes the artist did not
+// draw (fake diagonals at junctions of three colors, bent frames, rounded ends of stripes, a pixel
+// closed between outlines). They are on by default; XBRZ_DIAG = 0 turns them off, for the
+// reference xBRZ shapes. Rules 1, 3, 8, 9 and 11 to 13 are the crisp look and run with XBRZ_MINC
+// above 0; the xbrz-crisp preset sets it to 20, so low-contrast shading and textures keep their pixels.
 //
 // xBRZ decides, for each corner of each pixel, whether to cut it and how (a corner piece, a 45-degree
 // line, or a shallow or steep line). The rules below then change some of those decisions. Each rule
@@ -81,8 +81,8 @@
 // 13. Tiles between walls: in a row of 1-pixel tiles (4 or more, in a repeating pattern) that runs
 //     between two straight walls, like the squares of a gauge, a blocked corner between two tiles
 //     stays square, so no diagonal is chained through the row.
-// XBRZ_DIAG = 0 turns rules 2 to 7, 9, 10, 12 and 13 off, and XBRZ_MINC = 0 turns rules 1, 3 and 8 to
-// 13 off, so with XBRZ_MINC at 0 only rules 2 and 4 to 7 run.
+// XBRZ_DIAG = 0 turns rules 2 to 7, 9, 10, 12 and 13 off, and XBRZ_MINC = 0 turns rules 1, 3, 8, 9 and
+// 11 to 13 off, so with XBRZ_MINC at 0 only rules 2, 4 to 7 and 10 run.
 //
 // The first pass makes every blend decision once per input pixel (blend type, line type, blend
 // color and the minimum contrast) and the resolve pass, also once per input pixel, settles the
