@@ -1,6 +1,6 @@
 shaders = 3
 
-shader0 = shaders/xbrz-freescale-multipass/xbrz-freescale-pass0.glsl
+shader0 = shaders/xbrz-freescale-multipass/xbrz-crisp-pass0.glsl
 filter_linear0 = false
 scale_type0 = source
 scale0 = 1.0
