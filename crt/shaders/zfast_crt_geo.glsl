@@ -48,7 +48,11 @@ Dogway: I modified zfast_crt.glsl shader to include screen curvature,
 #endif
 
 #ifdef GL_ES
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+#define COMPAT_PRECISION highp
+#else
 #define COMPAT_PRECISION mediump
+#endif
 #else
 #define COMPAT_PRECISION
 #endif
